@@ -155,12 +155,15 @@ function allTasks(){ if(_all) return _all; const out=[]; P.days.forEach(day=>day
 const byKey=k=>allTasks().find(t=>t.key===k);
 const deadlineOf=t=>t.d<=LEARN_END?LEARN_END:(t.d<=MOCK_END?MOCK_END:null);
 const flexLeft=(skip)=>allTasks().filter(t=>t.t!=='K'&&deadlineOf(t)&&!S.done[t.key]&&!(skip&&skip.has(t.key)));
+// each day's share follows the original plan's load for that date (lighter class days stay lighter)
+let _cap=null; function CAP(d){ if(!_cap){ _cap={}; allTasks().forEach(t=>{ if(t.t!=='K'&&deadlineOf(t)) _cap[t.d]=(_cap[t.d]||0)+(t.min||0); }); } return _cap[d]||0; }
 function spread(from,rem){
   const out=[]; let i=0, day=from;
   while(i<rem.length && out.length<80){
     let target=0, cum=0;
     for(let j=i;j<rem.length;j++){ cum+=rem[j].min||0; const e=deadlineOf(rem[j]);
-      if(j===rem.length-1||deadlineOf(rem[j+1])!==e){ const n=Math.max(1,daysBetween(day,e)+1); target=Math.max(target,cum/n); } }
+      if(j===rem.length-1||deadlineOf(rem[j+1])!==e){ let capSum=0; for(let d=day;d<=e;d=addDays(d,1)) capSum+=CAP(d);
+        const share=daysBetween(day,e)<0?1:(capSum>0?CAP(day)/capSum:1/Math.max(1,daysBetween(day,e)+1)); target=Math.max(target,cum*share); } }
     const tasks=[]; let a=0;
     while(i<rem.length && (!tasks.length || a+(rem[i].min||0)/2<=target)){ tasks.push(rem[i]); a+=rem[i].min||0; i++; }
     out.push({d:day,tasks}); day=addDays(day,1); }
