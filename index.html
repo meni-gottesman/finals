@@ -76,6 +76,18 @@ label.stp.ok span{color:var(--muted);text-decoration:line-through}
 .hl button.on.y{background:var(--ok-bg);color:var(--ok);border-color:var(--ok)}
 .hl button.on.n{background:var(--bad-bg);color:var(--bad);border-color:var(--bad)}
 .hl input{width:100%;margin-top:6px;font:.95rem system-ui;padding:8px;border:1px solid var(--rule);border-radius:10px;background:var(--bg);color:var(--ink)}
+#viewer{position:fixed;inset:0;z-index:50;background:var(--bg);display:flex;flex-direction:column}
+#viewer[hidden]{display:none}
+.vbar{display:flex;gap:8px;align-items:center;padding:calc(env(safe-area-inset-top,0px) + 8px) 10px 8px;border-bottom:1px solid var(--rule);background:var(--surface)}
+.vbar button{border:0;border-radius:10px;min-height:40px;padding:0 12px;font:700 .9rem system-ui;cursor:pointer;background:var(--accent-bg);color:var(--accent)}
+.vbar #vback{background:var(--accent);color:var(--surface)}
+.vbar #vtitle{flex:1;min-width:0;font-size:.85rem;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#vframe{flex:1;width:100%;border:0;background:#fff}
+#vblock{padding:24px 16px}
+@media (min-width:1100px){
+  #viewer{left:50%;border-left:1px solid var(--rule)}
+  body.split .wrap{margin-left:calc((50vw - min(680px,50vw - 32px))/2);max-width:min(680px,50vw - 32px)}
+}
 footer{margin-top:28px;font-size:.8rem;color:var(--muted)}
 </style>
 </head>
@@ -85,6 +97,7 @@ footer{margin-top:28px;font-size:.8rem;color:var(--muted)}
   <div class="prog"><i id="bar"></i></div>
   <div class="meta"><span id="m1"></span><span id="m2"></span></div>
   <div id="main"></div>
+  <div id="viewer" hidden><div class="vbar"><button id="vback">← Back to task</button><button id="vprev" title="Previous page">‹</button><span id="vtitle"></span></div><iframe id="vframe" title="Study material"></iframe><div id="vblock" hidden></div></div>
   <footer>Questions are generated fresh every attempt, so memorized answers don’t carry over. Progress is saved in this browser on this device.</footer>
 </div>
 <script src="plan-data.js"></script>
@@ -269,7 +282,7 @@ async function hardItems(t){
 function mountHardLog(t,box){
   hardItems(t).then(items=>{ const L=S.hlog[t.key]=S.hlog[t.key]||{};
     const draw=()=>{ box.innerHTML=`<h3 style="font-size:1rem;margin:14px 0 4px">Problem log (${items.length} in this set)</h3><p class="small">Mark each problem as you grade it: ✓ fully correct, ✗ anything less. Leave it blank if you didn’t reach it. Every ✗ comes back as a “redo cold” item in 2 days.</p>`+
-      items.map(it=>{ const e=L[it.id]||{}; return `<div class="hl" data-id="${it.id}"><div class="r"><b><a href="${it.href}" target="_blank" rel="noopener">${esc(it.label)}</a></b><button class="y ${e.s==='ok'?'on':''}" data-s="ok">✓</button><button class="n ${e.s==='miss'?'on':''}" data-s="miss">✗</button></div>${e.s==='miss'?`<input placeholder="What went wrong + the rule that prevents it" value="${esc(e.note||'')}">`:''}</div>`; }).join('')+
+      items.map(it=>{ const e=L[it.id]||{}; return `<div class="hl" data-id="${it.id}"><div class="r"><b><a href="${it.href}">${esc(it.label)}</a></b><button class="y ${e.s==='ok'?'on':''}" data-s="ok">✓</button><button class="n ${e.s==='miss'?'on':''}" data-s="miss">✗</button></div>${e.s==='miss'?`<input placeholder="What went wrong + the rule that prevents it" value="${esc(e.note||'')}">`:''}</div>`; }).join('')+
       `<div class="hl"><b style="font-size:.9rem">Missed a problem from another source (homework, quiz, textbook)?</b><input id="xadd" placeholder="e.g. Lay 2.3 #31 · what went wrong"><button id="xbtn" style="margin-top:6px;width:100%">Add to redo list</button></div>`+
       (Object.values(L).filter(e=>e.extra).map(e=>`<p class="small">✗ ${esc(e.label)}</p>`).join(''));
       box.querySelectorAll('.hl[data-id]').forEach(row=>{ const id=row.dataset.id, it=items.find(x=>x.id===id);
@@ -287,7 +300,7 @@ function renderRedo(t,pre){
   if(!due.length){ S.done[t.key]=Date.now(); save(); return render(); }
   $('main').innerHTML=pre+`<div class="card"><div class="step">Redo cold · first thing today</div><span class="tag tA">All</span><h2>${esc(t.title)}</h2>
     <p>Each of these you missed 2+ days ago. For each one: close the solution, redo it from a blank page with a timer, <b>then</b> check. ✓ only if fully correct with nothing peeked; otherwise ✗ and it comes back in 2 more days.</p>
-    ${due.map(r=>`<div class="hl" data-id="${r.id}"><div class="r"><b>${r.href?`<a href="${r.href}" target="_blank" rel="noopener">${esc(r.label)}</a>`:esc(r.label)}</b><button class="y" data-s="ok">✓</button><button class="n" data-s="miss">✗</button></div><p class="small" style="margin:4px 0 0">${esc(r.src)}${r.note?' · last time: '+esc(r.note):''}${r.tries?' · attempt '+(r.tries+1):''}</p></div>`).join('')}</div>`;
+    ${due.map(r=>`<div class="hl" data-id="${r.id}"><div class="r"><b>${r.href?`<a href="${r.href}">${esc(r.label)}</a>`:esc(r.label)}</b><button class="y" data-s="ok">✓</button><button class="n" data-s="miss">✗</button></div><p class="small" style="margin:4px 0 0">${esc(r.src)}${r.note?' · last time: '+esc(r.note):''}${r.tries?' · attempt '+(r.tries+1):''}</p></div>`).join('')}</div>`;
   document.querySelectorAll('.hl[data-id]').forEach(row=>row.querySelectorAll('button').forEach(b=>b.onclick=()=>{
     const r=S.redo.find(x=>x.id===row.dataset.id); r.tries++; r.last=Date.now();
     if(b.dataset.s==='ok'){ r.cleared=true; } else { r.due=addDays(today(),2); }
@@ -447,6 +460,38 @@ $('logLink').onclick=e=>{ e.preventDefault(); clearInterval(tick);
    <h2>Your notes</h2>${S.notes.slice(-30).reverse().map(n=>`<p class="small"><b>${fmt(n.d)} · ${esc(n.title)}</b>${n.att?` · ${n.cor}/${n.att} correct`:''}${n.tot?` · ${n.pts}/${n.tot} pts`:''}<br>${esc(n.why||'')}</p>`).join('')||'<p>None yet.</p>'}
    <button class="btn sec" id="back">Back to today</button></div>`;
   $('back').onclick=render; };
+// ---------- built-in viewer: every link opens inside the app ----------
+const VSTACK=[];
+function embedURL(u){ let x; try{ x=new URL(u,location.href); }catch(e){ return null; }
+  if(x.protocol==='http:') x.protocol='https:';
+  const h=x.hostname;
+  if(/(^|\.)tbp\.studentorg\.berkeley\.edu$/.test(h)) return 'https://docs.google.com/viewer?embedded=true&url='+encodeURIComponent(x.href);
+  if(/youtube\.com$|youtu\.be$/.test(h)){ const id=h.includes('youtu.be')?x.pathname.slice(1):(x.searchParams.get('v')||x.pathname.split('/').pop());
+    const t=x.searchParams.get('t'); const st=t?parseInt(t,10):0; return 'https://www.youtube-nocookie.com/embed/'+id+(st?'?start='+st:''); }
+  if(/bcourses\.berkeley\.edu$|instructure\.com$|drive\.google\.com$|accounts\.google\.com$|gradescope\.com$|edstem\.org$/.test(h) || (h==='docs.google.com'&&!x.pathname.startsWith('/viewer'))) return null;
+  return x.href; }
+function showV(entry){ const v=$('viewer'), f=$('vframe'), b=$('vblock'); v.hidden=false; document.body.classList.add('split');
+  $('vtitle').textContent=entry.title||entry.url; $('vprev').disabled=VSTACK.length<2;
+  const e=embedURL(entry.url);
+  if(e){ b.hidden=true; f.hidden=false; if(f.dataset.src!==e){ f.dataset.src=e; f.src=e; } }
+  else { f.hidden=true; f.removeAttribute('src'); f.dataset.src=''; b.hidden=false;
+    b.innerHTML=`<p><b>${esc(entry.title||'This page')}</b> is on a site that refuses to be shown inside other pages (and needs your login), so it can’t open here.</p><p class="small">${esc(entry.url)}</p><button class="btn sec" id="vext">Open it in the browser instead</button>`;
+    $('vext').onclick=()=>window.open(entry.url,'_blank','noopener'); } }
+function openViewer(url,title){ try{ const x=new URL(url,location.href); if(x.origin===location.origin&&/\/finals\/(index\.html)?$/.test(x.pathname)){ closeViewer(); return; } }catch(e){}
+  VSTACK.push({url,title:(title||'').trim().slice(0,80)}); showV(VSTACK[VSTACK.length-1]); }
+function closeViewer(){ VSTACK.length=0; $('viewer').hidden=true; document.body.classList.remove('split'); const f=$('vframe'); f.removeAttribute('src'); f.dataset.src='';
+  window.dispatchEvent(new Event('focus')); }
+$('vback').onclick=closeViewer;
+$('vprev').onclick=()=>{ if(VSTACK.length>1){ VSTACK.pop(); showV(VSTACK[VSTACK.length-1]); } };
+const linkHandler=e=>{ const a=e.target.closest&&e.target.closest('a[href]'); if(!a) return; const h=a.getAttribute('href');
+  if(!h||h.startsWith('#')||h.startsWith('javascript:')||a.closest('.vbar')) return;
+  e.preventDefault(); openViewer(a.href,a.textContent); };
+document.addEventListener('click',linkHandler);
+$('vframe').addEventListener('load',()=>{ try{ const d=$('vframe').contentDocument; if(!d||!d.body) return;
+  d.addEventListener('click',ev=>{ const a=ev.target.closest&&ev.target.closest('a[href]'); if(!a) return; const h=a.getAttribute('href')||'';
+    if(h.startsWith('#')||h.startsWith('javascript:')) return; ev.preventDefault(); openViewer(a.href,a.textContent); });
+  const t=d.title; if(t&&VSTACK.length) $('vtitle').textContent=t; }catch(e){} });
+document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&!$('viewer').hidden) closeViewer(); });
 render();
 </script>
 </body>
