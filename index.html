@@ -461,11 +461,14 @@ $('logLink').onclick=e=>{ e.preventDefault(); clearInterval(tick);
    <button class="btn sec" id="back">Back to today</button></div>`;
   $('back').onclick=render; };
 // ---------- built-in viewer: every link opens inside the app ----------
-const VSTACK=[];
+const VSTACK=[]; let PDFPAGE=null;
 function embedURL(u){ let x; try{ x=new URL(u,location.href); }catch(e){ return null; }
   if(x.protocol==='http:') x.protocol='https:';
   const h=x.hostname;
-  if(/(^|\.)tbp\.studentorg\.berkeley\.edu$/.test(h)) return 'https://docs.google.com/viewer?embedded=true&url='+encodeURIComponent(x.href);
+  const isPdf=/\.pdf$/i.test(x.pathname)||/tbp\.studentorg\.berkeley\.edu$/.test(h);
+  const nativePdf=navigator.pdfViewerEnabled!==false && !matchMedia('(pointer:coarse)').matches && x.origin!==location.origin && !/tbp\.studentorg/.test(h);
+  if(isPdf && x.origin!==location.origin && !nativePdf){ const pg=(x.hash.match(/page=(\d+)/)||[])[1]; if(pg) PDFPAGE=pg;
+    return 'https://docs.google.com/viewer?embedded=true&url='+encodeURIComponent(x.origin+x.pathname+x.search); }
   if(/youtube\.com$|youtu\.be$/.test(h)){ const id=h.includes('youtu.be')?x.pathname.slice(1):(x.searchParams.get('v')||x.pathname.split('/').pop());
     const t=x.searchParams.get('t'); const st=t?parseInt(t,10):0; return 'https://www.youtube-nocookie.com/embed/'+id+(st?'?start='+st:''); }
   if(/bcourses\.berkeley\.edu$|instructure\.com$|drive\.google\.com$|accounts\.google\.com$|gradescope\.com$|edstem\.org$/.test(h) || (h==='docs.google.com'&&!x.pathname.startsWith('/viewer'))) return null;
@@ -473,7 +476,8 @@ function embedURL(u){ let x; try{ x=new URL(u,location.href); }catch(e){ return 
 function showV(entry){ const v=$('viewer'), f=$('vframe'), b=$('vblock'); v.hidden=false; document.body.classList.add('split');
   $('vtitle').textContent=entry.title||entry.url; $('vprev').disabled=VSTACK.length<2;
   const e=embedURL(entry.url);
-  if(e){ b.hidden=true; f.hidden=false; if(f.dataset.src!==e){ f.dataset.src=e; f.src=e; } }
+  if(e){ b.hidden=true; f.hidden=false; if(f.dataset.src!==e){ f.dataset.src=e; f.src=e; }
+    if(/docs\.google\.com\/viewer/.test(e)) $('vtitle').textContent=(entry.title||'PDF')+(PDFPAGE?' · go to page '+PDFPAGE:'')+' · loading can take ~10 s'; PDFPAGE=null; }
   else { f.hidden=true; f.removeAttribute('src'); f.dataset.src=''; b.hidden=false;
     b.innerHTML=`<p><b>${esc(entry.title||'This page')}</b> is on a site that refuses to be shown inside other pages (and needs your login), so it can’t open here.</p><p class="small">${esc(entry.url)}</p><button class="btn sec" id="vext">Open it in the browser instead</button>`;
     $('vext').onclick=()=>window.open(entry.url,'_blank','noopener'); } }
