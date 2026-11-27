@@ -144,10 +144,9 @@ function makeQ(unit,type,genId){
 const typesWithGens=unit=>[...new Set((G[unit]||[]).map(g=>g.type))];
 
 // ---------- queue + adaptive schedule ----------
-// Tasks run in plan order. Learning/hard work must be done by LEARN_END, practice finals by MOCK_END;
-// exam-week tasks (Dec 14+) stay on their own day. Every morning the app spreads whatever is left
-// evenly over the days remaining, so working ahead lightens every later day and falling behind
-// spreads the backlog instead of piling it onto one day.
+// Tasks run in plan order, each on its plan day. Anything unfinished rolls over to the next day,
+// ahead of that day's own tasks, until the student is back on track (the student's rule, Nov 27).
+// Finishing early lets them work ahead; tasks done ahead simply disappear from their later day.
 const LEARN_END='2026-12-07', MOCK_END='2026-12-13';
 const PLAN_START=P.days[0].d;
 let _all=null;
@@ -180,22 +179,15 @@ function spread(from,rem){
 const pinnedOn=d=>allTasks().filter(t=>t.t!=='K'&&!deadlineOf(t)&&t.d===d);
 function todayList(){
   const td=today();
-  if(!S.days[td]){
-    const keys = td<PLAN_START ? [] : ((spread(td,flexLeft())[0]||{tasks:[]}).tasks.map(t=>t.key));
-    S.days[td]={keys}; save(); }
-  const pinnedOld=allTasks().filter(t=>t.t!=='K'&&!deadlineOf(t)&&t.d<td&&!S.done[t.key]);
-  return [...pinnedOld, ...S.days[td].keys.map(byKey).filter(Boolean), ...pinnedOn(td)]; }
+  return allTasks().filter(t=>t.t!=='K'&&t.d<=td&&(!S.done[t.key]||dateOf(S.done[t.key])===td)); }
 function queue(){
   const td=today(), list=todayList(), q=list.filter(t=>!S.done[t.key]);
   if(q.length||!S.ahead[td]) return {q,ahead:false};
-  const nxt=flexLeft().filter(t=>!list.includes(t))[0];
+  const nxt=allTasks().filter(t=>t.t!=='K'&&deadlineOf(t)&&t.d>td&&!S.done[t.key])[0];
   return {q:nxt?[nxt]:[],ahead:true}; }
 function futureSchedule(){
-  const td=today(), list=todayList(), skip=new Set(list.map(t=>t.key));
-  const start=td<PLAN_START?PLAN_START:addDays(td,1);
-  const sch=spread(start,flexLeft(skip));
-  const map={}; sch.forEach(x=>map[x.d]=x.tasks.slice());
-  for(let d=start; d<='2026-12-17'; d=addDays(d,1)){ const p=pinnedOn(d).filter(t=>!S.done[t.key]); if(p.length) map[d]=(map[d]||[]).concat(p); }
+  const td=today(), map={};
+  allTasks().forEach(t=>{ if(t.t!=='K'&&t.d>td&&!S.done[t.key]) (map[t.d]=map[t.d]||[]).push(t); });
   return Object.keys(map).sort().map(d=>({d,tasks:map[d]})); }
 function learnedMap(){ const m={}; allTasks().forEach(t=>{ if(t.t==='L'&&S.done[t.key]) m[t.u]=dateOf(S.done[t.key]); }); return m; }
 function reviewUnits(t){
@@ -233,13 +225,14 @@ function render(){
   $('m2').textContent=left?('≈ '+fm(left)+' left today'):'';
   const main=$('main');
   let pre=allTasks().filter(t=>t.d===td&&t.t==='K'&&/FINAL/.test(t.title)).map(k=>`<div class="banner ok">🎯 ${esc(k.title)}</div>`).join('');
+  const behind=list.filter(t=>t.d<td&&!S.done[t.key]); if(behind.length&&!ahead) pre+=`<div class="banner warn">Catching up: ${behind.length} unfinished task${behind.length>1?'s':''} (≈ ${fm(behind.reduce((s,t)=>s+(t.min||0),0))}) from earlier days come first, then today’s own. Whatever you don’t finish rolls over to tomorrow.</div>`;
   if(ahead&&q.length) pre+=`<div class="banner info">Working ahead. Every task you finish now comes off a later day. <a href="#" id="stopAhead">Stop for today</a></div>`;
   if(!q.length){
-    const fut=futureSchedule(), rest=flexLeft().filter(t=>!list.includes(t)), learnLeft=rest.some(t=>deadlineOf(t)===LEARN_END);
+    const fut=futureSchedule(), rest=allTasks().filter(t=>t.t!=='K'&&deadlineOf(t)&&t.d>td&&!S.done[t.key]), learnLeft=rest.some(t=>deadlineOf(t)===LEARN_END);
     const nextDay=fut[0];
     main.innerHTML=pre+`<div class="card"><h2>${td<PLAN_START?'Your plan starts '+fmt(PLAN_START):(list.length?'Today’s work is done ✓':'Nothing left today')}</h2>
       ${list.length?'<p>Every task passed its check.</p>':''}
-      ${rest.length?`<p>You can keep going. Tasks run in the same order, and the app shrinks every later day to match.${nextDay?` Next up: <b>${esc(rest[0].title)}</b> (${fm(rest[0].min||0)}).`:''}</p>
+      ${rest.length?`<p>You can keep going. Tasks run in the same order; anything you finish now comes off its later day.${nextDay?` Next up: <b>${esc(rest[0].title)}</b> (${fm(rest[0].min||0)}).`:''}</p>
         <button class="btn" id="ahead">${td<PLAN_START?'Start now (get ahead)':'Work ahead: next task'}</button>`:'<p>Every learning and practice task is finished. Only exam-day warm-ups remain, on their own days.</p>'}
       ${nextDay?`<p class="small">${fmt(nextDay.d)}: ${nextDay.tasks.length} tasks, ≈ ${fm(nextDay.tasks.reduce((s,t)=>s+(t.min||0),0))}. ${learnLeft?'':'All learning done ✓ '}<a href="#" id="seeSched">See schedule</a></p>`:''}
       <p class="small">Sleep is part of the plan: memory consolidates overnight.</p></div>`;
@@ -247,13 +240,13 @@ function render(){
     if($('seeSched')) $('seeSched').onclick=e=>{e.preventDefault();showSchedule();};
     return; }
   const t=q[0]; renderTask(t,pre,ahead);
-  if($('stopAhead')) $('stopAhead').onclick=e=>{ e.preventDefault(); if(S.start[t.key]&&!S.done[t.key]&&!confirm('Stop for today? This task stays first in line tomorrow.')) return; S.ahead[td]=false; save(); render(); }; }
+  if($('stopAhead')) $('stopAhead').onclick=e=>{ e.preventDefault(); if(S.start[t.key]&&!S.done[t.key]&&!confirm('Stop for today? This task stays on its plan day.')) return; S.ahead[td]=false; save(); render(); }; }
 
 function renderTask(t,pre,ahead){
   const main=$('main'); const st=S.start[t.key];
   const minFrac={L:.6,H:.7,M:.8,T:.6,R:0}[t.t]??.6;
   const needMs=Math.round((t.min||0)*minFrac*60000);
-  const head=`${pre}<div class="card"><div class="step">${ahead?'Ahead':'Task'} · ${fm(t.min||0)}</div>${TAG[t.c]||''}<h2>${esc(t.title)}</h2>`;
+  const head=`${pre}<div class="card"><div class="step">${ahead?'Ahead · '+fmt(t.d):(t.d<today()?'Catch-up · from '+fmt(t.d):'Task')} · ${fm(t.min||0)}</div>${TAG[t.c]||''}<h2>${esc(t.title)}</h2>`;
   const instr=`<div class="instr">${t.t==='R'?'<div class="banner info"><b>Topics for this review</b> (picked from what you actually learned 3 and 7 days ago): '+reviewUnits(t).map(u=>esc(P.U[u]?P.U[u].n:u)).join(' · ')+'. These replace the list below.</div>':''}${t.html||''}</div>`;
   const C=S.check[t.key];
   if(!st){ main.innerHTML=head+instr+`<button class="btn" id="go">Start this task</button></div>`;
@@ -353,9 +346,8 @@ function showSchedule(){ clearInterval(tick);
   const td=today(), list=todayList(), fut=futureSchedule();
   const row=(d,tasks,isToday)=>{ const mins=tasks.reduce((s,t)=>s+(t.min||0),0);
     return `<div class="card"><div class="step">${isToday?'Today · ':''}${fmt(d)} · ≈ ${fm(mins)}</div>${tasks.map(t=>`<p style="margin:4px 0">${S.done[t.key]?'✓ ':''}${TAG[t.c]||''}${esc(t.title)} <span class="small">${fm(t.min||0)}</span></p>`).join('')}</div>`; };
-  const lastLearn=[...fut].reverse().find(x=>x.tasks.some(t=>deadlineOf(t)===LEARN_END));
-  const exams=allTasks().filter(t=>t.t==='K'&&/FINAL/.test(t.title));
-  $('main').innerHTML=`<div class="banner info">This schedule updates itself. Work ahead and every later day gets lighter; fall behind and the rest is spread over the days left. Learning finishes by ${fmt(lastLearn?lastLearn.d:(list.length?td:td))} at the latest (deadline ${fmt(LEARN_END)}); practice finals by ${fmt(MOCK_END)}.</div>
+    const exams=allTasks().filter(t=>t.t==='K'&&/FINAL/.test(t.title));
+  $('main').innerHTML=`<div class="banner info">Each task stays on its plan day. Unfinished tasks roll over to the next day, ahead of that day’s own tasks; tasks you do ahead disappear from their later day. Today shows everything due so far.</div>
     ${list.length?row(td,list,true):''}${fut.map(x=>row(x.d,x.tasks,false)).join('')}
     <div class="card">${exams.map(k=>`<p>🎯 ${fmt(k.d)} · ${esc(k.title)}</p>`).join('')}</div>
     <button class="btn sec" id="back">Back to today</button>`;
