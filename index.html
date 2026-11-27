@@ -64,6 +64,18 @@ textarea{min-height:90px}
 .row input{flex:1}
 label.chk{display:flex;gap:8px;align-items:center;margin:6px 0}
 details.instrbox summary{cursor:pointer;color:var(--accent);font-weight:600;margin-top:10px}
+label.stp{display:flex;gap:10px;align-items:flex-start;margin:6px 0;cursor:pointer}
+label.stp input{width:20px;height:20px;flex:none;margin-top:2px}
+label.stp.ok span{color:var(--muted);text-decoration:line-through}
+.fc{font-size:.8rem;border-radius:99px;padding:2px 8px;margin-left:6px;background:var(--warn-bg);color:var(--warn)}
+.fc.ok{background:var(--ok-bg);color:var(--ok)}
+.hl{border:1px solid var(--rule);border-radius:12px;padding:8px 10px;margin-top:8px}
+.hl .r{display:flex;gap:8px;align-items:center}
+.hl .r b{flex:1;font-size:.9rem;font-weight:600}
+.hl button{border:1px solid var(--rule);background:var(--surface);color:var(--ink);border-radius:10px;min-width:44px;min-height:40px;font:700 1rem system-ui;cursor:pointer}
+.hl button.on.y{background:var(--ok-bg);color:var(--ok);border-color:var(--ok)}
+.hl button.on.n{background:var(--bad-bg);color:var(--bad);border-color:var(--bad)}
+.hl input{width:100%;margin-top:6px;font:.95rem system-ui;padding:8px;border:1px solid var(--rule);border-radius:10px;background:var(--bg);color:var(--ink)}
 footer{margin-top:28px;font-size:.8rem;color:var(--muted)}
 </style>
 </head>
@@ -83,8 +95,9 @@ footer{margin-top:28px;font-size:.8rem;color:var(--muted)}
 "use strict";
 const P=window.PLAN, G=window.GEN||{};
 const KEY='finals-app-v2';
-let S={done:{},start:{},err:[],check:{},notes:[],q:null,days:{},ahead:{}};
+let S={done:{},start:{},err:[],check:{},notes:[],q:null,days:{},ahead:{},steps:{},hlog:{},redo:[]};
 try{ S=Object.assign(S,JSON.parse(localStorage.getItem(KEY)||'{}')); }catch(e){}
+S.steps=S.steps||{}; S.hlog=S.hlog||{}; S.redo=S.redo||[];
 const save=()=>{ try{ localStorage.setItem(KEY,JSON.stringify(S)); }catch(e){} };
 const $=id=>document.getElementById(id);
 const TAG={'54':'<span class="tag t54">Math 54</span>','55':'<span class="tag t55">Math 55</span>','B':'<span class="tag tB">CS 61B</span>','A':'<span class="tag tA">All</span>'};
@@ -179,7 +192,8 @@ function spread(from,rem){
 const pinnedOn=d=>allTasks().filter(t=>t.t!=='K'&&!deadlineOf(t)&&t.d===d);
 function todayList(){
   const td=today();
-  return allTasks().filter(t=>t.t!=='K'&&t.d<=td&&(!S.done[t.key]||dateOf(S.done[t.key])===td)); }
+  const x=redoTask();
+  return (x?[x]:[]).concat(allTasks().filter(t=>t.t!=='K'&&t.d<=td&&(!S.done[t.key]||dateOf(S.done[t.key])===td))); }
 function queue(){
   const td=today(), list=todayList(), q=list.filter(t=>!S.done[t.key]);
   if(q.length||!S.ahead[td]) return {q,ahead:false};
@@ -214,6 +228,71 @@ function dueErrors(t){ const course=t.c; return S.err.filter(e=>!e.cleared && e.
 
 // ---------- render ----------
 let tick=null;
+// ---------- in-app tracking: steps, flashcards, hard-problem log, redo-cold items ----------
+const stepEls=root=>[...root.querySelectorAll('.instr p')].filter(p=>/^\s*\d+\.\s/.test(p.textContent));
+let CARDS=null;
+async function loadCards(){ if(CARDS) return CARDS; try{ const h=await (await fetch('cards.html',{cache:'no-cache'})).text();
+  const a=h.indexOf('const C=['), b=h.indexOf('\n];',a); const C=(new Function('return '+h.slice(a+8,b+2)))();
+  const g=h.match(/const GROUPS=(\{[^;]*\});/); const GR=g?(new Function('return '+g[1]))():{}; CARDS={C,GR}; }catch(e){ CARDS={C:[],GR:{}}; } return CARDS; }
+function deckProgress(deck){ if(!CARDS) return null; const ids=CARDS.C.map((c,i)=>i).filter(i=>(CARDS.GR[deck]||[deck]).includes(CARDS.C[i][0]));
+  let known={}; try{ known=(JSON.parse(localStorage.getItem('m55-quiz5-cards-v2')||'{}').known)||{}; }catch(e){}
+  return {n:ids.length,k:ids.filter(i=>known[i]).length}; }
+function mountSteps(t,root){
+  const ps=stepEls(root); const st=S.steps[t.key]=S.steps[t.key]||{};
+  ps.forEach((p,i)=>{
+    const a=p.querySelector('a[href*="finals/cards.html?deck="]'); const deck=a?new URL(a.href).searchParams.get('deck'):null;
+    const lab=document.createElement('label'); lab.className='stp'+(st[i]?' ok':'');
+    lab.innerHTML=`<input type="checkbox" ${st[i]?'checked':''}><span>${p.innerHTML}</span>`; p.replaceWith(lab);
+    const box=lab.querySelector('input');
+    if(deck){ const tag=document.createElement('span'); tag.className='fc'; lab.querySelector('span').appendChild(tag);
+      const upd=()=>{ const pr=deckProgress(deck); if(!pr){ tag.textContent='checking cards…'; box.disabled=true; return; }
+        const done=pr.n>0&&pr.k>=pr.n; tag.textContent=pr.k+'/'+pr.n+' cards ✓'; tag.className='fc'+(done?' ok':''); box.disabled=!done&&!st[i];
+        if(!done&&!st[i]) box.title='Finish the deck first: every card marked Got it'; };
+      loadCards().then(upd); window.addEventListener('focus',upd); upd(); }
+    box.onchange=()=>{ if(box.checked) st[i]=Date.now(); else delete st[i]; lab.className='stp'+(box.checked?' ok':''); save(); };
+  });
+  return ps.length; }
+const stepsDone=(t,n)=>{ const st=S.steps[t.key]||{}; for(let i=0;i<n;i++) if(!st[i]) return false; return true; };
+// hard-problem log: lists the problems of this unit's hard-bank section
+const HB={};
+async function hardItems(t){
+  const m=(t.html||'').match(/href="[^"]*\/((?:math54|math55|cs61b)-hard\.html)#([A-Za-z0-9]+)"/); if(!m) return [];
+  const page=m[1], sec=m[2], k=page+'#'+sec; if(HB[k]) return HB[k];
+  try{ const d=new DOMParser().parseFromString(await (await fetch(page,{cache:'no-cache'})).text(),'text/html');
+    const el=d.getElementById(sec); if(!el) return HB[k]=[];
+    const its=[...el.querySelectorAll('.prob, article.pb, .q')].map((x,i)=>{
+      const lab=x.querySelector('.pn')?x.querySelector('.pn').textContent:('#'+(i+1));
+      const sub=(x.querySelector('.tg')||x.querySelector('.kind')||x.querySelector('.nm')||{}).textContent||'';
+      const src=x.querySelector('.src')?x.querySelector('.src').textContent+' · ':'';
+      return {id:k+':'+i,label:lab+' '+src+sub,href:'https://meni-gottesman.github.io/finals/'+page+'#'+(x.id||sec)}; });
+    return HB[k]=its; }catch(e){ return HB[k]=[]; } }
+function mountHardLog(t,box){
+  hardItems(t).then(items=>{ const L=S.hlog[t.key]=S.hlog[t.key]||{};
+    const draw=()=>{ box.innerHTML=`<h3 style="font-size:1rem;margin:14px 0 4px">Problem log (${items.length} in this set)</h3><p class="small">Mark each problem as you grade it: ✓ fully correct, ✗ anything less. Leave it blank if you didn’t reach it. Every ✗ comes back as a “redo cold” item in 2 days.</p>`+
+      items.map(it=>{ const e=L[it.id]||{}; return `<div class="hl" data-id="${it.id}"><div class="r"><b><a href="${it.href}" target="_blank" rel="noopener">${esc(it.label)}</a></b><button class="y ${e.s==='ok'?'on':''}" data-s="ok">✓</button><button class="n ${e.s==='miss'?'on':''}" data-s="miss">✗</button></div>${e.s==='miss'?`<input placeholder="What went wrong + the rule that prevents it" value="${esc(e.note||'')}">`:''}</div>`; }).join('')+
+      `<div class="hl"><b style="font-size:.9rem">Missed a problem from another source (homework, quiz, textbook)?</b><input id="xadd" placeholder="e.g. Lay 2.3 #31 · what went wrong"><button id="xbtn" style="margin-top:6px;width:100%">Add to redo list</button></div>`+
+      (Object.values(L).filter(e=>e.extra).map(e=>`<p class="small">✗ ${esc(e.label)}</p>`).join(''));
+      box.querySelectorAll('.hl[data-id]').forEach(row=>{ const id=row.dataset.id, it=items.find(x=>x.id===id);
+        row.querySelectorAll('button').forEach(b=>b.onclick=()=>{ const cur=(L[id]||{}).s; if(cur===b.dataset.s) delete L[id]; else L[id]=Object.assign(L[id]||{},{s:b.dataset.s,label:it.label,href:it.href}); save(); draw(); });
+        const inp=row.querySelector('input'); if(inp) inp.oninput=()=>{ L[id].note=inp.value; save(); }; });
+      $('xbtn').onclick=()=>{ const v=$('xadd').value.trim(); if(v.length<4) return; L['x'+Date.now()]={s:'miss',extra:1,label:v,note:v,href:''}; save(); draw(); }; };
+    draw(); }); }
+function addRedo(label,href,unit,note,src){ S.redo.push({id:'r'+Date.now()+Math.random().toString(36).slice(2,6),label,href:href||'',unit:unit||'',note:note||'',src:src||'',due:addDays(today(),2),tries:0,cleared:false}); }
+const redoDue=()=>S.redo.filter(r=>!r.cleared&&r.due<=today());
+function redoTask(){ const td=today(), due=redoDue();
+  if(!due.length&&!S.done['X:'+td]) return null;
+  return {key:'X:'+td,t:'X',c:'A',d:td,min:Math.max(10,8*due.length),title:'Redo cold: '+(due.length||'all')+' missed problem'+(due.length===1?'':'s')}; }
+function renderRedo(t,pre){
+  const due=redoDue();
+  if(!due.length){ S.done[t.key]=Date.now(); save(); return render(); }
+  $('main').innerHTML=pre+`<div class="card"><div class="step">Redo cold · first thing today</div><span class="tag tA">All</span><h2>${esc(t.title)}</h2>
+    <p>Each of these you missed 2+ days ago. For each one: close the solution, redo it from a blank page with a timer, <b>then</b> check. ✓ only if fully correct with nothing peeked; otherwise ✗ and it comes back in 2 more days.</p>
+    ${due.map(r=>`<div class="hl" data-id="${r.id}"><div class="r"><b>${r.href?`<a href="${r.href}" target="_blank" rel="noopener">${esc(r.label)}</a>`:esc(r.label)}</b><button class="y" data-s="ok">✓</button><button class="n" data-s="miss">✗</button></div><p class="small" style="margin:4px 0 0">${esc(r.src)}${r.note?' · last time: '+esc(r.note):''}${r.tries?' · attempt '+(r.tries+1):''}</p></div>`).join('')}</div>`;
+  document.querySelectorAll('.hl[data-id]').forEach(row=>row.querySelectorAll('button').forEach(b=>b.onclick=()=>{
+    const r=S.redo.find(x=>x.id===row.dataset.id); r.tries++; r.last=Date.now();
+    if(b.dataset.s==='ok'){ r.cleared=true; } else { r.due=addDays(today(),2); }
+    save(); render(); })); }
+
 function render(){
   clearInterval(tick);
   const td=today(), list=todayList(), {q,ahead}=queue();
@@ -225,7 +304,7 @@ function render(){
   $('m2').textContent=left?('≈ '+fm(left)+' left today'):'';
   const main=$('main');
   let pre=allTasks().filter(t=>t.d===td&&t.t==='K'&&/FINAL/.test(t.title)).map(k=>`<div class="banner ok">🎯 ${esc(k.title)}</div>`).join('');
-  const behind=list.filter(t=>t.d<td&&!S.done[t.key]); if(behind.length&&!ahead) pre+=`<div class="banner warn">Catching up: ${behind.length} unfinished task${behind.length>1?'s':''} (≈ ${fm(behind.reduce((s,t)=>s+(t.min||0),0))}) from earlier days come first, then today’s own. Whatever you don’t finish rolls over to tomorrow.</div>`;
+  const behind=list.filter(t=>t.t!=='X'&&t.d<td&&!S.done[t.key]); if(behind.length&&!ahead) pre+=`<div class="banner warn">Catching up: ${behind.length} unfinished task${behind.length>1?'s':''} (≈ ${fm(behind.reduce((s,t)=>s+(t.min||0),0))}) from earlier days come first, then today’s own. Whatever you don’t finish rolls over to tomorrow.</div>`;
   if(ahead&&q.length) pre+=`<div class="banner info">Working ahead. Every task you finish now comes off a later day. <a href="#" id="stopAhead">Stop for today</a></div>`;
   if(!q.length){
     const fut=futureSchedule(), rest=allTasks().filter(t=>t.t!=='K'&&deadlineOf(t)&&t.d>td&&!S.done[t.key]), learnLeft=rest.some(t=>deadlineOf(t)===LEARN_END);
@@ -243,6 +322,7 @@ function render(){
   if($('stopAhead')) $('stopAhead').onclick=e=>{ e.preventDefault(); if(S.start[t.key]&&!S.done[t.key]&&!confirm('Stop for today? This task stays on its plan day.')) return; S.ahead[td]=false; save(); render(); }; }
 
 function renderTask(t,pre,ahead){
+  if(t.t==='X') return renderRedo(t,pre);
   const main=$('main'); const st=S.start[t.key];
   const minFrac={L:.6,H:.7,M:.8,T:.6,R:0}[t.t]??.6;
   const needMs=Math.round((t.min||0)*minFrac*60000);
@@ -252,18 +332,18 @@ function renderTask(t,pre,ahead){
   if(!st){ main.innerHTML=head+instr+`<button class="btn" id="go">Start this task</button></div>`;
     $('go').onclick=()=>{ S.start[t.key]=Date.now(); save(); render(); }; return; }
   if(!C||!C.phase){
-    main.innerHTML=head+`<details class="instrbox" open><summary>Instructions</summary>${instr}</details><div class="timer" id="tm"></div><div id="after"></div></div>`;
-    const draw=()=>{ const el=Date.now()-st, rem=needMs-el;
-      $('tm').innerHTML=`${clock(el)}<small>${rem>0?'check unlocks in '+clock(rem):'check unlocked'} · planned ${fm(t.min||0)}</small>`;
-      if(rem<=0 && !$('ck')){ $('after').innerHTML=preCheckForm(t); bindPreCheck(t); } };
+    main.innerHTML=head+`<details class="instrbox" open><summary>Instructions · tick each step as you finish it</summary>${instr}</details><div id="hlog"></div><div class="timer" id="tm"></div><div id="after"></div></div>`;
+    const nSteps=mountSteps(t,main); if(t.t==='H') mountHardLog(t,$('hlog'));
+    const draw=()=>{ const el=Date.now()-st, rem=needMs-el, sd=stepsDone(t,nSteps);
+      $('tm').innerHTML=`${clock(el)}<small>${rem>0?'check unlocks in '+clock(rem):(sd?'check unlocked':'tick every step above to unlock the check')} · planned ${fm(t.min||0)}</small>`;
+      if(rem<=0 && sd && !$('ck')){ $('after').innerHTML=preCheckForm(t); bindPreCheck(t); }
+      if(!sd && $('ck')) $('after').innerHTML=''; };
     draw(); tick=setInterval(draw,1000); return; }
   renderCheck(t,head); }
 const clock=ms=>{ms=Math.max(0,ms);const s=Math.floor(ms/1000);return (s>=3600?Math.floor(s/3600)+':':'')+String(Math.floor(s/60)%60).padStart(2,'0')+':'+String(s%60).padStart(2,'0');};
 
 function preCheckForm(t){
-  if(t.t==='H') return `<p><b>Report honestly</b>: this decides what comes back in your review.</p>
-   <div class="row"><input class="ans" id="att" inputmode="numeric" placeholder="# problems attempted"><input class="ans" id="cor" inputmode="numeric" placeholder="# fully correct"></div>
-   <textarea id="why" placeholder="Every problem you missed: which one, what went wrong, the rule that prevents it"></textarea>
+  if(t.t==='H') return `<p><b>Grade honestly in the problem log above</b>: every ✗ comes back to be redone cold in 2 days. Partial credit = ✗.</p>
    <button class="btn" id="ck">Prove it: start the check</button>`;
   if(t.t==='M'){ const units=Object.keys(P.U).filter(u=>t.c==='B'?u.startsWith('B-'):u.startsWith(t.c+'-'));
    return `<p><b>Grade it strictly first</b> (partial = wrong). Then report:</p>
@@ -271,21 +351,27 @@ function preCheckForm(t){
    <input class="ans" id="sure" inputmode="numeric" placeholder="# answers marked SURE that were wrong">
    <p class="small">Tick every unit where you lost points:</p>${units.map(u=>`<label class="chk"><input type="checkbox" value="${u}"> ${esc(P.U[u].n)}</label>`).join('')}
    <textarea id="why" placeholder="Each lost point: what went wrong + the rule"></textarea>
+   <textarea id="qs" placeholder="Every question you lost points on, one per line (e.g. Q3b). Each comes back to redo cold in 2 days."></textarea>
    <button class="btn" id="ck">Submit and start the check</button>`; }
   if(t.t==='T') return `<textarea id="why" placeholder="What did you do / what did you log? (be specific)"></textarea><button class="btn" id="ck">Done: continue</button>`;
   return `<button class="btn" id="ck">I’m ready: start the mastery check</button>`; }
 function bindPreCheck(t){
   $('ck').onclick=()=>{
     const C=S.check[t.key]={phase:'check',streak:{},asked:0,wrong:0};
-    if(t.t==='H'){ const a=+$('att').value, c=+$('cor').value, w=$('why').value.trim();
-      if(!(a>0)||!(c>=0)||c>a){ alert('Enter how many you attempted and how many were fully correct.'); delete S.check[t.key]; return; }
-      if(c<a && w.length<15){ alert('Write down what you missed and why: this is the error log.'); delete S.check[t.key]; return; }
+    if(t.t==='H'){ const L=Object.values(S.hlog[t.key]||{}), a=L.filter(e=>!e.extra).length, c=L.filter(e=>e.s==='ok').length, miss=L.filter(e=>e.s==='miss');
+      if(!(a>0)){ alert('Mark the problems you did in the problem log (✓ or ✗).'); delete S.check[t.key]; return; }
+      if(miss.some(e=>!e.extra&&(e.note||'').trim().length<8)){ alert('For every ✗, write what went wrong and the rule that prevents it.'); delete S.check[t.key]; return; }
+      miss.forEach(e=>addRedo(e.label,e.href,t.u,e.note,'Hard set · '+(P.U[t.u]?P.U[t.u].n:'')));
+      const w=miss.map(e=>e.label+': '+(e.note||'')).join(' | ');
       S.notes.push({d:today(),key:t.key,title:t.title,att:a,cor:c,why:w});
       if(c/a<0.8){ C.extraNeed=1; } }
     if(t.t==='M'){ const pts=+$('pts').value, tot=+$('tot').value, w=$('why').value.trim();
       if(!(tot>0)||!(pts>=0)||pts>tot){ alert('Enter points earned and points possible.'); delete S.check[t.key]; return; }
       C.missedUnits=[...document.querySelectorAll('.chk input:checked')].map(x=>x.value);
       if(pts<tot && (!C.missedUnits.length||w.length<15)){ alert('Tick the units where you lost points and log what went wrong.'); delete S.check[t.key]; return; }
+      const qs=$('qs').value.split('\n').map(x=>x.trim()).filter(Boolean);
+      if(pts<tot && !qs.length){ alert('List every question you lost points on (one per line).'); delete S.check[t.key]; return; }
+      const lk=(t.html||'').match(/href="([^"]+)"/); qs.forEach(q=>addRedo(t.title.replace(/^Timed exam: /,'').replace(/<[^>]+>/g,'')+' · '+q,lk?lk[1]:'','', '', 'Timed exam'));
       S.notes.push({d:today(),key:t.key,title:t.title,pts,tot,sure:+$('sure').value||0,why:w});
       C.missedUnits.forEach(u=>S.err.push({id:'m'+Date.now()+u,unit:u,gen:null,type:null,d:today(),due:addDays(today(),1),cleared:false,from:'mock'})); }
     if(t.t==='T'){ const w=$('why').value.trim(); if(w.length<20){ alert('Write a real summary (20+ characters).'); delete S.check[t.key]; return; }
@@ -357,6 +443,7 @@ $('logLink').onclick=e=>{ e.preventDefault(); clearInterval(tick);
   const open=S.err.filter(x=>!x.cleared);
   $('main').innerHTML=`<div class="card"><h2>Error log</h2><p class="small">Every wrong answer comes back with fresh numbers in 2 and 7 days. It clears after you get it right twice.</p>
    ${open.length?'<ul>'+open.map(x=>`<li>${esc(P.U[x.unit]?P.U[x.unit].n:x.unit)} · ${esc(x.type||'missed on a timed exam')} · due ${fmt(x.due)}</li>`).join('')+'</ul>':'<p>Empty.</p>'}
+   <h2>Redo-cold list</h2>${S.redo.filter(r=>!r.cleared).length?'<ul>'+S.redo.filter(r=>!r.cleared).map(r=>`<li>${esc(r.label)} · due ${fmt(r.due)}${r.tries?' · tried '+r.tries+'×':''}</li>`).join('')+'</ul>':'<p>Empty.</p>'}<p class="small">Cleared: ${S.redo.filter(r=>r.cleared).length}</p>
    <h2>Your notes</h2>${S.notes.slice(-30).reverse().map(n=>`<p class="small"><b>${fmt(n.d)} · ${esc(n.title)}</b>${n.att?` · ${n.cor}/${n.att} correct`:''}${n.tot?` · ${n.pts}/${n.tot} pts`:''}<br>${esc(n.why||'')}</p>`).join('')||'<p>None yet.</p>'}
    <button class="btn sec" id="back">Back to today</button></div>`;
   $('back').onclick=render; };
