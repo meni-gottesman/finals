@@ -58,6 +58,20 @@
     {
      "type": "warn",
      "text": "For arbitrary functions (not solutions of one nice equation) W can vanish at some points without dependence: t and t² have W = t²."
+    },
+    {
+     "type": "example",
+     "title": "Wronskian of a complex-root pair",
+     "prompt": "Compute W[e²ᵗcos 3t, e²ᵗsin 3t] and conclude.",
+     "steps": [
+      "y₁ = e²ᵗcos 3t, y₁′ = e²ᵗ(2cos 3t − 3sin 3t); y₂ = e²ᵗsin 3t, y₂′ = e²ᵗ(2sin 3t + 3cos 3t).",
+      "W = y₁y₂′ − y₁′y₂ = e⁴ᵗ[cos 3t(2sin 3t + 3cos 3t) − sin 3t(2cos 3t − 3sin 3t)] = e⁴ᵗ·3(cos² + sin²) = 3e⁴ᵗ."
+     ],
+     "answer": "W = 3e⁴ᵗ ≠ 0: a fundamental set (for y″ − 4y′ + 13y = 0)"
+    },
+    {
+     "type": "tip",
+     "text": "For y″ + by′ + cy = 0, Abel's formula gives W(t) = W(0)e^(−bt): here b = −4, so W = 3e⁴ᵗ is consistent. A Wronskian of two solutions is never 0 at one point and nonzero at another."
     }
    ]
   },
@@ -200,6 +214,29 @@
     {
      "type": "tip",
      "text": "With m, k &gt; 0 and b &gt; 0 every root has negative real part, so every solution tends to 0."
+    },
+    {
+     "type": "example",
+     "title": "Classify by a parameter (exam-hard)",
+     "prompt": "Give the general solution of y″ + 4y′ + ky = 0 in each case k &lt; 4, k = 4, k &gt; 4. For which k do all solutions → 0?",
+     "steps": [
+      "Roots r = −2 ± √(4 − k).",
+      "k &lt; 4: distinct real r₁,₂ = −2 ± √(4 − k): y = c₁e^(r₁t) + c₂e^(r₂t).",
+      "k = 4: double root −2: y = (c₁ + c₂t)e⁻²ᵗ.",
+      "k &gt; 4: −2 ± iβ with β = √(k − 4): y = e⁻²ᵗ(c₁cos βt + c₂sin βt).",
+      "All → 0 iff both roots have negative real part: for k &lt; 4 need −2 + √(4 − k) &lt; 0 ⇔ k &gt; 0. So k &gt; 0."
+     ],
+     "answer": "Three forms as above; all solutions decay iff k &gt; 0"
+    },
+    {
+     "type": "example",
+     "title": "Critical damping and an IVP",
+     "prompt": "(a) m = 2, k = 8: which damping b gives critical damping? (b) Solve y″ + 2y′ + 2y = 0, y(0) = 1, y′(0) = 0.",
+     "steps": [
+      "(a) Critical ⇔ b² = 4mk = 64 ⇔ b = 8.",
+      "(b) r = −1 ± i: y = e⁻ᵗ(c₁cos t + c₂sin t). y(0) = c₁ = 1; y′(0) = −c₁ + c₂ = 0 ⇒ c₂ = 1."
+     ],
+     "answer": "(a) b = 8 (b) y = e⁻ᵗ(cos t + sin t)"
     }
    ]
   },
@@ -225,6 +262,17 @@
       "(c) Plug in: a·2 + b·2t + c·t² ≡ 0 forces a = b = c = 0. No (t² needs a triple root 0, i.e. y‴ = 0)."
      ],
      "answer": "(a) y″ + y′ − 6y = 0 (b) y″ − 6y′ + 13y = 0 (c) No"
+    },
+    {
+     "type": "example",
+     "title": "From two given solutions (exam-hard)",
+     "prompt": "y₁ = e²ᵗ and y₂ = e²ᵗ + e⁻ᵗ both solve ay″ + by′ + cy = 0 (constants, a = 1). Find the equation and the solution with y(0) = 0, y′(0) = 3.",
+     "steps": [
+      "The solution space is a subspace: y₂ − y₁ = e⁻ᵗ is also a solution. So the roots are 2 and −1.",
+      "(r − 2)(r + 1) = r² − r − 2 ⇒ y″ − y′ − 2y = 0.",
+      "y = c₁e²ᵗ + c₂e⁻ᵗ: c₁ + c₂ = 0, 2c₁ − c₂ = 3 ⇒ c₁ = 1, c₂ = −1."
+     ],
+     "answer": "y″ − y′ − 2y = 0; y = e²ᵗ − e⁻ᵗ"
     }
    ]
   },
@@ -316,6 +364,22 @@
       "(c) Roots 0, −3. Constant 5 = 5e⁰ᵗ and 0 is a root ⇒ s = 1: At. cos t: B cos t + C sin t."
      ],
      "answer": "(a) t²(At + B)e²ᵗ + e²ᵗ(C cos t + D sin t) (b) t[(At² + Bt + C)cos 3t + (Dt² + Et + F)sin 3t] + Ge⁻ᵗ (c) At + B cos t + C sin t"
+    },
+    {
+     "type": "example",
+     "title": "Form for a product with resonance (exam-hard, write the form)",
+     "prompt": "Write the trial form for y″ − 2y′ + 5y = t²eᵗcos 2t.",
+     "steps": [
+      "Roots: r² − 2r + 5 = 0 ⇒ r = 1 ± 2i.",
+      "The forcing has α + iβ = 1 + 2i, a simple root ⇒ s = 1; polynomial degree 2.",
+      "Trial: t[(At² + Bt + C)eᵗcos 2t + (Dt² + Et + F)eᵗsin 2t]: six coefficients.",
+      "(For reference, solving gives A = C = E = 0, B = 1/16, D = 1/12, F = −1/32.)"
+     ],
+     "answer": "y_p = t eᵗ[(At² + Bt + C)cos 2t + (Dt² + Et + F)sin 2t]"
+    },
+    {
+     "type": "p",
+     "text": "Why the trial family is right: differentiating tᵐe^(αt)cos βt produces only terms tʲe^(αt)cos βt and tʲe^(αt)sin βt with j ≤ m. So L maps the finite-dimensional space spanned by these functions into itself, and undetermined coefficients is just solving a linear system in that space. Resonance means L has a kernel inside the space; multiplying by tˢ moves to a space on which L is one-to-one."
     }
    ]
   },
@@ -357,6 +421,114 @@
     {
      "type": "tip",
      "text": "Resonance: when the forcing frequency equals a natural frequency (s = 1 with α = 0), yₚ has a factor t and the amplitude grows without bound."
+    },
+    {
+     "type": "example",
+     "title": "Two forcing pieces with different tˢ (exam-hard)",
+     "prompt": "Find the general solution of y″ − y = 2eᵗ + 3t.",
+     "steps": [
+      "Roots ±1: y_h = c₁eᵗ + c₂e⁻ᵗ.",
+      "Piece 2eᵗ: 1 is a simple root ⇒ s = 1, trial Ateᵗ. With p(r) = r² − 1, L[teᵗ] = p′(1)eᵗ = 2eᵗ, so 2A = 2 ⇒ A = 1.",
+      "Piece 3t: 0 is not a root ⇒ s = 0, trial Bt + C: L[Bt + C] = 0 − (Bt + C) = 3t ⇒ B = −3, C = 0.",
+      "Add the pieces (superposition)."
+     ],
+     "answer": "y = c₁eᵗ + c₂e⁻ᵗ + teᵗ − 3t"
+    },
+    {
+     "type": "example",
+     "title": "Write the form only (routine)",
+     "prompt": "Give the trial form for y″ + 3y′ + 2y = t³ + e⁻ᵗ + sin t.",
+     "steps": [
+      "Roots −1, −2.",
+      "t³: 0 not a root: At³ + Bt² + Ct + D.",
+      "e⁻ᵗ: −1 is a simple root: Ete⁻ᵗ.",
+      "sin t: i not a root: F cos t + G sin t."
+     ],
+     "answer": "At³ + Bt² + Ct + D + Ete⁻ᵗ + F cos t + G sin t"
+    },
+    {
+     "type": "p",
+     "text": "A physical reading of resonance: for an undamped spring my″ + ky = F₀cos ωt, the natural frequency is ω₀ = √(k/m). If ω ≠ ω₀ the response is bounded; if ω = ω₀ the particular solution grows like t·sin ω₀t, so the amplitude increases without bound. With damping (b &gt; 0) the homogeneous part decays and the response stays bounded for every ω."
+    }
+   ]
+  },
+  {
+   "title": "True/False traps",
+   "blocks": [
+    {
+     "type": "table",
+     "head": [
+      "Statement",
+      "T/F",
+      "One-line reason"
+     ],
+     "rows": [
+      [
+       "If y₁, y₂ solve y″ + py′ + qy = 0, so does any combination c₁y₁ + c₂y₂.",
+       "<b>True</b>",
+       "Superposition (linear homogeneous)."
+      ],
+      [
+       "If y₁, y₂ solve L[y] = g with g ≠ 0, so does y₁ + y₂.",
+       "<b>False</b>",
+       "L[y₁ + y₂] = 2g."
+      ],
+      [
+       "y = t is a solution of some ay″ + by′ + cy = 0 with constant coefficients.",
+       "<b>True</b>",
+       "y″ = 0 (double root 0)."
+      ],
+      [
+       "t² can solve a second-order constant-coefficient homogeneous equation.",
+       "<b>False</b>",
+       "It needs a triple root at 0."
+      ],
+      [
+       "If the auxiliary equation has roots 2 ± 3i, then e²ᵗcos 3t is a solution.",
+       "<b>True</b>",
+       "Real part of e^((2+3i)t)."
+      ],
+      [
+       "For y″ − 4y = e²ᵗ the trial Ae²ᵗ works.",
+       "<b>False</b>",
+       "2 is a root: use Ate²ᵗ."
+      ],
+      [
+       "For y″ + 4y = cos t the trial is A cos t + B sin t.",
+       "<b>True</b>",
+       "i is not a root (roots ±2i)."
+      ],
+      [
+       "For y″ + 4y = cos 2t the trial needs a factor t.",
+       "<b>True</b>",
+       "2i is a root (resonance)."
+      ],
+      [
+       "Undetermined coefficients works for y″ + y = tan t.",
+       "<b>False</b>",
+       "tan t is not in the polynomial/exponential/sinusoid family."
+      ],
+      [
+       "With m, k &gt; 0 and b &gt; 0, every solution of my″ + by′ + ky = 0 tends to 0.",
+       "<b>True</b>",
+       "All roots have negative real part."
+      ],
+      [
+       "If W[y₁, y₂](t₀) = 0 for solutions of one equation, they are dependent.",
+       "<b>True</b>",
+       "All-or-nothing Wronskian."
+      ],
+      [
+       "The general solution of L[y] = g is y_p + c₁y₁ + c₂y₂.",
+       "<b>True</b>",
+       "Particular + homogeneous."
+      ],
+      [
+       "Initial conditions may be applied to y_h before adding y_p.",
+       "<b>False</b>",
+       "Apply them to the full y = y_h + y_p."
+      ]
+     ]
     }
    ]
   }
@@ -1225,5 +1397,56 @@
   "L[teʳᵗ] = p′(r)eʳᵗ when p(r) = 0; L[t²eʳᵗ] = p″(r)eʳᵗ for a double root.",
   "Superposition: split g into pieces, solve each, add.",
   "Damping b² − 4mk: &lt; 0 under, = 0 critical, &gt; 0 over; resonance when forcing matches ±iω."
+ ],
+ "parsons": [
+  {
+   "title": "Solve an IVP step by step",
+   "goal": "Solve y″ − 3y′ + 2y = 0, y(0) = 1, y′(0) = 0.",
+   "lines": [
+    "Auxiliary equation: r² − 3r + 2 = 0.",
+    "Factor: (r − 1)(r − 2) = 0, so r = 1, 2.",
+    "General solution: y = c₁eᵗ + c₂e²ᵗ.",
+    "Differentiate: y′ = c₁eᵗ + 2c₂e²ᵗ.",
+    "Initial conditions: c₁ + c₂ = 1 and c₁ + 2c₂ = 0.",
+    "Solve: c₂ = −1, c₁ = 2.",
+    "Answer: y = 2eᵗ − e²ᵗ."
+   ],
+   "distractors": [
+    "General solution: y = (c₁ + c₂t)eᵗ.",
+    "Initial conditions: c₁ + c₂ = 1 and c₁ − 2c₂ = 0.",
+    "Factor: (r + 1)(r + 2) = 0, so r = −1, −2."
+   ]
+  },
+  {
+   "title": "Why a double root gives teʳᵗ",
+   "goal": "Let p(r) = ar² + br + c have a double root r₀. Prove that y = te^(r₀t) solves ay″ + by′ + cy = 0.",
+   "lines": [
+    "For y = teʳᵗ: y′ = eʳᵗ + rteʳᵗ and y″ = 2reʳᵗ + r²teʳᵗ.",
+    "Substitute: ay″ + by′ + cy = eʳᵗ[t(ar² + br + c) + (2ar + b)].",
+    "That is L[teʳᵗ] = (t·p(r) + p′(r))eʳᵗ.",
+    "A double root satisfies p(r₀) = 0 and p′(r₀) = 2ar₀ + b = 0.",
+    "So L[te^(r₀t)] = 0: te^(r₀t) is a solution. ∎"
+   ],
+   "distractors": [
+    "For y = teʳᵗ: y′ = rteʳᵗ and y″ = r²teʳᵗ.",
+    "A double root satisfies p(r₀) = 0 and p″(r₀) = 0.",
+    "So L[te^(r₀t)] = p(r₀)te^(r₀t) ≠ 0."
+   ]
+  },
+  {
+   "title": "Superposition principle",
+   "goal": "Prove: if L[y₁] = g₁ and L[y₂] = g₂ for L[y] = ay″ + by′ + cy, then L[k₁y₁ + k₂y₂] = k₁g₁ + k₂g₂.",
+   "lines": [
+    "Let y = k₁y₁ + k₂y₂. Then y′ = k₁y₁′ + k₂y₂′ and y″ = k₁y₁″ + k₂y₂″.",
+    "L[y] = a(k₁y₁″ + k₂y₂″) + b(k₁y₁′ + k₂y₂′) + c(k₁y₁ + k₂y₂).",
+    "Regroup: L[y] = k₁(ay₁″ + by₁′ + cy₁) + k₂(ay₂″ + by₂′ + cy₂).",
+    "This is k₁L[y₁] + k₂L[y₂] = k₁g₁ + k₂g₂. ∎"
+   ],
+   "distractors": [
+    "Then y″ = k₁²y₁″ + k₂²y₂″.",
+    "This is L[y₁]L[y₂] = g₁g₂.",
+    "Since L is nonlinear, regrouping is not allowed."
+   ]
+  }
  ]
 }

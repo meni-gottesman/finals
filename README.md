@@ -1,5 +1,3 @@
-# Finals study
+# Finals Prep
 
-Fall 2026 finals study site: Math 54, Math 55, CS 61B.
-
-Start here: https://meni-gottesman.github.io/finals/
+One app for the Fall 2026 Math 54, Math 55 and CS 61B finals: https://meni-gottesman.github.io/finals/

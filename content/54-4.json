@@ -72,6 +72,32 @@
       "det B = 5·7."
      ],
      "answer": "det B = 35"
+    },
+    {
+     "type": "p",
+     "text": "Concretely for 3×3, expanding along row 1: det A = a₁₁(a₂₂a₃₃ − a₂₃a₃₂) − a₁₂(a₂₁a₃₃ − a₂₃a₃₁) + a₁₃(a₂₁a₃₂ − a₂₂a₃₁). For larger n cofactor expansion costs about n! multiplications, which is why we expand only along sparse rows and otherwise row reduce (about n³ operations)."
+    },
+    {
+     "type": "example",
+     "title": "Routine 3×3 by cofactor expansion",
+     "prompt": "Compute det [1 2 3; 4 5 6; 7 8 10].",
+     "steps": [
+      "Row 1: 1·(5·10 − 6·8) − 2·(4·10 − 6·7) + 3·(4·8 − 5·7).",
+      "= 1·(2) − 2·(−2) + 3·(−3) = 2 + 4 − 9."
+     ],
+     "answer": "det = −3"
+    },
+    {
+     "type": "example",
+     "title": "A 5×5 determinant in two steps (exam-hard)",
+     "prompt": "Compute det A for A = [3 0 2 0 1; 1 2 4 −1 0; 0 0 5 0 0; 2 0 1 3 0; 0 0 6 0 2].",
+     "steps": [
+      "Row 3 has one nonzero entry, 5 at (3, 3), sign (−1)⁶ = +: det A = 5·det B, B = A without row 3 and column 3 = [3 0 0 1; 1 2 −1 0; 2 0 3 0; 0 0 0 2].",
+      "In B, row 4 has one nonzero entry, 2 at (4, 4), sign +: det B = 2·det [3 0 0; 1 2 −1; 2 0 3].",
+      "Expand that along row 1: 3·(2·3 − (−1)·0) = 18. So det B = 36.",
+      "det A = 5·36."
+     ],
+     "answer": "det A = 180"
     }
    ]
   },
@@ -133,6 +159,28 @@
      "type": "thm",
      "name": "Column operations",
      "text": "det Aᵀ = det A, so column operations affect det exactly as the corresponding row operations do. A matrix with a zero row or column, or two equal (or proportional) rows or columns, has det 0."
+    },
+    {
+     "type": "thm",
+     "name": "Linearity in one row",
+     "text": "If all rows but row i are fixed, det is a linear function of row i: det[…, u + v, …] = det[…, u, …] + det[…, v, …] and det[…, cu, …] = c·det[…, u, …]. (It is NOT linear in the whole matrix: det(A + B) ≠ det A + det B.)",
+     "proof": [
+      {
+       "type": "p",
+       "text": "Expand along row i: det A = Σⱼ aᵢⱼCᵢⱼ, and the cofactors Cᵢⱼ do not involve row i at all."
+      }
+     ]
+    },
+    {
+     "type": "example",
+     "title": "Track several operations at once (exam-hard)",
+     "prompt": "If det [a b c; d e f; g h i] = 7, find det [d e f; 3a 3b 3c; g − 2a h − 2b i − 2c].",
+     "steps": [
+      "Start from the original (det 7). Swap rows 1 and 2: det becomes −7.",
+      "Scale the new row 2 (= old row 1) by 3: det becomes −21.",
+      "Replace row 3 by row 3 − 2·(old row 1): replacement, det unchanged. (Subtracting a multiple of the old row 1 is legal even though that row is now scaled: it is a multiple of the current row 2.)"
+     ],
+     "answer": "−21"
     }
    ]
   },
@@ -187,6 +235,25 @@
     {
      "type": "warn",
      "text": "det(cA) uses cⁿ, not c. For a 4×4 matrix, det(−A) = +det A."
+    },
+    {
+     "type": "example",
+     "title": "Unknown determinant from a matrix equation (exam-hard)",
+     "prompt": "A is a 3×3 invertible matrix with A³ = 4A. Find all possible values of det A. Then find det(2A⁻¹Aᵀ) for each.",
+     "steps": [
+      "Take determinants: (det A)³ = det(4A) = 4³ det A = 64 det A.",
+      "det A ≠ 0 (invertible), so (det A)² = 64 ⇒ det A = ±8.",
+      "det(2A⁻¹Aᵀ) = 2³·(1/det A)·det A = 8 for either value."
+     ],
+     "answer": "det A = 8 or −8; det(2A⁻¹Aᵀ) = 8"
+    },
+    {
+     "type": "warn",
+     "text": "det(4A) = 4ⁿ det A with n = 3 here, not 4 det A."
+    },
+    {
+     "type": "tip",
+     "text": "Similar matrices B = P⁻¹AP have det B = det A, so the determinant is a property of the linear transformation, not of the basis chosen."
     }
    ]
   },
@@ -222,6 +289,17 @@
       "det = (x + 3)(x − 1)³."
      ],
      "answer": "Singular iff x = 1 or x = −3."
+    },
+    {
+     "type": "example",
+     "title": "Characteristic-equation preview (exam-hard)",
+     "prompt": "For which λ is A − λI singular, where A = [2 1 0; 1 2 0; 0 0 3]?",
+     "steps": [
+      "det(A − λI) = det [2−λ 1 0; 1 2−λ 0; 0 0 3−λ]. Expand along row 3 (two zeros): (3 − λ)[(2 − λ)² − 1].",
+      "(2 − λ)² − 1 = (2 − λ − 1)(2 − λ + 1) = (1 − λ)(3 − λ).",
+      "det = (3 − λ)²(1 − λ)."
+     ],
+     "answer": "λ = 1 or λ = 3 (these are the eigenvalues of A)"
     }
    ]
   },
@@ -272,6 +350,210 @@
     {
      "type": "warn",
      "text": "Use edge vectors (differences of vertices), not the vertices themselves. Triangles have half the parallelogram area. Volumes use |det|."
+    },
+    {
+     "type": "example",
+     "title": "Triangle, tetrahedron, ellipse (exam-hard)",
+     "prompt": "(a) Area of the triangle with vertices (1, 2), (3, 1), (4, 5). (b) Volume of the tetrahedron with vertices 0, (1, 2, 1), (2, 0, 1), (3, 1, 4). (c) Area of the image of the unit disk under T(x) = [2 1; 1 3]x.",
+     "steps": [
+      "(a) Edges from (1, 2): (2, −1) and (3, 3). |det [2 3; −1 3]| = |6 + 3| = 9. A triangle is half a parallelogram: 9/2.",
+      "(b) A tetrahedron is 1/6 of the parallelepiped on the same edges: |det [1 2 3; 2 0 1; 1 1 4]| = |−9| = 9, volume 9/6 = 3/2.",
+      "(c) det = 6 − 1 = 5, so area = 5·π·1² = 5π (the image is an ellipse)."
+     ],
+     "answer": "(a) 9/2 (b) 3/2 (c) 5π"
+    },
+    {
+     "type": "table",
+     "head": [
+      "Map of ℝ²",
+      "Matrix",
+      "det",
+      "Meaning"
+     ],
+     "rows": [
+      [
+       "Rotation by θ",
+       "[cos θ −sin θ; sin θ cos θ]",
+       "1",
+       "area and orientation kept"
+      ],
+      [
+       "Reflection across a line",
+       "e.g. [0 1; 1 0]",
+       "−1",
+       "area kept, orientation reversed"
+      ],
+      [
+       "Shear",
+       "[1 k; 0 1]",
+       "1",
+       "area kept"
+      ],
+      [
+       "Scaling by r",
+       "rI",
+       "r²",
+       "area × r²"
+      ],
+      [
+       "Projection onto a line",
+       "e.g. [1 0; 0 0]",
+       "0",
+       "squashes the plane: area 0, not invertible"
+      ]
+     ]
+    },
+    {
+     "type": "tip",
+     "text": "The sign of det tells orientation: det &gt; 0 keeps the counterclockwise order of e₁, e₂; det &lt; 0 flips it (a mirror image). det = 0 means the image is flattened into a line or a point, which is exactly why A is not invertible: information is lost."
+    },
+    {
+     "type": "example",
+     "title": "Combine scaling factors (routine)",
+     "prompt": "T rotates the plane by 30° and then stretches horizontally by 3. A region S has area 4. Find the area of T(S) and decide whether T preserves orientation.",
+     "steps": [
+      "Matrix of T = (stretch)(rotation); det = det(stretch)·det(rotation) = 3·1 = 3.",
+      "area(T(S)) = |3|·4 = 12.",
+      "det &gt; 0, so orientation is preserved."
+     ],
+     "answer": "Area 12; orientation preserved"
+    },
+    {
+     "type": "p",
+     "text": "Why |det| scales every region: approximate the region by tiny squares. T maps each square to a parallelogram whose area is |det A| times the square's area (the columns of A, scaled), and summing gives area(T(S)) = |det A|·area(S)."
+    }
+   ]
+  },
+  {
+   "title": "Choosing the fastest method",
+   "blocks": [
+    {
+     "type": "steps",
+     "title": "Decision procedure for det A",
+     "items": [
+      "2×2: ad − bc. 3×3 with no zeros: row 1 expansion (or Sarrus) is fine.",
+      "A row or column with one nonzero entry: expand along it immediately.",
+      "Triangular (or block triangular): multiply the diagonal (or the block determinants).",
+      "Otherwise: use replacements to create zeros in one column, then expand along that column. Replacements cost nothing; swaps flip the sign; record any scaling.",
+      "Spot dependence first: two proportional rows/columns, or a row that is a combination of others, gives 0 instantly."
+     ]
+    },
+    {
+     "type": "example",
+     "title": "Mix row reduction with expansion",
+     "prompt": "Compute det [2 3 −1 1; 4 7 0 5; −2 −1 3 2; 6 9 −3 4].",
+     "steps": [
+      "Clear column 1 below the pivot with replacements (det unchanged): R₂ − 2R₁ → [0 1 2 3], R₃ + R₁ → [0 2 2 3], R₄ − 3R₁ → [0 0 0 1].",
+      "Expand down column 1: det = 2·det [1 2 3; 2 2 3; 0 0 1].",
+      "Expand that along its last row (one nonzero entry, sign +): 1·det [1 2; 2 2] = 2 − 4 = −2.",
+      "det = 2·(−2)."
+     ],
+     "answer": "det = −4"
+    },
+    {
+     "type": "thm",
+     "name": "Proof idea of det(AB) = det A · det B",
+     "text": "For an elementary matrix E, det(EB) = det E · det B: this is exactly the row-operation rule (det E is 1, −1 or c for replacement, swap, scaling). If A is invertible, A = E₁E₂⋯Eₖ, so det(AB) = det E₁ ⋯ det Eₖ · det B = det A · det B. If A is singular, AB is singular too (rank AB ≤ rank A &lt; n), so both sides are 0."
+    },
+    {
+     "type": "p",
+     "text": "Background (useful for theory): the cofactor formula for the inverse, A⁻¹ = (1/det A)·adj A, where adj A is the transpose of the matrix of cofactors. It explains why a matrix of integers with det = ±1 has an integer inverse, and why entries of A⁻¹ are 'cofactor over determinant'."
+    },
+    {
+     "type": "example",
+     "title": "One entry of A⁻¹ from a cofactor",
+     "prompt": "For A = [1 2 0; 0 1 3; 2 0 1], find det A and the (1, 3) entry of A⁻¹.",
+     "steps": [
+      "det A by row 1: 1(1·1 − 3·0) − 2(0·1 − 3·2) + 0 = 1 + 12 = 13.",
+      "(A⁻¹)₁₃ = C₃₁/det A (note the transposed indices). C₃₁ = (−1)⁴ det [2 0; 1 3] = 6.",
+      "So (A⁻¹)₁₃ = 6/13."
+     ],
+     "answer": "det A = 13, (A⁻¹)₁₃ = 6/13"
+    }
+   ]
+  },
+  {
+   "title": "True/False traps",
+   "blocks": [
+    {
+     "type": "table",
+     "head": [
+      "Statement",
+      "T/F",
+      "One-line reason"
+     ],
+     "rows": [
+      [
+       "A row replacement does not change the determinant.",
+       "<b>True</b>",
+       "Shear: same base, same height."
+      ],
+      [
+       "Interchanging two rows multiplies det by −1.",
+       "<b>True</b>",
+       "Orientation reverses."
+      ],
+      [
+       "det(cA) = c det A.",
+       "<b>False</b>",
+       "det(cA) = cⁿ det A."
+      ],
+      [
+       "det(A + B) = det A + det B.",
+       "<b>False</b>",
+       "A = B = I₂ gives 4 ≠ 2."
+      ],
+      [
+       "If det A = 0, two rows or two columns are equal.",
+       "<b>False</b>",
+       "[1 2 3; 4 5 6; 7 8 9] has det 0 with no equal or proportional rows."
+      ],
+      [
+       "det Aᵀ = −det A.",
+       "<b>False</b>",
+       "det Aᵀ = det A."
+      ],
+      [
+       "If A is invertible, det A⁻¹ = 1/det A.",
+       "<b>True</b>",
+       "det A · det A⁻¹ = det I = 1."
+      ],
+      [
+       "det(AB) = det(BA) for square A, B.",
+       "<b>True</b>",
+       "Both equal det A · det B."
+      ],
+      [
+       "The determinant of a triangular matrix is the product of its diagonal entries.",
+       "<b>True</b>",
+       "Repeated expansion down the first column."
+      ],
+      [
+       "A row operation never changes whether det A = 0.",
+       "<b>True</b>",
+       "Each operation multiplies det by a nonzero number (1, −1 or c ≠ 0)."
+      ],
+      [
+       "|det A| is the volume scaling factor of x ↦ Ax.",
+       "<b>True</b>",
+       "Area/volume theorem."
+      ],
+      [
+       "If two columns of A are equal, det A = 0.",
+       "<b>True</b>",
+       "det Aᵀ = det A, and Aᵀ has two equal rows."
+      ],
+      [
+       "If A is 3×3 and det A = 2, then det(−A) = 2.",
+       "<b>False</b>",
+       "(−1)³·2 = −2."
+      ],
+      [
+       "det(A²) ≥ 0 for every real square A.",
+       "<b>True</b>",
+       "det(A²) = (det A)²."
+      ]
+     ]
     }
    ]
   }
@@ -931,5 +1213,56 @@
   "det(AB) = det A det B; det Aᵀ = det A; det A⁻¹ = 1/det A; det(cA) = cⁿ det A.",
   "Area/volume of box spanned by columns = |det A|; area(T(S)) = |det A|·area(S).",
   "det(A + B) ≠ det A + det B."
+ ],
+ "parsons": [
+  {
+   "title": "Invertible ⇔ nonzero determinant (one direction)",
+   "goal": "Prove: if A is invertible, then det A ≠ 0 and det(A⁻¹) = 1/det A.",
+   "lines": [
+    "Since A is invertible, AA⁻¹ = I.",
+    "Take determinants: det(AA⁻¹) = det I = 1.",
+    "By the multiplicative property, det(AA⁻¹) = det A · det(A⁻¹).",
+    "So det A · det(A⁻¹) = 1.",
+    "A product equal to 1 has no zero factor, so det A ≠ 0.",
+    "Dividing, det(A⁻¹) = 1/det A. ∎"
+   ],
+   "distractors": [
+    "By the additive property, det(AA⁻¹) = det A + det A⁻¹.",
+    "So det(A⁻¹) = −det A.",
+    "Take determinants: det(AA⁻¹) = det A."
+   ]
+  },
+  {
+   "title": "Odd skew-symmetric matrices are singular",
+   "goal": "Prove: if A is 5×5 and Aᵀ = −A, then det A = 0.",
+   "lines": [
+    "det A = det Aᵀ, since transposing does not change the determinant.",
+    "det Aᵀ = det(−A) because Aᵀ = −A.",
+    "det(−A) = (−1)⁵ det A, since all 5 rows are multiplied by −1.",
+    "So det A = −det A.",
+    "Hence 2 det A = 0, i.e. det A = 0. ∎"
+   ],
+   "distractors": [
+    "det(−A) = −det A for every square matrix.",
+    "det(−A) = (−1)² det A = det A.",
+    "So A = 0."
+   ]
+  },
+  {
+   "title": "Similar matrices have equal determinants",
+   "goal": "Prove: if B = P⁻¹AP with P invertible, then det B = det A.",
+   "lines": [
+    "det B = det(P⁻¹AP).",
+    "By multiplicativity, det(P⁻¹AP) = det(P⁻¹)·det A·det P.",
+    "det(P⁻¹) = 1/det P.",
+    "So det B = (1/det P)·det A·det P.",
+    "The factors det P cancel (det P ≠ 0), so det B = det A. ∎"
+   ],
+   "distractors": [
+    "det(P⁻¹AP) = det(P⁻¹ + A + P).",
+    "det(P⁻¹) = −det P.",
+    "So det B = det A only when P = I."
+   ]
+  }
  ]
 }

@@ -74,7 +74,7 @@
     },
     {
      "type": "p",
-     "text": "Each closed form is proved by induction exactly as in the next section; here you use them as tools."
+     "text": "Each closed form can be proved by induction (the standard sum-formula proofs); here you use them as tools to evaluate sums."
     },
     {
      "type": "example",
@@ -1218,6 +1218,7 @@
   }
  ],
  "keyFacts": [
+  "Geometric series: Σ<sub>k=0</sub><sup>n</sup> a·rᵏ = a(rⁿ⁺¹ − 1)/(r − 1) (r ≠ 1); Σ<sub>k≥0</sub> xᵏ = 1/(1 − x) for |x| &lt; 1",
   "Induction: P(a) and ∀k ≥ a (P(k) → P(k + 1)) ⇒ ∀n ≥ a P(n)",
   "Always label the base case, state the IH for one fixed k, write the goal P(k + 1)",
   "Divisibility: write f(k + 1) = c·f(k) + (multiple of d)",

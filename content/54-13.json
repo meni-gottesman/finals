@@ -60,6 +60,17 @@
     {
      "type": "warn",
      "text": "The bottom row holds the NEGATED lower coefficients (you moved them to the right side): y″ + 3y′ + 2y = 0 gives bottom row (−2, −3)."
+    },
+    {
+     "type": "example",
+     "title": "Coupled second- and first-order equations (exam-hard)",
+     "prompt": "Write the system x″ + 3x′ − y = 0, y′ = x + 2y as a first-order system u′ = Au.",
+     "steps": [
+      "Unknowns needed: x, x′ (x appears to second order) and y (first order). Let u₁ = x, u₂ = x′, u₃ = y.",
+      "u₁′ = u₂; u₂′ = x″ = −3x′ + y = −3u₂ + u₃; u₃′ = y′ = x + 2y = u₁ + 2u₃.",
+      "A = [0 1 0; 0 −3 1; 1 0 2]."
+     ],
+     "answer": "u = (x, x′, y), A = [0 1 0; 0 −3 1; 1 0 2]"
     }
    ]
   },
@@ -103,6 +114,18 @@
       "W = det [3e⁴ᵗ e⁻ᵗ; 2e⁴ᵗ −e⁻ᵗ] = −3e³ᵗ − 2e³ᵗ = −5e³ᵗ ≠ 0."
      ],
      "answer": "Both are solutions and W = −5e³ᵗ ≠ 0: fundamental matrix X(t) = [3e⁴ᵗ e⁻ᵗ; 2e⁴ᵗ −e⁻ᵗ]."
+    },
+    {
+     "type": "example",
+     "title": "Recover A from a fundamental matrix (exam-hard twist)",
+     "prompt": "X(t) = [eᵗ e³ᵗ; eᵗ −e³ᵗ] is a fundamental matrix of x′ = Ax. Find A.",
+     "steps": [
+      "Every fundamental matrix satisfies X′ = AX, so A = X′(t)X(t)⁻¹ (constant). Use t = 0: X(0) = [1 1; 1 −1], X′(0) = [1 3; 1 −3].",
+      "X(0)⁻¹ = (1/−2)[−1 −1; −1 1] = (1/2)[1 1; 1 −1].",
+      "A = [1 3; 1 −3]·(1/2)[1 1; 1 −1] = (1/2)[4 −2; −2 4] = [2 −1; −1 2].",
+      "Check: A(1, 1) = (1, 1) (eigenvalue 1) and A(1, −1) = (3, −3) (eigenvalue 3), matching the columns eᵗ(1, 1), e³ᵗ(1, −1)."
+     ],
+     "answer": "A = [2 −1; −1 2]"
     }
    ]
   },
@@ -152,6 +175,17 @@
       "t = 0: 3c₁ + c₂ = 1, 2c₁ − c₂ = 4 ⇒ 5c₁ = 5, c₁ = 1, c₂ = −2."
      ],
      "answer": "x(t) = e⁴ᵗ(3, 2) − 2e⁻ᵗ(1, −1) = (3e⁴ᵗ − 2e⁻ᵗ, 2e⁴ᵗ + 2e⁻ᵗ)"
+    },
+    {
+     "type": "example",
+     "title": "3×3 with distinct eigenvalues (exam-hard)",
+     "prompt": "Solve x′ = Ax, x(0) = (0, 0, 1), A = [1 2 0; 0 2 1; 0 0 3].",
+     "steps": [
+      "Triangular: λ = 1, 2, 3.",
+      "λ = 1: A − I = [0 2 0; 0 1 1; 0 0 2] ⇒ v₁ = (1, 0, 0). λ = 2: A − 2I = [−1 2 0; 0 0 1; 0 0 1] ⇒ v₂ = (2, 1, 0). λ = 3: A − 3I = [−2 2 0; 0 −1 1; 0 0 0] ⇒ v₃ = (1, 1, 1).",
+      "Solve c₁v₁ + c₂v₂ + c₃v₃ = (0, 0, 1): third entry c₃ = 1; second c₂ + 1 = 0 ⇒ c₂ = −1; first c₁ − 2 + 1 = 0 ⇒ c₁ = 1."
+     ],
+     "answer": "x(t) = eᵗ(1, 0, 0) − e²ᵗ(2, 1, 0) + e³ᵗ(1, 1, 1)"
     }
    ]
   },
@@ -181,6 +215,62 @@
     {
      "type": "tip",
      "text": "x′ = λI·x: every vector is an eigenvector, so x(t) = e^(λt)x(0) (straight rays)."
+    }
+   ]
+  },
+  {
+   "title": "Defective eigenvalues: generalized eigenvectors",
+   "blocks": [
+    {
+     "type": "p",
+     "text": "If a repeated eigenvalue λ has an eigenspace that is too small (geometric multiplicity &lt; algebraic multiplicity), there are not enough eigen-solutions e^(λt)v. For a 2×2 matrix with a double eigenvalue and only one independent eigenvector v, the missing solution has the form x₂ = e^(λt)(tv + u), where u is a generalized eigenvector: (A − λI)u = v."
+    },
+    {
+     "type": "thm",
+     "name": "Second solution in the defective case",
+     "text": "If (A − λI)v = 0 with v ≠ 0 and (A − λI)u = v, then x₂(t) = e^(λt)(tv + u) solves x′ = Ax, and together with x₁ = e^(λt)v it forms a fundamental set.",
+     "proof": [
+      {
+       "type": "p",
+       "text": "x₂′ = λe^(λt)(tv + u) + e^(λt)v. And Ax₂ = e^(λt)(tAv + Au) = e^(λt)(tλv + λu + v), using Av = λv and Au = λu + v. The two agree."
+      },
+      {
+       "type": "p",
+       "text": "Independence: at t = 0 the solutions are v and u; u is not a multiple of v (otherwise (A − λI)u would be 0, not v), so W(0) = det[v u] ≠ 0."
+      }
+     ]
+    },
+    {
+     "type": "tip",
+     "text": "This mirrors the repeated-root case of second-order equations: the companion matrix of y″ − 4y′ + 4y = 0 is [0 1; −4 4], with the double eigenvalue 2 and only one eigenvector, and the extra t in te²ᵗ comes from exactly this construction."
+    },
+    {
+     "type": "steps",
+     "title": "Recipe (2×2, double eigenvalue λ, one eigenvector)",
+     "items": [
+      "Check rank(A − λI) = 1 (so the eigenspace is 1-dimensional).",
+      "Find an eigenvector v.",
+      "Solve (A − λI)u = v for any one u (it always has solutions).",
+      "x = c₁e^(λt)v + c₂e^(λt)(tv + u); fit c₁, c₂ from x(0) = c₁v + c₂u."
+     ]
+    },
+    {
+     "type": "example",
+     "title": "Defective eigenvalue IVP",
+     "prompt": "Solve x′ = [3 1; −1 1]x, x(0) = (3, 1).",
+     "steps": [
+      "tr 4, det 3 + 1 = 4: λ² − 4λ + 4 = (λ − 2)², double eigenvalue 2.",
+      "A − 2I = [1 1; −1 −1] has rank 1 ⇒ only one eigenvector, v = (1, −1). Defective.",
+      "Solve (A − 2I)u = v: u₁ + u₂ = 1 (second row is the same equation negated) ⇒ take u = (1, 0).",
+      "x = c₁e²ᵗ(1, −1) + c₂e²ᵗ[t(1, −1) + (1, 0)].",
+      "x(0) = c₁(1, −1) + c₂(1, 0) = (3, 1) ⇒ −c₁ = 1 ⇒ c₁ = −1, then c₂ = 4.",
+      "x = e²ᵗ[(−1, 1) + 4t(1, −1) + (4, 0)] = e²ᵗ(3 + 4t, 1 − 4t). Check t = 0: (3, 1). ✓"
+     ],
+     "answer": "x(t) = e²ᵗ(3 + 4t, 1 − 4t)"
+    },
+    {
+     "type": "warn",
+     "text": "In the defective case, e^(λt)(tv) alone is NOT a solution; you need the +u. And a repeated eigenvalue with a full eigenspace never needs t terms."
     }
    ]
   },
@@ -288,6 +378,176 @@
       "(e) True."
      ],
      "answer": "(a) T (b) F (c) T (d) F (e) T"
+    }
+   ]
+  },
+  {
+   "title": "Phase portraits and stability (2×2)",
+   "blocks": [
+    {
+     "type": "p",
+     "text": "The origin is an equilibrium of x′ = Ax. It is (asymptotically) stable if every solution tends to 0, and unstable if some solution starting arbitrarily close to 0 moves away. The type of the origin is decided by the eigenvalues, which for a 2×2 matrix are decided by τ = tr A and Δ = det A: λ² − τλ + Δ = 0."
+    },
+    {
+     "type": "table",
+     "head": [
+      "Condition on τ = tr A, Δ = det A",
+      "Eigenvalues",
+      "Portrait",
+      "Stability"
+     ],
+     "rows": [
+      [
+       "Δ &lt; 0",
+       "real, opposite signs",
+       "saddle",
+       "unstable"
+      ],
+      [
+       "Δ &gt; 0, τ² &gt; 4Δ, τ &lt; 0",
+       "real, both negative",
+       "node (sink)",
+       "stable"
+      ],
+      [
+       "Δ &gt; 0, τ² &gt; 4Δ, τ &gt; 0",
+       "real, both positive",
+       "node (source)",
+       "unstable"
+      ],
+      [
+       "τ² = 4Δ, Δ &gt; 0",
+       "repeated",
+       "star node (A = λI) or degenerate node (defective)",
+       "stable if τ &lt; 0, unstable if τ &gt; 0"
+      ],
+      [
+       "0 &lt; 4Δ − τ², τ &lt; 0",
+       "α ± iβ, α &lt; 0",
+       "spiral sink",
+       "stable"
+      ],
+      [
+       "τ = 0, Δ &gt; 0",
+       "±iβ",
+       "center (closed ellipses)",
+       "stable but not asymptotically"
+      ],
+      [
+       "0 &lt; 4Δ − τ², τ &gt; 0",
+       "α ± iβ, α &gt; 0",
+       "spiral source",
+       "unstable"
+      ]
+     ]
+    },
+    {
+     "type": "tip",
+     "text": "Read a node's picture from the eigenvectors: trajectories approach 0 tangent to the eigenvector of the eigenvalue closer to 0 (the slower direction) and run parallel to the faster one far away. In a saddle the eigenvector lines are the only straight-line trajectories; the stable line belongs to the negative eigenvalue."
+    },
+    {
+     "type": "example",
+     "title": "Classify portraits",
+     "prompt": "Classify the origin for (a) [1 4; 2 −1], (b) [−3 1; 1 −3], (c) [−1 −2; 1 −3], (d) [0 4; −1 0], (e) [3 1; −1 1].",
+     "steps": [
+      "(a) Δ = −1 − 8 = −9 &lt; 0 ⇒ saddle (λ = ±3), unstable.",
+      "(b) τ = −6, Δ = 8, τ² − 4Δ = 4 &gt; 0 ⇒ real eigenvalues −2, −4 ⇒ stable node.",
+      "(c) τ = −4, Δ = 5, τ² − 4Δ = −4 &lt; 0 ⇒ spiral sink (λ = −2 ± i), stable.",
+      "(d) τ = 0, Δ = 4 ⇒ center (λ = ±2i).",
+      "(e) τ = 4, Δ = 4, τ² = 4Δ ⇒ repeated λ = 2, defective ⇒ unstable degenerate node."
+     ],
+     "answer": "(a) saddle (b) stable node (c) stable spiral (d) center (e) unstable degenerate node"
+    },
+    {
+     "type": "example",
+     "title": "Spiral with a parameter (exam-hard)",
+     "prompt": "For x′ = [a 2; −2 a]x, classify the origin for every real a and give the direction of rotation.",
+     "steps": [
+      "Eigenvalues a ± 2i (τ = 2a, Δ = a² + 4 &gt; 0, τ² − 4Δ = −16 &lt; 0).",
+      "a &lt; 0: spiral sink; a = 0: center; a &gt; 0: spiral source.",
+      "Direction: A(1, 0) = (a, −2) has negative second component, so at the positive x-axis the motion is downward: clockwise."
+     ],
+     "answer": "a &lt; 0 stable spiral, a = 0 center, a &gt; 0 unstable spiral; always clockwise"
+    }
+   ]
+  },
+  {
+   "title": "True/False traps",
+   "blocks": [
+    {
+     "type": "table",
+     "head": [
+      "Statement",
+      "T/F",
+      "One-line reason"
+     ],
+     "rows": [
+      [
+       "Every solution of x′ = Ax is a combination of eigen-solutions e^(λt)v.",
+       "<b>False</b>",
+       "Not in the defective case (te^(λt) terms appear)."
+      ],
+      [
+       "If A has a repeated eigenvalue, x′ = Ax needs t·e^(λt) terms.",
+       "<b>False</b>",
+       "Not if the eigenspace is full (e.g. A = 2I)."
+      ],
+      [
+       "If x₁, …, xₙ solve x′ = Ax and W(t₀) ≠ 0, they form a fundamental set.",
+       "<b>True</b>",
+       "Nonzero Wronskian at one point."
+      ],
+      [
+       "e^(λt)v solves x′ = Ax only if v is an eigenvector for λ (or v = 0).",
+       "<b>True</b>",
+       "Compare λe^(λt)v with e^(λt)Av."
+      ],
+      [
+       "If det A &lt; 0 for a 2×2 A, the origin is a saddle.",
+       "<b>True</b>",
+       "Product of eigenvalues negative ⇒ real, opposite signs."
+      ],
+      [
+       "If tr A &lt; 0 for a 2×2 A, the origin is stable.",
+       "<b>False</b>",
+       "Need det A &gt; 0 too: diag(1, −3) has tr −2 but is a saddle."
+      ],
+      [
+       "Complex eigenvalues with zero real part give closed orbits.",
+       "<b>True</b>",
+       "Center."
+      ],
+      [
+       "For complex λ = α + iβ, Re(e^(λt)v) and Im(e^(λt)v) are real solutions.",
+       "<b>True</b>",
+       "A is real."
+      ],
+      [
+       "The real and imaginary parts of the solution for λ̄ give two new independent solutions.",
+       "<b>False</b>",
+       "They are the same two (up to sign)."
+      ],
+      [
+       "In a saddle, solutions starting on the eigenvector line of the negative eigenvalue tend to 0.",
+       "<b>True</b>",
+       "No component along the unstable eigenvector."
+      ],
+      [
+       "A defective double eigenvalue λ gives solutions e^(λt)v and e^(λt)(tv + u) with (A − λI)u = v.",
+       "<b>True</b>",
+       "Generalized eigenvector construction."
+      ],
+      [
+       "The companion matrix of y″ + by′ + cy = 0 has eigenvalues equal to the roots of r² + br + c.",
+       "<b>True</b>",
+       "Same characteristic polynomial."
+      ],
+      [
+       "A 2×2 system with eigenvalues −1 and 0 has all solutions tending to 0.",
+       "<b>False</b>",
+       "The λ = 0 component stays constant."
+      ]
+     ]
     }
    ]
   }
@@ -1277,5 +1537,54 @@
   "Repeated eigenvalue with full eigenspace: same formula, no t e^(λt).",
   "λ = α + iβ, v = a + ib: x₁ = e^(αt)(a cos βt − b sin βt), x₂ = e^(αt)(a sin βt + b cos βt).",
   "Decay iff no component along eigenvectors with Re λ ≥ 0; 2×2 stable ⇔ tr &lt; 0, det &gt; 0."
+ ],
+ "parsons": [
+  {
+   "title": "Eigenpairs give solutions",
+   "goal": "Prove: if Av = λv, then x(t) = e^(λt)v solves x′ = Ax.",
+   "lines": [
+    "Differentiate: x′(t) = λe^(λt)v, since v is constant.",
+    "Compute Ax(t) = A(e^(λt)v) = e^(λt)Av.",
+    "Since Av = λv, Ax(t) = e^(λt)λv = λe^(λt)v.",
+    "So x′(t) = Ax(t) for all t. ∎"
+   ],
+   "distractors": [
+    "Differentiate: x′(t) = e^(λt)Av.",
+    "Compute Ax(t) = λAv.",
+    "Since Av = λv, v must be a unit vector."
+   ]
+  },
+  {
+   "title": "The defective second solution",
+   "goal": "Let (A − λI)v = 0 and (A − λI)u = v. Prove x(t) = e^(λt)(tv + u) solves x′ = Ax.",
+   "lines": [
+    "Product rule: x′(t) = λe^(λt)(tv + u) + e^(λt)v.",
+    "From the hypotheses, Av = λv and Au = λu + v.",
+    "So Ax(t) = e^(λt)(tAv + Au) = e^(λt)(tλv + λu + v).",
+    "Rearrange: Ax(t) = λe^(λt)(tv + u) + e^(λt)v.",
+    "This equals x′(t), so x solves the system. ∎"
+   ],
+   "distractors": [
+    "Product rule: x′(t) = λe^(λt)(tv + u).",
+    "From the hypotheses, Au = λu.",
+    "So Ax(t) = λx(t), and x is an eigen-solution."
+   ]
+  },
+  {
+   "title": "Wronskian all-or-nothing",
+   "goal": "Let x₁, …, xₙ solve x′ = A(t)x on I. Prove: if W(t₀) = 0 for some t₀ ∈ I, then the xᵢ are linearly dependent on I.",
+   "lines": [
+    "W(t₀) = det[x₁(t₀) ⋯ xₙ(t₀)] = 0, so these n vectors are dependent.",
+    "Choose c ≠ 0 with c₁x₁(t₀) + ⋯ + cₙxₙ(t₀) = 0.",
+    "Let y(t) = c₁x₁(t) + ⋯ + cₙxₙ(t); by superposition y solves the system with y(t₀) = 0.",
+    "The zero function also solves the system with value 0 at t₀.",
+    "By uniqueness y(t) = 0 for every t ∈ I, a nontrivial dependence relation on I. ∎"
+   ],
+   "distractors": [
+    "Choose c = 0 with c₁x₁(t₀) + ⋯ = 0.",
+    "By existence y(t) = 0 only at t₀.",
+    "So W(t) = 0 implies every xᵢ is the zero solution."
+   ]
+  }
  ]
 }

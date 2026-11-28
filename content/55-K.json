@@ -1532,5 +1532,39 @@
   "Bayes: p(F | E) = p(E | F) p(F) / Σ p(E | Fᵢ) p(Fᵢ); use a table of products",
   "Birthday: p(shared) = 1 − 365·364⋯(366 − n)/365ⁿ, ≈ 50.7% at n = 23",
   "Probabilistic method: p(bad) &lt; 1 ⇒ a good object exists"
+ ],
+ "parsons": [
+  {
+   "title": "Disjoint events are not independent",
+   "goal": "Prove: if A and B are disjoint events with p(A) > 0 and p(B) > 0, then A and B are not independent.",
+   "lines": [
+    "Suppose, for contradiction, that A and B are independent.",
+    "Independence means p(A ∩ B) = p(A)·p(B).",
+    "Because A ∩ B = ∅, the left side is p(∅) = 0.",
+    "So p(A)·p(B) = 0, hence p(A) = 0 or p(B) = 0.",
+    "This contradicts p(A) > 0 and p(B) > 0, so A and B are not independent."
+   ],
+   "distractors": [
+    "Independence means p(A ∪ B) = p(A) + p(B).",
+    "Because A ∩ B = ∅, p(A | B) = p(A).",
+    "So p(A)·p(B) = 0, hence p(A) = p(B)."
+   ]
+  },
+  {
+   "title": "Deriving Bayes’ theorem",
+   "goal": "Let E, F be events with p(E) > 0 and 0 &lt; p(F) &lt; 1, and let F̄ be the complement of F. Prove p(F | E) = p(E | F)p(F) / [p(E | F)p(F) + p(E | F̄)p(F̄)].",
+   "lines": [
+    "By the definition of conditional probability, p(F | E) = p(E ∩ F)/p(E).",
+    "Also by definition p(E | F) = p(E ∩ F)/p(F), so the numerator is p(E ∩ F) = p(E | F)p(F).",
+    "Similarly, since p(F̄) > 0, p(E | F̄) = p(E ∩ F̄)/p(F̄) gives p(E ∩ F̄) = p(E | F̄)p(F̄).",
+    "E is the disjoint union of E ∩ F and E ∩ F̄, so p(E) = p(E ∩ F) + p(E ∩ F̄) = p(E | F)p(F) + p(E | F̄)p(F̄).",
+    "Substituting the numerator and this expression for p(E) into the first line gives p(F | E) = p(E | F)p(F) / [p(E | F)p(F) + p(E | F̄)p(F̄)]."
+   ],
+   "distractors": [
+    "By the definition of conditional probability, p(F | E) = p(E ∩ F)/p(F).",
+    "E is the disjoint union of F and F̄, so p(E) = p(F) + p(F̄) = 1.",
+    "Since p(E | F) = p(F | E), the formula follows directly."
+   ]
+  }
  ]
 }

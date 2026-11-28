@@ -1,0 +1,301 @@
+{
+ "id": "54-sheet",
+ "title": "Math 54 note sheet",
+ "sections": [
+  {
+   "title": "Systems, span, independence (1.1–1.9)",
+   "blocks": [
+    {
+     "type": "list",
+     "items": [
+      "Consistent ⇔ no echelon row [0 ⋯ 0 | c≠0]. Consistent + free var ⇒ ∞ solutions; no free var ⇒ unique.",
+      "Ax = b solvable ⇔ b ∈ Col A = Span{columns}. Solution set = p + Nul A (never a subspace if b ≠ 0).",
+      "#free = n − #pivots; #pivots ≤ min(m, n)."
+     ]
+    },
+    {
+     "type": "table",
+     "head": [
+      "Pivot in every…",
+      "means",
+      "equivalently"
+     ],
+     "rows": [
+      [
+       "row of A",
+       "columns span ℝᵐ; T onto; Ax = b ∀b",
+       "rank = m (needs n ≥ m)"
+      ],
+      [
+       "column of A",
+       "columns independent; T one-to-one; Nul A = {0}",
+       "rank = n (needs m ≥ n)"
+      ]
+     ]
+    },
+    {
+     "type": "list",
+     "items": [
+      "Standard matrix A = [T(e₁) ⋯ T(eₙ)]; 'S then T' = (T)(S). Rotation [cos −sin; sin cos]; reflect y = x: [0 1; 1 0]; shear [1 k; 0 1].",
+      "p &gt; n vectors in ℝⁿ ⇒ dependent; set with 0 ⇒ dependent; two vectors dependent ⇔ parallel."
+     ]
+    }
+   ]
+  },
+  {
+   "title": "Matrix algebra, inverses, IMT (2.1–2.3)",
+   "blocks": [
+    {
+     "type": "list",
+     "items": [
+      "(AB)ᵀ = BᵀAᵀ, (AB)⁻¹ = B⁻¹A⁻¹; AB ≠ BA; AB = AC ⇏ B = C; AB = 0 ⇏ A or B = 0.",
+      "[a b; c d]⁻¹ = (1/(ad − bc))[d −b; −c a]. [A | I] → [I | A⁻¹]. AXB = C ⇒ X = A⁻¹CB⁻¹; AX = X + B ⇒ X = (A − I)⁻¹B.",
+      "Elementary E = I after one row op; EA does that op; E⁻¹ = reverse op."
+     ]
+    },
+    {
+     "type": "p",
+     "text": "<b>IMT (square A):</b> invertible ⇔ A ~ I ⇔ n pivots ⇔ Ax = 0 only trivial ⇔ columns independent ⇔ x ↦ Ax one-to-one ⇔ Ax = b solvable ∀b ⇔ columns span ℝⁿ ⇔ onto ⇔ ∃C: CA = I ⇔ ∃D: AD = I ⇔ Aᵀ invertible ⇔ det A ≠ 0 ⇔ 0 not an eigenvalue ⇔ Col A = ℝⁿ ⇔ rank n ⇔ Nul A = {0}. Square AB = I ⇒ BA = I."
+    }
+   ]
+  },
+  {
+   "title": "Determinants (3.1–3.3)",
+   "blocks": [
+    {
+     "type": "list",
+     "items": [
+      "Cᵢⱼ = (−1)^(i+j)det Aᵢⱼ; expand along the sparsest line. Triangular: product of diagonal.",
+      "Replacement: no change; swap: ×(−1); scale a row by k: ×k. det(cA) = cⁿdet A.",
+      "det(AB) = det A det B; det Aᵀ = det A; det A⁻¹ = 1/det A; det(A + B) ≠ det A + det B.",
+      "Area/volume of box on columns = |det A|; area(T(S)) = |det A|·area(S); triangle ½|det|, tetrahedron ⅙|det|."
+     ]
+    }
+   ]
+  },
+  {
+   "title": "Subspaces, bases, rank, coordinates (4.1–4.6)",
+   "blocks": [
+    {
+     "type": "list",
+     "items": [
+      "Subspace: 0 ∈ H, closed under + and scalars. Spans and kernels are subspaces.",
+      "Nul A ⊆ ℝⁿ: basis = free-variable vectors from RREF. Col A ⊆ ℝᵐ: pivot columns of the ORIGINAL A. Row A: nonzero rows of an echelon form.",
+      "rank A + dim Nul A = n; rank A = dim Col A = dim Row A = rank Aᵀ; dim Nul Aᵀ = m − rank.",
+      "dim ℝⁿ = n, ℙₙ = n + 1, Mₘₓₙ = mn. With dim V vectors: independent ⇔ spanning ⇔ basis."
+     ]
+    },
+    {
+     "type": "formula",
+     "text": "P<sub>𝒞←ℬ</sub> = [[b₁]<sub>𝒞</sub> ⋯ [bₙ]<sub>𝒞</sub>] = C⁻¹B: row reduce [C | B] → [I | P<sub>𝒞←ℬ</sub>];  [x]<sub>𝒞</sub> = P<sub>𝒞←ℬ</sub>[x]<sub>ℬ</sub>"
+    },
+    {
+     "type": "p",
+     "text": "Easy direction: P<sub>ℰ←ℬ</sub> = B. (P<sub>𝒞←ℬ</sub>)⁻¹ = P<sub>ℬ←𝒞</sub>. Matrix of T rel. ℬ, 𝒞: columns [T(bⱼ)]<sub>𝒞</sub>; ℬ-matrix of x ↦ Ax = P⁻¹AP."
+    }
+   ]
+  },
+  {
+   "title": "Eigenvalues, diagonalization, complex eigenvalues (5.1–5.5)",
+   "blocks": [
+    {
+     "type": "list",
+     "items": [
+      "λ eigenvalue ⇔ det(A − λI) = 0; eigenspace Nul(A − λI). 2×2: λ² − (tr)λ + det. Triangular: diagonal.",
+      "Σλ = tr A, ∏λ = det A. Row ops change eigenvalues!",
+      "A = PDP⁻¹ ⇔ n independent eigenvectors (P columns, same order as D). n distinct ⇒ diagonalizable. Repeated: need geometric (n − rank(A − λI)) = algebraic for each λ.",
+      "Aᵏ = PDᵏP⁻¹; Aᵏx = Σcᵢλᵢᵏvᵢ. Similar ⇒ same char poly, det, tr, rank (not eigenvectors).",
+      "λ = a − bi with eigenvector v: A = PCP⁻¹, P = [Re v  Im v], C = [a −b; b a] = r·Rot(φ), r = |λ| = √det, φ = arg(a + bi). r &lt; 1 spiral in, = 1 ellipse, &gt; 1 out."
+     ]
+    }
+   ]
+  },
+  {
+   "title": "Orthogonality, projections, least squares (6.1–6.7)",
+   "blocks": [
+    {
+     "type": "list",
+     "items": [
+      "cos θ = u·v/(‖u‖‖v‖); (Row A)⊥ = Nul A, (Col A)⊥ = Nul Aᵀ; W⊥ = Nul(rows = spanning vectors).",
+      "Orthogonal basis: cⱼ = y·uⱼ/uⱼ·uⱼ. ŷ = Σ(y·uᵢ/uᵢ·uᵢ)uᵢ (ORTHOGONAL basis only) = UUᵀy (orthonormal U). Distance = ‖y − ŷ‖.",
+      "UᵀU = I ⇔ orthonormal columns (‖Ux‖ = ‖x‖); UUᵀ = projection onto Col U.",
+      "Gram–Schmidt: vₖ = xₖ − Σⱼ₍ₖ (xₖ·vⱼ/vⱼ·vⱼ)vⱼ. QR: Q = normalized GS of columns, R = QᵀA.",
+      "Least squares: AᵀAx̂ = Aᵀb (or Rx̂ = Qᵀb); error ‖b − Ax̂‖; unique ⇔ columns independent ⇔ AᵀA invertible. Line fit: rows (1, xᵢ).",
+      "Inner product: symmetric, linear, ⟨u, u⟩ &gt; 0 for u ≠ 0. C[a, b]: ⟨f, g⟩ = ∫fg. Evaluation at k points on ℙₙ needs k ≥ n + 1."
+     ]
+    }
+   ]
+  },
+  {
+   "title": "Symmetric matrices and SVD (7.1, 7.4)",
+   "blocks": [
+    {
+     "type": "list",
+     "items": [
+      "A = Aᵀ ⇔ A = PDPᵀ (P orthogonal). Real eigenvalues; distinct eigenspaces orthogonal; Gram–Schmidt inside a repeated eigenspace, then normalize.",
+      "Spectral decomposition A = Σλᵢuᵢuᵢᵀ; Aᵏ = Σλᵢᵏuᵢuᵢᵀ."
+     ]
+    },
+    {
+     "type": "steps",
+     "title": "SVD recipe A = UΣVᵀ",
+     "items": [
+      "AᵀA → eigenvalues λ₁ ≥ λ₂ ≥ ⋯ ≥ 0; σᵢ = √λᵢ = ‖Avᵢ‖.",
+      "Orthonormal eigenvectors v₁, …, vₙ → V.",
+      "uᵢ = Avᵢ/σᵢ (σᵢ &gt; 0); complete U with an orthonormal basis of Nul Aᵀ.",
+      "Σ is m×n. rank = #σ &gt; 0; u₁..uᵣ: Col A; rest: Nul Aᵀ; v₁..vᵣ: Row A; rest: Nul A. max ‖Ax‖ = σ₁."
+     ]
+    }
+   ]
+  },
+  {
+   "title": "Second-order linear ODEs (Nagle 4.2–4.5)",
+   "blocks": [
+    {
+     "type": "table",
+     "head": [
+      "Roots of ar² + br + c",
+      "General solution"
+     ],
+     "rows": [
+      [
+       "r₁ ≠ r₂ real",
+       "c₁e^(r₁t) + c₂e^(r₂t)"
+      ],
+      [
+       "r double",
+       "(c₁ + c₂t)eʳᵗ"
+      ],
+      [
+       "α ± iβ",
+       "e^(αt)(c₁cos βt + c₂sin βt)"
+      ]
+     ]
+    },
+    {
+     "type": "table",
+     "head": [
+      "g(t)",
+      "Trial y_p (then × tˢ)"
+     ],
+     "rows": [
+      [
+       "Pₘ(t) (degree m)",
+       "Aₘtᵐ + ⋯ + A₀"
+      ],
+      [
+       "Pₘ(t)e^(αt)",
+       "(Aₘtᵐ + ⋯ + A₀)e^(αt)"
+      ],
+      [
+       "Pₘ(t)e^(αt)cos βt or sin βt",
+       "e^(αt)[(A-poly)cos βt + (B-poly)sin βt]"
+      ]
+     ]
+    },
+    {
+     "type": "p",
+     "text": "<b>tˢ rule:</b> s = multiplicity of α (or α + iβ) as a root (0, 1, 2). Full polynomial, both cos and sin; decide s per piece. L[teʳᵗ] = p′(r)eʳᵗ if p(r) = 0. Superposition: solve each piece, add. Apply ICs to y_h + y_p."
+    },
+    {
+     "type": "list",
+     "items": [
+      "W = y₁y₂′ − y₁′y₂: never 0 or always 0 for solutions; W(t) = W(0)e^(−bt) (a = 1).",
+      "my″ + by′ + ky = 0: b² − 4mk &lt; 0 under, = 0 critical, &gt; 0 over; b = 0 pure oscillation ω = √(k/m); resonance when forcing frequency = √(k/m)."
+     ]
+    }
+   ]
+  },
+  {
+   "title": "Systems x′ = Ax (Nagle 9.1, 9.4–9.6)",
+   "blocks": [
+    {
+     "type": "list",
+     "items": [
+      "nth order → x₁ = y, …, xₙ = y⁽ⁿ⁻¹⁾; last row = negated coefficients; companion eigenvalues = characteristic roots.",
+      "Av = λv ⇒ e^(λt)v solves. x = Σcᵢe^(λᵢt)vᵢ; c from [v₁ ⋯ vₙ]c = x(0); or x = X(t)X(0)⁻¹x(0); A = X′X⁻¹.",
+      "λ = α + iβ, v = a + ib: x₁ = e^(αt)(a cos βt − b sin βt), x₂ = e^(αt)(a sin βt + b cos βt). Use ONE λ.",
+      "Defective double λ (1 eigenvector v): solve (A − λI)u = v; x₂ = e^(λt)(tv + u). Full eigenspace: no t terms."
+     ]
+    },
+    {
+     "type": "table",
+     "head": [
+      "τ = tr, Δ = det",
+      "Portrait"
+     ],
+     "rows": [
+      [
+       "Δ &lt; 0",
+       "saddle (unstable)"
+      ],
+      [
+       "Δ &gt; 0, τ² &gt; 4Δ",
+       "node: stable if τ &lt; 0, unstable if τ &gt; 0"
+      ],
+      [
+       "τ² = 4Δ",
+       "star / degenerate node"
+      ],
+      [
+       "τ² &lt; 4Δ, τ ≠ 0",
+       "spiral: in if τ &lt; 0, out if τ &gt; 0"
+      ],
+      [
+       "τ = 0, Δ &gt; 0",
+       "center"
+      ]
+     ]
+    },
+    {
+     "type": "p",
+     "text": "Rotation direction: second entry of A(1, 0) &gt; 0 ⇒ counterclockwise. Decay ⇔ no component along eigenvectors with Re λ ≥ 0."
+    }
+   ]
+  },
+  {
+   "title": "Fourier series (Nagle 10.3–10.4)",
+   "blocks": [
+    {
+     "type": "formula",
+     "text": "f ~ a₀/2 + Σ[aₙcos(nπx/L) + bₙsin(nπx/L)],  aₙ = (1/L)∫₋ₗᴸ f cos(nπx/L) dx,  bₙ = (1/L)∫₋ₗᴸ f sin(nπx/L) dx"
+    },
+    {
+     "type": "list",
+     "items": [
+      "Orthogonality on [−L, L]: ∫cos·cos = ∫sin·sin = 0 (m ≠ n), L (m = n); ∫sin·cos = 0; ∫1 = 2L.",
+      "Even f ⇒ bₙ = 0, aₙ = (2/L)∫₀ᴸ f cos. Odd f ⇒ aₙ = 0 (incl. a₀), bₙ = (2/L)∫₀ᴸ f sin. even·odd = odd.",
+      "Half range on [0, L]: cosine series = even extension (2/L ∫₀ᴸ f cos); sine series = odd extension (2/L ∫₀ᴸ f sin; = 0 at 0 and L).",
+      "Converges to ½[f(x⁺) + f(x⁻)] of the 2L-periodic extension; at ±L: ½[f(L⁻) + f(−L⁺)]. Reduce x mod 2L first.",
+      "cos nπ = (−1)ⁿ, sin nπ = 0; sin(nπ/2) = 1, 0, −1, 0, …",
+      "∫₀ᴸ x cos(nπx/L) = L²((−1)ⁿ − 1)/(nπ)²;  ∫₀ᴸ x sin(nπx/L) = L²(−1)ⁿ⁺¹/(nπ);  ∫₀ᴸ sin(nπx/L) = L(1 − (−1)ⁿ)/(nπ).",
+      "x² on [−L, L]: a₀ = 2L²/3, aₙ = 4L²(−1)ⁿ/(nπ)²; x: bₙ = 2L(−1)ⁿ⁺¹/(nπ). Σ1/n² = π²/6, Σ_odd 1/n² = π²/8."
+     ]
+    }
+   ]
+  },
+  {
+   "title": "Classic True/False traps",
+   "blocks": [
+    {
+     "type": "list",
+     "items": [
+      "Free variable ⇒ ∞ solutions: FALSE unless consistent. Pivot in every row of [A | b] ⇒ consistent: FALSE.",
+      "Echelon form unique: FALSE (RREF is). Ax = b solution set is a span: FALSE if b ≠ 0.",
+      "Dependent ⇒ every vector is a combination of the others: FALSE (some vector). Pairwise non-parallel ⇒ independent: FALSE (3+ vectors).",
+      "T(0) = 0 ⇒ linear: FALSE. Wide matrix one-to-one / tall matrix onto: never.",
+      "(A + B)⁻¹ = A⁻¹ + B⁻¹, det(A + B) = det A + det B, det(cA) = c det A: all FALSE.",
+      "If det A = 0 then two rows are proportional: FALSE. Row ops preserve Col A / eigenvalues: FALSE (they preserve Nul A, Row A, rank).",
+      "Diagonalizable ⇔ invertible: FALSE both ways ([1 1; 0 1], diag(0, 1)). Diagonalizable ⇒ distinct eigenvalues: FALSE (I).",
+      "Same eigenvalues ⇒ similar: FALSE ([1 1; 0 1] vs I). Similar ⇒ same eigenvectors: FALSE.",
+      "Orthogonal set ⇒ independent: FALSE (may contain 0). Orthonormal columns ⇒ UUᵀ = I: FALSE unless square.",
+      "Least-squares x̂ is unique: FALSE unless columns independent. Projection formula with non-orthogonal basis: WRONG.",
+      "Singular values = |eigenvalues|: FALSE unless symmetric. Symmetric ⇒ orthogonally diagonalizable: TRUE (and conversely).",
+      "Repeated eigenvalue of x′ = Ax ⇒ t·e^(λt) terms: FALSE if eigenspace full. tr A &lt; 0 ⇒ stable (2×2): FALSE (need det &gt; 0).",
+      "Fourier series = f at jumps: FALSE (average). Sine series at 0 equals f(0⁺): FALSE (0)."
+     ]
+    }
+   ]
+  }
+ ]
+}

@@ -65,6 +65,22 @@
        "text": "Suppose not; take the first <b>v</b>ₚ₊₁ that is a combination c₁<b>v</b>₁ + ⋯ + cₚ<b>v</b>ₚ of earlier independent ones. Apply A: λₚ₊₁<b>v</b>ₚ₊₁ = Σcᵢλᵢ<b>v</b>ᵢ. Subtract λₚ₊₁ times the original: 0 = Σcᵢ(λᵢ − λₚ₊₁)<b>v</b>ᵢ. Independence gives cᵢ(λᵢ − λₚ₊₁) = 0, and λᵢ ≠ λₚ₊₁, so all cᵢ = 0, making <b>v</b>ₚ₊₁ = 0, impossible."
       }
      ]
+    },
+    {
+     "type": "example",
+     "title": "Eigenvector with a parameter (exam-hard)",
+     "prompt": "For which h is v = (1, h, 1) an eigenvector of A = [2 1 0; 1 2 1; 0 1 2]? Give the eigenvalue.",
+     "steps": [
+      "Av = (2 + h, 1 + 2h + 1, h + 2) = (2 + h, 2 + 2h, 2 + h).",
+      "For Av = λv: the first entry forces λ = 2 + h (third entry agrees).",
+      "Second entry: 2 + 2h = λh = (2 + h)h ⇒ 2 + 2h = 2h + h² ⇒ h² = 2.",
+      "h = ±√2, with λ = 2 ± √2 respectively."
+     ],
+     "answer": "h = √2 (λ = 2 + √2) or h = −√2 (λ = 2 − √2)"
+    },
+    {
+     "type": "p",
+     "text": "Geometric examples help: a rotation of ℝ² by 90° has no real eigenvectors (every vector turns); a reflection across a line has eigenvalue 1 on the line and −1 on the perpendicular line; a projection onto a line has eigenvalues 1 (the line) and 0 (the perpendicular line, its kernel)."
     }
    ]
   },
@@ -124,6 +140,22 @@
     {
      "type": "warn",
      "text": "Row reduction changes eigenvalues. Never row reduce A before finding eigenvalues; you may only row reduce A − λI to find eigenvectors once λ is known."
+    },
+    {
+     "type": "example",
+     "title": "3×3 characteristic polynomial without triangular shortcuts (exam-hard)",
+     "prompt": "Find the eigenvalues of A = [1 2 2; 2 1 2; 2 2 1].",
+     "steps": [
+      "Trick: every row sums to 5, so A(1, 1, 1) = 5(1, 1, 1): λ = 5 is an eigenvalue.",
+      "A − (−1)I = A + I = [2 2 2; 2 2 2; 2 2 2] has rank 1, so λ = −1 has a 2-dimensional eigenspace (geometric multiplicity 2).",
+      "Trace check: 5 + (−1) + (−1) = 3 = 1 + 1 + 1. ✓ Determinant check: 5·1 = 5 = det A.",
+      "Characteristic polynomial −(λ − 5)(λ + 1)²."
+     ],
+     "answer": "λ = 5 and λ = −1 (double)"
+    },
+    {
+     "type": "tip",
+     "text": "Look for shortcuts before expanding: equal row sums give an eigenvector (1, …, 1); a rank-deficient A − cI gives the eigenvalue c with multiplicity at least n − rank; trace and det check the result."
     }
    ]
   },
@@ -155,6 +187,17 @@
       "Check: A(1, 1, 1) = (9, 9, 9). ✓ A(−3, 0, 1) = (−12 + 6, −6 + 6, −6 + 8) = (−6, 0, 2) = 2(−3, 0, 1). ✓"
      ],
      "answer": "λ = 2: {(1, 2, 0), (−3, 0, 1)} (geometric = algebraic = 2); λ = 9: {(1, 1, 1)}."
+    },
+    {
+     "type": "example",
+     "title": "Geometric multiplicity depending on a parameter (exam-hard)",
+     "prompt": "A = [2 a 0; 0 2 1; 0 0 3]. For which a is A diagonalizable?",
+     "steps": [
+      "Triangular: eigenvalues 2 (algebraic multiplicity 2) and 3.",
+      "A − 2I = [0 a 0; 0 0 1; 0 0 1]. If a = 0: rows (0, 0, 0), (0, 0, 1), (0, 0, 1) ⇒ rank 1 ⇒ eigenspace dimension 2. If a ≠ 0: rows (0, a, 0) and (0, 0, 1) are independent ⇒ rank 2 ⇒ dimension 1.",
+      "Diagonalizable ⇔ geometric = algebraic for λ = 2 ⇔ a = 0."
+     ],
+     "answer": "Diagonalizable iff a = 0"
     }
    ]
   },
@@ -239,6 +282,17 @@
     {
      "type": "warn",
      "text": "A 2×2 matrix with a repeated eigenvalue λ is diagonalizable only if it already equals λI."
+    },
+    {
+     "type": "example",
+     "title": "Diagonalize with a repeated eigenvalue (routine for symmetric matrices)",
+     "prompt": "Diagonalize A = [1 2 2; 2 1 2; 2 2 1].",
+     "steps": [
+      "λ = 5: eigenvector (1, 1, 1).",
+      "λ = −1: A + I has rank 1, equation x₁ + x₂ + x₃ = 0, basis (−1, 1, 0), (−1, 0, 1).",
+      "P = [1 −1 −1; 1 1 0; 1 0 1], D = diag(5, −1, −1)."
+     ],
+     "answer": "A = PDP⁻¹ with P = [1 −1 −1; 1 1 0; 1 0 1], D = diag(5, −1, −1)"
     }
    ]
   },
@@ -272,6 +326,69 @@
       "Check k = 3: A³ = [223 98; −196 −71], and the formula gives 2·125 − 27 = 223, 125 − 27 = 98, 54 − 250 = −196, 54 − 125 = −71. ✓"
      ],
      "answer": "Aᵏ = [2·5ᵏ − 3ᵏ, 5ᵏ − 3ᵏ; 2·3ᵏ − 2·5ᵏ, 2·3ᵏ − 5ᵏ]"
+    },
+    {
+     "type": "example",
+     "title": "Long-run limit of a Markov-type matrix (exam-hard)",
+     "prompt": "A = [0.8 0.3; 0.2 0.7]. Find Aᵏ and lim Aᵏ, and lim Aᵏx₀ for x₀ = (1, 0).",
+     "steps": [
+      "Columns sum to 1, so λ = 1 is an eigenvalue; trace 1.5 ⇒ the other eigenvalue is 0.5.",
+      "λ = 1: A − I = [−0.2 0.3; 0.2 −0.3] ⇒ (3, 2). λ = 0.5: A − 0.5I = [0.3 0.3; 0.2 0.2] ⇒ (−1, 1).",
+      "P = [3 −1; 2 1], det 5, P⁻¹ = (1/5)[1 1; −2 3]. Aᵏ = P diag(1, 0.5ᵏ) P⁻¹ = [3/5 + (2/5)0.5ᵏ, 3/5 − (3/5)0.5ᵏ; 2/5 − (2/5)0.5ᵏ, 2/5 + (3/5)0.5ᵏ].",
+      "As k → ∞, 0.5ᵏ → 0: lim Aᵏ = [3/5 3/5; 2/5 2/5].",
+      "lim Aᵏ(1, 0) = (3/5, 2/5): the steady state, the eigenvector for λ = 1 scaled to sum 1."
+     ],
+     "answer": "lim Aᵏ = [3/5 3/5; 2/5 2/5]; lim Aᵏx₀ = (3/5, 2/5)"
+    }
+   ]
+  },
+  {
+   "title": "Why diagonalization works and when it fails",
+   "blocks": [
+    {
+     "type": "p",
+     "text": "Think of A acting on coordinates relative to a basis of eigenvectors. In those coordinates A just multiplies each coordinate by its eigenvalue: that is the diagonal matrix D. The matrix P converts eigen-coordinates to standard coordinates and P⁻¹ converts back, so A = PDP⁻¹ says: change to eigen-coordinates, scale, change back."
+    },
+    {
+     "type": "p",
+     "text": "It fails exactly when there are not enough eigenvectors to form a basis. The typical culprit is a 'shear-like' matrix such as [λ 1; 0 λ]: it has the single eigenvalue λ, but it pushes every vector off its line except those on the x-axis. No basis of eigenvectors exists, and no choice of P makes it diagonal."
+    },
+    {
+     "type": "table",
+     "head": [
+      "Situation",
+      "Diagonalizable?"
+     ],
+     "rows": [
+      [
+       "n distinct real eigenvalues",
+       "always"
+      ],
+      [
+       "repeated eigenvalue, eigenspace dimension = multiplicity for each",
+       "yes"
+      ],
+      [
+       "some eigenspace too small",
+       "no"
+      ],
+      [
+       "real symmetric",
+       "always (even orthogonally)"
+      ],
+      [
+       "complex eigenvalues",
+       "not over ℝ (possibly over ℂ)"
+      ],
+      [
+       "triangular with distinct diagonal",
+       "yes"
+      ]
+     ]
+    },
+    {
+     "type": "warn",
+     "text": "A matrix can be invertible and not diagonalizable ([1 1; 0 1]) or diagonalizable and not invertible (diag(0, 1)). Don't mix the two questions."
     }
    ]
   },
@@ -326,6 +443,107 @@
     {
      "type": "tip",
      "text": "Diagonalizable is about having enough eigenvectors; invertible is about 0 not being an eigenvalue. They are independent properties."
+    },
+    {
+     "type": "example",
+     "title": "Everything from the eigenvalues (exam-hard)",
+     "prompt": "A is 3×3 with eigenvalues 1, 2, 4. Find det A, tr A, det(A − 3I), the eigenvalues of A², A⁻¹ and A + 2I, and decide whether A is diagonalizable.",
+     "steps": [
+      "det A = 1·2·4 = 8; tr A = 1 + 2 + 4 = 7.",
+      "A − 3I has eigenvalues 1 − 3, 2 − 3, 4 − 3 = −2, −1, 1, so det(A − 3I) = (−2)(−1)(1) = 2.",
+      "If Av = λv: A²v = λ²v, A⁻¹v = λ⁻¹v, (A + 2I)v = (λ + 2)v. Eigenvalues: A²: 1, 4, 16; A⁻¹: 1, 1/2, 1/4; A + 2I: 3, 4, 6.",
+      "Three distinct eigenvalues ⇒ diagonalizable."
+     ],
+     "answer": "det 8, tr 7, det(A − 3I) = 2; A²: 1, 4, 16; A⁻¹: 1, 1/2, 1/4; A + 2I: 3, 4, 6; diagonalizable"
+    },
+    {
+     "type": "p",
+     "text": "Any matrix similar to A shares all of these numbers, because similar matrices have the same characteristic polynomial. So to show two matrices are NOT similar, find one invariant that differs (trace, det, rank, an eigenspace dimension); to show they ARE similar, the safest route is to show both are diagonalizable with the same eigenvalues."
+    }
+   ]
+  },
+  {
+   "title": "True/False traps",
+   "blocks": [
+    {
+     "type": "table",
+     "head": [
+      "Statement",
+      "T/F",
+      "One-line reason"
+     ],
+     "rows": [
+      [
+       "If Ax = λx for some vector x, then λ is an eigenvalue of A.",
+       "<b>False</b>",
+       "x must be nonzero (A0 = λ0 for every λ)."
+      ],
+      [
+       "A matrix A is singular iff 0 is an eigenvalue.",
+       "<b>True</b>",
+       "Ax = 0x has a nonzero solution ⇔ Nul A ≠ {0}."
+      ],
+      [
+       "The eigenvalues of a matrix are on its main diagonal.",
+       "<b>False</b>",
+       "Only for triangular matrices."
+      ],
+      [
+       "Row operations do not change eigenvalues.",
+       "<b>False</b>",
+       "[2 0; 0 1] → [1 0; 0 1] by scaling."
+      ],
+      [
+       "If A is diagonalizable, A has n distinct eigenvalues.",
+       "<b>False</b>",
+       "I is diagonal with one eigenvalue."
+      ],
+      [
+       "If A has n distinct eigenvalues, A is diagonalizable.",
+       "<b>True</b>",
+       "n independent eigenvectors."
+      ],
+      [
+       "A = PDP⁻¹ with D diagonal ⇒ the columns of P are eigenvectors of A.",
+       "<b>True</b>",
+       "AP = PD column by column."
+      ],
+      [
+       "If A is diagonalizable, so is A².",
+       "<b>True</b>",
+       "A² = PD²P⁻¹."
+      ],
+      [
+       "Similar matrices have the same eigenvectors.",
+       "<b>False</b>",
+       "They have the same eigenvalues; eigenvectors differ by P."
+      ],
+      [
+       "Each eigenvalue has at least one eigenvector.",
+       "<b>True</b>",
+       "A − λI singular ⇒ nonzero null vector."
+      ],
+      [
+       "An n×n matrix has at most n eigenvalues.",
+       "<b>True</b>",
+       "Its characteristic polynomial has degree n."
+      ],
+      [
+       "If v₁, v₂ are eigenvectors for the same λ, then v₁ + v₂ is an eigenvector for λ (if nonzero).",
+       "<b>True</b>",
+       "The eigenspace is a subspace."
+      ],
+      [
+       "If A and B have the same characteristic polynomial, they are similar.",
+       "<b>False</b>",
+       "[1 1; 0 1] and I."
+      ],
+      [
+       "The trace of A equals the sum of its eigenvalues.",
+       "<b>True</b>",
+       "Compare λⁿ⁻¹ coefficients of det(λI − A)."
+      ]
+     ]
     }
    ]
   }
@@ -1224,5 +1442,57 @@
   "n distinct eigenvalues ⇒ diagonalizable; repeated eigenvalue: check each eigenspace dimension.",
   "Aᵏ = PDᵏP⁻¹; Aᵏx = Σcᵢλᵢᵏvᵢ.",
   "Similar ⇒ same characteristic polynomial, det, trace, rank; not same eigenvectors."
+ ],
+ "parsons": [
+  {
+   "title": "Eigenvectors for distinct eigenvalues are independent (two vectors)",
+   "goal": "Prove: if Av₁ = λ₁v₁, Av₂ = λ₂v₂, v₁, v₂ ≠ 0 and λ₁ ≠ λ₂, then {v₁, v₂} is linearly independent.",
+   "lines": [
+    "Suppose c₁v₁ + c₂v₂ = 0.",
+    "Apply A: c₁λ₁v₁ + c₂λ₂v₂ = 0.",
+    "Multiply the first equation by λ₂: c₁λ₂v₁ + c₂λ₂v₂ = 0.",
+    "Subtract: c₁(λ₁ − λ₂)v₁ = 0.",
+    "Since λ₁ ≠ λ₂ and v₁ ≠ 0, c₁ = 0.",
+    "Then c₂v₂ = 0 with v₂ ≠ 0, so c₂ = 0: the set is independent. ∎"
+   ],
+   "distractors": [
+    "Apply A: c₁v₁ + c₂v₂ = λ(c₁v₁ + c₂v₂).",
+    "Since λ₁ ≠ λ₂, v₁ = v₂.",
+    "Subtract: (c₁ − c₂)(λ₁ − λ₂) = 0."
+   ]
+  },
+  {
+   "title": "Similar matrices have the same characteristic polynomial",
+   "goal": "Prove: if B = P⁻¹AP, then det(B − λI) = det(A − λI).",
+   "lines": [
+    "Write λI = P⁻¹(λI)P, since P⁻¹IP = I.",
+    "So B − λI = P⁻¹AP − P⁻¹(λI)P = P⁻¹(A − λI)P.",
+    "Take determinants: det(B − λI) = det(P⁻¹)·det(A − λI)·det(P).",
+    "det(P⁻¹)·det(P) = det(P⁻¹P) = det I = 1.",
+    "Hence det(B − λI) = det(A − λI): same eigenvalues with the same multiplicities. ∎"
+   ],
+   "distractors": [
+    "So B − λI = P⁻¹(A − λ)P.",
+    "Hence A and B have the same eigenvectors.",
+    "Take determinants: det(B − λI) = det(A) − λ."
+   ]
+  },
+  {
+   "title": "A = PDP⁻¹ means the columns of P are eigenvectors",
+   "goal": "Prove: if A = PDP⁻¹ with D = diag(λ₁, …, λₙ) and P = [v₁ ⋯ vₙ], then Avⱼ = λⱼvⱼ for every j and the vⱼ are independent.",
+   "lines": [
+    "Multiply A = PDP⁻¹ on the right by P: AP = PD.",
+    "Column j of AP is Avⱼ.",
+    "Column j of PD is P(λⱼeⱼ) = λⱼvⱼ.",
+    "So Avⱼ = λⱼvⱼ for each j.",
+    "P is invertible, so its columns are linearly independent (and in particular nonzero).",
+    "Hence v₁, …, vₙ are n independent eigenvectors. ∎"
+   ],
+   "distractors": [
+    "Multiply on the left by P: PA = DP.",
+    "Column j of PD is λⱼ times row j of P.",
+    "The vⱼ are orthogonal since D is diagonal."
+   ]
+  }
  ]
 }

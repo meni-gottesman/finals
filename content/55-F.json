@@ -1029,5 +1029,55 @@
   "RSA: n = pq, φ = (p − 1)(q − 1), gcd(e, φ) = 1, d = e⁻¹ mod φ; c = mᵉ mod n, m = cᵈ mod n",
   "RSA works: Fermat mod p and mod q, then CRT uniqueness mod pq",
   "Freshman’s dream: (a + b)ᵖ ≡ aᵖ + bᵖ (mod p)"
+ ],
+ "parsons": [
+  {
+   "title": "Why RSA decryption recovers the message",
+   "goal": "Let n = pq with distinct primes p, q, let de ≡ 1 (mod (p − 1)(q − 1)), and let 0 ≤ M &lt; n with p ∤ M and q ∤ M. If C = Mᵉ mod n, prove Cᵈ mod n = M.",
+   "lines": [
+    "Since C ≡ Mᵉ (mod n), Cᵈ ≡ M<sup>de</sup> (mod n); write de = 1 + t(p − 1)(q − 1) with an integer t ≥ 0.",
+    "Since p ∤ M, Fermat’s little theorem gives M<sup>p−1</sup> ≡ 1 (mod p), so M<sup>de</sup> = M·(M<sup>p−1</sup>)<sup>t(q−1)</sup> ≡ M (mod p).",
+    "The same argument with q (using M<sup>q−1</sup> ≡ 1 (mod q)) gives M<sup>de</sup> ≡ M (mod q).",
+    "p and q are distinct primes that both divide M<sup>de</sup> − M, so pq | M<sup>de</sup> − M, i.e. M<sup>de</sup> ≡ M (mod n).",
+    "Hence Cᵈ ≡ M (mod n), and since 0 ≤ M &lt; n, reducing Cᵈ modulo n returns exactly M."
+   ],
+   "distractors": [
+    "Since de ≡ 1 (mod n), write de = 1 + tn with an integer t ≥ 0.",
+    "Since p ∤ M, Fermat’s little theorem gives M<sup>p</sup> ≡ 1 (mod p).",
+    "Since M<sup>de</sup> ≡ M modulo p and modulo q, we get M<sup>de</sup> ≡ M (mod p + q)."
+   ]
+  },
+  {
+   "title": "Uniqueness in the Chinese Remainder Theorem",
+   "goal": "Let m₁, …, mₙ be pairwise relatively prime and m = m₁m₂⋯mₙ. Prove that any two solutions x, y of the system x ≡ aᵢ (mod mᵢ), i = 1, …, n, satisfy x ≡ y (mod m).",
+   "lines": [
+    "Suppose x and y both solve x ≡ aᵢ (mod mᵢ) for i = 1, …, n.",
+    "Subtracting, x − y ≡ 0 (mod mᵢ), so mᵢ | x − y for every i.",
+    "Since m₁ | x − y, m₂ | x − y and gcd(m₁, m₂) = 1, we get m₁m₂ | x − y.",
+    "Repeating with m₁m₂ and m₃ (coprime, since m₃ is coprime to each factor), and so on, gives m = m₁m₂⋯mₙ | x − y.",
+    "Hence x ≡ y (mod m): the solution is unique modulo m."
+   ],
+   "distractors": [
+    "Since each mᵢ divides x − y, the sum m₁ + m₂ + ⋯ + mₙ divides x − y.",
+    "Since m₁ | x − y and m₂ | x − y, always m₁m₂ | x − y, whether or not they are coprime.",
+    "Adding, x + y ≡ 2aᵢ (mod mᵢ), so x ≡ y (mod mᵢ)."
+   ]
+  },
+  {
+   "title": "Inverses from Fermat’s little theorem",
+   "goal": "Let p be prime and p ∤ a. Prove that a<sup>p−2</sup> is an inverse of a modulo p, and use it to find 3⁻¹ mod 11.",
+   "lines": [
+    "By Fermat’s little theorem, since p ∤ a, a<sup>p−1</sup> ≡ 1 (mod p).",
+    "Because p ≥ 2, we can write a<sup>p−1</sup> = a · a<sup>p−2</sup>.",
+    "So a · a<sup>p−2</sup> ≡ 1 (mod p), which says a<sup>p−2</sup> is an inverse of a modulo p.",
+    "For p = 11 and a = 3: 3⁹ = 19683 ≡ 4 (mod 11).",
+    "Check: 3 · 4 = 12 ≡ 1 (mod 11), so 3⁻¹ ≡ 4 (mod 11)."
+   ],
+   "distractors": [
+    "By Fermat’s little theorem, aᵖ ≡ 1 (mod p).",
+    "So a<sup>p−1</sup> itself is the inverse of a modulo p.",
+    "For p = 11 and a = 3: 3¹⁰ ≡ 1, so 3⁻¹ ≡ 1 (mod 11)."
+   ]
+  }
  ]
 }

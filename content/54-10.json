@@ -39,6 +39,27 @@
       "Normalize: (1, 1, 0)/√2, (1, −1, 2)/√6, (−1, 1, 1)/√3."
      ],
      "answer": "Orthogonal basis (1, 1, 0), (1, −1, 2), (−1, 1, 1); orthonormal: divide by √2, √6, √3."
+    },
+    {
+     "type": "thm",
+     "name": "Why vₖ is orthogonal to v₁ (the key computation)",
+     "text": "With v₂ = x₂ − (x₂·v₁/v₁·v₁)v₁: v₂·v₁ = x₂·v₁ − (x₂·v₁/v₁·v₁)(v₁·v₁) = x₂·v₁ − x₂·v₁ = 0. The same one-line computation, using that the earlier v's are mutually orthogonal, shows vₖ·vⱼ = 0 for every j &lt; k."
+    },
+    {
+     "type": "example",
+     "title": "Gram–Schmidt with ∫₋₁¹: the first Legendre polynomials (exam-hard)",
+     "prompt": "Orthogonalize 1, t, t² in ℙ₂ with ⟨f, g⟩ = ∫₋₁¹ f(t)g(t) dt, and give ‖·‖² of each result.",
+     "steps": [
+      "v₁ = 1, ⟨1, 1⟩ = 2.",
+      "⟨t, 1⟩ = ∫₋₁¹ t dt = 0 (odd): v₂ = t, ⟨t, t⟩ = 2/3.",
+      "⟨t², 1⟩ = 2/3, ⟨t², t⟩ = 0 (odd): v₃ = t² − (2/3)/2·1 = t² − 1/3.",
+      "⟨t² − 1/3, t² − 1/3⟩ = ∫₋₁¹ (t⁴ − (2/3)t² + 1/9) dt = 2/5 − 4/9 + 2/9 = 8/45."
+     ],
+     "answer": "{1, t, t² − 1/3} with squared norms 2, 2/3, 8/45"
+    },
+    {
+     "type": "tip",
+     "text": "Symmetric intervals plus parity save almost all the integration: odd·even integrands vanish on [−a, a]."
     }
    ]
   },
@@ -76,6 +97,23 @@
       "So Q = [1/3 2/3; 2/3 1/3; 2/3 −2/3], R = [3 6; 0 3]."
      ],
      "answer": "Q = (1/3)[1 2; 2 1; 2 −2], R = [3 6; 0 3]"
+    },
+    {
+     "type": "example",
+     "title": "QR in ℝ⁴ and least squares through it (exam-hard)",
+     "prompt": "A = [1 3; 1 1; 1 1; 1 −1]. Find A = QR and use it to solve the least-squares problem for b = (1, 2, 3, 4).",
+     "steps": [
+      "a₁ = (1, 1, 1, 1), ‖a₁‖ = 2 ⇒ q₁ = (1, 1, 1, 1)/2.",
+      "a₂·a₁ = 4, a₁·a₁ = 4 ⇒ v₂ = a₂ − a₁ = (2, 0, 0, −2), ‖v₂‖ = 2√2 ⇒ q₂ = (1, 0, 0, −1)/√2.",
+      "R = QᵀA = [q₁·a₁ q₁·a₂; 0 q₂·a₂] = [2 2; 0 2√2].",
+      "Qᵀb = ((1 + 2 + 3 + 4)/2, (1 − 4)/√2) = (5, −3/√2).",
+      "Back-substitute: 2√2·x̂₂ = −3/√2 ⇒ x̂₂ = −3/4; 2x̂₁ + 2x̂₂ = 5 ⇒ x̂₁ = 13/4. (Same as solving AᵀAx̂ = Aᵀb.)"
+     ],
+     "answer": "Q = [(1,1,1,1)/2, (1,0,0,−1)/√2], R = [2 2; 0 2√2]; x̂ = (13/4, −3/4)"
+    },
+    {
+     "type": "tip",
+     "text": "Why QR helps numerically: AᵀA squares the condition number of A, while Rx̂ = Qᵀb works with A's own conditioning. On exams, QR mostly saves you from inverting AᵀA: R is triangular, so back-substitution suffices."
     }
    ]
   },
@@ -144,6 +182,21 @@
     {
      "type": "tip",
      "text": "If the columns of A are orthogonal, AᵀA is diagonal and x̂ⱼ = (<b>b</b>·<b>a</b>ⱼ)/(<b>a</b>ⱼ·<b>a</b>ⱼ): just projection coefficients."
+    },
+    {
+     "type": "example",
+     "title": "Least squares with orthogonal columns (exam-hard shortcut)",
+     "prompt": "Solve the least-squares problem for A = [1 −1; 1 1; 1 1; 1 −1], b = (1, 2, 4, 3), and find the error.",
+     "steps": [
+      "The columns a₁ = (1, 1, 1, 1), a₂ = (−1, 1, 1, −1) are orthogonal (dot product 0), so AᵀA = diag(4, 4).",
+      "x̂₁ = b·a₁/a₁·a₁ = 10/4 = 5/2, x̂₂ = b·a₂/a₂·a₂ = (−1 + 2 + 4 − 3)/4 = 1/2.",
+      "b̂ = Ax̂ = (2, 3, 3, 2); b − b̂ = (−1, −1, 1, 1); error = √4 = 2."
+     ],
+     "answer": "x̂ = (5/2, 1/2), error 2"
+    },
+    {
+     "type": "p",
+     "text": "Interpretation: b̂ = Ax̂ is the point of Col A closest to b, the residual b − Ax̂ is orthogonal to every column, and the least-squares error is the distance from b to Col A. If b is already in Col A the error is 0 and the least-squares solutions are the ordinary solutions."
     }
    ]
   },
@@ -191,6 +244,28 @@
       "y = (2, 1, 1, 4); solve XᵀXβ = Xᵀy."
      ],
      "answer": "X = [1 −1 1; 1 0 0; 1 1 1; 1 2 4], y = (2, 1, 1, 4), normal equations XᵀXβ = Xᵀy."
+    },
+    {
+     "type": "example",
+     "title": "Quadratic fit, fully solved (exam-hard)",
+     "prompt": "Fit y = β₀ + β₁x + β₂x² to (−1, 2), (0, 1), (1, 1), (2, 4) by least squares.",
+     "steps": [
+      "X = [1 −1 1; 1 0 0; 1 1 1; 1 2 4], y = (2, 1, 1, 4).",
+      "XᵀX = [4 2 6; 2 6 8; 6 8 18] (sums of 1, x, x², x³, x⁴), Xᵀy = (Σy, Σxy, Σx²y) = (8, 7, 19).",
+      "Row reduce [XᵀX | Xᵀy] to get β = (7/10, −2/5, 1).",
+      "Fitted values at x = −1, 0, 1, 2: 2.1, 0.7, 1.3, 3.9, close to the data."
+     ],
+     "answer": "y = 0.7 − 0.4x + x²"
+    },
+    {
+     "type": "example",
+     "title": "Uniqueness with a parameter",
+     "prompt": "For which h does Ax = b have a unique least-squares solution for every b, where A = [1 2; 2 h; 3 6]?",
+     "steps": [
+      "Unique ⇔ columns independent. Column 2 = 2·column 1 exactly when h = 4.",
+      "For h ≠ 4 the columns are independent ⇒ AᵀA invertible ⇒ unique x̂."
+     ],
+     "answer": "Unique iff h ≠ 4"
     }
    ]
   },
@@ -259,6 +334,145 @@
     {
      "type": "warn",
      "text": "Orthogonality depends on the inner product: 1 and t are orthogonal for ∫₋₁¹ but not for ∫₀¹."
+    },
+    {
+     "type": "example",
+     "title": "Which formulas define inner products? (exam-hard)",
+     "prompt": "(a) ⟨x, y⟩ = x₁y₁ − x₂y₂ on ℝ². (b) ⟨p, q⟩ = p(0)q(0) + p′(0)q′(0) + p″(0)q″(0) on ℙ₂. (c) Compute ‖sin t‖ in C[0, π] with ⟨f, g⟩ = ∫₀^π fg dt.",
+     "steps": [
+      "(a) Not an inner product: ⟨(0, 1), (0, 1)⟩ = −1 &lt; 0 (positivity fails).",
+      "(b) Symmetric and linear (evaluation and differentiation are linear). Positivity: for p = a + bt + ct², ⟨p, p⟩ = a² + b² + (2c)², which is 0 only if a = b = c = 0. Yes, an inner product.",
+      "(c) ‖sin t‖² = ∫₀^π sin²t dt = π/2, so ‖sin t‖ = √(π/2)."
+     ],
+     "answer": "(a) no (b) yes (c) √(π/2)"
+    }
+   ]
+  },
+  {
+   "title": "How the pieces fit together",
+   "blocks": [
+    {
+     "type": "p",
+     "text": "All of this unit is one idea used four ways: the closest point of a subspace W to a vector y is its orthogonal projection, and projections are easy once W has an orthogonal basis."
+    },
+    {
+     "type": "table",
+     "head": [
+      "Tool",
+      "What it does",
+      "Formula"
+     ],
+     "rows": [
+      [
+       "Projection",
+       "closest point of W to y",
+       "ŷ = Σ(y·uᵢ/uᵢ·uᵢ)uᵢ (orthogonal basis)"
+      ],
+      [
+       "Gram–Schmidt",
+       "manufactures an orthogonal basis",
+       "vₖ = xₖ − Σⱼ₍ₖ proj<sub>vⱼ</sub> xₖ"
+      ],
+      [
+       "QR",
+       "records Gram–Schmidt as a factorization",
+       "A = QR, R = QᵀA"
+      ],
+      [
+       "Least squares",
+       "closest point of Col A to b",
+       "AᵀAx̂ = Aᵀb, or Rx̂ = Qᵀb"
+      ],
+      [
+       "Inner product spaces",
+       "same ideas for functions",
+       "replace u·v by ⟨u, v⟩ = ∫fg"
+      ]
+     ]
+    },
+    {
+     "type": "p",
+     "text": "Fourier series (the last unit of the course) are exactly this picture in C[−L, L]: the functions 1, cos(nπx/L), sin(nπx/L) are an orthogonal basis, and the Fourier coefficients are the projection coefficients ⟨f, φ⟩/⟨φ, φ⟩."
+    }
+   ]
+  },
+  {
+   "title": "True/False traps",
+   "blocks": [
+    {
+     "type": "table",
+     "head": [
+      "Statement",
+      "T/F",
+      "One-line reason"
+     ],
+     "rows": [
+      [
+       "Gram–Schmidt produces an orthogonal set from any linearly independent set.",
+       "<b>True</b>",
+       "Each vₖ is nonzero and orthogonal to the earlier ones."
+      ],
+      [
+       "If {v₁, v₂, v₃} is orthogonal and W = Span of them, Gram–Schmidt leaves them unchanged.",
+       "<b>True</b>",
+       "All projection coefficients are 0."
+      ],
+      [
+       "In A = QR, R is invertible when A has independent columns.",
+       "<b>True</b>",
+       "R's diagonal entries are the positive lengths ‖vₖ‖."
+      ],
+      [
+       "In A = QR, the columns of Q form an orthonormal basis of Col A.",
+       "<b>True</b>",
+       "Gram–Schmidt preserves the span."
+      ],
+      [
+       "A least-squares solution x̂ satisfies Ax̂ = b.",
+       "<b>False</b>",
+       "Only Ax̂ = proj<sub>Col A</sub> b."
+      ],
+      [
+       "The normal equations always have at least one solution.",
+       "<b>True</b>",
+       "Aᵀb ∈ Col Aᵀ = Col(AᵀA)."
+      ],
+      [
+       "If the columns of A are independent, x̂ = (AᵀA)⁻¹Aᵀb.",
+       "<b>True</b>",
+       "AᵀA is then invertible."
+      ],
+      [
+       "The least-squares error is ‖Ax̂‖.",
+       "<b>False</b>",
+       "It is ‖b − Ax̂‖."
+      ],
+      [
+       "The general least-squares problem is to find x minimizing ‖b − Ax‖.",
+       "<b>True</b>",
+       "Definition."
+      ],
+      [
+       "⟨p, q⟩ = p(0)q(0) + p(1)q(1) is an inner product on ℙ₂.",
+       "<b>False</b>",
+       "t² − t ≠ 0 has ⟨p, p⟩ = 0."
+      ],
+      [
+       "In any inner product space, |⟨u, v⟩| ≤ ‖u‖‖v‖.",
+       "<b>True</b>",
+       "Cauchy–Schwarz."
+      ],
+      [
+       "1 and t are orthogonal in C[0, 1] with the integral inner product.",
+       "<b>False</b>",
+       "∫₀¹ t dt = 1/2 ≠ 0."
+      ],
+      [
+       "If x̂ is a least-squares solution, b − Ax̂ ∈ Nul Aᵀ.",
+       "<b>True</b>",
+       "Aᵀ(b − Ax̂) = 0 by the normal equations."
+      ]
+     ]
     }
    ]
   }
@@ -893,5 +1107,57 @@
   "Line fit: X rows (1, xᵢ); XᵀX = [n Σx; Σx Σx²], Xᵀy = (Σy, Σxy).",
   "Inner product axioms: symmetric, linear, positive (⟨u, u⟩ = 0 only for u = 0).",
   "C[a, b]: ⟨f, g⟩ = ∫ₐᵇ fg dt; same projection and Gram–Schmidt formulas as ℝⁿ."
+ ],
+ "parsons": [
+  {
+   "title": "Derive the normal equations",
+   "goal": "Prove: x̂ minimizes ‖b − Ax‖ if and only if AᵀAx̂ = Aᵀb.",
+   "lines": [
+    "As x varies, Ax runs over all of Col A.",
+    "By the Best Approximation Theorem, ‖b − Ax‖ is smallest exactly when Ax = b̂ = proj<sub>Col A</sub> b.",
+    "Ax̂ = b̂ holds iff b − Ax̂ is orthogonal to Col A (orthogonal decomposition).",
+    "b − Ax̂ ⟂ Col A iff it is orthogonal to every column aⱼ, i.e. aⱼᵀ(b − Ax̂) = 0 for all j.",
+    "In matrix form: Aᵀ(b − Ax̂) = 0.",
+    "Rearranging gives AᵀAx̂ = Aᵀb. ∎"
+   ],
+   "distractors": [
+    "‖b − Ax‖ is smallest exactly when Ax = b.",
+    "b − Ax̂ ⟂ Col A iff it is orthogonal to every row of A.",
+    "Rearranging gives AAᵀx̂ = Ab."
+   ]
+  },
+  {
+   "title": "Nul(AᵀA) = Nul A",
+   "goal": "Prove: AᵀAx = 0 if and only if Ax = 0 (hence AᵀA is invertible iff A has independent columns).",
+   "lines": [
+    "If Ax = 0, then AᵀAx = Aᵀ0 = 0.",
+    "Conversely, suppose AᵀAx = 0.",
+    "Multiply on the left by xᵀ: xᵀAᵀAx = 0.",
+    "But xᵀAᵀAx = (Ax)ᵀ(Ax) = ‖Ax‖².",
+    "So ‖Ax‖² = 0, which forces Ax = 0.",
+    "Thus Nul(AᵀA) = Nul A. ∎"
+   ],
+   "distractors": [
+    "Multiply on the left by Aᵀ: AᵀAᵀAx = 0.",
+    "But xᵀAᵀAx = ‖x‖², so x = 0.",
+    "Since AᵀA is square, it is invertible."
+   ]
+  },
+  {
+   "title": "One step of Gram–Schmidt",
+   "goal": "Show that v₂ = x₂ − (x₂·v₁/v₁·v₁)v₁ is orthogonal to v₁ and that Span{v₁, v₂} = Span{x₁, x₂} when v₁ = x₁.",
+   "lines": [
+    "Compute v₂·v₁ = x₂·v₁ − (x₂·v₁/v₁·v₁)(v₁·v₁).",
+    "The factor v₁·v₁ cancels, giving v₂·v₁ = x₂·v₁ − x₂·v₁ = 0.",
+    "v₂ is a combination of x₂ and v₁ = x₁, so v₂ ∈ Span{x₁, x₂}.",
+    "Conversely x₂ = v₂ + (x₂·v₁/v₁·v₁)v₁ ∈ Span{v₁, v₂}.",
+    "Hence the two spans are equal. ∎"
+   ],
+   "distractors": [
+    "Compute v₂·v₁ = x₂·x₁ − 1.",
+    "The factor cancels, giving v₂·v₁ = 1.",
+    "v₂ is a multiple of v₁, so the spans are equal."
+   ]
+  }
  ]
 }

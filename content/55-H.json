@@ -1119,5 +1119,89 @@
   "Correctness of a recursive algorithm: strong induction on input size; IH only on the recursive call",
   "Two-term recursions need two base cases and strong induction",
   "f₀ = f₁ = 1 here (Rosen: f₀ = 0, f₁ = 1); f₀ + ⋯ + fₙ = fₙ₊₂ − 1"
+ ],
+ "parsons": [
+  {
+   "title": "Length of a concatenation",
+   "goal": "Strings over Σ: λ is a string, and wa is a string for every string w and a ∈ Σ. Define l(λ) = 0, l(wa) = l(w) + 1, xλ = x and x(wa) = (xw)a. Prove l(xy) = l(x) + l(y) for all strings x, y.",
+   "lines": [
+    "Fix an arbitrary string x and use structural induction on y.",
+    "Basis: y = λ. Then l(xλ) = l(x) = l(x) + 0 = l(x) + l(λ).",
+    "Recursive step: let y = wa with a ∈ Σ, and assume l(xw) = l(x) + l(w).",
+    "Then l(x(wa)) = l((xw)a) = l(xw) + 1, by the definitions of concatenation and l.",
+    "By the inductive hypothesis this equals l(x) + l(w) + 1 = l(x) + l(wa).",
+    "So the property holds for every string y built by the recursive definition, for every x."
+   ],
+   "distractors": [
+    "Basis: y = a is a single symbol, and l(xa) = l(x) + 1 = l(x) + l(a).",
+    "Recursive step: let y = wa and assume l(x(wa)) = l(x) + l(wa).",
+    "Then l(x(wa)) = l(xw) + l(a) + 1, by the definition of l."
+   ]
+  },
+  {
+   "title": "Leaves = internal vertices + 1",
+   "goal": "Full binary trees: a single vertex is one; if T₁, T₂ are, so is the tree with a new root r whose children are the roots of T₁ and T₂. Prove L(T) = I(T) + 1, where L counts leaves and I counts internal vertices.",
+   "lines": [
+    "We use structural induction on the recursive definition of full binary trees.",
+    "Basis: T is a single vertex, which is a leaf, so L(T) = 1 and I(T) = 0, and 1 = 0 + 1.",
+    "Recursive step: T is a new root r with subtrees T₁ and T₂, and we assume L(T₁) = I(T₁) + 1 and L(T₂) = I(T₂) + 1.",
+    "The leaves of T are the leaves of T₁ and T₂, and its internal vertices are r and those of T₁ and T₂, so L(T) = L(T₁) + L(T₂) and I(T) = 1 + I(T₁) + I(T₂).",
+    "Then L(T) = (I(T₁) + 1) + (I(T₂) + 1) = I(T) + 1, completing the induction."
+   ],
+   "distractors": [
+    "The leaves of T are the leaves of T₁ and T₂ together with r, so L(T) = L(T₁) + L(T₂) + 1.",
+    "Basis: T is a single vertex, which is internal, so I(T) = 1 and L(T) = 0.",
+    "Recursive step: attach two new leaves below one leaf of a smaller tree, which raises both L and I by 1."
+   ]
+  },
+  {
+   "title": "Vertices of a full binary tree of height h",
+   "goal": "Prove that every full binary tree T satisfies n(T) ≤ 2<sup>h(T)+1</sup> − 1, where n is the number of vertices and h the height.",
+   "lines": [
+    "Basis: T is a single vertex, so n(T) = 1 and h(T) = 0, and 1 ≤ 2<sup>0+1</sup> − 1 = 1.",
+    "Recursive step: T has root r and subtrees T₁, T₂; assume n(Tᵢ) ≤ 2<sup>h(Tᵢ)+1</sup> − 1 for i = 1, 2.",
+    "Count: n(T) = 1 + n(T₁) + n(T₂) and h(T) = 1 + max(h(T₁), h(T₂)).",
+    "By the inductive hypothesis, n(T) ≤ 1 + (2<sup>h(T₁)+1</sup> − 1) + (2<sup>h(T₂)+1</sup> − 1).",
+    "Each h(Tᵢ) ≤ h(T) − 1, so n(T) ≤ 1 + 2(2<sup>h(T)</sup> − 1).",
+    "This simplifies to n(T) ≤ 2<sup>h(T)+1</sup> − 1, the claim for T."
+   ],
+   "distractors": [
+    "Count: n(T) = n(T₁) + n(T₂) and h(T) = h(T₁) + h(T₂).",
+    "Each h(Tᵢ) = h(T), so n(T) ≤ 1 + 2(2<sup>h(T)+1</sup> − 1).",
+    "Basis: T is a single vertex, so n(T) = 1 and h(T) = 1, and 1 ≤ 2² − 1."
+   ]
+  },
+  {
+   "title": "Fast powering is correct",
+   "goal": "fastpow(a, n): if n = 0 return 1; if n is even, t := fastpow(a, n/2) and return t·t; otherwise return a·fastpow(a, n − 1). Prove fastpow(a, n) = aⁿ for every integer n ≥ 0.",
+   "lines": [
+    "We use strong induction on n ≥ 0.",
+    "Base case: n = 0. The algorithm returns 1 = a⁰.",
+    "Inductive hypothesis: let n ≥ 1 and assume fastpow(a, m) = aᵐ for every m with 0 ≤ m &lt; n.",
+    "If n is even, 0 ≤ n/2 &lt; n, so t = a<sup>n/2</sup> and the result is t·t = aⁿ; if n is odd, 0 ≤ n − 1 &lt; n, so the result is a·aⁿ⁻¹ = aⁿ.",
+    "In every case fastpow(a, n) = aⁿ, so by strong induction the algorithm is correct for all n ≥ 0."
+   ],
+   "distractors": [
+    "Inductive hypothesis: let n ≥ 1 and assume only that fastpow(a, n − 1) = aⁿ⁻¹.",
+    "Base case: n = 1. The algorithm returns a·fastpow(a, 0) = a.",
+    "If n is even, the result is t·t = 2·a<sup>n/2</sup> = aⁿ."
+   ]
+  },
+  {
+   "title": "A recursive set of multiples of 3",
+   "goal": "S is defined by: 3 ∈ S, and if x, y ∈ S then x + y ∈ S. Prove that 3 divides every element of S.",
+   "lines": [
+    "Let P(x) be “3 | x”; we use structural induction on the definition of S.",
+    "Basis: the only basis element is 3, and 3 | 3.",
+    "Recursive step: suppose x, y ∈ S with 3 | x and 3 | y, say x = 3s and y = 3t.",
+    "Then x + y = 3(s + t), so 3 | x + y.",
+    "Every element of S comes from 3 by finitely many recursive steps, so 3 divides every element of S."
+   ],
+   "distractors": [
+    "Recursive step: suppose 3 | x + y, and conclude 3 | x and 3 | y.",
+    "Basis: 0 ∈ S and 3 | 0.",
+    "Then x + y = 3s + 3t + 3, so 3 | x + y."
+   ]
+  }
  ]
 }

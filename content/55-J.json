@@ -1427,5 +1427,71 @@
   "Repeated letters: n!/(n₁!⋯nₖ!); “not together” = total − glued",
   "Lattice paths (0,0) → (a,b): C(a + b, a); through P: multiply segments",
   "Order matters + repeats: nʳ; order + no repeats: P(n, r); no order + no repeats: C(n, r); no order + repeats: C(n + r − 1, r)"
+ ],
+ "parsons": [
+  {
+   "title": "Pascal’s identity by a story",
+   "goal": "Give a combinatorial proof that C(n, k) = C(n − 1, k − 1) + C(n − 1, k) for 1 ≤ k ≤ n.",
+   "lines": [
+    "Count the k-element subsets of S = {1, 2, …, n}; by definition there are C(n, k) of them.",
+    "Fix the element n and split these subsets into those that contain n and those that do not.",
+    "Subsets containing n: choose the other k − 1 elements from {1, …, n − 1}, giving C(n − 1, k − 1); subsets without n: choose all k from {1, …, n − 1}, giving C(n − 1, k).",
+    "The two classes are disjoint and together contain every k-subset of S.",
+    "So by the sum rule, C(n, k) = C(n − 1, k − 1) + C(n − 1, k)."
+   ],
+   "distractors": [
+    "Subsets containing n: choose k more elements from {1, …, n − 1}, giving C(n − 1, k); subsets without n: C(n − 1, k − 1).",
+    "The two classes overlap in the subsets containing n − 1, so subtract C(n − 2, k − 1).",
+    "Count the ordered k-tuples of distinct elements of S; there are C(n, k) of them."
+   ]
+  },
+  {
+   "title": "Vandermonde’s identity",
+   "goal": "Give a combinatorial proof that C(m + n, r) = Σ<sub>k=0</sub><sup>r</sup> C(m, r − k)·C(n, k).",
+   "lines": [
+    "Count the committees of r people chosen from a group of m men and n women; there are C(m + n, r) of them.",
+    "Classify each committee by the number k of women on it, where 0 ≤ k ≤ r.",
+    "For a fixed k, choose the k women in C(n, k) ways and the r − k men in C(m, r − k) ways, so by the product rule C(m, r − k)·C(n, k) committees have exactly k women.",
+    "Different values of k give disjoint classes, and every committee lies in one of them.",
+    "By the sum rule, C(m + n, r) = Σ<sub>k=0</sub><sup>r</sup> C(m, r − k)·C(n, k)."
+   ],
+   "distractors": [
+    "For a fixed k, there are C(m, r − k) + C(n, k) committees with exactly k women.",
+    "Classify each committee by whether its first chosen member is a man or a woman.",
+    "For a fixed k, there are C(m + n, k)·C(m + n, r − k) committees with exactly k women."
+   ]
+  },
+  {
+   "title": "Σ k·C(n, k) = n·2ⁿ⁻¹ (committee with a chair)",
+   "goal": "Give a combinatorial proof that Σ<sub>k=1</sub><sup>n</sup> k·C(n, k) = n·2<sup>n−1</sup>.",
+   "lines": [
+    "Count the ways to choose, from n people, a committee together with a chair who is on the committee.",
+    "Method 1: choose the size k and the committee in C(n, k) ways, then the chair in k ways; summing over k gives Σ<sub>k=1</sub><sup>n</sup> k·C(n, k).",
+    "Method 2: first choose the chair, in n ways.",
+    "Then each of the other n − 1 people is on the committee or not, giving 2<sup>n−1</sup> choices, so Method 2 gives n·2<sup>n−1</sup>.",
+    "Both methods count the same set, so Σ<sub>k=1</sub><sup>n</sup> k·C(n, k) = n·2<sup>n−1</sup>."
+   ],
+   "distractors": [
+    "Then each of the n people is on the committee or not, giving 2<sup>n</sup> choices, so Method 2 gives n·2<sup>n</sup>.",
+    "Method 1: choose the committee in 2<sup>n</sup> ways and then the chair in n ways.",
+    "Both methods count the same set, so Σ<sub>k=1</sub><sup>n</sup> k·C(n, k) = 2<sup>n</sup>."
+   ]
+  },
+  {
+   "title": "Σ C(n, k) = 2ⁿ by counting subsets",
+   "goal": "Give a combinatorial proof that Σ<sub>k=0</sub><sup>n</sup> C(n, k) = 2<sup>n</sup>.",
+   "lines": [
+    "Count the subsets of an n-element set S in two ways.",
+    "First way: decide for each of the n elements whether it is in or out; 2 choices each, so by the product rule S has 2<sup>n</sup> subsets.",
+    "Second way: sort the subsets by their size k, where 0 ≤ k ≤ n; there are C(n, k) subsets of size k.",
+    "The sizes give disjoint classes covering all subsets, so by the sum rule S has Σ<sub>k=0</sub><sup>n</sup> C(n, k) subsets.",
+    "Equating the two counts gives Σ<sub>k=0</sub><sup>n</sup> C(n, k) = 2<sup>n</sup>."
+   ],
+   "distractors": [
+    "Second way: sort the subsets by their size k, where 1 ≤ k ≤ n; there are C(n, k) subsets of size k.",
+    "First way: each of the n elements is in or out, so S has 2n subsets.",
+    "There are C(n, k) subsets of each size k, so by the product rule S has C(n, 0)·C(n, 1)⋯C(n, n) subsets."
+   ]
+  }
  ]
 }

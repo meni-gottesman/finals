@@ -38,6 +38,16 @@
     {
      "type": "tip",
      "text": "Fast trick: ∫₋π^π (3 + 2 cos 2x − sin 5x)² dx = 3²·2π + 2²·π + 1²·π = 23π, because all cross terms vanish."
+    },
+    {
+     "type": "example",
+     "title": "Orthogonality on [−2, 2] by product-to-sum (exam-hard)",
+     "prompt": "Compute ∫₋₂² sin²(πx) dx and ∫₋₂² sin(πx/2)sin(3πx/2) dx from the identities, not the table.",
+     "steps": [
+      "L = 2. sin²(πx) = ½[1 − cos(2πx)]; ∫₋₂² ½ dx = 2 and cos(2πx) integrates to 0 over whole periods: total 2 = L. (Here πx = 2πx/L, i.e. n = 2.)",
+      "sin A sin B = ½[cos(A − B) − cos(A + B)] = ½[cos(πx) − cos(2πx)]; both integrate to 0 over [−2, 2]: total 0."
+     ],
+     "answer": "2 and 0"
     }
    ]
   },
@@ -79,6 +89,46 @@
     {
      "type": "warn",
      "text": "Two classic slips: forgetting the ½ on a₀ (compute a₀ separately, since the aₙ formula often has n in a denominator), and using nx instead of nπx/L when L ≠ π."
+    },
+    {
+     "type": "example",
+     "title": "Half-wave rectified sine (exam-hard)",
+     "prompt": "Find the Fourier series of f(x) = 0 on (−π, 0), f(x) = sin x on (0, π).",
+     "steps": [
+      "a₀ = (1/π)∫₀^π sin x dx = 2/π, constant term 1/π.",
+      "aₙ = (1/π)∫₀^π sin x cos nx dx. With sin x cos nx = ½[sin(1 + n)x + sin(1 − n)x]: a₁ = 0 and, for n ≥ 2, aₙ = −(1 + (−1)ⁿ)/(π(n² − 1)): −2/(π(n² − 1)) for even n, 0 for odd n.",
+      "bₙ = (1/π)∫₀^π sin x sin nx dx: b₁ = (1/π)(π/2) = 1/2, and bₙ = 0 for n ≥ 2 (orthogonality on [0, π] of sin x and sin nx).",
+      "f ~ 1/π + ½ sin x − (2/π)[cos 2x/3 + cos 4x/15 + cos 6x/35 + ⋯]."
+     ],
+     "answer": "f ~ 1/π + ½ sin x − (2/π)Σₖ cos(2kx)/(4k² − 1)"
+    },
+    {
+     "type": "warn",
+     "text": "Watch the special index: formulas with n² − 1 in the denominator break at n = 1, so compute a₁ and b₁ separately."
+    },
+    {
+     "type": "steps",
+     "title": "Template for computing a Fourier series",
+     "items": [
+      "Identify L (half the period) and write the frequencies nπx/L.",
+      "Check symmetry: even ⇒ skip bₙ; odd ⇒ skip aₙ and a₀; neither ⇒ compute all.",
+      "Compute a₀ separately (it is (1/L)∫f, often simpler and never has n in a denominator).",
+      "Split the integrals at the breakpoints; integrate by parts for x·cos and x·sin (or use the standard integrals).",
+      "Simplify with cos nπ = (−1)ⁿ, sin nπ = 0; separate even and odd n if (−1)ⁿ appears.",
+      "Write the series and sanity-check one value with the convergence theorem."
+     ]
+    },
+    {
+     "type": "example",
+     "title": "Fourier series of |x| (routine, uses symmetry)",
+     "prompt": "Find the Fourier series of f(x) = |x| on (−π, π).",
+     "steps": [
+      "Even ⇒ bₙ = 0. a₀ = (2/π)∫₀^π x dx = π ⇒ constant π/2.",
+      "aₙ = (2/π)∫₀^π x cos nx dx = (2/π)·((−1)ⁿ − 1)/n²: −4/(πn²) for odd n, 0 for even n.",
+      "|x| ~ π/2 − (4/π)[cos x + cos 3x/9 + cos 5x/25 + ⋯].",
+      "Check at x = 0 (continuous): 0 = π/2 − (4/π)Σ_odd 1/n² gives Σ_odd 1/n² = π²/8, the known value. ✓"
+     ],
+     "answer": "|x| ~ π/2 − (4/π)Σ_odd cos(nx)/n²"
     }
    ]
   },
@@ -116,6 +166,16 @@
     {
      "type": "tip",
      "text": "Split a function into even and odd parts when it is a sum: x + x² on (−1, 1) has its cosine terms from x² and its sine terms from x."
+    },
+    {
+     "type": "example",
+     "title": "Symmetry before integrating (routine)",
+     "prompt": "Without computing, which coefficients of f(x) = x|x| on (−π, π) vanish? And of g(x) = x² − |x|?",
+     "steps": [
+      "x|x|: (−x)|−x| = −x|x|, odd ⇒ all aₙ (including a₀) are 0; only sines.",
+      "x² − |x|: even ⇒ all bₙ = 0; only cosines and a constant."
+     ],
+     "answer": "x|x|: aₙ = 0; x² − |x|: bₙ = 0"
     }
    ]
   },
@@ -153,6 +213,16 @@
       "x = 5 ≡ 1 (mod 4) ⇒ 1. x = 6 ≡ 2 ⇒ 1."
      ],
      "answer": "0, 1, 1, 0, 1, 1"
+    },
+    {
+     "type": "example",
+     "title": "Convergence of a half-range expansion (exam-hard)",
+     "prompt": "f = 1 on (0, 1), f = 0 on (1, 2). To what do its cosine series and its sine series converge at x = 0, 1, 2, 3?",
+     "steps": [
+      "Cosine series = Fourier series of the even 4-periodic extension. At 0: the even extension has 1 on both sides ⇒ 1. At 1: jump 1 → 0 ⇒ ½. At 2: both sides 0 ⇒ 0. At 3 ≡ −1: jump between 0 and 1 ⇒ ½.",
+      "Sine series = odd extension. At 0: −1 on the left, 1 on the right ⇒ 0. At 1: ½. At 2: both sides 0 ⇒ 0. At 3 ≡ −1: the odd extension jumps between 0 and −1 ⇒ −½."
+     ],
+     "answer": "Cosine: 1, ½, 0, ½. Sine: 0, ½, 0, −½"
     }
    ]
   },
@@ -197,6 +267,33 @@
     {
      "type": "warn",
      "text": "Half-range coefficients use 2/L and ∫₀ᴸ; full-range coefficients use 1/L and ∫₋ₗᴸ. Mixing them doubles or halves every coefficient."
+    },
+    {
+     "type": "example",
+     "title": "Cosine series of a step (exam-hard)",
+     "prompt": "Find the cosine series of f = 1 on (0, 1), f = 0 on (1, 2).",
+     "steps": [
+      "L = 2. a₀ = (2/2)∫₀¹ 1 dx = 1 ⇒ constant ½.",
+      "aₙ = (2/2)∫₀¹ cos(nπx/2) dx = [2/(nπ)] sin(nπ/2): 2/π, 0, −2/(3π), 0, 2/(5π), …"
+     ],
+     "answer": "f ~ ½ + (2/π)[cos(πx/2) − (1/3)cos(3πx/2) + (1/5)cos(5πx/2) − ⋯]"
+    }
+   ]
+  },
+  {
+   "title": "Fourier series as projections, and where they are used",
+   "blocks": [
+    {
+     "type": "p",
+     "text": "In C[−L, L] with ⟨f, g⟩ = ∫₋ₗᴸ fg dx, the functions 1, cos(nπx/L), sin(nπx/L) form an orthogonal set with ⟨1, 1⟩ = 2L and ⟨cos, cos⟩ = ⟨sin, sin⟩ = L. The N-th partial sum of the Fourier series is exactly the orthogonal projection of f onto the span of the first 2N + 1 of these functions, so it is the best approximation of f by a trigonometric polynomial of that degree (in the mean-square sense)."
+    },
+    {
+     "type": "p",
+     "text": "This explains every formula: aₙ = ⟨f, cos⟩/⟨cos, cos⟩ = (1/L)∫ f cos, and the constant term a₀/2 = ⟨f, 1⟩/⟨1, 1⟩ = (1/2L)∫ f, the average value. It also explains why a finite trigonometric sum is its own Fourier series: it already lies in the subspace, and projecting changes nothing."
+    },
+    {
+     "type": "p",
+     "text": "Application: Fourier series solve the heat and wave equations by separation of variables. A forced oscillator y″ + ω²y = f(t) with periodic f can be solved term by term: each mode sin nt is a forcing term, and resonance happens only for modes with n = ω that actually appear in f."
     }
    ]
   },
@@ -245,6 +342,101 @@
       "(e) True: b₃ = 1, a₅ = 2, all other coefficients 0 by orthogonality."
      ],
      "answer": "(a) F (b) T (c) F (d) F (e) T"
+    },
+    {
+     "type": "example",
+     "title": "Σ 1/(4k² − 1) from the half-wave sine (exam-hard)",
+     "prompt": "Use the series of the half-wave rectified sine to evaluate Σₖ≥₁ 1/(4k² − 1).",
+     "steps": [
+      "f ~ 1/π + ½ sin x − (2/π)Σ cos(2kx)/(4k² − 1).",
+      "At x = 0, f is continuous with f(0) = 0, and sin 0 = 0, cos 0 = 1.",
+      "0 = 1/π − (2/π)Σ 1/(4k² − 1) ⇒ Σ 1/(4k² − 1) = 1/2."
+     ],
+     "answer": "1/3 + 1/15 + 1/35 + ⋯ = 1/2"
+    },
+    {
+     "type": "tip",
+     "text": "Telescoping check: 1/(4k² − 1) = ½[1/(2k − 1) − 1/(2k + 1)], whose partial sums are ½[1 − 1/(2K + 1)] → ½. ✓"
+    }
+   ]
+  },
+  {
+   "title": "True/False traps",
+   "blocks": [
+    {
+     "type": "table",
+     "head": [
+      "Statement",
+      "T/F",
+      "One-line reason"
+     ],
+     "rows": [
+      [
+       "The Fourier series of f converges to f(x) at every point where f is continuous (f, f′ piecewise continuous).",
+       "<b>True</b>",
+       "Convergence theorem."
+      ],
+      [
+       "At a jump the Fourier series converges to the value f(x).",
+       "<b>False</b>",
+       "To the average of the one-sided limits."
+      ],
+      [
+       "If f is odd, its Fourier series has only cosine terms.",
+       "<b>False</b>",
+       "Only sine terms."
+      ],
+      [
+       "If f is even on [−L, L], bₙ = 0 for every n.",
+       "<b>True</b>",
+       "f·sin is odd."
+      ],
+      [
+       "The constant term of the Fourier series is a₀.",
+       "<b>False</b>",
+       "It is a₀/2, the average of f."
+      ],
+      [
+       "The sine series of f on [0, L] converges to 0 at x = 0 and x = L.",
+       "<b>True</b>",
+       "Every term vanishes there."
+      ],
+      [
+       "The cosine series of f on [0, L] is the Fourier series of the even extension.",
+       "<b>True</b>",
+       "Definition."
+      ],
+      [
+       "cos(nπ) = (−1)ⁿ and sin(nπ) = 0 for integers n.",
+       "<b>True</b>",
+       "Standard values."
+      ],
+      [
+       "∫₋ₗᴸ cos(mπx/L)sin(nπx/L) dx = 0 for all m, n.",
+       "<b>True</b>",
+       "Odd integrand."
+      ],
+      [
+       "The Fourier series of sin 3x + cos x on [−π, π] has infinitely many nonzero coefficients.",
+       "<b>False</b>",
+       "It is its own Fourier series: b₃ = 1, a₁ = 1."
+      ],
+      [
+       "Half-range coefficients use the factor 2/L.",
+       "<b>True</b>",
+       "The even/odd extension doubles the half-interval integral."
+      ],
+      [
+       "A Fourier series of a 2L-periodic function uses frequencies nπ/L.",
+       "<b>True</b>",
+       "cos(nπx/L), sin(nπx/L)."
+      ],
+      [
+       "Changing f at one point changes its Fourier coefficients.",
+       "<b>False</b>",
+       "Integrals ignore single points."
+      ]
+     ]
     }
    ]
   }
@@ -806,5 +998,56 @@
   "Half-range: cosine series = even extension, sine series = odd extension (sine series is 0 at 0 and L).",
   "sin nπ = 0, cos nπ = (−1)ⁿ; sin(nπ/2) = 1, 0, −1, 0, …",
   "Numerical series: evaluate the Fourier series at a convenient point (Σ1/n² = π²/6, Σ_odd 1/n² = π²/8)."
+ ],
+ "parsons": [
+  {
+   "title": "Derive the cosine coefficient formula",
+   "goal": "Assume f(x) = a₀/2 + Σ[aₙcos(nπx/L) + bₙsin(nπx/L)] can be integrated term by term on [−L, L]. Show aₘ = (1/L)∫₋ₗᴸ f(x)cos(mπx/L) dx for m ≥ 1.",
+   "lines": [
+    "Multiply both sides by cos(mπx/L) and integrate over [−L, L].",
+    "The constant term gives (a₀/2)∫₋ₗᴸ cos(mπx/L) dx = 0.",
+    "Each sine term gives ∫ sin(nπx/L)cos(mπx/L) dx = 0 (odd integrand).",
+    "Each cosine term with n ≠ m gives 0 by orthogonality.",
+    "The term n = m gives aₘ∫₋ₗᴸ cos²(mπx/L) dx = aₘL.",
+    "So ∫₋ₗᴸ f(x)cos(mπx/L) dx = aₘL, i.e. aₘ = (1/L)∫₋ₗᴸ f(x)cos(mπx/L) dx. ∎"
+   ],
+   "distractors": [
+    "The term n = m gives aₘ∫ cos² dx = 2aₘL.",
+    "Each cosine term with n ≠ m gives aₙL.",
+    "So aₘ = (2/L)∫₋ₗᴸ f(x)cos(mπx/L) dx."
+   ]
+  },
+  {
+   "title": "Even functions have only cosine terms",
+   "goal": "Prove: if f is even on [−L, L], then bₙ = 0 for every n.",
+   "lines": [
+    "bₙ = (1/L)∫₋ₗᴸ f(x)sin(nπx/L) dx.",
+    "f is even and sin(nπx/L) is odd.",
+    "The product of an even and an odd function is odd.",
+    "The integral of an odd function over a symmetric interval [−L, L] is 0.",
+    "Hence bₙ = 0 for every n, and the series has only cosine terms (plus a₀/2). ∎"
+   ],
+   "distractors": [
+    "The product of an even and an odd function is even.",
+    "So bₙ = (2/L)∫₀ᴸ f(x)sin(nπx/L) dx ≠ 0.",
+    "Hence aₙ = 0 for every n."
+   ]
+  },
+  {
+   "title": "A coefficient by parts",
+   "goal": "Compute bₙ for f(x) = x on (−π, π).",
+   "lines": [
+    "f is odd, so bₙ = (2/π)∫₀^π x sin nx dx.",
+    "By parts with u = x, dv = sin nx dx: ∫ x sin nx dx = −x cos(nx)/n + ∫ cos(nx)/n dx.",
+    "Evaluate on [0, π]: [−x cos(nx)/n]₀^π = −π cos(nπ)/n = −π(−1)ⁿ/n.",
+    "The remaining integral [sin(nx)/n²]₀^π is 0.",
+    "So bₙ = (2/π)(−π(−1)ⁿ/n) = 2(−1)ⁿ⁺¹/n. ∎"
+   ],
+   "distractors": [
+    "f is even, so bₙ = 0.",
+    "Evaluate on [0, π]: [−x cos(nx)/n]₀^π = π/n.",
+    "So bₙ = 2/n for every n."
+   ]
+  }
  ]
 }

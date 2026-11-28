@@ -55,6 +55,22 @@
       "3 independent vectors in the 3-dimensional ℙ₂ ⇒ basis."
      ],
      "answer": "Yes, it is a basis."
+    },
+    {
+     "type": "example",
+     "title": "Basis of a subspace defined by equations, then extend it (exam-hard)",
+     "prompt": "H = {(a, b, c, d) : a − 2b + c = 0, b = d}. Find a basis and dim H, then extend it to a basis of ℝ⁴.",
+     "steps": [
+      "H = Nul [1 −2 1 0; 0 1 0 −1]. From row 2, b = d; from row 1, a = 2b − c = 2d − c. Free c, d.",
+      "(a, b, c, d) = c(−1, 0, 1, 0) + d(2, 1, 0, 1). Basis {(−1, 0, 1, 0), (2, 1, 0, 1)}, dim H = 2.",
+      "To extend, append e₁, e₂, e₃, e₄ and keep pivot columns of [h₁ h₂ e₁ e₂ e₃ e₄]: pivots fall in the first four columns.",
+      "So {h₁, h₂, e₁, e₂} is a basis of ℝ⁴ (its 4×4 determinant is nonzero)."
+     ],
+     "answer": "Basis of H: {(−1,0,1,0), (2,1,0,1)}, dim 2; extended basis {h₁, h₂, e₁, e₂}"
+    },
+    {
+     "type": "tip",
+     "text": "Two views of a basis: as small as possible while spanning (remove redundant vectors with the Spanning Set Theorem), and as large as possible while independent (any independent set can be extended by adding vectors not already in its span)."
     }
    ]
   },
@@ -112,6 +128,21 @@
       "Match t²: c = 5. Match t: b + c = −2 ⇒ b = −7. Match 1: a + b + c = 3 ⇒ a = 5."
      ],
      "answer": "(5, −7, 5)"
+    },
+    {
+     "type": "example",
+     "title": "Matrices via coordinates (exam-hard twist)",
+     "prompt": "Is {[1 2; 0 1], [1 0; 1 0], [0 1; 1 0], [2 1; 1 1]} a basis of M₂ₓ₂?",
+     "steps": [
+      "Use the standard basis E₁₁, E₁₂, E₂₁, E₂₂: [a b; c d] ↦ (a, b, c, d).",
+      "Coordinate vectors (1, 2, 0, 1), (1, 0, 1, 0), (0, 1, 1, 0), (2, 1, 1, 1) as columns of a 4×4 matrix.",
+      "Row reduction gives 4 pivots (rank 4), so the coordinate vectors are independent; 4 independent vectors in the 4-dimensional M₂ₓ₂ form a basis."
+     ],
+     "answer": "Yes, it is a basis"
+    },
+    {
+     "type": "p",
+     "text": "Why coordinates are trustworthy: the coordinate map is linear, one-to-one and onto (an isomorphism). Linear maps send relations to relations, and one-to-one maps cannot create new ones, so a set is independent in V exactly when its coordinate vectors are independent in ℝⁿ, and it spans V exactly when they span ℝⁿ."
     }
    ]
   },
@@ -180,6 +211,21 @@
       "Col A basis: columns 1 and 3 of A: (1, 2, 3), (0, 1, 1)."
      ],
      "answer": "rank 2, nullity 3; Row: {(1, 2, 0, 4, 1), (0, 0, 1, 1, 1)}; Col: {(1, 2, 3), (0, 1, 1)}."
+    },
+    {
+     "type": "example",
+     "title": "Rank theorem traps (exam-hard)",
+     "prompt": "(a) Can a 6×9 matrix have a 2-dimensional null space? (b) A is 7×9 with dim Nul A = 2. Is Ax = b consistent for every b? (c) A is 5×5 and Ax = 0 has a 1-dimensional solution space. What are rank A and dim Col Aᵀ? Is A invertible?",
+     "steps": [
+      "(a) rank ≤ 6, so dim Nul A = 9 − rank ≥ 3. No.",
+      "(b) rank = 9 − 2 = 7 = number of rows ⇒ Col A is a 7-dimensional subspace of ℝ⁷ = all of ℝ⁷ ⇒ yes, always consistent.",
+      "(c) rank = 5 − 1 = 4 = dim Row A = dim Col Aᵀ. rank &lt; 5 ⇒ not invertible."
+     ],
+     "answer": "(a) No (b) Yes (c) rank 4, dim Col Aᵀ = 4, not invertible"
+    },
+    {
+     "type": "tip",
+     "text": "Two numbers decide almost everything: rank r and the shape m×n. Then dim Col A = dim Row A = r, dim Nul A = n − r, dim Nul Aᵀ = m − r. Onto ⇔ r = m; one-to-one ⇔ r = n."
     }
    ]
   },
@@ -222,6 +268,23 @@
     {
      "type": "warn",
      "text": "Reducing [B | C] gives P<sub>ℬ←𝒞</sub>, the wrong direction. The matrix you reduce on the left is the basis you are converting INTO."
+    },
+    {
+     "type": "example",
+     "title": "Change of basis in ℙ₂ (exam-hard)",
+     "prompt": "ℰ = {1, t, t²}, 𝒞 = {1, 1 + t, (1 + t)²}. Find P<sub>ℰ←𝒞</sub> and P<sub>𝒞←ℰ</sub>, and use them to write p = 3 − t + 2t² in the basis 𝒞.",
+     "steps": [
+      "𝒞 in standard coordinates: 1 → (1, 0, 0), 1 + t → (1, 1, 0), (1 + t)² = 1 + 2t + t² → (1, 2, 1).",
+      "P<sub>ℰ←𝒞</sub> = [1 1 1; 0 1 2; 0 0 1] (the easy direction).",
+      "P<sub>𝒞←ℰ</sub> = (P<sub>ℰ←𝒞</sub>)⁻¹ = [1 −1 1; 0 1 −2; 0 0 1].",
+      "[p]<sub>𝒞</sub> = P<sub>𝒞←ℰ</sub>(3, −1, 2) = (3 + 1 + 2, −1 − 4, 2) = (6, −5, 2).",
+      "Check: 6 − 5(1 + t) + 2(1 + t)² = 6 − 5 − 5t + 2 + 4t + 2t² = 3 − t + 2t². ✓"
+     ],
+     "answer": "[p]<sub>𝒞</sub> = (6, −5, 2)"
+    },
+    {
+     "type": "p",
+     "text": "This is Taylor's formula around t = −1 in disguise: writing p in powers of (1 + t) is exactly changing to the basis 𝒞."
     }
    ]
   },
@@ -246,6 +309,166 @@
     {
      "type": "tip",
      "text": "Dimension counting rules: independent sets have ≤ dim V vectors; spanning sets have ≥ dim V; a basis has exactly dim V; with exactly dim V vectors, independent ⇔ spanning."
+    }
+   ]
+  },
+  {
+   "title": "Computing dimensions of familiar spaces",
+   "blocks": [
+    {
+     "type": "p",
+     "text": "To find the dimension of a subspace, write its general element with free parameters and read off a spanning set; if the parameters are independent (each appears in its own position), that spanning set is a basis and the number of parameters is the dimension."
+    },
+    {
+     "type": "table",
+     "head": [
+      "Space",
+      "General element",
+      "Dimension"
+     ],
+     "rows": [
+      [
+       "Symmetric 2×2 matrices",
+       "[a b; b c]",
+       "3"
+      ],
+      [
+       "Upper triangular 3×3",
+       "6 entries on/above diagonal",
+       "6"
+      ],
+      [
+       "Trace-zero n×n",
+       "n² entries with one condition",
+       "n² − 1"
+      ],
+      [
+       "{p ∈ ℙ₃ : p(0) = 0}",
+       "bt + ct² + dt³",
+       "3"
+      ],
+      [
+       "{p ∈ ℙₙ : p(1) = p(2) = 0}",
+       "(t − 1)(t − 2)q(t), q ∈ ℙₙ₋₂",
+       "n − 1"
+      ],
+      [
+       "Solutions of y″ + by′ + cy = 0",
+       "c₁y₁ + c₂y₂",
+       "2"
+      ]
+     ]
+    },
+    {
+     "type": "example",
+     "title": "Dimension by counting conditions",
+     "prompt": "Find dim W for W = {A ∈ M₂ₓ₂ : A [1; 1] = [0; 0]} and give a basis.",
+     "steps": [
+      "A = [a b; c d]: A(1, 1) = (a + b, c + d) = 0 ⇒ b = −a, d = −c.",
+      "A = a[1 −1; 0 0] + c[0 0; 1 −1].",
+      "Two independent matrices ⇒ dim W = 2 (= 4 entries minus 2 independent linear conditions)."
+     ],
+     "answer": "dim W = 2, basis {[1 −1; 0 0], [0 0; 1 −1]}"
+    },
+    {
+     "type": "warn",
+     "text": "Counting conditions works only when the conditions are independent: dim = (dimension of the big space) − (rank of the condition matrix)."
+    },
+    {
+     "type": "example",
+     "title": "Coordinates in a rotated basis (geometric view)",
+     "prompt": "ℬ = {(1, 1), (−1, 1)}. Find [x]<sub>ℬ</sub> for x = (3, 5), and interpret.",
+     "steps": [
+      "The basis vectors are orthogonal, so cⱼ = (x·bⱼ)/(bⱼ·bⱼ): c₁ = 8/2 = 4, c₂ = 2/2 = 1.",
+      "Check: 4(1, 1) + 1(−1, 1) = (3, 5). ✓",
+      "Geometrically, ℬ is the standard grid rotated by 45° and stretched by √2; (4, 1) are the coordinates of the same point read on that grid."
+     ],
+     "answer": "[x]<sub>ℬ</sub> = (4, 1)"
+    }
+   ]
+  },
+  {
+   "title": "True/False traps",
+   "blocks": [
+    {
+     "type": "table",
+     "head": [
+      "Statement",
+      "T/F",
+      "One-line reason"
+     ],
+     "rows": [
+      [
+       "A basis is a spanning set that is as large as possible.",
+       "<b>False</b>",
+       "It is a spanning set that is as small as possible (or an independent set as large as possible)."
+      ],
+      [
+       "If H = Span{b₁, …, bₚ}, then {b₁, …, bₚ} is a basis of H.",
+       "<b>False</b>",
+       "Only if the bᵢ are independent."
+      ],
+      [
+       "The columns of an invertible n×n matrix form a basis of ℝⁿ.",
+       "<b>True</b>",
+       "IMT: independent and spanning."
+      ],
+      [
+       "The pivot columns of RREF(A) form a basis of Col A.",
+       "<b>False</b>",
+       "Use the pivot columns of A itself."
+      ],
+      [
+       "If dim V = 3, any 3 vectors spanning V form a basis.",
+       "<b>True</b>",
+       "Basis Theorem."
+      ],
+      [
+       "dim ℙ₃ = 3.",
+       "<b>False</b>",
+       "{1, t, t², t³} has 4 elements."
+      ],
+      [
+       "If a 6×4 matrix has rank 4, Ax = b has at most one solution.",
+       "<b>True</b>",
+       "No free variables."
+      ],
+      [
+       "dim Row A + dim Nul A = number of columns of A.",
+       "<b>True</b>",
+       "dim Row A = rank."
+      ],
+      [
+       "The rank of A equals the number of nonzero rows of A.",
+       "<b>False</b>",
+       "Of an ECHELON form of A, not of A."
+      ],
+      [
+       "Row A = Col Aᵀ.",
+       "<b>True</b>",
+       "Rows of A are columns of Aᵀ."
+      ],
+      [
+       "P<sub>𝒞←ℬ</sub> has columns [cⱼ]<sub>ℬ</sub>.",
+       "<b>False</b>",
+       "Its columns are [bⱼ]<sub>𝒞</sub>; [cⱼ]<sub>ℬ</sub> builds P<sub>ℬ←𝒞</sub>."
+      ],
+      [
+       "A vector space of dimension n has exactly one basis.",
+       "<b>False</b>",
+       "It has infinitely many (for n ≥ 1)."
+      ],
+      [
+       "If V is spanned by 5 vectors, dim V ≤ 5.",
+       "<b>True</b>",
+       "A spanning set contains a basis."
+      ],
+      [
+       "A 4×7 matrix of rank 4 defines an onto map ℝ⁷ → ℝ⁴.",
+       "<b>True</b>",
+       "Pivot in every row."
+      ]
+     ]
     }
    ]
   }
@@ -1079,5 +1302,39 @@
   "Rank Theorem: rank A + dim Nul A = n; rank A = dim Col A = dim Row A = rank Aᵀ ≤ min(m, n).",
   "P_{𝒞←ℬ} = [[b₁]_𝒞 ⋯ [bₙ]_𝒞] = C⁻¹B: row reduce [C | B] → [I | P].",
   "(P_{𝒞←ℬ})⁻¹ = P_{ℬ←𝒞}."
+ ],
+ "parsons": [
+  {
+   "title": "Unique Representation Theorem",
+   "goal": "Prove: if ℬ = {b₁, …, bₙ} is a basis of V, each x ∈ V has exactly one representation x = c₁b₁ + ⋯ + cₙbₙ.",
+   "lines": [
+    "Existence: ℬ spans V, so x = c₁b₁ + ⋯ + cₙbₙ for some scalars.",
+    "Uniqueness: suppose also x = d₁b₁ + ⋯ + dₙbₙ.",
+    "Subtracting, 0 = (c₁ − d₁)b₁ + ⋯ + (cₙ − dₙ)bₙ.",
+    "ℬ is linearly independent, so every cᵢ − dᵢ = 0.",
+    "Hence cᵢ = dᵢ for all i: the representation is unique. ∎"
+   ],
+   "distractors": [
+    "Subtracting, 0 = (c₁ + d₁)b₁ + ⋯ + (cₙ + dₙ)bₙ.",
+    "ℬ spans V, so every cᵢ − dᵢ = 0.",
+    "Existence: ℬ is independent, so x is a combination of the bᵢ."
+   ]
+  },
+  {
+   "title": "The Rank Theorem",
+   "goal": "Prove: for an m×n matrix A, rank A + dim Nul A = n.",
+   "lines": [
+    "Row reduce A to an echelon form; let r be the number of pivot columns.",
+    "The pivot columns of A form a basis of Col A, so rank A = dim Col A = r.",
+    "Each of the n − r non-pivot columns gives one free variable in Ax = 0.",
+    "The parametric vector form gives one basis vector of Nul A per free variable, so dim Nul A = n − r.",
+    "Therefore rank A + dim Nul A = r + (n − r) = n. ∎"
+   ],
+   "distractors": [
+    "The pivot columns of the echelon form are a basis of Col A.",
+    "Each of the m − r zero rows gives one free variable.",
+    "Therefore rank A + dim Nul A = m."
+   ]
+  }
  ]
 }

@@ -382,6 +382,45 @@
     {
      "type": "warn",
      "text": "<b>Wrong:</b> “pigeonhole shows every box has 2.” <b>Right:</b> it shows <i>some</i> box has at least 2. (The other boxes could even be empty.)"
+    },
+    {
+     "type": "def",
+     "term": "Ramsey number R(3, 3)",
+     "text": "R(3, 3) is the least n such that, whenever every pair of n people is labelled “friends” or “strangers”, there must be 3 mutual friends or 3 mutual strangers. (Equivalently: every red/blue colouring of the edges of Kₙ has a one-coloured triangle.)"
+    },
+    {
+     "type": "thm",
+     "name": "R(3, 3) = 6",
+     "text": "Among any 6 people there are 3 mutual friends or 3 mutual strangers, and 5 people are not enough.",
+     "proof": [
+      {
+       "type": "p",
+       "text": "<b>6 suffice.</b> Fix a person v. v has 5 relationships, each of 2 types, so by the generalized pigeonhole principle at least ⌈5/2⌉ = 3 are the same type; by symmetry say v is friends with a, b, c."
+      },
+      {
+       "type": "p",
+       "text": "If two of a, b, c are friends, those two and v are 3 mutual friends. If not, a, b, c are 3 mutual strangers. ∎"
+      },
+      {
+       "type": "p",
+       "text": "<b>5 do not suffice.</b> Seat 5 people around a table; neighbours are friends, non-neighbours are strangers. A triangle of friends would need 3 people pairwise adjacent on a 5-cycle, impossible; a triangle of strangers would need 3 pairwise non-adjacent seats among 5, also impossible."
+      }
+     ]
+    },
+    {
+     "type": "example",
+     "title": "Ramsey R(3, 3) = 6 with pigeonhole",
+     "prompt": "Show that at any party of 6 people there are 3 mutual acquaintances or 3 mutual strangers, and give a party of 5 where this fails.",
+     "steps": [
+      "Pick one person v. The other 5 people are each either acquainted with v or strangers to v.",
+      "Pigeons: the 5 other people. Holes: “acquainted with v” and “stranger to v”. ⌈5/2⌉ = 3, so some hole has 3 people a, b, c.",
+      "Say a, b, c all know v (the stranger case is the same with the words swapped).",
+      "Case 1: two of them, say a and b, know each other. Then v, a, b are 3 mutual acquaintances.",
+      "Case 2: no two of a, b, c know each other. Then a, b, c are 3 mutual strangers.",
+      "For 5 people: arrange them in a pentagon, acquaintances = sides, strangers = diagonals. The sides form a 5-cycle and the diagonals form another 5-cycle; neither contains a triangle.",
+      "A brute-force check over all 2¹⁰ = 1024 colourings of K₅ finds 12 with no one-coloured triangle (all pentagon colourings), and over all 2¹⁵ colourings of K₆ finds none."
+     ],
+     "answer": "Always 3 mutual acquaintances or strangers among 6; the pentagon party of 5 has neither, so R(3, 3) = 6"
     }
    ]
   },
@@ -1251,6 +1290,19 @@
    ]
   },
   {
+   "front": "What is R(3, 3) and how does pigeonhole prove it?",
+   "back": [
+    {
+     "type": "formula",
+     "text": "R(3, 3) = 6"
+    },
+    {
+     "type": "p",
+     "text": "Fix v among 6 people: of its 5 relationships, ⌈5/2⌉ = 3 share a type, say friends with a, b, c. Any friendly pair among a, b, c gives a triangle with v; otherwise a, b, c are mutual strangers. Five people fail: pentagon with sides = friends, diagonals = strangers."
+    }
+   ]
+  },
+  {
    "front": "Generalized pigeonhole principle?",
    "back": [
     {
@@ -1536,5 +1588,55 @@
   "P(n, r) = n!/(n − r)! (order matters); C(n, r) = n!/(r!(n − r)!) (order doesn’t); 0! = 1",
   "Together: glue into a block (× internal orders); apart: arrange the others, choose gaps",
   "Never “pick one first, then anything” for “at least one”: it double counts"
+ ],
+ "parsons": [
+  {
+   "title": "Two of n + 1 integers differ by a multiple of n",
+   "goal": "Prove that among any n + 1 integers there are two whose difference is divisible by n.",
+   "lines": [
+    "Pigeons: the n + 1 given integers a₁, …, aₙ₊₁. Holes: the n possible remainders 0, 1, …, n − 1 on division by n.",
+    "Put each aᵢ into the hole of its remainder aᵢ mod n.",
+    "There are n + 1 pigeons and only n holes, so by the pigeonhole principle two integers aᵢ, aⱼ with i ≠ j share a remainder r.",
+    "Write aᵢ = nq + r and aⱼ = nq′ + r; then aᵢ − aⱼ = n(q − q′).",
+    "So n | aᵢ − aⱼ: among any n + 1 integers some two differ by a multiple of n."
+   ],
+   "distractors": [
+    "Pigeons: the n + 1 given integers. Holes: the n + 1 possible remainders 0, 1, …, n.",
+    "Write aᵢ = nq + r and aⱼ = nq′ + r; then aᵢ − aⱼ = r − r = 0, so aᵢ = aⱼ.",
+    "There are n + 1 pigeons and n holes, so every hole contains exactly one integer."
+   ]
+  },
+  {
+   "title": "Ramsey: R(3, 3) ≤ 6",
+   "goal": "Prove that among any 6 people, where each pair are friends or strangers, there are 3 mutual friends or 3 mutual strangers.",
+   "lines": [
+    "Fix one person v; v has a relationship with each of the other 5 people.",
+    "There are 2 types of relationship, so by the generalized pigeonhole principle at least ⌈5/2⌉ = 3 of them have the same type; by symmetry say v is friends with a, b and c.",
+    "If some two of a, b, c are friends, say a and b, then v, a, b are 3 mutual friends.",
+    "Otherwise no two of a, b, c are friends, so a, b, c are 3 mutual strangers.",
+    "In either case the 6 people contain 3 mutual friends or 3 mutual strangers."
+   ],
+   "distractors": [
+    "v has a relationship with each of the other 6 people, so at least 3 have the same type.",
+    "If some two of a, b, c are friends, say a and b, then a, b, c are 3 mutual friends.",
+    "There are 2 types of relationship, so at least ⌈5/2⌉ = 2 of them have the same type."
+   ]
+  },
+  {
+   "title": "The generalized pigeonhole principle",
+   "goal": "Prove: if N objects are placed into k boxes, some box contains at least ⌈N/k⌉ objects.",
+   "lines": [
+    "Suppose, for contradiction, that every one of the k boxes contains at most ⌈N/k⌉ − 1 objects.",
+    "Then the total number of objects is at most k(⌈N/k⌉ − 1).",
+    "Since ⌈N/k⌉ &lt; N/k + 1, this gives k(⌈N/k⌉ − 1) &lt; k(N/k + 1 − 1) = N.",
+    "So fewer than N objects were placed, contradicting that there are N objects.",
+    "Hence some box contains at least ⌈N/k⌉ objects."
+   ],
+   "distractors": [
+    "Suppose, for contradiction, that every box contains at least ⌈N/k⌉ objects.",
+    "Since ⌈N/k⌉ ≤ N/k, this gives k(⌈N/k⌉ − 1) ≤ N − k.",
+    "So exactly N/k objects are in each box."
+   ]
+  }
  ]
 }

@@ -90,6 +90,34 @@
       "Matrix [1 1/2 1/2; 0 −1/2 −1/2]."
      ],
      "answer": "[1 ½ ½; 0 −½ −½]"
+    },
+    {
+     "type": "example",
+     "title": "Matrix of multiplication by (t + 1), ℙ₂ → ℙ₃",
+     "prompt": "T(p) = (t + 1)p(t). Find its matrix relative to ℬ = {1, t, t²} and 𝒞 = {1, t, t², t³}. Use it to compute T(2 − t + 3t²).",
+     "steps": [
+      "T(1) = 1 + t → (1, 1, 0, 0); T(t) = t + t² → (0, 1, 1, 0); T(t²) = t² + t³ → (0, 0, 1, 1).",
+      "M = [1 0 0; 1 1 0; 0 1 1; 0 0 1] (4×3: dim of codomain × dim of domain).",
+      "M(2, −1, 3) = (2, 2 − 1, −1 + 3, 3) = (2, 1, 2, 3) ⇒ T(p) = 2 + t + 2t² + 3t³.",
+      "Direct check: (t + 1)(2 − t + 3t²) = 2t − t² + 3t³ + 2 − t + 3t² = 2 + t + 2t² + 3t³. ✓"
+     ],
+     "answer": "M = [1 0 0; 1 1 0; 0 1 1; 0 0 1]; T(2 − t + 3t²) = 2 + t + 2t² + 3t³"
+    },
+    {
+     "type": "example",
+     "title": "Differentiation on a space of exponentials (exam-hard)",
+     "prompt": "V = Span{eᵗcos t, eᵗsin t}, D = d/dt on V. Find [D]<sub>ℬ</sub> for ℬ = {eᵗcos t, eᵗsin t} and use it to find an antiderivative of eᵗcos t.",
+     "steps": [
+      "D(eᵗcos t) = eᵗcos t − eᵗsin t → (1, −1). D(eᵗsin t) = eᵗsin t + eᵗcos t → (1, 1).",
+      "[D]<sub>ℬ</sub> = [1 1; −1 1]: a rotation–scaling matrix (det 2 ≠ 0, so D is invertible on V).",
+      "An antiderivative of eᵗcos t is D⁻¹ applied to its coordinates (1, 0): [D]⁻¹ = (1/2)[1 −1; 1 1], and (1/2)[1 −1; 1 1](1, 0) = (1/2, 1/2).",
+      "So ∫eᵗcos t dt = ½(eᵗcos t + eᵗsin t) + C. Check by differentiating: ½(eᵗcos t − eᵗsin t + eᵗsin t + eᵗcos t) = eᵗcos t. ✓"
+     ],
+     "answer": "[D] = [1 1; −1 1]; ∫eᵗcos t dt = ½eᵗ(cos t + sin t) + C"
+    },
+    {
+     "type": "tip",
+     "text": "This is linear algebra replacing integration by parts: on a finite-dimensional space closed under d/dt, differentiation is a matrix, and integration is its inverse."
     }
    ]
   },
@@ -192,6 +220,17 @@
       "Check with row 2: 4·1 + (−2 + 2i)(1 + i) = 4 + (−2 − 2i + 2i + 2i²) = 4 − 4 = 0. ✓"
      ],
      "answer": "λ = 1 ± 2i; v = (1, 1 + i) for 1 − 2i (and (1, 1 − i) for 1 + 2i)."
+    },
+    {
+     "type": "example",
+     "title": "Complex eigenvalues with a parameter (exam-hard)",
+     "prompt": "For which k does A = [1 k; −2 3] have non-real eigenvalues? For those k, do the points Aᵏx₀ spiral in or out?",
+     "steps": [
+      "tr A = 4, det A = 3 + 2k. Discriminant tr² − 4 det = 16 − 12 − 8k = 4 − 8k.",
+      "Non-real ⇔ 4 − 8k &lt; 0 ⇔ k &gt; 1/2.",
+      "Then |λ|² = det A = 3 + 2k &gt; 4, so |λ| &gt; 2 &gt; 1: always spirals outward."
+     ],
+     "answer": "k &gt; 1/2; the orbits always spiral outward"
     }
    ]
   },
@@ -248,6 +287,30 @@
        "1"
       ]
      ]
+    },
+    {
+     "type": "example",
+     "title": "A = PCP⁻¹ with |λ| = 1 (exam-hard)",
+     "prompt": "A = [0.5 −0.6; 0.75 1.1]. Find the eigenvalues, P and C, the scale factor and angle, and describe the orbits xₖ = Aᵏx₀.",
+     "steps": [
+      "tr = 1.6, det = 0.55 + 0.45 = 1: λ² − 1.6λ + 1 = 0 ⇒ λ = 0.8 ± 0.6i.",
+      "λ = 0.8 − 0.6i: row 1 of A − λI is (−0.3 + 0.6i, −0.6) ⇒ (−0.3 + 0.6i)x₁ = 0.6x₂ ⇒ x₂ = (−0.5 + i)x₁. Take v = (2, −1 + 2i) = (2, −1) + i(0, 2).",
+      "P = [Re v Im v] = [2 0; −1 2], C = [0.8 −0.6; 0.6 0.8] (a = 0.8, b = 0.6).",
+      "Check: AP = [1.6 −1.2; 0.4 2.2] = PC. ✓",
+      "r = |λ| = √(0.64 + 0.36) = 1, angle φ = arctan(0.6/0.8) ≈ 36.9°. Since r = 1, the points xₖ neither grow nor shrink: they move around a closed ellipse (a circle distorted by P)."
+     ],
+     "answer": "λ = 0.8 ± 0.6i; P = [2 0; −1 2], C = [0.8 −0.6; 0.6 0.8]; r = 1, φ ≈ 36.9°; orbits are ellipses"
+    },
+    {
+     "type": "example",
+     "title": "Spot the rotation–scaling data from trace and determinant",
+     "prompt": "A = [3 −2; 1 1]. Without eigenvectors, find a, b, r and decide whether Aᵏx spirals in or out.",
+     "steps": [
+      "For a real 2×2 with eigenvalues a ± bi: tr A = 2a and det A = a² + b².",
+      "tr = 4 ⇒ a = 2; det = 3 + 2 = 5 = 4 + b² ⇒ b = 1.",
+      "r = √5 &gt; 1 ⇒ spirals outward; angle arctan(1/2) ≈ 26.6° per step (in P-coordinates)."
+     ],
+     "answer": "a = 2, b = 1, r = √5: spirals out"
     }
    ]
   },
@@ -299,6 +362,30 @@
    ]
   },
   {
+   "title": "Why complex eigenvalues mean rotation",
+   "blocks": [
+    {
+     "type": "p",
+     "text": "A real 2×2 matrix with no real eigenvector turns every direction. In the basis {Re v, Im v} it becomes C = [a −b; b a], and C is the matrix of multiplication by the complex number a + bi on the plane identified with ℂ: (x + iy)(a + bi) = (ax − by) + i(bx + ay). Multiplication by a complex number scales by its modulus r and rotates by its argument φ, which is exactly the factorization C = r·Rotation(φ)."
+    },
+    {
+     "type": "p",
+     "text": "Consequently Cᵏ is multiplication by (a + bi)ᵏ = rᵏ(cos kφ + i sin kφ), and Aᵏ = PCᵏP⁻¹. In standard coordinates the circle of radius ρ in P-coordinates becomes an ellipse, which is why trajectories look like elliptical spirals rather than circular ones."
+    },
+    {
+     "type": "example",
+     "title": "Powers through complex numbers",
+     "prompt": "Compute C⁶ for C = [1 −√3; √3 1].",
+     "steps": [
+      "C corresponds to 1 + √3 i, with r = 2 and φ = 60°.",
+      "(1 + √3 i)⁶ = 2⁶(cos 360° + i sin 360°) = 64.",
+      "So C⁶ = 64I."
+     ],
+     "answer": "C⁶ = 64I"
+    }
+   ]
+  },
+  {
    "title": "True/False on complex eigenvalues and ℬ-matrices",
    "blocks": [
     {
@@ -317,6 +404,81 @@
     {
      "type": "tip",
      "text": "Fast check for a 2×2 with eigenvalues a ± bi: trace = 2a and det = a² + b²."
+    }
+   ]
+  },
+  {
+   "title": "True/False traps",
+   "blocks": [
+    {
+     "type": "table",
+     "head": [
+      "Statement",
+      "T/F",
+      "One-line reason"
+     ],
+     "rows": [
+      [
+       "The matrix of T: V → V relative to ℬ has columns [T(bⱼ)]<sub>ℬ</sub>.",
+       "<b>True</b>",
+       "Definition of the ℬ-matrix."
+      ],
+      [
+       "If A = PBP⁻¹, then B is the matrix of x ↦ Ax relative to the columns of P.",
+       "<b>True</b>",
+       "[T]<sub>ℬ</sub> = P⁻¹AP = B."
+      ],
+      [
+       "The differentiation operator on ℙₙ is invertible.",
+       "<b>False</b>",
+       "It kills constants (eigenvalue 0)."
+      ],
+      [
+       "A real 2×2 matrix with eigenvalue 3 + 2i also has eigenvalue 3 − 2i.",
+       "<b>True</b>",
+       "Real characteristic polynomial ⇒ conjugate roots."
+      ],
+      [
+       "A real 2×2 matrix with complex eigenvalues can be diagonalized with a real P.",
+       "<b>False</b>",
+       "There are no real eigenvectors."
+      ],
+      [
+       "If λ = a − bi has eigenvector v, then A = PCP⁻¹ with P = [Re v Im v], C = [a −b; b a].",
+       "<b>True</b>",
+       "Lay's Theorem 9 (verify AP = PC)."
+      ],
+      [
+       "For C = [a −b; b a], |λ| = √(a² + b²).",
+       "<b>True</b>",
+       "|a ± bi|."
+      ],
+      [
+       "If |λ| &lt; 1 for the complex eigenvalues of A, then Aᵏx → 0.",
+       "<b>True</b>",
+       "Cᵏ = rᵏ·Rotation, r &lt; 1."
+      ],
+      [
+       "Every real 2×2 matrix is similar to a rotation–scaling matrix.",
+       "<b>False</b>",
+       "Only those with non-real eigenvalues."
+      ],
+      [
+       "The ℬ-matrix of a diagonalizable A relative to an eigenvector basis is diagonal.",
+       "<b>True</b>",
+       "T(bⱼ) = λⱼbⱼ."
+      ],
+      [
+       "Matrices of the same linear map relative to different bases have the same determinant.",
+       "<b>True</b>",
+       "They are similar."
+      ],
+      [
+       "A 3×3 real matrix can have three non-real eigenvalues.",
+       "<b>False</b>",
+       "A real cubic has a real root."
+      ]
+     ]
     }
    ]
   }
@@ -1237,5 +1399,39 @@
   "λ = a − bi, eigenvector v: A = PCP⁻¹, P = [Re v Im v], C = [a −b; b a].",
   "C = r·rotation(φ), r = |λ| = √(a² + b²) = √det C, φ = angle of (a, b).",
   "Aᵏx: spiral in if |λ| &lt; 1, closed orbit if |λ| = 1, spiral out if |λ| &gt; 1."
+ ],
+ "parsons": [
+  {
+   "title": "Real form of a complex eigenvector",
+   "goal": "Let A be real 2×2 with eigenvalue λ = a − bi (b ≠ 0) and eigenvector v = x + iy (x, y real). Show A[x y] = [x y]C with C = [a −b; b a].",
+   "lines": [
+    "Start from Av = λv: A(x + iy) = (a − bi)(x + iy).",
+    "Expand the right side: (ax + by) + i(−bx + ay).",
+    "A is real, so Ax + iAy has real part Ax and imaginary part Ay.",
+    "Match real parts: Ax = ax + by.",
+    "Match imaginary parts: Ay = −bx + ay.",
+    "These say A[x y] = [x y][a −b; b a], i.e. AP = PC with P = [x y]. ∎"
+   ],
+   "distractors": [
+    "Expand the right side: (ax − by) + i(bx + ay).",
+    "Match real parts: Ax = ax − by.",
+    "So A is diagonalizable over ℝ with P = [x y]."
+   ]
+  },
+  {
+   "title": "The ℬ-matrix of x ↦ Ax is P⁻¹AP",
+   "goal": "Let ℬ = {b₁, …, bₙ} be a basis of ℝⁿ and P = [b₁ ⋯ bₙ]. Show [Ax]<sub>ℬ</sub> = P⁻¹AP[x]<sub>ℬ</sub>.",
+   "lines": [
+    "By definition of coordinates, x = P[x]<sub>ℬ</sub>, so [x]<sub>ℬ</sub> = P⁻¹x.",
+    "Apply this to the vector Ax: [Ax]<sub>ℬ</sub> = P⁻¹(Ax).",
+    "Substitute x = P[x]<sub>ℬ</sub>: [Ax]<sub>ℬ</sub> = P⁻¹AP[x]<sub>ℬ</sub>.",
+    "Hence the matrix of x ↦ Ax relative to ℬ is P⁻¹AP. ∎"
+   ],
+   "distractors": [
+    "By definition of coordinates, x = P⁻¹[x]<sub>ℬ</sub>.",
+    "Hence the ℬ-matrix is PAP⁻¹.",
+    "Apply this to Ax: [Ax]<sub>ℬ</sub> = A[x]<sub>ℬ</sub>."
+   ]
+  }
  ]
 }
