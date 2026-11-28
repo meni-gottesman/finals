@@ -1,0 +1,586 @@
+{
+ "id": "B-15",
+ "course": "B",
+ "title": "Compression & software engineering",
+ "source": "CS 61B Lec 29, 31, 37, 38 · Ch 28, 36, 38",
+ "summary": "Prefix-free codes and Huffman coding (build the tree, encode, decode), the hard limits on what any compressor can do, and the software-engineering ideas the course tests: complexity and its symptoms, deep vs shallow modules, information hiding, AI tools in software engineering and the social implications of computing. Past finals use Huffman and compression-limit questions even though compression gets little lecture time.",
+ "lesson": [
+  {
+   "title": "Prefix-free codes",
+   "blocks": [
+    {
+     "type": "def",
+     "term": "Code",
+     "text": "A map from symbols to bit strings (codewords). Fixed-length codes use ⌈log₂ R⌉ bits per symbol for R symbols."
+    },
+    {
+     "type": "def",
+     "term": "Prefix-free code",
+     "text": "No codeword is a prefix of another. Then a bit stream decodes unambiguously, left to right, with no separators."
+    },
+    {
+     "type": "p",
+     "text": "A prefix-free code is a binary trie: symbols at the leaves, 0 = left, 1 = right. Decoding walks from the root, outputs the symbol at each leaf and restarts at the root."
+    },
+    {
+     "type": "example",
+     "title": "Decode a prefix-free code",
+     "prompt": "Code A = 0, B = 10, C = 110, D = 111. Decode 0110100111010.",
+     "steps": [
+      "Read 0 → A. Read 1, 1, 0 → C. Read 1, 0 → B. Read 0 → A.",
+      "Read 1, 1, 1 → D. Read 0 → A. Read 1, 0 → B. All bits used."
+     ],
+     "answer": "ACBADAB (verified)"
+    },
+    {
+     "type": "warn",
+     "text": "{0, 01, 11} is not prefix-free (0 is a prefix of 01): “011” could be 0|11 or 01|1. Check every pair for the prefix relation."
+    }
+   ]
+  },
+  {
+   "title": "Huffman coding",
+   "blocks": [
+    {
+     "type": "steps",
+     "title": "Huffman’s algorithm",
+     "items": [
+      "Make a leaf for each symbol, weighted by its frequency; put them in a min-priority queue.",
+      "Repeatedly remove the two lightest trees, make them children of a new node whose weight is their sum, and insert it.",
+      "When one tree remains, read each codeword off the root-to-leaf path (left = 0, right = 1)."
+     ]
+    },
+    {
+     "type": "example",
+     "title": "Build a Huffman code",
+     "prompt": "Frequencies a 20, b 10, c 15, d 5, e 30, f 20 (100 symbols). Ties are broken alphabetically by the symbols in each tree; the first tree removed becomes the left (0) child.",
+     "steps": [
+      "Merge d 5 + b 10 → db 15.",
+      "Merge c 15 + db 15 → cdb 30.",
+      "Merge a 20 + f 20 → af 40.",
+      "Merge cdb 30 + e 30 → cdbe 60.",
+      "Merge af 40 + cdbe 60 → root 100.",
+      "Codes: a 00, f 01, c 100, d 1010, b 1011, e 11.",
+      "Cost: 20·2 + 10·4 + 15·3 + 5·4 + 30·2 + 20·2 = 245 bits (2.45 bits/symbol) vs 300 for a 3-bit fixed code."
+     ],
+     "answer": "a 00, b 1011, c 100, d 1010, e 11, f 01; 245 bits (verified)"
+    },
+    {
+     "type": "thm",
+     "name": "Huffman is optimal",
+     "text": "Among prefix-free codes that encode one symbol at a time, Huffman minimizes Σ freq × codeword length. Different tie-breaking can give different codes but always the same total cost."
+    },
+    {
+     "type": "list",
+     "items": [
+      "Frequent symbols get short codes because they are merged last (they sit near the root).",
+      "The decoder needs the tree (or the frequency table), which must be sent along with the bits.",
+      "Building the tree takes O(R log R) for R symbols; encoding is Θ(total bits).",
+      "Extreme case: Fibonacci frequencies 1, 1, 2, 3, 5, 8, 13 give a maximally lopsided tree with codeword lengths 6, 6, 5, 4, 3, 2, 1."
+     ]
+    }
+   ]
+  },
+  {
+   "title": "Limits of compression",
+   "blocks": [
+    {
+     "type": "thm",
+     "name": "No universal compressor",
+     "text": "No lossless algorithm can shrink every input. There are 2ᴺ bit strings of length N but only 2ᴺ − 1 strings shorter than N (1023 shorter than 10 bits vs 1024 of length 10), so two inputs would map to the same output (pigeonhole)."
+    },
+    {
+     "type": "example",
+     "title": "Counting argument",
+     "prompt": "A compressor maps every 8-bit file to an output of at most 7 bits. How many 8-bit files are there, how many possible outputs, and what must happen?",
+     "steps": [
+      "Inputs: 2⁸ = 256 files.",
+      "Outputs of length 0 … 7: 1 + 2 + 4 + ⋯ + 128 = 255 strings.",
+      "256 inputs into 255 outputs: by pigeonhole two files compress to the same output, so they cannot both be recovered."
+     ],
+     "answer": "256 vs 255: some two files collide, so the compressor cannot be lossless"
+    },
+    {
+     "type": "thm",
+     "name": "Compression model",
+     "text": "A compressed file is useful only together with its decompressor. The true size of a compressed representation is (bits) + (size of the program that decodes them); a self-extracting archive makes this explicit. The shortest program that outputs a string measures its information content, and no algorithm can compute that shortest length for all strings."
+    },
+    {
+     "type": "list",
+     "items": [
+      "Huffman alone cannot go below 1 bit per symbol; repeated patterns (e.g. “abababab…”) need dictionary methods like LZW, which code repeated substrings.",
+      "Compressing an already compressed or random-looking file usually makes it slightly larger (overhead of the table/header).",
+      "Lossless vs lossy: lossy (JPEG, MP3) discards information people don’t notice; it is not limited by the pigeonhole argument in the same way because the output need not be recoverable exactly."
+     ]
+    }
+   ]
+  },
+  {
+   "title": "Complexity in software",
+   "blocks": [
+    {
+     "type": "def",
+     "term": "Complexity",
+     "text": "Anything about a system’s structure that makes it hard to understand or modify."
+    },
+    {
+     "type": "table",
+     "head": [
+      "Symptom",
+      "Meaning"
+     ],
+     "rows": [
+      [
+       "Change amplification",
+       "a simple change requires edits in many places"
+      ],
+      [
+       "Cognitive load",
+       "how much a developer must know to make a change"
+      ],
+      [
+       "Unknown unknowns",
+       "it is not obvious what must change or what information is relevant (the worst symptom)"
+      ]
+     ]
+    },
+    {
+     "type": "list",
+     "items": [
+      "Causes: dependencies (code that cannot be understood or changed in isolation) and obscurity (important information is not obvious).",
+      "Complexity is incremental: it accumulates from many small “just make it work” decisions.",
+      "Tactical programming optimizes for finishing the current task; strategic programming invests a little extra time now in good design, which pays off over the life of the code."
+     ]
+    }
+   ]
+  },
+  {
+   "title": "Deep vs shallow modules, information hiding",
+   "blocks": [
+    {
+     "type": "def",
+     "term": "Module depth",
+     "text": "Benefit (functionality hidden) relative to cost (interface size). A deep module has a simple interface over a lot of functionality; a shallow module’s interface is almost as complex as its implementation."
+    },
+    {
+     "type": "example",
+     "title": "Deep or shallow?",
+     "prompt": "Classify: (a) a garbage collector with no interface at all; (b) Java’s file reading that needs FileInputStream wrapped in BufferedInputStream wrapped in ObjectInputStream; (c) a method <code>addNullValueForAttribute(String a) { data.put(a, null); }</code>; (d) the Unix file API open/read/write/close/lseek.",
+     "steps": [
+      "(a) Very deep: enormous functionality, no interface.",
+      "(b) Shallow layers: the user must know and assemble several classes to get the common case (buffering should be the default).",
+      "(c) Shallow: the interface says nothing the implementation doesn’t; it adds a name to learn without hiding anything.",
+      "(d) Deep: five calls hide disk layout, caching, permissions, devices."
+     ],
+     "answer": "(a) deep (b) shallow (c) shallow (d) deep"
+    },
+    {
+     "type": "def",
+     "term": "Information hiding / leakage",
+     "text": "Hide design decisions (data formats, algorithms) inside one module so others don’t depend on them. Leakage happens when one decision is reflected in several modules (e.g. two classes both parse the same file format), causing change amplification."
+    },
+    {
+     "type": "tip",
+     "text": "Signs of good design: interfaces simpler than implementations, general-purpose modules (“somewhat general” interfaces), pulling complexity downward into the implementation instead of pushing it onto every caller, and comments that describe what isn’t obvious from the code."
+    }
+   ]
+  },
+  {
+   "title": "AI tools in software engineering",
+   "blocks": [
+    {
+     "type": "p",
+     "text": "Code-generating AI assistants can write boilerplate, tests, and first drafts quickly, and explain unfamiliar code. The software-engineering principles above still decide whether a codebase stays maintainable."
+    },
+    {
+     "type": "list",
+     "items": [
+      "Generated code can be plausible but wrong: invented APIs, subtle off-by-one or edge-case bugs, security holes, or licensing issues. Treat it like code from an unknown colleague: read it, test it, and understand it before merging.",
+      "Tests and specifications become more important, not less: they are how you check code you didn’t write.",
+      "It is easy to generate large amounts of code tactically, which can grow complexity (shallow modules, duplicated logic, information leakage) faster than before; strategic design and review are the counterweight.",
+      "You remain responsible for code you submit, including correctness, privacy and attribution."
+     ]
+    }
+   ]
+  },
+  {
+   "title": "Social implications of computing",
+   "blocks": [
+    {
+     "type": "list",
+     "items": [
+      "Design choices encode values: what data is collected, who can access it, what defaults are, and who the system is built for.",
+      "Algorithms trained on historical data can reproduce or amplify bias; fairness must be measured, not assumed.",
+      "Privacy, security and accessibility are engineering requirements with real consequences for people.",
+      "Engineers are responsible for foreseeable harms of what they build, including misuse at scale."
+     ]
+    }
+   ]
+  }
+ ],
+ "cards": [
+  {
+   "front": "Prefix-free code?",
+   "back": [
+    {
+     "type": "p",
+     "text": "No codeword is a prefix of another; decoding is unambiguous without separators."
+    }
+   ]
+  },
+  {
+   "front": "How is a prefix-free code represented for decoding?",
+   "back": [
+    {
+     "type": "p",
+     "text": "A binary trie with symbols at leaves (0 left, 1 right)."
+    }
+   ]
+  },
+  {
+   "front": "Huffman’s algorithm?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Repeatedly merge the two lowest-frequency trees until one remains; read codes off root-to-leaf paths."
+    }
+   ]
+  },
+  {
+   "front": "Why do frequent symbols get short Huffman codes?",
+   "back": [
+    {
+     "type": "p",
+     "text": "They are merged late, so they end up near the root."
+    }
+   ]
+  },
+  {
+   "front": "Is the Huffman code unique?",
+   "back": [
+    {
+     "type": "p",
+     "text": "No (ties, left/right choices), but every Huffman code has the same minimal total cost."
+    }
+   ]
+  },
+  {
+   "front": "Huffman cost formula?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Σ frequency × codeword length."
+    }
+   ]
+  },
+  {
+   "front": "Best Huffman can do per symbol?",
+   "back": [
+    {
+     "type": "p",
+     "text": "At least 1 bit per symbol; dictionary methods (LZW) exploit repeated substrings."
+    }
+   ]
+  },
+  {
+   "front": "Why can no compressor shrink every file?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Pigeonhole: 2ᴺ inputs of length N but only 2ᴺ − 1 shorter outputs."
+    }
+   ]
+  },
+  {
+   "front": "What else must be counted in the size of compressed data?",
+   "back": [
+    {
+     "type": "p",
+     "text": "The decompressor (or code table) needed to recover it."
+    }
+   ]
+  },
+  {
+   "front": "Three symptoms of complexity?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Change amplification, cognitive load, unknown unknowns."
+    }
+   ]
+  },
+  {
+   "front": "Two causes of complexity?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Dependencies and obscurity."
+    }
+   ]
+  },
+  {
+   "front": "Deep module?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Simple interface, lots of hidden functionality (high benefit/cost)."
+    }
+   ]
+  },
+  {
+   "front": "Shallow module?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Interface nearly as complex as what it does (e.g. a one-line wrapper method)."
+    }
+   ]
+  },
+  {
+   "front": "Information leakage?",
+   "back": [
+    {
+     "type": "p",
+     "text": "A design decision reflected in multiple modules, so changing it requires changing all of them."
+    }
+   ]
+  },
+  {
+   "front": "Tactical vs strategic programming?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Tactical: just get the feature working. Strategic: invest in good design for long-term simplicity."
+    }
+   ]
+  },
+  {
+   "front": "Main risks of AI-generated code?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Plausible but wrong code (invented APIs, edge-case bugs), security/licensing problems, faster growth of complexity; mitigate with reading, tests, review."
+    }
+   ]
+  },
+  {
+   "front": "Lossless vs lossy compression?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Lossless recovers the input exactly (Huffman, LZW, zip); lossy discards information (JPEG, MP3)."
+    }
+   ]
+  }
+ ],
+ "hard": [
+  {
+   "title": "Huffman with ties: same cost, different trees",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "Frequencies p 1, q 1, r 2, s 2, t 4. (a) Build a Huffman tree (ties alphabetical, first removed = left). (b) Show that a different valid tie-break gives different codeword lengths. (c) Prove both have the same cost."
+    }
+   ],
+   "answer": "(a) p 1100, q 1101, r 111, s 10, t 0, cost 22 (b) e.g. lengths 3, 3, 3, 3, 1 or 3, 3, 2, 2, 2 — also cost 22",
+   "solution": [
+    {
+     "type": "p",
+     "text": "(a) Merges: p + q → pq 2; pq 2 + r 2 → pqr 4 (tie with s broken alphabetically: pq &lt; r &lt; s); s 2 + pqr 4 → 6 (tie between pqr 4 and t 4: s 2 is the unique smallest, then pqr before t alphabetically); t 4 + spqr 6 → 10. Codes p 1100, q 1101, r 111, s 10, t 0; cost 1·4 + 1·4 + 2·3 + 2·2 + 4·1 = 22 (verified)."
+    },
+    {
+     "type": "p",
+     "text": "(b) After p + q → pq 2, three trees of weight 2 tie (pq, r, s). Merging r + s → rs 4 instead leaves {pq 2, rs 4, t 4}; merging pq + t → 6 and then rs 4 + 6 → 10 gives lengths p 3, q 3, r 2, s 2, t 2: cost 3 + 3 + 4 + 4 + 8 = 22. (Merging pq + rs instead gives lengths 3, 3, 3, 3, 1: cost 3 + 3 + 6 + 6 + 4 = 22.)"
+    },
+    {
+     "type": "p",
+     "text": "(c) The cost of any code tree equals the sum of the weights of its internal nodes (each internal node’s weight counts one bit for every symbol below it). Huffman’s internal weights here are 2, 4, 6, 10 in every tie-break order, so every Huffman tree costs 22 — and Huffman trees are optimal."
+    }
+   ]
+  },
+  {
+   "title": "Maximum codeword length",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "For R symbols, what is the longest possible Huffman codeword, and which frequencies achieve it? Give the code for frequencies 1, 1, 2, 3, 5, 8, 13 (symbols a … g)."
+    }
+   ],
+   "answer": "R − 1 bits, e.g. Fibonacci frequencies; lengths a 6, b 6, c 5, d 4, e 3, f 2, g 1",
+   "solution": [
+    {
+     "type": "p",
+     "text": "A binary tree with R leaves has depth at most R − 1, reached when every merge combines the previous tree with one new leaf."
+    },
+    {
+     "type": "p",
+     "text": "With Fibonacci weights each merge combines the tree built so far with the next leaf: {1, 1} → 2; {2 (c), 2} → 4; {3, 4} → 7; {5, 7} → 12; {8, 12} → 20; {13, 20} → 33. Since every new leaf is at least as heavy as the next-lightest alternative, the chain never branches."
+    },
+    {
+     "type": "p",
+     "text": "Resulting codes (verified): g 0, f 10, e 110, d 1110, c 11111, a 111100, b 111101 — lengths 1 … 6 = R − 1."
+    }
+   ]
+  },
+  {
+   "title": "Compress every file?",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "A startup claims an algorithm that losslessly compresses every file of length ≥ 1000 bits by at least 1 bit. (a) Disprove it. (b) Their fallback claim: it never increases size and shrinks at least one file. Disprove that too."
+    }
+   ],
+   "answer": "(a) pigeonhole on lengths (b) same counting on files ≤ N bits",
+   "solution": [
+    {
+     "type": "p",
+     "text": "(a) Consider all 2¹⁰⁰⁰ files of exactly 1000 bits. Outputs have length ≤ 999, and there are only 2¹⁰⁰⁰ − 1 such strings (including the empty string). Two inputs share an output, so decompression can’t be unique."
+    },
+    {
+     "type": "p",
+     "text": "(b) Suppose f is injective, never increases length, and shrinks some x of length N. Let T be the 2ᴺ − 1 strings shorter than N. f maps T into T (it never lengthens) and is injective, so on the finite set T it is a bijection onto T. But f(x) is also in T, so f(x) = f(t) for some t ∈ T with t ≠ x — contradicting injectivity. So any compressor that shrinks one file must lengthen another."
+    }
+   ]
+  },
+  {
+   "title": "Encode, decode, and count bits",
+   "level": "hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "Using the code a 00, b 1011, c 100, d 1010, e 11, f 01, encode “cafe”, decode 1011001010 1100 (spaces only for readability), and compute how many bits “facade” takes vs a fixed 3-bit code."
+    }
+   ],
+   "answer": "cafe = 100000111; badea; facade 15 bits vs 18",
+   "solution": [
+    {
+     "type": "p",
+     "text": "cafe: c 100, a 00, f 01, e 11 → 100000111 (verified: decodes back to cafe)."
+    },
+    {
+     "type": "p",
+     "text": "1011001010 1100: 1011 = b, 00 = a, 1010 = d, 11 = e, 00 = a → “badea” (verified)."
+    },
+    {
+     "type": "p",
+     "text": "facade: f 01, a 00, c 100, a 00, d 1010, e 11 → 2 + 2 + 3 + 2 + 4 + 2 = 15 bits vs 6 × 3 = 18."
+    }
+   ]
+  },
+  {
+   "title": "Deep vs shallow redesign",
+   "level": "hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "A team’s Stack class exposes <code>getArray()</code>, <code>getSize()</code>, <code>setSize(int)</code> and <code>ensureCapacity(int)</code>; callers push with <code>s.ensureCapacity(s.getSize() + 1); s.getArray()[s.getSize()] = x; s.setSize(s.getSize() + 1);</code>. Name the complexity symptoms and redesign it."
+    }
+   ],
+   "answer": "Shallow, leaks representation; redesign as push/pop/peek/isEmpty",
+   "solution": [
+    {
+     "type": "p",
+     "text": "Information leakage: every caller knows the array representation and resizing policy. Change amplification: switching to a linked list or changing growth touches every caller. Cognitive load: three-step protocol per push, easy to get wrong (unknown unknowns: forgetting setSize corrupts state)."
+    },
+    {
+     "type": "p",
+     "text": "Deep redesign: push(x), pop(), peek(), isEmpty(), size(). The array, size field and resizing become private implementation details."
+    }
+   ]
+  },
+  {
+   "title": "Review AI-generated code",
+   "level": "hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "An assistant produced <code>int mid = (lo + hi) / 2;</code> inside a binary search over an int[] of length up to 2³⁰ + 10, and a hashCode <code>return name.length();</code> for a class whose equals compares names. Which is a real bug, which is a performance problem, and what tests or reviews would have caught them?"
+    }
+   ],
+   "answer": "(lo + hi) can overflow for huge arrays (bug); name.length() is legal but collides heavily (performance)",
+   "solution": [
+    {
+     "type": "p",
+     "text": "lo + hi exceeds Integer.MAX_VALUE when both are above 2³⁰: mid becomes negative → crash. Fix: lo + (hi − lo) / 2. A test with very large indices or a careful review catches it."
+    },
+    {
+     "type": "p",
+     "text": "hashCode = name.length() satisfies the contract (equal names ⇒ equal lengths) but all names of the same length collide, degrading HashMap operations toward Θ(N). A benchmark or a review of the distribution catches it."
+    },
+    {
+     "type": "p",
+     "text": "General lesson: verify generated code with tests targeting edge cases and with review for design quality, exactly as for human-written code."
+    }
+   ]
+  }
+ ],
+ "keyFacts": [
+  "Prefix-free ⇔ no codeword is a prefix of another ⇔ symbols at trie leaves; decode by walking the trie.",
+  "Huffman: repeatedly merge the two lightest trees; optimal Σ freq × length; ties change codes, not cost.",
+  "Huffman ≥ 1 bit/symbol; max codeword length R − 1 (Fibonacci frequencies).",
+  "No lossless compressor shrinks all inputs (2ᴺ strings vs 2ᴺ − 1 shorter ones); count the decoder too.",
+  "Complexity symptoms: change amplification, cognitive load, unknown unknowns; causes: dependencies, obscurity.",
+  "Deep module = simple interface, much hidden functionality; avoid information leakage; program strategically.",
+  "AI-generated code: read, test and review it; you stay responsible."
+ ],
+ "parsons": [
+  {
+   "title": "Build a Huffman tree",
+   "goal": "pq is a min-priority queue of Nodes ordered by freq, initially holding one leaf per symbol (at least one). Combine until one tree remains and return its root.",
+   "lines": [
+    "static Node buildHuffman(PriorityQueue&lt;Node> pq) {",
+    "    while (pq.size() > 1) {",
+    "        Node a = pq.poll(), b = pq.poll();",
+    "        pq.add(new Node('\\0', a.freq + b.freq, a, b));",
+    "    }",
+    "    return pq.poll();",
+    "}"
+   ],
+   "distractors": [
+    "    while (pq.size() > 0) {",
+    "        pq.add(new Node(a.ch, a.freq * b.freq, a, b));",
+    "        Node a = pq.poll(), b = pq.peek();"
+   ]
+  },
+  {
+   "title": "Decode a bit string",
+   "goal": "Walk the Huffman/prefix-code tree: 0 = left, 1 = right; on reaching a leaf, output its symbol and restart at the root.",
+   "lines": [
+    "static String decode(Node root, String bits) {",
+    "    StringBuilder out = new StringBuilder(); Node p = root;",
+    "    for (char b : bits.toCharArray()) {",
+    "        p = (b == '0') ? p.left : p.right;",
+    "        if (p.isLeaf()) { out.append(p.ch); p = root; }",
+    "    }",
+    "    return out.toString();",
+    "}"
+   ],
+   "distractors": [
+    "        if (p.isLeaf()) out.append(p.ch);",
+    "        p = (b == '0') ? p.right : p.left;",
+    "        if (p == null) { out.append(p.ch); p = root; }"
+   ]
+  },
+  {
+   "title": "Build the encoding table",
+   "goal": "Fill table with the codeword of every leaf below n, where path is the bit string from the root to n (left = 0, right = 1).",
+   "lines": [
+    "static void buildTable(Node n, String path, Map&lt;Character, String> table) {",
+    "    if (n.isLeaf()) {",
+    "        table.put(n.ch, path);",
+    "        return;",
+    "    }",
+    "    buildTable(n.left, path + \"0\", table); buildTable(n.right, path + \"1\", table);",
+    "}"
+   ],
+   "distractors": [
+    "    buildTable(n.left, path + \"1\", table); buildTable(n.right, path + \"0\", table);",
+    "    buildTable(n.left, path, table); buildTable(n.right, path, table);",
+    "        table.put(n.ch, path + \"0\");"
+   ]
+  }
+ ]
+}

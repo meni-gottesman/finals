@@ -1,0 +1,601 @@
+{
+ "id": "B-12",
+ "course": "B",
+ "title": "Tries",
+ "source": "CS 61B Lec 28 · Ch 27",
+ "summary": "A trie stores strings character by character along root-to-node paths, so lookups cost time proportional to the key length, independent of how many keys are stored, and prefix questions (keysWithPrefix, longestPrefixOf) become natural. Exams trace inserts and prefix operations, compare runtimes with hash maps and BSTs, and ask about node representations (arrays, maps, ternary search trees).",
+ "lesson": [
+  {
+   "title": "Tries and the basic operations",
+   "blocks": [
+    {
+     "type": "def",
+     "term": "Trie",
+     "text": "A tree where each node represents a prefix. Each edge is labelled with one character; the path from the root to a node spells that node’s prefix. A node is marked isKey if its prefix is a stored key."
+    },
+    {
+     "type": "code",
+     "lang": "java",
+     "text": "class Node {\n    boolean isKey;\n    Node[] next = new Node[128];      // one link per ASCII character\n}\nvoid add(String key) {\n    Node p = root;\n    for (int i = 0; i < key.length(); i++) {\n        char c = key.charAt(i);\n        if (p.next[c] == null) p.next[c] = new Node();\n        p = p.next[c];\n    }\n    p.isKey = true;\n}\nboolean contains(String key) {\n    Node p = root;\n    for (int i = 0; i < key.length(); i++) {\n        p = p.next[key.charAt(i)];\n        if (p == null) return false;          // fell off the trie\n    }\n    return p.isKey;                           // a prefix alone is not a key\n}"
+    },
+    {
+     "type": "example",
+     "title": "Insert and count nodes",
+     "prompt": "Insert sea, sell, she, shells, shore, sh, by, the into an empty trie. How many nodes are created (not counting the root)? Which nodes are marked?",
+     "steps": [
+      "sea: s, e, a (3 new). sell: s, e shared; l, l (2). she: s shared; h, e (2). shells: s, h, e shared; l, l, s (3).",
+      "shore: s, h shared; o, r, e (3). sh: no new nodes, just mark the h node. by: b, y (2). the: t, h, e (3).",
+      "Total 3 + 2 + 2 + 3 + 3 + 0 + 2 + 3 = 18 new nodes.",
+      "Marked: the ends of sea, sell, she, shells, shore, sh, by, the (8 marks; one of them, sh, is an internal node)."
+     ],
+     "answer": "18 nodes (19 with the root) (verified)"
+    },
+    {
+     "type": "example",
+     "title": "contains on prefixes",
+     "prompt": "With that trie: contains(\"sh\"), contains(\"shel\"), contains(\"shells\"), contains(\"shellsx\"), contains(\"s\")?",
+     "steps": [
+      "sh: path exists and the h node is marked → true.",
+      "shel: path exists, node not marked → false.",
+      "shells: true. shellsx: falls off after shells → false.",
+      "s: node exists but unmarked → false."
+     ],
+     "answer": "true false true false false (verified)"
+    },
+    {
+     "type": "warn",
+     "text": "Reaching the end of the path is not enough: check isKey. And the empty path (the root) represents the empty string."
+    }
+   ]
+  },
+  {
+   "title": "Prefix operations",
+   "blocks": [
+    {
+     "type": "def",
+     "term": "keysWithPrefix(pre)",
+     "text": "Walk down the prefix; then collect every key in that subtrie (DFS, appending characters). With array links scanned in index order, results come out alphabetically."
+    },
+    {
+     "type": "def",
+     "term": "longestPrefixOf(q)",
+     "text": "Walk down q as far as possible, remembering the last marked node passed; return the corresponding prefix of q."
+    },
+    {
+     "type": "code",
+     "lang": "java",
+     "text": "List<String> keysWithPrefix(String pre) {\n    List<String> out = new ArrayList<>();\n    Node p = root;\n    for (char c : pre.toCharArray()) { p = p.next[c]; if (p == null) return out; }\n    collect(p, pre, out);\n    return out;\n}\nvoid collect(Node p, String prefix, List<String> out) {\n    if (p == null) return;\n    if (p.isKey) out.add(prefix);\n    for (char c = 0; c < 128; c++) collect(p.next[c], prefix + c, out);\n}"
+    },
+    {
+     "type": "example",
+     "title": "keysWithPrefix",
+     "prompt": "In the trie of sea, sell, she, shells, shore, sh, by, the: keysWithPrefix(\"sh\"), (\"se\"), (\"\"), (\"x\").",
+     "steps": [
+      "\"sh\": walk s → h. Collect: h itself is marked → sh; then e → she (marked); under she: l → l → s → shells; then o → r → e → shore.",
+      "\"se\": sea, sell.",
+      "\"\": every key, alphabetically: by, sea, sell, sh, she, shells, shore, the.",
+      "\"x\": no such path → empty list."
+     ],
+     "answer": "[sh, she, shells, shore], [sea, sell], all 8 sorted, [] (verified)"
+    },
+    {
+     "type": "example",
+     "title": "longestPrefixOf",
+     "prompt": "Queries: \"shellsort\", \"shelter\", \"sea\", \"bye\", \"apple\".",
+     "steps": [
+      "shellsort: marked nodes passed at sh, she, shells; then o has no link → return shells.",
+      "shelter: marks at sh, she; after shel the next char t has no link → she.",
+      "sea → sea; bye → by; apple: no path from the root via a → null."
+     ],
+     "answer": "shells, she, sea, by, null (verified)"
+    },
+    {
+     "type": "tip",
+     "text": "Autocomplete = keysWithPrefix; spell-check suggestions and IP routing (longest matching prefix) = longestPrefixOf. Hash maps can’t answer prefix questions without scanning every key."
+    }
+   ]
+  },
+  {
+   "title": "Runtime vs hash maps and BSTs",
+   "blocks": [
+    {
+     "type": "table",
+     "head": [
+      "Operation on N keys of length L",
+      "Trie",
+      "Hash table",
+      "Balanced BST"
+     ],
+     "rows": [
+      [
+       "contains / add",
+       "Θ(L) worst",
+       "Θ(L) to hash + Θ(1) expected (Θ(NL) worst)",
+       "Θ(L log N) (each comparison up to Θ(L))"
+      ],
+      [
+       "keysWithPrefix",
+       "Θ(prefix + size of output subtrie)",
+       "Θ(NL) (scan all)",
+       "Θ(L log N + output)"
+      ],
+      [
+       "ordered iteration",
+       "yes",
+       "no",
+       "yes"
+      ]
+     ]
+    },
+    {
+     "type": "thm",
+     "name": "Key fact",
+     "text": "Trie lookup cost depends only on the key length (and alphabet handling), not on N: a miss can be detected after only a few characters."
+    },
+    {
+     "type": "example",
+     "title": "Which structure?",
+     "prompt": "You store 10⁶ English words and must support: (a) exact lookup only, (b) “all words starting with pre”, (c) “longest stored word that is a prefix of this URL”. Pick a structure for each.",
+     "steps": [
+      "(a) A HashSet is simplest and Θ(L) expected; a trie also works.",
+      "(b) Trie: walk the prefix, then output the subtrie; a hash set would scan all 10⁶ words.",
+      "(c) Trie with longestPrefixOf."
+     ],
+     "answer": "HashSet (or trie), trie, trie"
+    }
+   ]
+  },
+  {
+   "title": "Node representations and TSTs",
+   "blocks": [
+    {
+     "type": "table",
+     "head": [
+      "Representation",
+      "Link lookup",
+      "Memory per node"
+     ],
+     "rows": [
+      [
+       "Array of R links (R = 128 or 256)",
+       "Θ(1)",
+       "Θ(R): mostly null"
+      ],
+      [
+       "HashMap&lt;Character, Node>",
+       "Θ(1) expected",
+       "proportional to number of children"
+      ],
+      [
+       "TreeMap&lt;Character, Node>",
+       "Θ(log R)",
+       "proportional to children; sorted iteration"
+      ],
+      [
+       "Ternary search tree",
+       "Θ(log R)-ish per char (BST over characters)",
+       "3 links per node"
+      ]
+     ]
+    },
+    {
+     "type": "warn",
+     "text": "With array nodes, memory is Θ(R × number of nodes): 19 nodes × 128 links = 2432 references for 8 short words. Map-based nodes trade a bit of speed for far less memory."
+    },
+    {
+     "type": "def",
+     "term": "Ternary search tree (TST)",
+     "text": "Each node holds one character and three links: lo (smaller character, same position), eq (next position), hi (larger character, same position). A key ends at a node marked as a key."
+    },
+    {
+     "type": "example",
+     "title": "Build a TST and trace a search",
+     "prompt": "Insert cat, cap, dog, ca, cub, do into an empty TST. Give its structure (written char(lo, eq, hi), * = key) and the nodes examined by get(\"cub\").",
+     "steps": [
+      "cat: chain c → a → t (eq links), mark t. cap: c, a match; p &lt; t → p becomes t’s lo; mark p.",
+      "dog: d > c → c’s hi is d; then o, g down eq links; mark g. ca: mark the a node.",
+      "cub: c matches; u > a → a’s hi is u; then b on u’s eq link; mark b. do: mark o.",
+      "Structure: c(·, a*(·, t*(p*, ·, ·), u(·, b*, ·)), d(·, o*(·, g*, ·), ·)). 9 nodes (a trie on the same words also has 9 non-root nodes).",
+      "get(\"cub\"): c (equal, go eq), a (u > a, go hi), u (equal, go eq), b (last char, marked) → found after examining 4 nodes."
+     ],
+     "answer": "Found after 4 nodes (verified)"
+    }
+   ]
+  }
+ ],
+ "cards": [
+  {
+   "front": "What does a trie node represent?",
+   "back": [
+    {
+     "type": "p",
+     "text": "The prefix spelled by the path from the root; isKey marks prefixes that are stored keys."
+    }
+   ]
+  },
+  {
+   "front": "Trie contains cost?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Θ(L) for a key of length L, independent of N."
+    }
+   ]
+  },
+  {
+   "front": "Why must contains check isKey?",
+   "back": [
+    {
+     "type": "p",
+     "text": "A path can exist because the string is a prefix of a longer key (e.g. \"shel\")."
+    }
+   ]
+  },
+  {
+   "front": "keysWithPrefix algorithm?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Walk to the prefix node, then DFS its subtrie collecting marked nodes."
+    }
+   ]
+  },
+  {
+   "front": "longestPrefixOf algorithm?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Walk down the query, remembering the last marked node; stop when a link is missing."
+    }
+   ]
+  },
+  {
+   "front": "Order of keys from collect with array links?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Alphabetical (links scanned in character order)."
+    }
+   ]
+  },
+  {
+   "front": "Trie vs hash table for prefix queries?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Trie: Θ(prefix + output). Hash table: must scan all N keys."
+    }
+   ]
+  },
+  {
+   "front": "Balanced BST contains cost for strings of length L?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Θ(L log N) worst case (each comparison may scan L characters)."
+    }
+   ]
+  },
+  {
+   "front": "Downside of array-of-R nodes?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Memory Θ(R) per node, mostly null links."
+    }
+   ]
+  },
+  {
+   "front": "Alternatives to arrays for child links?",
+   "back": [
+    {
+     "type": "p",
+     "text": "HashMap (Θ(1) expected, compact), TreeMap (sorted, Θ(log R)), or a ternary search tree."
+    }
+   ]
+  },
+  {
+   "front": "TST links?",
+   "back": [
+    {
+     "type": "p",
+     "text": "lo (smaller char, same position), eq (next char), hi (larger char, same position)."
+    }
+   ]
+  },
+  {
+   "front": "When does a trie beat a hash map?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Prefix/ordered queries, early miss detection, many shared prefixes. Hash map is simpler for exact lookups."
+    }
+   ]
+  },
+  {
+   "front": "Number of nodes after inserting keys?",
+   "back": [
+    {
+     "type": "p",
+     "text": "One per distinct prefix (plus the root): shared prefixes share nodes."
+    }
+   ]
+  },
+  {
+   "front": "Deleting a key from a trie?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Unmark its node, then remove nodes on the way back up that are unmarked and have no children."
+    }
+   ]
+  },
+  {
+   "front": "Shortest unique prefix of a word?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Store a pass-through count per node; walk the word until a node with count 1."
+    }
+   ]
+  },
+  {
+   "front": "Wildcard search “s.e”?",
+   "back": [
+    {
+     "type": "p",
+     "text": "DFS: at a ‘.’ branch into every child; otherwise follow the one link."
+    }
+   ]
+  },
+  {
+   "front": "Worst-case trie add cost?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Θ(L) (creating up to L nodes)."
+    }
+   ]
+  }
+ ],
+ "hard": [
+  {
+   "title": "Delete with pruning",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "Write <code>boolean delete(Node p, String s, int d)</code> for a map-based trie that removes key s and deletes every node that no longer lies on the path to any key. It returns true if the caller should remove p. In the trie of sea, sell, she, shells, shore, sh, by, the, how many non-root nodes remain after deleting shells, and after then deleting sh?"
+    }
+   ],
+   "answer": "15 after deleting shells; still 15 after deleting sh",
+   "solution": [
+    {
+     "type": "code",
+     "lang": "java",
+     "text": "boolean delete(Node p, String s, int d) {\n    if (d == s.length()) {\n        p.isKey = false;\n    } else {\n        Node c = p.next.get(s.charAt(d));\n        if (c == null) return false;                       // key not present\n        if (delete(c, s, d + 1)) p.next.remove(s.charAt(d));\n    }\n    return !p.isKey && p.next.isEmpty();                    // prune me?\n}"
+    },
+    {
+     "type": "p",
+     "text": "Deleting shells unmarks the final s; it has no children, so it is removed; then l, l are removed (unmarked, childless) and the walk stops at e (she is a key): 18 − 3 = 15."
+    },
+    {
+     "type": "p",
+     "text": "Deleting sh only unmarks the h node, which still has children (she, shore): no node is removed, 15 remain. keysWithPrefix(\"s\") is now [sea, sell, she, shore]. Verified. (Call delete(root, s, 0); never remove the root itself.)"
+    }
+   ]
+  },
+  {
+   "title": "Wildcard matching",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "Write <code>int match(Node p, String pat, int d)</code> counting keys of exactly pat’s length that match pat, where ‘.’ matches any single character. In the trie of sea, sell, she, shells, shore, sh, by, the, evaluate s.e, s.., .h., and ...... (six dots). What is the worst-case runtime?"
+    }
+   ],
+   "answer": "1, 2, 2, 1; worst case Θ(number of nodes at depth ≤ |pat|) — up to Θ(R^L)",
+   "solution": [
+    {
+     "type": "code",
+     "lang": "java",
+     "text": "int match(Node p, String pat, int d) {\n    if (p == null) return 0;\n    if (d == pat.length()) return p.isKey ? 1 : 0;\n    char c = pat.charAt(d);\n    if (c == '.') {\n        int total = 0;\n        for (Node q : p.next.values()) total += match(q, pat, d + 1);\n        return total;\n    }\n    return match(p.next.get(c), pat, d + 1);\n}"
+    },
+    {
+     "type": "p",
+     "text": "s.e: she (sea ends in a). s..: sea, she. .h.: she, the. ......: shells. Verified."
+    },
+    {
+     "type": "p",
+     "text": "A pattern of all dots visits every node down to depth L: Θ(min(total nodes, R^L)). Specific characters prune to a single path."
+    }
+   ]
+  },
+  {
+   "title": "Shortest unique prefixes",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "For every word in a set, find its shortest prefix that no other word in the set shares (if none exists because the word is a prefix of another word, report the whole word). Give an algorithm with total time Θ(total length). Answer for sea, sell, she, shells, shore, sh, by, the."
+    }
+   ],
+   "answer": "sea, sel, she, shel, sho, sh, b, t",
+   "solution": [
+    {
+     "type": "p",
+     "text": "Insert all words, storing at each node a count of words passing through it."
+    },
+    {
+     "type": "p",
+     "text": "For each word, walk its path until reaching a node with count 1; the prefix so far is unique. If the walk ends at the word’s last node first, the word itself is the answer."
+    },
+    {
+     "type": "p",
+     "text": "Results: sea → sea (se is shared with sell), sell → sel, she → she (prefix of shells, so whole word), shells → shel, shore → sho, sh → sh, by → b, the → t. Verified. Each word is walked once: Θ(total length)."
+    }
+   ]
+  },
+  {
+   "title": "Runtime comparison",
+   "level": "hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "N keys, each of length L, alphabet size R. Give worst-case Θ for (a) contains in an array-based trie, (b) contains in a TreeMap&lt;String, …&gt;, (c) keysWithPrefix(p) in a trie returning K keys whose total length is S, (d) building the array trie (time and memory)."
+    }
+   ],
+   "answer": "(a) Θ(L) (b) Θ(L log N) (c) Θ(|p| + S) roughly, at most Θ(|p| + R·nodes in subtrie) (d) Θ(NL) time, Θ(NLR) memory",
+   "solution": [
+    {
+     "type": "p",
+     "text": "(a) One array access per character."
+    },
+    {
+     "type": "p",
+     "text": "(b) log N comparisons, each Θ(L) in the worst case (long shared prefixes)."
+    },
+    {
+     "type": "p",
+     "text": "(c) Walk |p| nodes, then visit the subtrie: its node count is at most S, but scanning R links per node costs Θ(R) each, so Θ(|p| + R·(nodes in subtrie)), which is Θ(|p| + S) for constant R."
+    },
+    {
+     "type": "p",
+     "text": "(d) Up to NL nodes, each with an array of R links."
+    }
+   ]
+  },
+  {
+   "title": "TST shape",
+   "level": "hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "Insert cat, cap, dog, ca, cub, do into an empty TST. How many nodes, which are marked, and how many nodes does get(\"dot\") examine before failing?"
+    }
+   ],
+   "answer": "9 nodes; marked a (ca), t, p, b, o (do), g; 4 nodes for \"dot\"",
+   "solution": [
+    {
+     "type": "p",
+     "text": "Structure c(·, a*(·, t*(p*, ·, ·), u(·, b*, ·)), d(·, o*(·, g*, ·), ·)) with 9 nodes (verified)."
+    },
+    {
+     "type": "p",
+     "text": "get(\"dot\"): c (d > c → hi), d (equal → eq), o (equal → eq), g (t > g → hi = null) → fails after examining 4 nodes (verified)."
+    }
+   ]
+  },
+  {
+   "title": "Design: count words with a prefix quickly",
+   "level": "hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "Support add(word) and countPrefix(p) (how many stored words start with p) with both in Θ(length). Which per-node field do you add, and how is it maintained?"
+    }
+   ],
+   "answer": "A size/count field incremented along the insertion path",
+   "solution": [
+    {
+     "type": "p",
+     "text": "Store at each node the number of stored keys in its subtrie. In add, first check contains (Θ(L)) to avoid double counting; then walk the path incrementing count at every node, creating nodes as needed."
+    },
+    {
+     "type": "p",
+     "text": "countPrefix(p): walk p; return the node’s count, or 0 if the path breaks. Both Θ(L)."
+    },
+    {
+     "type": "p",
+     "text": "Deletion decrements the same path."
+    }
+   ]
+  }
+ ],
+ "keyFacts": [
+  "Trie: one node per distinct prefix; isKey marks stored keys; contains/add Θ(L), independent of N.",
+  "contains must check isKey at the end (prefix ≠ key).",
+  "keysWithPrefix = walk prefix + collect subtrie (alphabetical with array links); longestPrefixOf = remember last marked node.",
+  "Array nodes: Θ(1) links, Θ(R) memory per node. Map nodes save memory; TST uses lo/eq/hi links.",
+  "Trie beats hashing for prefix and ordered queries; BST string lookups cost Θ(L log N)."
+ ],
+ "parsons": [
+  {
+   "title": "Trie insert (array of 128 links)",
+   "goal": "Each Node has boolean isKey and Node[] next = new Node[128]. Add key to the trie.",
+   "lines": [
+    "public void add(String key) {",
+    "    Node p = root;",
+    "    for (int i = 0; i &lt; key.length(); i++) {",
+    "        char c = key.charAt(i);",
+    "        if (p.next[c] == null) p.next[c] = new Node();",
+    "        p = p.next[c];",
+    "    }",
+    "    p.isKey = true;",
+    "}"
+   ],
+   "distractors": [
+    "        p.next[c] = new Node();",
+    "    for (int i = 1; i &lt; key.length(); i++) {",
+    "        p.isKey = true;"
+   ]
+  },
+  {
+   "title": "Trie contains",
+   "goal": "Return true iff key was added (not merely a prefix of some added key).",
+   "lines": [
+    "public boolean contains(String key) {",
+    "    Node p = root;",
+    "    for (int i = 0; i &lt; key.length(); i++) {",
+    "        p = p.next[key.charAt(i)];",
+    "        if (p == null) return false;",
+    "    }",
+    "    return p.isKey;",
+    "}"
+   ],
+   "distractors": [
+    "    return true;",
+    "    return p != null;",
+    "        if (p.next == null) return false;"
+   ]
+  },
+  {
+   "title": "Collect keys below a node",
+   "goal": "Append to out every key in p’s subtrie, in alphabetical order, where prefix is the string spelled on the way to p (keysWithPrefix calls this on the node reached by the prefix).",
+   "lines": [
+    "private void collect(Node p, String prefix, List&lt;String> out) {",
+    "    if (p == null) return;",
+    "    if (p.isKey) out.add(prefix);",
+    "    for (char c = 0; c &lt; 128; c++) {",
+    "        collect(p.next[c], prefix + c, out);",
+    "    }",
+    "}"
+   ],
+   "distractors": [
+    "    if (p.isKey) return;",
+    "        collect(p.next[c], prefix, out);",
+    "    for (char c = 127; c >= 0; c--) {"
+   ]
+  },
+  {
+   "title": "longestPrefixOf",
+   "goal": "Return the longest added key that is a prefix of q (keys are non-empty), or null.",
+   "lines": [
+    "public String longestPrefixOf(String q) {",
+    "    Node p = root; int best = -1;",
+    "    for (int i = 0; i &lt; q.length(); i++) {",
+    "        p = p.next[q.charAt(i)];",
+    "        if (p == null) break;",
+    "        if (p.isKey) best = i + 1;",
+    "    }",
+    "    return best &lt; 0 ? null : q.substring(0, best);",
+    "}"
+   ],
+   "distractors": [
+    "        if (p.isKey) best = i;",
+    "        if (p == null) return null;",
+    "        if (p.isKey) return q.substring(0, i + 1);"
+   ]
+  }
+ ]
+}

@@ -1,0 +1,684 @@
+{
+ "id": "B-10",
+ "course": "B",
+ "title": "Shortest paths (Dijkstra, A*) & MSTs (Prim, Kruskal)",
+ "source": "CS 61B Lec 23–24 · Ch 22–23",
+ "summary": "Weighted graph algorithms: Dijkstra’s single-source shortest paths and why negative edges break it, A* search with admissible and consistent heuristics, shortest paths in DAGs via topological order, and minimum spanning trees by Prim and Kruskal, both justified by the cut property. Exams demand exact traces (distTo, edgeTo, PQ, WQU arrays) and proofs or counterexamples.",
+ "lesson": [
+  {
+   "title": "Dijkstra’s algorithm",
+   "blocks": [
+    {
+     "type": "p",
+     "text": "Single-source shortest paths in a graph with <b>non-negative</b> edge weights. Keep distTo[v] (best known distance) and edgeTo[v]; repeatedly take the unvisited vertex with the smallest distTo from a priority queue and <b>relax</b> its outgoing edges."
+    },
+    {
+     "type": "def",
+     "term": "Relax edge v → w with weight c",
+     "text": "If distTo[v] + c &lt; distTo[w], set distTo[w] = distTo[v] + c, edgeTo[w] = v, and update w’s priority in the PQ."
+    },
+    {
+     "type": "code",
+     "lang": "java",
+     "text": "void dijkstra(int s) {\n    Arrays.fill(distTo, INF); distTo[s] = 0;\n    pq.add(s, 0);\n    while (!pq.isEmpty()) {\n        int v = pq.removeSmallest();        // v's distance is now final\n        for (Edge e : adj(v)) {\n            int w = e.to;\n            if (distTo[v] + e.weight < distTo[w]) {\n                distTo[w] = distTo[v] + e.weight;\n                edgeTo[w] = v;\n                pq.addOrChangePriority(w, distTo[w]);\n            }\n        }\n    }\n}"
+    },
+    {
+     "type": "example",
+     "title": "Dijkstra trace with distTo and edgeTo after every visit",
+     "prompt": "Directed graph: A→B 4, A→C 1, C→B 2, B→D 1, C→D 5, D→E 3, C→E 8, E→F 1, D→F 6. Source A.",
+     "steps": [
+      "Start: A = 0, others ∞; PQ {A:0}.",
+      "Visit A: relax A→B (4), A→C (1). distTo B 4, C 1; edgeTo B←A, C←A. PQ {C:1, B:4}.",
+      "Visit C: C→B: 1 + 2 = 3 &lt; 4 → B = 3 (edgeTo C); C→D: D = 6 (C); C→E: E = 9 (C). PQ {B:3, D:6, E:9}.",
+      "Visit B: B→D: 3 + 1 = 4 &lt; 6 → D = 4 (B). PQ {D:4, E:9}.",
+      "Visit D: D→E: 7 &lt; 9 → E = 7 (D); D→F: F = 10 (D). PQ {E:7, F:10}.",
+      "Visit E: E→F: 8 &lt; 10 → F = 8 (E). Visit F: nothing changes.",
+      "Final distTo A 0, B 3, C 1, D 4, E 7, F 8; edgeTo B←C, C←A, D←B, E←D, F←E. Shortest A→F: A C B D E F."
+     ],
+     "answer": "Visit order A C B D E F; distances 0 3 1 4 7 8 (verified)"
+    },
+    {
+     "type": "thm",
+     "name": "Runtime",
+     "text": "With a binary-heap PQ: V removeSmallest and up to E decrease-priority operations, each O(log V): O((V + E) log V). (With a lazy PQ that allows duplicate entries: O(E log E) = O(E log V).)"
+    },
+    {
+     "type": "thm",
+     "name": "Correctness (non-negative weights)",
+     "text": "When v is removed from the PQ, distTo[v] is final: any other path to v must leave the visited set through some edge to an unvisited x with distTo[x] ≥ distTo[v], and the rest of the path adds ≥ 0."
+    }
+   ]
+  },
+  {
+   "title": "Negative edges",
+   "blocks": [
+    {
+     "type": "example",
+     "title": "Dijkstra fails with a negative edge",
+     "prompt": "Edges A→B 2, A→C 5, C→B −4, B→D 1. Run Dijkstra from A (vertices are finalized when visited, and visited vertices are not re-processed).",
+     "steps": [
+      "Visit A: B = 2, C = 5. Visit B (smallest): D = 3. Visit D: nothing.",
+      "Visit C: C→B gives 5 − 4 = 1 &lt; 2, so distTo[B] becomes 1, but B was already visited and its edge B→D is never relaxed again.",
+      "Final distTo D = 3, but the true shortest path A→C→B→D has length 2."
+     ],
+     "answer": "Wrong answer distTo[D] = 3 (true 2) (verified)"
+    },
+    {
+     "type": "warn",
+     "text": "Adding a constant to every edge to make weights non-negative does not fix it: it penalizes paths with more edges and changes which path is shortest. Shortest paths in a DAG with negative edges are easy (next section); general graphs need Bellman–Ford (outside this unit)."
+    }
+   ]
+  },
+  {
+   "title": "Shortest paths in a DAG",
+   "blocks": [
+    {
+     "type": "p",
+     "text": "In a DAG, relax vertices in topological order. Every edge into v is relaxed before v’s outgoing edges, so each distTo is final when used. Works with negative weights. Θ(V + E)."
+    },
+    {
+     "type": "example",
+     "title": "DAG shortest and longest paths",
+     "prompt": "DAG with topological order 0, 1, 2, 3, 4, 5 and edges 0→1 5, 0→2 3, 1→3 6, 1→2 2, 2→4 4, 2→5 2, 2→3 7, 3→4 −1, 4→5 −2. Shortest and longest distances from 0?",
+     "steps": [
+      "Relax 0: d1 = 5, d2 = 3. Relax 1: d3 = 11, 1→2 gives 7 (no). Relax 2: d4 = 7, d5 = 5, d3 = min(11, 10) = 10.",
+      "Relax 3: 3→4 gives 9 (no). Relax 4: 4→5 gives 5 (tie). Shortest: [0, 5, 3, 10, 7, 5].",
+      "Longest: same pass with max: d1 5, d2 max(3, 7) = 7, d3 max(11, 14) = 14, d4 max(11, 13) = 13, d5 max(9, 11) = 11 → [0, 5, 7, 14, 13, 11].",
+      "Longest path in a DAG = shortest path with negated weights, solved by the DAG algorithm, not by Dijkstra."
+     ],
+     "answer": "shortest [0 5 3 10 7 5]; longest [0 5 7 14 13 11] (verified)"
+    },
+    {
+     "type": "warn",
+     "text": "Negating weights and running Dijkstra on this DAG gives longest guesses 0 5 7 14 11 9 — wrong for vertices 4 and 5 (verified), because negated weights are negative."
+    }
+   ]
+  },
+  {
+   "title": "A* search",
+   "blocks": [
+    {
+     "type": "p",
+     "text": "A* finds a shortest path from s to one target t. It is Dijkstra with PQ priority distTo[v] + h(v), where h(v) estimates the distance from v to t. It stops when t is removed from the PQ."
+    },
+    {
+     "type": "def",
+     "term": "Admissible heuristic",
+     "text": "h(v) ≤ true distance from v to t for every v (never overestimates). Guarantees the path found to t is shortest (tree-search version)."
+    },
+    {
+     "type": "def",
+     "term": "Consistent heuristic",
+     "text": "h(u) ≤ w(u, v) + h(v) for every edge u → v, and h(t) = 0. Consistent ⇒ admissible; guarantees correctness even when vertices are finalized once (graph search, as in 61B)."
+    },
+    {
+     "type": "example",
+     "title": "A* with a good heuristic",
+     "prompt": "Edges A→B 2, A→C 3, B→D 4, C→D 2, B→E 7, D→F 3, E→F 1, C→F 9; target F; h = A 6, B 6, C 5, D 3, E 1, F 0. Which vertices are visited?",
+     "steps": [
+      "True distances to F: A 8, B 7, C 5, D 3, E 1: h never overestimates; checking each edge, h is also consistent.",
+      "Visit A: B (2 + 6 = 8), C (3 + 5 = 8). Tie → B (lower label).",
+      "Visit B: D 6 (priority 9), E 9 (priority 10). Visit C: D improves to 5 (priority 8), F 12 (priority 12).",
+      "Visit D (8): F improves to 8 (priority 8). Visit F: stop."
+     ],
+     "answer": "Visited A B C D F; E is never visited; distance 8 (correct) (verified)"
+    },
+    {
+     "type": "example",
+     "title": "A* with an inadmissible heuristic",
+     "prompt": "Same graph, but h(D) = 8 (true distance 3).",
+     "steps": [
+      "Visit A, then B (priority 8). D gets priority 6 + 8 = 14, E 9 + 1 = 10.",
+      "Visit C: D = 5 (priority 13), F = 12 (priority 12).",
+      "Visit E (10): F = 10 (priority 10). Visit F: stop with 10."
+     ],
+     "answer": "Returns 10 instead of 8 — overestimating at D hid the real shortest path (verified)"
+    },
+    {
+     "type": "tip",
+     "text": "h = 0 makes A* exactly Dijkstra. A better (larger but still consistent) heuristic visits fewer vertices."
+    }
+   ]
+  },
+  {
+   "title": "MSTs and the cut property",
+   "blocks": [
+    {
+     "type": "def",
+     "term": "Minimum spanning tree",
+     "text": "For a connected undirected weighted graph: a set of V − 1 edges connecting all vertices with minimum total weight (necessarily a tree)."
+    },
+    {
+     "type": "thm",
+     "name": "Cut property",
+     "text": "For any cut (partition of V into two nonempty sets), the minimum-weight crossing edge belongs to every MST if it is the unique minimum (to some MST if tied).",
+     "proof": [
+      {
+       "type": "p",
+       "text": "Proof: take an MST T without the min crossing edge e. Adding e to T creates a cycle, which must cross the cut a second time via some edge f. Since w(e) &lt; w(f), T + e − f is a spanning tree lighter than T — contradiction."
+      }
+     ]
+    },
+    {
+     "type": "thm",
+     "name": "Cycle property",
+     "text": "The unique heaviest edge on any cycle is in no MST."
+    },
+    {
+     "type": "list",
+     "items": [
+      "Distinct edge weights ⇒ the MST is unique.",
+      "The MST depends only on the order of the weights: adding a constant to all weights, or applying any increasing function (e.g. squaring positive weights), keeps the same MST — unlike shortest paths.",
+      "The shortest-path tree from a vertex is generally not an MST, and vice versa."
+     ]
+    }
+   ]
+  },
+  {
+   "title": "Prim’s algorithm",
+   "blocks": [
+    {
+     "type": "p",
+     "text": "Grow one tree from a start vertex. Repeatedly add the lightest edge from the tree to a non-tree vertex (the cut property applied to the cut tree / rest). Implementation is Dijkstra with priority = weight of the single connecting edge, not total distance."
+    },
+    {
+     "type": "example",
+     "title": "Prim trace with distTo",
+     "prompt": "Undirected graph on 0–6: 0–1 4, 0–2 3, 1–2 5, 1–3 2, 2–3 7, 2–4 8, 3–4 6, 3–5 9, 4–5 1, 4–6 10, 5–6 11. Start at 0.",
+     "steps": [
+      "Add 0: distTo 1 = 4, 2 = 3.",
+      "Add 2 (3, edge 0–2): distTo 3 = 7, 4 = 8 (1 stays 4 &lt; 5).",
+      "Add 1 (4, edge 0–1): distTo 3 = 2 (edge 1–3).",
+      "Add 3 (2): distTo 4 = 6 (3–4), 5 = 9.",
+      "Add 4 (6): distTo 5 = 1 (4–5), 6 = 10.",
+      "Add 5 (1): 5–6 is 11 > 10, no change. Add 6 (10)."
+     ],
+     "answer": "Edges 0–2, 0–1, 1–3, 3–4, 4–5, 4–6; total 26 (verified)"
+    },
+    {
+     "type": "thm",
+     "name": "Runtime",
+     "text": "O((V + E) log V) with a binary heap; Θ(V²) with the array version (best for dense graphs)."
+    }
+   ]
+  },
+  {
+   "title": "Kruskal’s algorithm",
+   "blocks": [
+    {
+     "type": "p",
+     "text": "Sort all edges by weight. Scan them in increasing order and add an edge if it does not form a cycle — tested with a disjoint-set structure (isConnected / connect). Stop after V − 1 edges."
+    },
+    {
+     "type": "example",
+     "title": "Kruskal trace with WQU",
+     "prompt": "Same graph. WQU with roots storing −size; tie → first argument’s root under the second’s; edge u–v calls connect(u, v).",
+     "steps": [
+      "4–5 (1): take; [−1 −1 −1 −1 5 −2 −1].",
+      "1–3 (2): take; [−1 3 −1 −2 5 −2 −1].",
+      "0–2 (3): take; [2 3 −2 −2 5 −2 −1].",
+      "0–1 (4): roots 2 and 3, tie → 2 under 3: take; [2 3 3 −4 5 −2 −1].",
+      "1–2 (5): same root 3 → skip (cycle).",
+      "3–4 (6): roots 3 (size 4) and 5 (size 2) → 5 under 3: take; [2 3 3 −6 5 3 −1].",
+      "2–3 (7), 2–4 (8), 3–5 (9): all within one set → skip.",
+      "4–6 (10): take; 6 under 3: [2 3 3 −7 5 3 3]. 5–6 (11): skip."
+     ],
+     "answer": "Same MST, total 26 (verified)"
+    },
+    {
+     "type": "thm",
+     "name": "Runtime",
+     "text": "Sorting O(E log E) dominates; the WQU operations add O(E log V) (nearly O(E) with path compression). Overall O(E log E) = O(E log V)."
+    }
+   ]
+  }
+ ],
+ "cards": [
+  {
+   "front": "What does relaxing edge v → w do?",
+   "back": [
+    {
+     "type": "p",
+     "text": "If distTo[v] + w(v, w) &lt; distTo[w], update distTo[w] and edgeTo[w] (and the PQ priority)."
+    }
+   ]
+  },
+  {
+   "front": "Dijkstra’s runtime with a binary heap?",
+   "back": [
+    {
+     "type": "p",
+     "text": "O((V + E) log V)."
+    }
+   ]
+  },
+  {
+   "front": "Why does Dijkstra fail with negative edges?",
+   "back": [
+    {
+     "type": "p",
+     "text": "A vertex is finalized when removed; a later negative edge could have given it a shorter distance."
+    }
+   ]
+  },
+  {
+   "front": "Does adding a constant to all weights fix negative edges for Dijkstra?",
+   "back": [
+    {
+     "type": "p",
+     "text": "No: it penalizes paths with more edges and can change the shortest path."
+    }
+   ]
+  },
+  {
+   "front": "Shortest paths in a DAG?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Relax vertices in topological order; Θ(V + E); negative weights OK."
+    }
+   ]
+  },
+  {
+   "front": "Longest path in a DAG?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Negate the weights and run the DAG shortest-path algorithm (or use max). Not Dijkstra."
+    }
+   ]
+  },
+  {
+   "front": "A* priority?",
+   "back": [
+    {
+     "type": "p",
+     "text": "distTo[v] + h(v)."
+    }
+   ]
+  },
+  {
+   "front": "Admissible heuristic?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Never overestimates: h(v) ≤ true distance to the goal."
+    }
+   ]
+  },
+  {
+   "front": "Consistent heuristic?",
+   "back": [
+    {
+     "type": "p",
+     "text": "h(u) ≤ w(u, v) + h(v) for every edge and h(goal) = 0. Implies admissible."
+    }
+   ]
+  },
+  {
+   "front": "A* with h = 0?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Exactly Dijkstra (stopping at the goal)."
+    }
+   ]
+  },
+  {
+   "front": "What happens with an inadmissible heuristic?",
+   "back": [
+    {
+     "type": "p",
+     "text": "A* may return a non-shortest path."
+    }
+   ]
+  },
+  {
+   "front": "Cut property?",
+   "back": [
+    {
+     "type": "p",
+     "text": "The minimum-weight edge crossing any cut is in the MST (in every MST if unique)."
+    }
+   ]
+  },
+  {
+   "front": "Cycle property?",
+   "back": [
+    {
+     "type": "p",
+     "text": "The unique maximum-weight edge on a cycle is in no MST."
+    }
+   ]
+  },
+  {
+   "front": "When is the MST unique?",
+   "back": [
+    {
+     "type": "p",
+     "text": "When all edge weights are distinct (sufficient condition)."
+    }
+   ]
+  },
+  {
+   "front": "Does squaring all (positive) weights change the MST? The shortest paths?",
+   "back": [
+    {
+     "type": "p",
+     "text": "MST: no (same order). Shortest paths: possibly yes."
+    }
+   ]
+  },
+  {
+   "front": "Prim’s algorithm in one line?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Grow a tree from a start vertex, always adding the lightest edge leaving the tree."
+    }
+   ]
+  },
+  {
+   "front": "Prim vs Dijkstra priorities?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Prim: weight of the edge connecting v to the tree. Dijkstra: total distance from the source."
+    }
+   ]
+  },
+  {
+   "front": "Kruskal in one line?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Add edges in increasing weight order, skipping those that would form a cycle (checked with union-find)."
+    }
+   ]
+  },
+  {
+   "front": "Kruskal runtime?",
+   "back": [
+    {
+     "type": "p",
+     "text": "O(E log E) for sorting (= O(E log V))."
+    }
+   ]
+  },
+  {
+   "front": "Is the shortest-path tree an MST?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Not in general."
+    }
+   ]
+  },
+  {
+   "front": "How many edges does an MST have?",
+   "back": [
+    {
+     "type": "p",
+     "text": "V − 1."
+    }
+   ]
+  },
+  {
+   "front": "Reduction: shortest path where one edge may be used for free?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Two copies of the graph; each edge u → v also gets a 0-weight edge from copy 0’s u to copy 1’s v; answer min(dist to t₀, t₁)."
+    }
+   ]
+  }
+ ],
+ "hard": [
+  {
+   "title": "Shortest path with one free edge",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "In a directed graph with non-negative weights you may make exactly one edge free (cost 0) on your path (or none). Reduce this to a single Dijkstra run and give its runtime. Apply it to the graph from the Dijkstra trace (A→B 4, A→C 1, C→B 2, B→D 1, C→D 5, D→E 3, C→E 8, E→F 1, D→F 6), from A to F."
+    }
+   ],
+   "answer": "Layered graph with 2V vertices; answer 2 (A→C, free C→E, E→F)",
+   "solution": [
+    {
+     "type": "p",
+     "text": "Build two copies of every vertex: (v, 0) = free edge not used yet, (v, 1) = used. For each edge u → v of weight c add (u, 0) → (v, 0) and (u, 1) → (v, 1) with weight c, and (u, 0) → (v, 1) with weight 0."
+    },
+    {
+     "type": "p",
+     "text": "Run Dijkstra from (A, 0); answer min(dist(F, 0), dist(F, 1)). The graph has 2V vertices and 3E edges: O((V + E) log V)."
+    },
+    {
+     "type": "p",
+     "text": "Here: A→C (1), C→E free (0), E→F (1) = 2. Verified both with the layered graph and by brute force (trying each edge as the free one)."
+    }
+   ]
+  },
+  {
+   "title": "Counterexample hunting",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "For each claim give a proof or a small counterexample. (a) If all edge weights are distinct, the shortest-path tree from any vertex is the MST. (b) Adding 10 to every edge weight preserves the MST. (c) Adding 10 to every edge weight preserves shortest paths. (d) If e is the lightest edge in the graph, e is in every MST. (e) The heaviest edge of the graph is in no MST."
+    }
+   ],
+   "answer": "(a) false (b) true (c) false (d) true (e) false",
+   "solution": [
+    {
+     "type": "p",
+     "text": "(a) Triangle A–B 2, B–C 2.5, A–C 3: the shortest-path tree from A uses A–B and A–C (A–C = 3 beats A–B–C = 4.5), total 5; the MST is A–B, B–C with total 4.5."
+    },
+    {
+     "type": "p",
+     "text": "(b) Every spanning tree has V − 1 edges, so every tree’s weight rises by 10(V − 1): the minimum is the same tree."
+    },
+    {
+     "type": "p",
+     "text": "(c) A→B→C with weights 1, 1 vs A→C with 3: shortest is A→B→C (2 vs 3); after +10: 22 vs 13, now A→C."
+    },
+    {
+     "type": "p",
+     "text": "(d) Take the cut separating e’s two endpoints (e.g. one endpoint alone vs everything else). e is the lightest edge in the whole graph, so it is the lightest crossing edge: by the cut property it is in every MST (if weights tie, in some MST)."
+    },
+    {
+     "type": "p",
+     "text": "(e) False if that edge is a bridge (its removal disconnects the graph): every spanning tree must use it."
+    }
+   ]
+  },
+  {
+   "title": "Dijkstra on a graph where it happens to work",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "Run Dijkstra (finalize a vertex when it is removed; never re-process it) from A on two graphs. Case 1: A→B 1, A→C 4, B→C −2, C→D 1. Case 2: the same but A→B has weight 5. Are the final distances correct?"
+    }
+   ],
+   "answer": "Case 1 correct (0, 1, −1, 0); case 2 wrong: D = 5 instead of 4",
+   "solution": [
+    {
+     "type": "p",
+     "text": "Case 1: visit A (B 1, C 4); visit B: C = −1; visit C: D = 0; visit D. All correct, because the negative edge was relaxed before its head was removed. Negative edges don’t always break Dijkstra; they only remove the guarantee."
+    },
+    {
+     "type": "p",
+     "text": "Case 2: visit A (B 5, C 4); visit C (smallest): D = 5; visit D; visit B: B→C lowers distTo[C] to 3, but C is never processed again, so D stays 5. True distances: C 3, D 4. Both runs verified."
+    }
+   ]
+  },
+  {
+   "title": "Prim vs Kruskal intermediate states",
+   "level": "hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "On the lesson’s MST graph, list the edges in the order Prim (from vertex 6) adds them, and give the WQU array after Kruskal has processed the first five edges in sorted order."
+    }
+   ],
+   "answer": "Prim from 6: 4–6, 4–5, 3–4, 1–3, 0–1, 0–2; Kruskal after 5 edges [2 3 3 −4 5 −2 −1]",
+   "solution": [
+    {
+     "type": "p",
+     "text": "Prim from 6: candidates 4–6 (10), 5–6 (11) → take 4–6. From {4, 6}: 4–5 (1). From {4, 5, 6}: 3–4 (6) beats 2–4 (8), 3–5 (9). Then 1–3 (2), then 0–1 (4) (vs 2–3 7, 2–4 8), then 0–2 (3). Total 26, same MST (verified)."
+    },
+    {
+     "type": "p",
+     "text": "Kruskal’s first five sorted edges: 4–5, 1–3, 0–2, 0–1 (taken) and 1–2 (skipped): [2 3 3 −4 5 −2 −1] (verified)."
+    }
+   ]
+  },
+  {
+   "title": "A* heuristics: admissible vs consistent",
+   "level": "hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "Graph: S→A 1, S→B 4, A→B 1, A→G 5, B→G 1. True distances to G: S 3, A 2, B 1. Heuristic h = (S 3, A 2, B 0, G 0). Is h admissible? Consistent? Does graph-search A* (finalize on removal) return the correct distance?"
+    }
+   ],
+   "answer": "Admissible but not consistent (A→B violates it); still returns 3 here",
+   "solution": [
+    {
+     "type": "p",
+     "text": "Admissible: each h ≤ true distance (3 ≤ 3, 2 ≤ 2, 0 ≤ 1)."
+    },
+    {
+     "type": "p",
+     "text": "Consistent: S→A: 3 ≤ 1 + 2 ✓; S→B: 3 ≤ 4 + 0 ✓; A→B: 2 ≤ 1 + 0? No! 2 > 1. So h is not consistent."
+    },
+    {
+     "type": "p",
+     "text": "Run: pop S: A = 1 (priority 3), B = 4 (priority 4). Pop A: B = 2 (priority 2), G = 6 (priority 6). Pop B: G = 3 (priority 3). Pop G: distance 3, correct on this graph (verified). Inconsistency means a vertex could be finalized too early on other graphs, so graph-search A* is only guaranteed correct for consistent heuristics."
+    }
+   ]
+  },
+  {
+   "title": "Edge in some MST?",
+   "level": "hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "Give an O(E) algorithm (after you know the graph) to decide whether a given edge e = (u, v) with weight w belongs to some MST."
+    }
+   ],
+   "answer": "e is in some MST iff u and v are not connected using only edges of weight &lt; w",
+   "solution": [
+    {
+     "type": "p",
+     "text": "If u and v are connected by a path of edges all lighter than w, then e is the heaviest edge on a cycle and (being strictly heaviest) is in no MST."
+    },
+    {
+     "type": "p",
+     "text": "Otherwise, consider the cut: the component of u in the subgraph of edges lighter than w vs the rest; e crosses it and no lighter edge does, so by the cut property e is in some MST."
+    },
+    {
+     "type": "p",
+     "text": "Algorithm: BFS/DFS from u using only edges with weight &lt; w; answer yes iff v is not reached. Θ(V + E)."
+    }
+   ]
+  }
+ ],
+ "keyFacts": [
+  "Dijkstra: visit the unvisited vertex with smallest distTo, relax its edges; O((V + E) log V); requires non-negative weights.",
+  "Relax v → w: if distTo[v] + c &lt; distTo[w] then update distTo[w], edgeTo[w], PQ.",
+  "DAG shortest/longest paths: relax in topological order, Θ(V + E), negatives OK.",
+  "A*: priority distTo + h; admissible (never overestimates) / consistent (h(u) ≤ w + h(v)); h = 0 is Dijkstra.",
+  "Cut property: lightest crossing edge is in the MST. Cycle property: unique heaviest edge on a cycle is not.",
+  "Prim: grow from one vertex by the lightest edge out (priority = edge weight). Kruskal: sorted edges + union-find. Both O(E log V).",
+  "Distinct weights ⇒ unique MST; MST invariant under increasing transforms, shortest paths are not."
+ ],
+ "parsons": [
+  {
+   "title": "Dijkstra’s main loop (lazy PQ)",
+   "goal": "distTo[] starts at ∞ except distTo[s] = 0, and pq (ordered by the first entry) initially holds {0, s}. Finish Dijkstra; adj.get(v) holds edges {w, weight}.",
+   "lines": [
+    "while (!pq.isEmpty()) {",
+    "    int v = pq.poll()[1];",
+    "    if (done[v]) continue;",
+    "    done[v] = true;",
+    "    for (int[] e : adj.get(v)) {",
+    "        int w = e[0], wt = e[1];",
+    "        if (distTo[v] + wt &lt; distTo[w]) {",
+    "            distTo[w] = distTo[v] + wt; edgeTo[w] = v;",
+    "            pq.add(new int[]{distTo[w], w});",
+    "        }",
+    "    }",
+    "}"
+   ],
+   "distractors": [
+    "        if (distTo[v] + wt > distTo[w]) {",
+    "            distTo[w] = wt; edgeTo[w] = v;",
+    "    int v = pq.peek()[1];"
+   ]
+  },
+  {
+   "title": "Kruskal with a disjoint-set structure",
+   "goal": "edges is a list of {u, v, weight}; uf is a WQU structure on V vertices with find and union. Return the total MST weight.",
+   "lines": [
+    "int kruskal(List&lt;int[]> edges, int V) {",
+    "    edges.sort((a, b) -> Integer.compare(a[2], b[2]));",
+    "    UF uf = new UF(V); int total = 0;",
+    "    for (int[] e : edges) {",
+    "        if (uf.find(e[0]) == uf.find(e[1])) continue;",
+    "        uf.union(e[0], e[1]); total += e[2];",
+    "    }",
+    "    return total;",
+    "}"
+   ],
+   "distractors": [
+    "    edges.sort((a, b) -> Integer.compare(b[2], a[2]));",
+    "        if (uf.find(e[0]) != uf.find(e[1])) continue;",
+    "        total += e[2];"
+   ]
+  },
+  {
+   "title": "Eager Prim (array version, Θ(V²))",
+   "goal": "Grow an MST from vertex 0 using distTo[] (cheapest known edge into the tree) on an adjacency matrix w (0 = no edge). Return the total weight.",
+   "lines": [
+    "int prim(int[][] w) {",
+    "    int n = w.length, total = 0;",
+    "    int[] distTo = new int[n]; boolean[] inTree = new boolean[n];",
+    "    Arrays.fill(distTo, Integer.MAX_VALUE); distTo[0] = 0;",
+    "    for (int it = 0; it &lt; n; it++) {",
+    "        int v = -1;",
+    "        for (int i = 0; i &lt; n; i++) if (!inTree[i] && (v &lt; 0 || distTo[i] &lt; distTo[v])) v = i;",
+    "        inTree[v] = true; total += distTo[v];",
+    "        for (int u = 0; u &lt; n; u++) if (w[v][u] > 0 && !inTree[u] && w[v][u] &lt; distTo[u]) distTo[u] = w[v][u];",
+    "    }",
+    "    return total;",
+    "}"
+   ],
+   "distractors": [
+    "        for (int u = 0; u &lt; n; u++) if (w[v][u] > 0 && !inTree[u] && distTo[v] + w[v][u] &lt; distTo[u]) distTo[u] = distTo[v] + w[v][u];",
+    "        for (int i = 0; i &lt; n; i++) if (!inTree[i] && (v &lt; 0 || distTo[i] > distTo[v])) v = i;",
+    "    for (int it = 0; it &lt; n - 1; it++) {"
+   ]
+  },
+  {
+   "title": "Shortest paths in a DAG",
+   "goal": "order is a topological order of the DAG; distTo starts at ∞ (Long.MAX_VALUE / 4) except distTo[s] = 0. Negative weights are allowed.",
+   "lines": [
+    "void dagShortest(List&lt;int[]>[] adj, int[] order) {",
+    "    for (int v : order) {",
+    "        if (distTo[v] == INF) continue;",
+    "        for (int[] e : adj[v]) {",
+    "            if (distTo[v] + e[1] &lt; distTo[e[0]]) distTo[e[0]] = distTo[v] + e[1];",
+    "        }",
+    "    }",
+    "}"
+   ],
+   "distractors": [
+    "    for (int v = 0; v &lt; adj.length; v++) {",
+    "            if (distTo[v] + e[1] > distTo[e[0]]) distTo[e[0]] = distTo[v] + e[1];",
+    "        if (distTo[v] != INF) continue;"
+   ]
+  }
+ ]
+}

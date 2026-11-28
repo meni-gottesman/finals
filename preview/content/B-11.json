@@ -1,0 +1,705 @@
+{
+ "id": "B-11",
+ "course": "B",
+ "title": "Hashing",
+ "source": "CS 61B Lec 26–27 · Ch 25–26",
+ "summary": "Hash tables turn a key into an array index with hashCode and a modulus, keep collisions in short chains, and resize to keep the load factor constant, giving Θ(1) expected operations. Exams trace inserts and resizes, judge hash functions, find equals/hashCode contract bugs and mutable-key traps, and ask you to pick the right data structure for a design.",
+ "lesson": [
+  {
+   "title": "From arrays to hash tables",
+   "blocks": [
+    {
+     "type": "p",
+     "text": "If keys were small integers we could use them as array indices (a “DataIndexedArray”): Θ(1) everything, but memory proportional to the key range. Hashing compresses any key into a small index range."
+    },
+    {
+     "type": "def",
+     "term": "Hash function / hash code",
+     "text": "A function from keys to ints (Java: <code>hashCode()</code>). It must be deterministic and consistent with equals."
+    },
+    {
+     "type": "def",
+     "term": "Bucket index",
+     "text": "<code>Math.floorMod(key.hashCode(), M)</code> for M buckets. floorMod (not %) keeps negative hash codes in range: floorMod(−3, 8) = 5 while −3 % 8 = −3."
+    },
+    {
+     "type": "def",
+     "term": "Collision",
+     "text": "Two keys landing in the same bucket. Unavoidable (pigeonhole: infinitely many keys, M buckets)."
+    },
+    {
+     "type": "warn",
+     "text": "<code>Math.abs(h) % M</code> is not safe either: Math.abs(Integer.MIN_VALUE) is still Integer.MIN_VALUE (negative), and the String \"polygenelubricants\" actually has hash code Integer.MIN_VALUE."
+    }
+   ]
+  },
+  {
+   "title": "Hash codes in Java",
+   "blocks": [
+    {
+     "type": "thm",
+     "name": "String.hashCode",
+     "text": "For s of length n: s[0]·31^(n−1) + s[1]·31^(n−2) + ⋯ + s[n−1], computed with int overflow. Computed by the loop h = 31·h + c."
+    },
+    {
+     "type": "example",
+     "title": "Compute String hash codes",
+     "prompt": "Compute \"a\", \"ab\", \"cat\" and compare \"Aa\" with \"BB\".",
+     "steps": [
+      "\"a\" = 97.",
+      "\"ab\" = 97·31 + 98 = 3105.",
+      "\"cat\" = 99·31² + 97·31 + 116 = 95139 + 3007 + 116 = 98262.",
+      "\"Aa\" = 65·31 + 97 = 2112; \"BB\" = 66·31 + 66 = 2112: a collision between different strings."
+     ],
+     "answer": "97, 3105, 98262, and \"Aa\" and \"BB\" both hash to 2112 (verified)"
+    },
+    {
+     "type": "list",
+     "items": [
+      "Integer.hashCode(x) = x (so −7 hashes to −7). Boolean: true → 1231. Long: high and low 32 bits XORed (1L &lt;&lt; 32 hashes to 1).",
+      "List.hashCode is order-sensitive: List.of(1, 2) → 994, List.of(2, 1) → 1024.",
+      "Default Object.hashCode is identity-based: two equal objects of a class that overrides equals but not hashCode almost surely hash differently."
+     ]
+    },
+    {
+     "type": "thm",
+     "name": "Good hash codes",
+     "text": "Spread keys evenly over all ints and use every part of the key that equals uses. Multiplying by a prime like 31 before adding the next component makes order matter and avoids systematic collisions."
+    },
+    {
+     "type": "example",
+     "title": "Good vs bad hashCode for points",
+     "prompt": "Points (x, y) with 0 ≤ x, y &lt; 100 (10,000 points). Compare hashCode = x + y with hashCode = 31x + y.",
+     "steps": [
+      "x + y takes only 199 distinct values (0 … 198); about 50 points share each value on average, and resizing can never separate keys with equal hash codes.",
+      "31x + y takes 3169 distinct values here (31x + y collides only when y differs by a multiple of 31 with x adjusted), far better; a full-range mixing hash would give 10,000.",
+      "Return 0 for every key: one bucket holds everything → Θ(N) per operation."
+     ],
+     "answer": "199 vs 3169 distinct hash codes (verified)"
+    }
+   ]
+  },
+  {
+   "title": "Separate chaining, load factor, resizing",
+   "blocks": [
+    {
+     "type": "p",
+     "text": "Keep an array of M buckets, each a list. With N items the average chain length is the load factor α = N/M. Resize (double M and rehash every item) whenever α exceeds a constant threshold, so chains stay Θ(1) long on average."
+    },
+    {
+     "type": "formula",
+     "text": "α = N / M  ·  resize when α > threshold  ·  new index = floorMod(hashCode, newM)"
+    },
+    {
+     "type": "example",
+     "title": "Insert and resize trace",
+     "prompt": "M = 4, keys are Integers (hashCode = value), new items go to the end of their chain, and after an insert, if N/M > 1, M doubles and items are rehashed by scanning buckets 0, 1, … in order. Insert 5, 28, 19, 15, 20, 33, 12, 17, 10, −3.",
+     "steps": [
+      "5 → 5 mod 4 = 1; 28 → 0; 19 → 3; 15 → 3 (chain [19, 15]). N = 4, α = 1: no resize yet.",
+      "20 → bucket 0 ([28, 20]); N = 5 > 4 → resize to 8. Rehash in scan order: 28 → 4, 20 → 4, 5 → 5, 19 → 3, 15 → 7.",
+      "33 → 1; 12 → 4 ([28, 20, 12]); 17 → 1 ([33, 17]). N = 8 = M: no resize.",
+      "10 → bucket 2 of 8, N = 9 > 8 → resize to 16: 33 → 1, 17 → 1, 19 → 3, 28 → 12, 20 → 4, 12 → 12, 5 → 5, 10 → 10, 15 → 15.",
+      "−3 → floorMod(−3, 16) = 13."
+     ],
+     "answer": "M = 16: 1:[33, 17] 3:[19] 4:[20] 5:[5] 10:[10] 12:[28, 12] 13:[−3] 15:[15] (verified)"
+    },
+    {
+     "type": "table",
+     "head": [
+      "Operation",
+      "Expected (good hash, resizing)",
+      "Worst case"
+     ],
+     "rows": [
+      [
+       "put / get / remove",
+       "Θ(1) (put amortized)",
+       "Θ(N) (everything in one bucket)"
+      ],
+      [
+       "one resize",
+       "Θ(N)",
+       "Θ(N)"
+      ],
+      [
+       "iterate all keys",
+       "Θ(N + M)",
+       "Θ(N + M)"
+      ]
+     ]
+    },
+    {
+     "type": "tip",
+     "text": "Open addressing (linear probing) is the alternative: store items directly in the array and, on collision, try the next slot. It needs α &lt; 1 and deletion is tricky; Java’s HashMap uses chaining."
+    }
+   ]
+  },
+  {
+   "title": "The equals/hashCode contract and mutable keys",
+   "blocks": [
+    {
+     "type": "thm",
+     "name": "Contract",
+     "text": "a.equals(b) ⇒ a.hashCode() == b.hashCode(). A HashMap first jumps to the bucket of hashCode, then searches it with equals. If equal keys can hash differently, lookups search the wrong bucket."
+    },
+    {
+     "type": "example",
+     "title": "Contract bugs",
+     "prompt": "For each class, say what happens in a HashSet: (a) equals compares names, hashCode returns name.length() + age. (b) equals compares id, hashCode returns 42. (c) equals compares (x, y), hashCode inherited from Object.",
+     "steps": [
+      "(a) Broken: two equal objects (same name) with different ages hash differently → duplicates stored, contains fails.",
+      "(b) Legal (equal ⇒ equal hash) but terrible: every key collides → Θ(N) operations.",
+      "(c) Broken: identity hash codes differ for equal points → duplicates, failed lookups."
+     ],
+     "answer": "(a) broken (b) correct but Θ(N) (c) broken"
+    },
+    {
+     "type": "example",
+     "title": "Mutating a key",
+     "prompt": "A List&lt;Integer> key = [1, 2] is put into a HashSet, then key.add(3). What do contains(key) and contains(List.of(1, 2)) return?",
+     "steps": [
+      "The list was stored in the bucket for hash of [1, 2].",
+      "After mutation its hash is that of [1, 2, 3]: contains(key) looks in a different bucket (almost surely) → false.",
+      "contains(List.of(1, 2)) looks in the right bucket, but the stored object is now [1, 2, 3], not equal → false. The entry is stranded but still counted in size."
+     ],
+     "answer": "false and false"
+    }
+   ]
+  },
+  {
+   "title": "Choosing the right data structure",
+   "blocks": [
+    {
+     "type": "table",
+     "head": [
+      "Need",
+      "Use",
+      "Cost"
+     ],
+     "rows": [
+      [
+       "membership / map by key, no order",
+       "HashSet / HashMap",
+       "Θ(1) expected"
+      ],
+      [
+       "ordered keys, floor/ceiling, range queries, min/max",
+       "TreeSet / TreeMap (LLRB)",
+       "Θ(log N)"
+      ],
+      [
+       "repeated min / max removal",
+       "PriorityQueue (heap)",
+       "Θ(log N)"
+      ],
+      [
+       "by index, fast append",
+       "ArrayList",
+       "Θ(1) amortized"
+      ],
+      [
+       "both ends",
+       "ArrayDeque",
+       "Θ(1) amortized"
+      ],
+      [
+       "connectivity under unions",
+       "disjoint sets (WQU + PC)",
+       "≈ Θ(1) amortized"
+      ],
+      [
+       "string prefix queries",
+       "trie",
+       "Θ(length)"
+      ]
+     ]
+    },
+    {
+     "type": "example",
+     "title": "Pick structures for a design",
+     "prompt": "Support insert(x), remove(x) and getRandom() (uniformly random stored element), each in Θ(1) expected.",
+     "steps": [
+      "A hash set alone can’t pick a uniformly random element in Θ(1). An ArrayList can (random index), but removal is Θ(N).",
+      "Combine: ArrayList a of elements + HashMap pos from element to its index in a.",
+      "remove(x): i = pos.get(x); move the last element into slot i (update its pos), remove the last slot, delete x from pos. All Θ(1).",
+      "Trace: insert 10, 20, 30, 40; remove 20 → 40 moves into index 1: a = [10, 40, 30], pos = {10: 0, 40: 1, 30: 2}."
+     ],
+     "answer": "ArrayList + HashMap(element → index) (verified)"
+    }
+   ]
+  }
+ ],
+ "cards": [
+  {
+   "front": "How does Java turn a hashCode into a bucket index?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Math.floorMod(hashCode, M) (or a bit mask when M is a power of 2)."
+    }
+   ]
+  },
+  {
+   "front": "Why floorMod instead of %?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Hash codes can be negative; % would give a negative index."
+    }
+   ]
+  },
+  {
+   "front": "Why is Math.abs(h) % M unsafe?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Math.abs(Integer.MIN_VALUE) is negative."
+    }
+   ]
+  },
+  {
+   "front": "String.hashCode formula?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Σ s[i]·31^(n−1−i), with int overflow; loop h = 31h + c."
+    }
+   ]
+  },
+  {
+   "front": "\"Aa\".hashCode() vs \"BB\".hashCode()?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Both 2112: different strings can collide."
+    }
+   ]
+  },
+  {
+   "front": "Integer.hashCode(x)?",
+   "back": [
+    {
+     "type": "p",
+     "text": "x itself."
+    }
+   ]
+  },
+  {
+   "front": "Load factor?",
+   "back": [
+    {
+     "type": "p",
+     "text": "α = N/M, the average chain length."
+    }
+   ]
+  },
+  {
+   "front": "Why resize a hash table?",
+   "back": [
+    {
+     "type": "p",
+     "text": "To keep α bounded so chains are Θ(1) long on average."
+    }
+   ]
+  },
+  {
+   "front": "Cost of one resize? Amortized put cost?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Θ(N) for the resize; Θ(1) amortized (with doubling)."
+    }
+   ]
+  },
+  {
+   "front": "Worst case of a hash table operation?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Θ(N): all keys in one bucket (bad hashCode or adversarial keys)."
+    }
+   ]
+  },
+  {
+   "front": "Can resizing fix a hashCode that returns a constant?",
+   "back": [
+    {
+     "type": "p",
+     "text": "No: equal hash codes always share a bucket regardless of M."
+    }
+   ]
+  },
+  {
+   "front": "equals/hashCode contract?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Equal objects must have equal hash codes."
+    }
+   ]
+  },
+  {
+   "front": "Is hashCode returning 42 for everything legal?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Legal (satisfies the contract) but makes every operation Θ(N)."
+    }
+   ]
+  },
+  {
+   "front": "What goes wrong when a key is mutated inside a HashMap?",
+   "back": [
+    {
+     "type": "p",
+     "text": "It sits in the bucket of its old hash; lookups by the new or old value fail."
+    }
+   ]
+  },
+  {
+   "front": "Separate chaining vs linear probing?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Chaining: lists per bucket, α can exceed 1. Probing: items in the array itself, try next slot on collision, needs α &lt; 1."
+    }
+   ]
+  },
+  {
+   "front": "HashMap vs TreeMap?",
+   "back": [
+    {
+     "type": "p",
+     "text": "HashMap Θ(1) expected, no order. TreeMap Θ(log N), sorted keys, floor/ceiling/range."
+    }
+   ]
+  },
+  {
+   "front": "Why does 31 appear in hash codes?",
+   "back": [
+    {
+     "type": "p",
+     "text": "An odd prime multiplier that spreads values and makes the order of components matter."
+    }
+   ]
+  },
+  {
+   "front": "Iterating over a hash table costs?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Θ(N + M)."
+    }
+   ]
+  },
+  {
+   "front": "Data structure for insert, remove, getRandom in Θ(1)?",
+   "back": [
+    {
+     "type": "p",
+     "text": "ArrayList + HashMap from element to index; remove by swapping with the last element."
+    }
+   ]
+  },
+  {
+   "front": "LRU cache data structures?",
+   "back": [
+    {
+     "type": "p",
+     "text": "HashMap from key to node of a doubly linked list ordered by recency: Θ(1) get/put/evict."
+    }
+   ]
+  },
+  {
+   "front": "Is List.hashCode order-sensitive?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Yes: List.of(1, 2) and List.of(2, 1) hash to 994 and 1024."
+    }
+   ]
+  }
+ ],
+ "hard": [
+  {
+   "title": "LRU cache",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "Design an LRU cache with capacity k supporting get(key) and put(key, value) in Θ(1) expected; when full, put evicts the least recently used key (get and put both count as uses). Describe the structure and trace capacity 3: put 1, put 2, put 3, get 1, put 4, get 2, get 3, put 5."
+    }
+   ],
+   "answer": "HashMap key → DLL node + DLL in recency order; final keys (old → new) 4, 3, 5",
+   "solution": [
+    {
+     "type": "p",
+     "text": "A doubly linked list (with sentinel) holds entries from least to most recently used; a HashMap maps each key to its node."
+    },
+    {
+     "type": "p",
+     "text": "get: look up the node, unlink it and move it to the most-recent end (Θ(1) with prev/next pointers). put: if present update and move; else create a node at the recent end, and if size > k remove the node at the old end and delete its key from the map."
+    },
+    {
+     "type": "p",
+     "text": "Trace: [1], [1 2], [1 2 3]; get 1 → [2 3 1]; put 4 → evict 2 → [3 1 4]; get 2 → miss; get 3 → [1 4 3]; put 5 → evict 1 → [4 3 5]. Verified with a reference implementation."
+    }
+   ]
+  },
+  {
+   "title": "Insert, remove, getRandom in Θ(1)",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "Implement a set with insert(x), remove(x), getRandom() all Θ(1) expected (getRandom returns each stored element with equal probability). Write remove."
+    }
+   ],
+   "answer": "ArrayList + HashMap(element → index); swap with last on remove",
+   "solution": [
+    {
+     "type": "code",
+     "lang": "java",
+     "text": "boolean remove(int x) {\n    Integer i = pos.get(x);\n    if (i == null) return false;\n    int last = a.get(a.size() - 1);\n    a.set(i, last);            // move last element into the hole\n    pos.put(last, i);\n    a.remove(a.size() - 1);    // Θ(1): removing the last slot\n    pos.remove(x);             // after pos.put, in case x == last\n    return true;\n}"
+    },
+    {
+     "type": "p",
+     "text": "The order of the last two pos updates matters when x is the last element: putting last → i first and then removing x leaves the map correct."
+    },
+    {
+     "type": "p",
+     "text": "After inserting 10, 20, 30, 40 and removing 20: a = [10, 40, 30], pos = {10: 0, 30: 2, 40: 1}; remove(99) returns false (verified)."
+    }
+   ]
+  },
+  {
+   "title": "Negative hash codes and abs",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "A student computes bucket indices as <code>Math.abs(key.hashCode()) % M</code>. (a) Find a String key for which this crashes when M = 10, and give the index it computes. (b) Why does M = 8 hide the bug? (c) Fix it."
+    }
+   ],
+   "answer": "\"polygenelubricants\" (hash Integer.MIN_VALUE) gives index −8; with M = 8 the result is 0; use Math.floorMod",
+   "solution": [
+    {
+     "type": "p",
+     "text": "(a) \"polygenelubricants\".hashCode() is Integer.MIN_VALUE = −2147483648 (verified). Math.abs of it overflows back to −2147483648, and −2147483648 % 10 = −8 → ArrayIndexOutOfBoundsException."
+    },
+    {
+     "type": "p",
+     "text": "(b) −2147483648 = −2³¹ is divisible by 8, so % 8 gives 0, a valid index — the bug only appears for moduli that don’t divide 2³¹."
+    },
+    {
+     "type": "p",
+     "text": "(c) Math.floorMod(key.hashCode(), M) always returns a value in [0, M)."
+    }
+   ]
+  },
+  {
+   "title": "Resize trace with a different threshold",
+   "level": "hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "Separate chaining, M = 2 initially, new items appended to chains, resize (double, rehash in bucket-scan order) when N/M > 1.5 after an insert. Insert 7, 3, 12, 8, 21, 4. Give the final table."
+    }
+   ],
+   "answer": "M = 4: 0:[12, 8, 4] 1:[21] 2:[] 3:[7, 3]",
+   "solution": [
+    {
+     "type": "p",
+     "text": "7 → 1, 3 → 1 ([7, 3]), 12 → 0. N = 3, α = 1.5: not > 1.5, no resize."
+    },
+    {
+     "type": "p",
+     "text": "8 → 0 ([12, 8]); N = 4, α = 2 > 1.5 → M = 4: scan bucket 0 (12 → 0, 8 → 0), then bucket 1 (7 → 3, 3 → 3)."
+    },
+    {
+     "type": "p",
+     "text": "21 → 1; N = 5, α = 1.25. 4 → 0 ([12, 8, 4]); N = 6, α = 1.5: not > 1.5."
+    },
+    {
+     "type": "p",
+     "text": "Final M = 4: 0:[12, 8, 4] 1:[21] 2:[] 3:[7, 3] (verified)."
+    }
+   ]
+  },
+  {
+   "title": "Which point hash scales?",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "N points (x, y) with 0 ≤ x, y &lt; √N go into a chaining table with M = the smallest power of two > N, index floorMod(h, M). The total number of key comparisons for calling contains on every point was measured:"
+    },
+    {
+     "type": "table",
+     "head": [
+      "N",
+      "31x + y",
+      "x + y",
+      "x·√N + y",
+      "x·65536 + y"
+     ],
+     "rows": [
+      [
+       "10,000",
+       "21,234",
+       "338,350",
+       "10,000",
+       "505,000"
+      ],
+      [
+       "40,000",
+       "148,421",
+       "2,686,700",
+       "40,000",
+       "4,020,000"
+      ],
+      [
+       "160,000",
+       "1,101,750",
+       "21,413,400",
+       "160,000",
+       "8,080,000"
+      ]
+     ]
+    },
+    {
+     "type": "p",
+     "text": "Explain each column and give the asymptotic total cost of N contains calls for the first three."
+    }
+   ],
+   "answer": "31x+y and x+y: Θ(N^1.5); x·√N + y: Θ(N); x·65536 + y collapses because 65536 ≡ 0 mod M",
+   "solution": [
+    {
+     "type": "p",
+     "text": "x + y has only 2√N − 1 distinct codes, so chains have length about √N: N lookups cost Θ(N·√N) = Θ(N^1.5). The column grows ×8 when N grows ×4, exactly the N^1.5 signature."
+    },
+    {
+     "type": "p",
+     "text": "31x + y: codes 31x + y collide whenever y ≥ 31, so there are only about 32√N distinct codes: still Θ(N^1.5), just ~16× cheaper than x + y (ratios ≈ 7.0 and 7.4 per ×4 of N)."
+    },
+    {
+     "type": "p",
+     "text": "x·√N + y is a bijection onto 0 … N − 1 &lt; M: every chain has length ≤ 1, total exactly N: Θ(N)."
+    },
+    {
+     "type": "p",
+     "text": "x·65536 + y: while M ≤ 65536, 65536·x ≡ 0 (mod M), so only y matters: √N codes, Θ(N^1.5) (×8 growth). At N = 160,000, M = 262,144 > 65536 and two bits of x survive, so it suddenly improves. Lesson: multipliers that share factors with M (powers of two with power-of-two M) destroy information. All counts verified by simulation."
+    }
+   ]
+  },
+  {
+   "title": "Design: first unique character, streaming",
+   "level": "hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "Characters arrive one at a time. After each, report the first character so far that has appeared exactly once (or none). Give a structure with Θ(1) amortized per character for an alphabet of any size."
+    }
+   ],
+   "answer": "HashMap counts + queue of candidates (lazy deletion)",
+   "solution": [
+    {
+     "type": "p",
+     "text": "Keep a HashMap char → count and a queue of characters in arrival order (each enqueued on first appearance)."
+    },
+    {
+     "type": "p",
+     "text": "On arrival: increment the count (enqueue if it became 1). Then, while the queue’s front has count > 1, dequeue it. The front is the answer."
+    },
+    {
+     "type": "p",
+     "text": "Each character is enqueued and dequeued at most once: Θ(1) amortized. (Alternative: LinkedHashMap of characters seen once, removing on the second sighting.) Stream a, b, a, c, b: answers a, a, b, b, c (verified)."
+    }
+   ]
+  }
+ ],
+ "keyFacts": [
+  "Bucket = Math.floorMod(hashCode, M); never % or Math.abs (negatives, Integer.MIN_VALUE).",
+  "String hash: Σ s[i]·31^(n−1−i) with overflow; \"Aa\" and \"BB\" collide.",
+  "Load factor α = N/M; double M and rehash when α exceeds a threshold → Θ(1) expected (amortized) ops.",
+  "Worst case Θ(N) per op if hash codes collide; resizing cannot separate equal hash codes.",
+  "Contract: equals ⇒ equal hashCode. Constant hashCode is legal but Θ(N).",
+  "Never mutate a key’s hashCode fields while it is in a hash structure.",
+  "HashMap Θ(1) unordered vs TreeMap Θ(log N) ordered; combine structures for designs (LRU = HashMap + DLL)."
+ ],
+ "parsons": [
+  {
+   "title": "Separate chaining: put with resize",
+   "goal": "buckets is an array of lists of Entry(key, val); n counts entries. Insert or update key, then double the table if the load factor exceeds maxLoad.",
+   "lines": [
+    "public void put(K key, V val) {",
+    "    int i = Math.floorMod(key.hashCode(), buckets.length);",
+    "    for (Entry e : buckets[i]) {",
+    "        if (e.key.equals(key)) { e.val = val; return; }",
+    "    }",
+    "    buckets[i].add(new Entry(key, val)); n += 1;",
+    "    if ((double) n / buckets.length > maxLoad) resize(2 * buckets.length);",
+    "}"
+   ],
+   "distractors": [
+    "    int i = key.hashCode() % buckets.length;",
+    "        if (e.key == key) { e.val = val; return; }",
+    "    if (n / buckets.length > maxLoad) resize(buckets.length + 1);"
+   ]
+  },
+  {
+   "title": "Rehash on resize",
+   "goal": "Rebuild the table with m buckets, moving every entry to the bucket for its hash code mod m.",
+   "lines": [
+    "private void resize(int m) {",
+    "    List&lt;Entry>[] old = buckets;",
+    "    buckets = new List[m];",
+    "    for (int i = 0; i &lt; m; i++) buckets[i] = new ArrayList&lt;>();",
+    "    for (List&lt;Entry> chain : old) {",
+    "        for (Entry e : chain) buckets[Math.floorMod(e.key.hashCode(), m)].add(e);",
+    "    }",
+    "}"
+   ],
+   "distractors": [
+    "        for (Entry e : chain) buckets[Math.floorMod(e.key.hashCode(), old.length)].add(e);",
+    "    List&lt;Entry>[] old = new List[m];",
+    "    buckets = old;"
+   ]
+  },
+  {
+   "title": "Separate chaining: get",
+   "goal": "Return the value for key, or null if absent.",
+   "lines": [
+    "public V get(K key) {",
+    "    int i = Math.floorMod(key.hashCode(), buckets.length);",
+    "    for (Entry e : buckets[i]) {",
+    "        if (e.key.equals(key)) return e.val;",
+    "    }",
+    "    return null;",
+    "}"
+   ],
+   "distractors": [
+    "    for (List&lt;Entry> chain : buckets) {",
+    "        if (e.key.equals(key)) return e.key;",
+    "        else return null;"
+   ]
+  },
+  {
+   "title": "Polynomial hashCode for an int sequence",
+   "goal": "Return a hash code for a class holding int[] items, combining every element like String.hashCode does (so equal sequences hash equally and order matters).",
+   "lines": [
+    "@Override",
+    "public int hashCode() {",
+    "    int h = 0;",
+    "    for (int x : items) h = 31 * h + x;",
+    "    return h;",
+    "}"
+   ],
+   "distractors": [
+    "    for (int x : items) h = h + x;",
+    "    return items.hashCode();",
+    "    int h = 1; return h;"
+   ]
+  }
+ ]
+}

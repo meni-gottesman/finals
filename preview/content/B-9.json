@@ -1,0 +1,792 @@
+{
+ "id": "B-9",
+ "course": "B",
+ "title": "Graphs: representations, DFS/BFS, topological sort, DAGs",
+ "source": "CS 61B Lec 21–22, 25 · Ch 20–21, 24",
+ "summary": "Graph vocabulary and representations, depth-first and breadth-first traversal with exact visiting orders, BFS shortest paths, topological sort of DAGs by reverse postorder, and cycle detection. Most graph exam questions are DFS or BFS with extra bookkeeping, so tracing them precisely and adapting them to new problems is the core skill.",
+ "lesson": [
+  {
+   "title": "Vocabulary",
+   "blocks": [
+    {
+     "type": "def",
+     "term": "Graph",
+     "text": "G = (V, E): a set of vertices and a set of edges (pairs of vertices). We also write V and E for their sizes. Simple graphs (no self-loops or parallel edges) have E ≤ V²."
+    },
+    {
+     "type": "def",
+     "term": "Directed / undirected / weighted",
+     "text": "Undirected edge {u, v} goes both ways; directed edge u → v one way; weighted edges carry a number."
+    },
+    {
+     "type": "def",
+     "term": "Path, cycle, connected",
+     "text": "A path is a sequence of vertices joined by edges; a cycle returns to its start. Undirected G is connected if every pair is joined by a path; a connected component is a maximal connected piece."
+    },
+    {
+     "type": "def",
+     "term": "Tree, DAG",
+     "text": "A tree is connected and acyclic (exactly V − 1 edges). A DAG is a directed graph with no directed cycle."
+    },
+    {
+     "type": "thm",
+     "name": "Handshake lemma",
+     "text": "In an undirected graph the degrees sum to 2E. That is why “visit every vertex and scan its neighbors” costs Θ(V + E), not Θ(V·E)."
+    },
+    {
+     "type": "warn",
+     "text": "A graph traversal must mark visited vertices; otherwise cycles make it loop forever. Tree traversals don’t need marks because each node is reachable one way only."
+    }
+   ]
+  },
+  {
+   "title": "Representations and their costs",
+   "blocks": [
+    {
+     "type": "table",
+     "head": [
+      "Operation",
+      "Adjacency matrix",
+      "Adjacency list",
+      "Edge list"
+     ],
+     "rows": [
+      [
+       "Space",
+       "Θ(V²)",
+       "Θ(V + E)",
+       "Θ(E)"
+      ],
+      [
+       "Add edge",
+       "Θ(1)",
+       "Θ(1)",
+       "Θ(1)"
+      ],
+      [
+       "Is u–v an edge?",
+       "Θ(1)",
+       "Θ(deg u)",
+       "Θ(E)"
+      ],
+      [
+       "Iterate neighbors of v",
+       "Θ(V)",
+       "Θ(deg v)",
+       "Θ(E)"
+      ],
+      [
+       "Iterate all edges",
+       "Θ(V²)",
+       "Θ(V + E)",
+       "Θ(E)"
+      ],
+      [
+       "Full DFS / BFS",
+       "Θ(V²)",
+       "Θ(V + E)",
+       "Θ(V·E)"
+      ]
+     ]
+    },
+    {
+     "type": "example",
+     "title": "Choosing a representation",
+     "prompt": "A social network has V = 10⁸ people and E = 10¹⁰ friendships. (a) Memory of a boolean adjacency matrix vs adjacency lists? (b) Which is faster for “list all friends of v” and for “are u and v friends”?",
+     "steps": [
+      "(a) Matrix: V² = 10¹⁶ bits ≈ 1.25 petabytes. Lists: Θ(V + E) ≈ 2·10¹⁰ entries (each undirected edge stored twice): tens of gigabytes.",
+      "(b) Friends of v: lists Θ(deg v) vs matrix Θ(V) = 10⁸ per query.",
+      "Are u, v friends: matrix Θ(1), lists Θ(deg u) (or Θ(1) expected if each list is a HashSet)."
+     ],
+     "answer": "Adjacency lists (optionally with hash sets) — the matrix is only reasonable for dense graphs"
+    },
+    {
+     "type": "warn",
+     "text": "Θ(V + E) is not Θ(E): isolated vertices still cost time. Only if the graph is connected (E ≥ V − 1) does V + E simplify to Θ(E)."
+    }
+   ]
+  },
+  {
+   "title": "Depth-first search",
+   "blocks": [
+    {
+     "type": "code",
+     "lang": "java",
+     "text": "void dfs(int v) {\n    marked[v] = true;\n    preorder.add(v);                 // when first visited\n    for (int w : adj.get(v)) {\n        if (!marked[w]) {\n            edgeTo[w] = v;\n            dfs(w);\n        }\n    }\n    postorder.add(v);                // when all neighbors are done\n}"
+    },
+    {
+     "type": "def",
+     "term": "DFS preorder / postorder",
+     "text": "Preorder: the order vertices are first marked. Postorder: the order their recursive calls finish."
+    },
+    {
+     "type": "p",
+     "text": "All traces below use this graph: Undirected graph G on vertices 0–7 with edges 0–1, 0–4, 1–2, 1–5, 2–3, 2–6, 4–5, 5–6, 6–7, 3–7. Adjacency lists (sorted): 0: 1 4 · 1: 0 2 5 · 2: 1 3 6 · 3: 2 7 · 4: 0 5 · 5: 1 4 6 · 6: 2 5 7 · 7: 3 6. Neighbors are always explored in increasing order."
+    },
+    {
+     "type": "example",
+     "title": "DFS from 0: preorder, postorder, edgeTo",
+     "prompt": "Run dfs(0) on G.",
+     "steps": [
+      "dfs(0): mark 0; first neighbor 1 → dfs(1): neighbors 0 (marked), 2 → dfs(2): neighbors 1 (marked), 3 → dfs(3): neighbor 7 → dfs(7): neighbors 3 (marked), 6 → dfs(6): neighbors 2 (marked), 5 → dfs(5): neighbors 1 (marked), 4 → dfs(4): neighbors 0, 5 marked → 4 finishes.",
+      "Then 5 finishes, 6 checks 7 (marked) and finishes, 7 finishes, 3 finishes, 2 checks 6 (marked) and finishes, 1 checks 5 (marked) and finishes, 0 checks 4 (marked) and finishes.",
+      "Preorder: 0 1 2 3 7 6 5 4. Postorder: 4 5 6 7 3 2 1 0.",
+      "edgeTo: 1←0, 2←1, 3←2, 7←3, 6←7, 5←6, 4←5. The DFS path from 0 to 4 is 0-1-2-3-7-6-5-4 (7 edges) even though 0–4 is an edge."
+     ],
+     "answer": "pre 0 1 2 3 7 6 5 4; post 4 5 6 7 3 2 1 0 (verified)"
+    },
+    {
+     "type": "example",
+     "title": "Which start vertex gives this order?",
+     "prompt": "For which start vertices s does DFS preorder on G end with vertex 7?",
+     "steps": [
+      "Run DFS from each s (neighbors ascending):",
+      "s = 0: … 5 4; s = 1: 1 0 4 5 6 2 3 7 ✓; s = 2: … 7 3; s = 3: 3 2 1 0 4 5 6 7 ✓; s = 4: … 6 5; s = 5: … 7 6; s = 6: 6 2 1 0 4 5 3 7 ✓; s = 7: … 5 6."
+     ],
+     "answer": "s ∈ {1, 3, 6} (verified)"
+    },
+    {
+     "type": "tip",
+     "text": "Iterative DFS with an explicit stack produces the same preorder if you mark a vertex when it is popped (skipping already-marked ones) and push neighbors in reverse order. Marking on push gives a different order — read which version a question uses."
+    }
+   ]
+  },
+  {
+   "title": "Breadth-first search and shortest paths",
+   "blocks": [
+    {
+     "type": "code",
+     "lang": "java",
+     "text": "void bfs(int s) {\n    Queue<Integer> q = new ArrayDeque<>();\n    q.add(s); marked[s] = true; distTo[s] = 0;\n    while (!q.isEmpty()) {\n        int v = q.remove();\n        for (int w : adj.get(v)) {\n            if (!marked[w]) {\n                marked[w] = true;            // mark when ENQUEUED\n                edgeTo[w] = v;\n                distTo[w] = distTo[v] + 1;\n                q.add(w);\n            }\n        }\n    }\n}"
+    },
+    {
+     "type": "thm",
+     "name": "BFS finds fewest-edge paths",
+     "text": "BFS visits vertices in nondecreasing distance from s (all distance-k vertices are dequeued before any distance-(k+1) vertex), so distTo[w] = distTo[v] + 1 is the minimum number of edges and edgeTo gives a shortest path tree. DFS has no such guarantee."
+    },
+    {
+     "type": "example",
+     "title": "BFS from 0 with distTo and edgeTo",
+     "prompt": "Run bfs(0) on G.",
+     "steps": [
+      "Queue [0]. Dequeue 0: enqueue 1, 4 (dist 1).",
+      "Dequeue 1: enqueue 2, 5 (dist 2). Dequeue 4: 0, 5 marked.",
+      "Dequeue 2: enqueue 3, 6 (dist 3). Dequeue 5: nothing new.",
+      "Dequeue 3: enqueue 7 (dist 4). Dequeue 6, 7: nothing new.",
+      "Order 0 1 4 2 5 3 6 7; distTo [0 1 2 3 1 2 3 4]; edgeTo [−, 0, 1, 2, 0, 1, 2, 3]."
+     ],
+     "answer": "Shortest path 0 → 7: follow edgeTo back 7 ← 3 ← 2 ← 1 ← 0, length 4 (verified)"
+    },
+    {
+     "type": "example",
+     "title": "BFS on an implicit graph",
+     "prompt": "Fewest knight moves from (0, 0) to (7, 7) on an 8×8 board, and from (0, 0) to (1, 1)?",
+     "steps": [
+      "Vertices are squares; edges are the 8 knight moves that stay on the board. No need to build the graph: generate neighbors on the fly.",
+      "BFS from (0, 0) with a dist array of −1s; stop when the target is dequeued.",
+      "Results: 6 moves to (7, 7) and 4 moves to (1, 1) (diagonal neighbors are surprisingly far). On a 3×3 board, (1, 1) is unreachable."
+     ],
+     "answer": "6 and 4 (verified)"
+    },
+    {
+     "type": "table",
+     "head": [
+      "",
+      "DFS",
+      "BFS"
+     ],
+     "rows": [
+      [
+       "Fringe",
+       "stack (recursion)",
+       "queue"
+      ],
+      [
+       "Finds",
+       "some path; pre/postorder; cycles; topological order",
+       "fewest-edge paths"
+      ],
+      [
+       "Time (adj. lists)",
+       "Θ(V + E)",
+       "Θ(V + E)"
+      ],
+      [
+       "Extra space worst",
+       "Θ(V) (recursion depth on a path graph)",
+       "Θ(V) (queue on a star graph)"
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "title": "DAGs and topological sort",
+   "blocks": [
+    {
+     "type": "def",
+     "term": "Topological order",
+     "text": "An ordering of a digraph’s vertices such that every edge u → v has u before v. Exists iff the digraph is a DAG; usually not unique."
+    },
+    {
+     "type": "thm",
+     "name": "Reverse DFS postorder is a topological order",
+     "text": "For an edge u → v in a DAG, v finishes before u: either v was already finished when u examined it, or dfs(v) is called (and finishes) inside dfs(u). (v can’t be in progress, since that would mean a path v ⇝ u, closing a cycle.) So u comes after v in postorder, before it in reverse postorder."
+    },
+    {
+     "type": "steps",
+     "title": "Topological sort",
+     "items": [
+      "Run DFS from every unmarked vertex (in increasing order unless told otherwise), recording postorder.",
+      "Reverse the postorder.",
+      "Alternative (Kahn’s algorithm): repeatedly output a vertex of in-degree 0 and delete its edges."
+     ]
+    },
+    {
+     "type": "example",
+     "title": "Topological sort by reverse postorder",
+     "prompt": "DAG on 0–6 with edges 0→1, 0→2, 1→3, 2→3, 2→5, 3→4, 5→4, 6→5, 6→0.",
+     "steps": [
+      "dfs(0): 0 → 1 → 3 → 4; 4 finishes, 3, then 1. Back at 0 → 2: 3 marked, → 5: 4 marked, 5 finishes, 2 finishes, 0 finishes.",
+      "Postorder so far 4 3 1 5 2 0. Vertices 1–5 are marked; dfs(6): neighbors 0, 5 marked; 6 finishes.",
+      "Postorder 4 3 1 5 2 0 6 → reversed: 6 0 2 5 1 3 4.",
+      "Check: every edge goes left to right (e.g. 6→0, 2→5, 5→4)."
+     ],
+     "answer": "6 0 2 5 1 3 4 (verified)"
+    },
+    {
+     "type": "example",
+     "title": "All possible topological orders",
+     "prompt": "For the same DAG, which vertices can appear at each index of some topological order?",
+     "steps": [
+      "6 has in-degree 0 and is the only source: index 0 is 6. Then 0 is the only source: index 1.",
+      "After 6, 0, the sources are 1 and 2: index 2 ∈ {1, 2}. 3 needs both 1 and 2; 5 needs 2 and 6.",
+      "Enumerating all orders (there are 5): idx2 ∈ {1, 2}, idx3 ∈ {1, 2, 5}, idx4 ∈ {1, 3, 5}, idx5 ∈ {3, 5}, idx6 = 4."
+     ],
+     "answer": "5 orders; positions as listed (verified by enumeration)"
+    }
+   ]
+  },
+  {
+   "title": "Cycle detection and other DFS/BFS designs",
+   "blocks": [
+    {
+     "type": "thm",
+     "name": "Directed cycles",
+     "text": "Run DFS with three colors: white (unvisited), gray (on the current recursion path), black (finished). A directed cycle exists iff DFS meets an edge to a gray vertex. Θ(V + E)."
+    },
+    {
+     "type": "thm",
+     "name": "Undirected cycles",
+     "text": "In DFS, an edge to an already-marked vertex other than the parent you came from means a cycle. (Or: a connected undirected graph is acyclic iff E = V − 1.)"
+    },
+    {
+     "type": "example",
+     "title": "Directed cycle with three colors",
+     "prompt": "Edges 0→1, 1→2, 2→3, 3→1, 2→4. Run the three-color DFS from 0.",
+     "steps": [
+      "0 gray → 1 gray → 2 gray → 3 gray → edge 3→1: 1 is gray (on the path 0, 1, 2, 3) → cycle 1 → 2 → 3 → 1.",
+      "Note: reaching a black vertex is not a cycle (e.g. in the DAG above, 2 → 3 after 3 finished)."
+     ],
+     "answer": "Cycle found (verified)"
+    },
+    {
+     "type": "example",
+     "title": "Bipartite check",
+     "prompt": "Is G bipartite? Is a triangle plus a separate edge bipartite?",
+     "steps": [
+      "BFS 2-coloring: color the start 0, give each newly discovered neighbor the opposite color; if an edge joins two same-colored vertices, not bipartite. Repeat from every uncolored vertex (the graph may be disconnected).",
+      "G: sides {0, 2, 5, 7} and {1, 3, 4, 6}; every edge crosses: bipartite.",
+      "Triangle 0–1–2: 0 gets A, 1 and 2 get B, edge 1–2 joins two B’s: not bipartite. (A graph is bipartite iff it has no odd cycle.)"
+     ],
+     "answer": "G yes; triangle + edge no (verified)"
+    },
+    {
+     "type": "example",
+     "title": "Counting connected components",
+     "prompt": "How many components does the undirected graph with edges 0–1, 1–2, 2–0, 3–4 on vertices 0–4 have?",
+     "steps": [
+      "Loop over vertices; each time an unmarked vertex is found, increment the count and DFS from it (marking its whole component).",
+      "0 starts component 1 (marks 0, 1, 2); 3 starts component 2 (marks 3, 4)."
+     ],
+     "answer": "2 components; Θ(V + E) (verified)"
+    }
+   ]
+  }
+ ],
+ "cards": [
+  {
+   "front": "Adjacency list vs matrix: space?",
+   "back": [
+    {
+     "type": "p",
+     "text": "List Θ(V + E); matrix Θ(V²)."
+    }
+   ]
+  },
+  {
+   "front": "Full DFS/BFS cost on adjacency lists vs matrix?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Θ(V + E) vs Θ(V²)."
+    }
+   ]
+  },
+  {
+   "front": "Is u–v an edge: cost with matrix vs list?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Θ(1) vs Θ(deg u)."
+    }
+   ]
+  },
+  {
+   "front": "Sum of degrees in an undirected graph?",
+   "back": [
+    {
+     "type": "p",
+     "text": "2E."
+    }
+   ]
+  },
+  {
+   "front": "DFS preorder vs postorder?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Preorder: when a vertex is first marked. Postorder: when its recursive call finishes."
+    }
+   ]
+  },
+  {
+   "front": "Which traversal gives fewest-edge paths?",
+   "back": [
+    {
+     "type": "p",
+     "text": "BFS (unweighted graphs)."
+    }
+   ]
+  },
+  {
+   "front": "Where does BFS mark a vertex?",
+   "back": [
+    {
+     "type": "p",
+     "text": "When it is enqueued (so it is enqueued at most once)."
+    }
+   ]
+  },
+  {
+   "front": "What does edgeTo store?",
+   "back": [
+    {
+     "type": "p",
+     "text": "The vertex from which each vertex was first discovered; following it back gives the path to the source."
+    }
+   ]
+  },
+  {
+   "front": "Topological order exists iff…?",
+   "back": [
+    {
+     "type": "p",
+     "text": "The digraph has no directed cycle (it is a DAG)."
+    }
+   ]
+  },
+  {
+   "front": "How to compute a topological order with DFS?",
+   "back": [
+    {
+     "type": "p",
+     "text": "DFS from every unmarked vertex, record postorder, reverse it."
+    }
+   ]
+  },
+  {
+   "front": "Why does reverse postorder work?",
+   "back": [
+    {
+     "type": "p",
+     "text": "For every edge u → v in a DAG, v finishes before u."
+    }
+   ]
+  },
+  {
+   "front": "Kahn’s algorithm?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Repeatedly remove a vertex with in-degree 0 and output it; if vertices remain with none of in-degree 0, there is a cycle."
+    }
+   ]
+  },
+  {
+   "front": "Directed cycle detection?",
+   "back": [
+    {
+     "type": "p",
+     "text": "DFS with gray/black marks: an edge to a gray (in-progress) vertex means a cycle."
+    }
+   ]
+  },
+  {
+   "front": "Undirected cycle detection?",
+   "back": [
+    {
+     "type": "p",
+     "text": "DFS: an edge to a marked vertex that is not the parent means a cycle."
+    }
+   ]
+  },
+  {
+   "front": "Bipartite iff…?",
+   "back": [
+    {
+     "type": "p",
+     "text": "No odd-length cycle; test by BFS/DFS 2-coloring."
+    }
+   ]
+  },
+  {
+   "front": "Count connected components?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Loop over vertices; DFS from each unmarked one, counting starts. Θ(V + E)."
+    }
+   ]
+  },
+  {
+   "front": "Is a topological order unique?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Usually not; unique iff there is a Hamiltonian path (each consecutive pair joined by an edge)."
+    }
+   ]
+  },
+  {
+   "front": "Worst-case extra space of recursive DFS?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Θ(V) recursion depth (e.g. a path graph)."
+    }
+   ]
+  },
+  {
+   "front": "BFS on a grid or puzzle state space?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Treat states as vertices and moves as edges; generate neighbors on the fly; dist array instead of marked."
+    }
+   ]
+  },
+  {
+   "front": "Can DFS find shortest paths in an unweighted graph?",
+   "back": [
+    {
+     "type": "p",
+     "text": "No; its first path to a vertex can be much longer (DFS from 0 reached 4 via 7 edges though 0–4 is an edge)."
+    }
+   ]
+  },
+  {
+   "front": "Tree on V vertices: number of edges?",
+   "back": [
+    {
+     "type": "p",
+     "text": "V − 1."
+    }
+   ]
+  },
+  {
+   "front": "Θ(V + E) vs Θ(E)?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Different unless the graph is connected (then E ≥ V − 1)."
+    }
+   ]
+  }
+ ],
+ "hard": [
+  {
+   "title": "Shortest cycle through a vertex",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "Given an unweighted directed graph and a vertex s, find the length of the shortest directed cycle that passes through s (or −1), in Θ(V + E). Apply it to edges 0→1, 1→2, 2→0, 2→3, 3→4, 4→0, 1→4, 4→5, 5→1 for s = 0, 3, 5."
+    }
+   ],
+   "answer": "BFS from s; answer = min over edges u → s of dist[u] + 1; gives 3, 5, 3",
+   "solution": [
+    {
+     "type": "p",
+     "text": "A cycle through s is a path s ⇝ u followed by an edge u → s. The shortest one uses a shortest path to u, which BFS computes for all u at once."
+    },
+    {
+     "type": "code",
+     "lang": "java",
+     "text": "int shortestCycleThrough(List<List<Integer>> adj, int s) {\n    int[] d = new int[adj.size()]; Arrays.fill(d, -1); d[s] = 0;\n    Queue<Integer> q = new ArrayDeque<>(List.of(s));\n    int best = Integer.MAX_VALUE;\n    while (!q.isEmpty()) {\n        int v = q.remove();\n        for (int w : adj.get(v)) {\n            if (w == s) best = Math.min(best, d[v] + 1);\n            else if (d[w] == -1) { d[w] = d[v] + 1; q.add(w); }\n        }\n    }\n    return best == Integer.MAX_VALUE ? -1 : best;\n}"
+    },
+    {
+     "type": "p",
+     "text": "s = 0: 0→1→2→0 (3). s = 3: 3→4→0→1→2→3 (5). s = 5: 5→1→4→5 (3). Verified. One BFS: Θ(V + E). (Running this from every s finds the girth in Θ(V(V + E)).)"
+    }
+   ]
+  },
+  {
+   "title": "A traversal with a priority-queue fringe",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "code",
+     "lang": "java",
+     "text": "List<Integer> traverse(List<List<Integer>> adj, int s) {\n    boolean[] marked = new boolean[adj.size()];\n    PriorityQueue<Integer> pq = new PriorityQueue<>();   // smallest label first\n    pq.add(s);\n    List<Integer> order = new ArrayList<>();\n    while (!pq.isEmpty()) {\n        int v = pq.poll();\n        if (marked[v]) continue;\n        marked[v] = true; order.add(v);\n        for (int w : adj.get(v)) if (!marked[w]) pq.add(w);\n    }\n    return order;\n}"
+    },
+    {
+     "type": "p",
+     "text": "Give the visiting order on the graph G of the lesson starting from 7, and a tight O bound in terms of V and E."
+    }
+   ],
+   "answer": "7 3 2 1 0 4 5 6; O((V + E) log E) = O((V + E) log V)",
+   "solution": [
+    {
+     "type": "p",
+     "text": "Pop 7: push 3, 6. Pop 3 (smallest): push 2. Pop 2: push 1, 6. Pop 1: push 0, 5. Pop 0: push 4. Pop 4: push 5. Pop 5: push 6. Pop 6, then the remaining duplicates (5, 6, 6) are skipped."
+    },
+    {
+     "type": "p",
+     "text": "Order 7 3 2 1 0 4 5 6 (verified). It always expands the smallest-labelled vertex on the frontier: neither DFS nor BFS."
+    },
+    {
+     "type": "p",
+     "text": "Each edge can push one entry, so the PQ holds O(E) items and there are O(E) polls and pushes at O(log E) each, plus Θ(V) for the array: O((V + E) log E); since E ≤ V², log E ≤ 2 log V, so O((V + E) log V)."
+    }
+   ]
+  },
+  {
+   "title": "Every possible topological position",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "For the DAG with edges 0→1, 0→2, 1→3, 2→3, 2→5, 3→4, 5→4, 6→5, 6→0, list every vertex that can appear at index 3 of some topological order, and count the topological orders. Explain without brute force."
+    }
+   ],
+   "answer": "Index 3 ∈ {1, 2, 5}; 5 orders",
+   "solution": [
+    {
+     "type": "p",
+     "text": "Forced prefix: 6 is the only source, then 0 is the only source. The remaining vertices 1, 2, 3, 4, 5 satisfy 1 → 3, 2 → 3, 2 → 5, 3 → 4, 5 → 4 (and 6 already placed)."
+    },
+    {
+     "type": "p",
+     "text": "Index 2 is a source among {1, 2}. Index 3: after 6 0 1 → only 2 is available; after 6 0 2 → 1 or 5. So {1, 2, 5}."
+    },
+    {
+     "type": "p",
+     "text": "Counting: 4 must be last. Order the set {1, 2, 3, 5} with 1 &lt; 3, 2 &lt; 3, 2 &lt; 5: if 1 first: 1 2 then {3, 5} in 2 orders → 2; if 2 first: remaining {1, 3, 5} with 1 &lt; 3: 3 orders. Total 5. Verified by enumeration."
+    }
+   ]
+  },
+  {
+   "title": "Bipartite check with the Graph API",
+   "level": "hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "Write <code>boolean isBipartite(Graph G)</code> using only <code>G.V()</code> and <code>G.adj(v)</code>, correct for disconnected graphs, in Θ(V + E). What does it return for an odd cycle plus isolated vertices?"
+    }
+   ],
+   "answer": "BFS 2-coloring from every uncolored vertex; false",
+   "solution": [
+    {
+     "type": "p",
+     "text": "side[] = −1 for all. For each s with side[s] == −1: side[s] = 0 and BFS; each discovered w gets 1 − side[v]; if an edge joins two equal sides, return false. Return true at the end (code in the parsons exercise; verified on G (true) and triangle + edge (false))."
+    },
+    {
+     "type": "p",
+     "text": "Disconnected graphs need the outer loop; isolated vertices are trivially fine. An odd cycle cannot be 2-colored, so the answer is false."
+    }
+   ]
+  },
+  {
+   "title": "Fewest moves on an adjacency map",
+   "level": "hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "A cave is given as <code>Map&lt;String, List&lt;String>> exits</code>. Write <code>int fewestMoves(String start, String goal)</code> returning the minimum number of moves, or −1, in Θ(V + E) expected."
+    }
+   ],
+   "answer": "BFS with a HashMap of distances",
+   "solution": [
+    {
+     "type": "code",
+     "lang": "java",
+     "text": "int fewestMoves(Map<String, List<String>> exits, String start, String goal) {\n    Map<String, Integer> dist = new HashMap<>();\n    Queue<String> q = new ArrayDeque<>();\n    dist.put(start, 0); q.add(start);\n    while (!q.isEmpty()) {\n        String v = q.remove();\n        if (v.equals(goal)) return dist.get(v);\n        for (String w : exits.getOrDefault(v, List.of())) {\n            if (!dist.containsKey(w)) { dist.put(w, dist.get(v) + 1); q.add(w); }\n        }\n    }\n    return -1;\n}"
+    },
+    {
+     "type": "p",
+     "text": "The dist map doubles as the marked set. Each room enters the queue once and each exit is scanned once; map operations are Θ(1) expected."
+    }
+   ]
+  },
+  {
+   "title": "Always, sometimes, never",
+   "level": "hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "For a connected undirected graph decide: (a) DFS preorder from s equals BFS order from s. (b) BFS from s visits vertices in nondecreasing distance from s. (c) If the graph has a cycle, DFS from any s finds an edge to a marked non-parent vertex. (d) Reverse DFS postorder of a digraph with a cycle is a topological order."
+    }
+   ],
+   "answer": "(a) sometimes (b) always (c) always (d) never",
+   "solution": [
+    {
+     "type": "p",
+     "text": "(a) Equal on a path graph from an endpoint; different on G (DFS 0 1 2 3 …, BFS 0 1 4 2 …)."
+    },
+    {
+     "type": "p",
+     "text": "(b) Always: that is the queue invariant."
+    },
+    {
+     "type": "p",
+     "text": "(c) Always: DFS reaches the whole connected graph; consider the cycle vertex first marked — eventually the edge closing the cycle is examined from a vertex whose neighbor is already marked and is not its parent."
+    },
+    {
+     "type": "p",
+     "text": "(d) A topological order does not exist if there is a cycle, so no ordering qualifies."
+    }
+   ]
+  },
+  {
+   "title": "Representations and runtime puzzle",
+   "level": "hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "Code: for each vertex v, for each vertex w ≠ v, if (hasEdge(v, w)) count++. Give Θ with an adjacency matrix and with adjacency lists (hasEdge scans v’s list). How would you count edges optimally with lists?"
+    }
+   ],
+   "answer": "Θ(V²) with a matrix; Θ(V·E) with lists; optimal Σ deg/2 in Θ(V)",
+   "solution": [
+    {
+     "type": "p",
+     "text": "Matrix: V² calls at Θ(1)."
+    },
+    {
+     "type": "p",
+     "text": "Lists: hasEdge(v, w) costs Θ(deg v); summing over w gives V·deg v; summing over v gives V·Σ deg = Θ(V·E)."
+    },
+    {
+     "type": "p",
+     "text": "Optimal: E = (Σ list sizes)/2, Θ(V) if list sizes are cached, Θ(V + E) by scanning."
+    }
+   ]
+  }
+ ],
+ "keyFacts": [
+  "Adjacency lists: space Θ(V + E), traversal Θ(V + E); matrix: Θ(V²) for both.",
+  "DFS (stack/recursion): preorder = first visit, postorder = finish. BFS (queue): mark on enqueue.",
+  "BFS gives fewest-edge paths (distTo, edgeTo); DFS does not.",
+  "Topological order ⇔ DAG; compute by reversing DFS postorder over all vertices (or Kahn).",
+  "Directed cycle: edge to a gray (in-progress) vertex. Undirected: edge to a marked non-parent.",
+  "Bipartite ⇔ no odd cycle ⇔ BFS 2-coloring succeeds.",
+  "Ties: explore neighbors in increasing order unless stated; trace exactly."
+ ],
+ "parsons": [
+  {
+   "title": "BFS with distTo and edgeTo",
+   "goal": "Fill distTo[] (fewest edges from s, −1 if unreachable) and edgeTo[] using breadth-first search on adjacency lists adj.",
+   "lines": [
+    "void bfs(List&lt;List&lt;Integer>> adj, int s) {",
+    "    Arrays.fill(distTo, -1); Queue&lt;Integer> q = new ArrayDeque&lt;>();",
+    "    q.add(s); distTo[s] = 0;",
+    "    while (!q.isEmpty()) {",
+    "        int v = q.remove();",
+    "        for (int w : adj.get(v)) {",
+    "            if (distTo[w] == -1) { distTo[w] = distTo[v] + 1; edgeTo[w] = v; q.add(w); }",
+    "        }",
+    "    }",
+    "}"
+   ],
+   "distractors": [
+    "    Arrays.fill(distTo, -1); Stack&lt;Integer> q = new Stack&lt;>();",
+    "            if (distTo[w] == -1) { distTo[w] = distTo[w] + 1; edgeTo[w] = v; q.add(w); }",
+    "            if (distTo[w] != -1) { distTo[w] = distTo[v] + 1; edgeTo[w] = v; q.add(w); }"
+   ]
+  },
+  {
+   "title": "Topological sort by reverse DFS postorder",
+   "goal": "Return a topological order of a DAG with vertices 0 … V−1 (helper dfs(adj, v) marks v, recurses into unmarked neighbors, then appends v to post).",
+   "lines": [
+    "List&lt;Integer> topoSort(List&lt;List&lt;Integer>> adj) {",
+    "    post = new ArrayList&lt;>(); marked = new boolean[adj.size()];",
+    "    for (int v = 0; v &lt; adj.size(); v++) {",
+    "        if (!marked[v]) dfs(adj, v);",
+    "    }",
+    "    Collections.reverse(post);",
+    "    return post;",
+    "}"
+   ],
+   "distractors": [
+    "    dfs(adj, 0);",
+    "        dfs(adj, v);",
+    "    Collections.sort(post);"
+   ]
+  },
+  {
+   "title": "Directed cycle detection (three colors)",
+   "goal": "color[v] is 0 (unvisited), 1 (on the current DFS path) or 2 (finished). Return true if a directed cycle is reachable from v.",
+   "lines": [
+    "boolean hasCycle(List&lt;List&lt;Integer>> adj, int v) {",
+    "    color[v] = 1;",
+    "    for (int w : adj.get(v)) {",
+    "        if (color[w] == 1 || (color[w] == 0 && hasCycle(adj, w))) return true;",
+    "    }",
+    "    color[v] = 2;",
+    "    return false;",
+    "}"
+   ],
+   "distractors": [
+    "        if (color[w] == 2 || (color[w] == 0 && hasCycle(adj, w))) return true;",
+    "        if (color[w] != 0) return true;",
+    "    color[v] = 0;"
+   ]
+  },
+  {
+   "title": "Bipartite check by 2-coloring",
+   "goal": "Return true iff the undirected graph (adjacency lists) can be 2-colored; side[] starts filled with −1.",
+   "lines": [
+    "boolean bipartite(List&lt;List&lt;Integer>> adj) {",
+    "    for (int s = 0; s &lt; adj.size(); s++) {",
+    "        if (side[s] != -1) continue;",
+    "        side[s] = 0; Queue&lt;Integer> q = new ArrayDeque&lt;>(List.of(s));",
+    "        while (!q.isEmpty()) {",
+    "            int v = q.remove();",
+    "            for (int w : adj.get(v)) {",
+    "                if (side[w] == -1) { side[w] = 1 - side[v]; q.add(w); }",
+    "                else if (side[w] == side[v]) return false;",
+    "            }",
+    "        }",
+    "    }",
+    "    return true;",
+    "}"
+   ],
+   "distractors": [
+    "                else if (side[w] != side[v]) return false;",
+    "                if (side[w] == -1) { side[w] = side[v]; q.add(w); }",
+    "    return false;"
+   ]
+  }
+ ]
+}

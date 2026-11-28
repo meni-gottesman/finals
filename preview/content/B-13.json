@@ -1,0 +1,674 @@
+{
+ "id": "B-13",
+ "course": "B",
+ "title": "Basic sorts: selection, insertion, heap, merge",
+ "source": "CS 61B Lec 32–33 · Ch 30",
+ "summary": "The four classic comparison sorts — selection, insertion, heapsort and mergesort — with their exact intermediate states, best and worst runtimes, stability and memory use, plus inversions as the measure of how unsorted an array is. Exams show partially sorted arrays and ask which algorithm produced them, then probe runtime, stability and “which sort when”.",
+ "lesson": [
+  {
+   "title": "Vocabulary",
+   "blocks": [
+    {
+     "type": "def",
+     "term": "Comparison sort",
+     "text": "Sorts using only pairwise comparisons (compareTo / compare)."
+    },
+    {
+     "type": "def",
+     "term": "Inversion",
+     "text": "A pair of positions i &lt; j with a[i] > a[j]. A sorted array has 0; a reversed array of N items has N(N − 1)/2 (28 for N = 8)."
+    },
+    {
+     "type": "def",
+     "term": "Stable",
+     "text": "Items with equal keys keep their original relative order. Matters when sorting by one key after another."
+    },
+    {
+     "type": "def",
+     "term": "In place",
+     "text": "Uses O(1) extra memory (O(log N) is often also accepted for recursion)."
+    },
+    {
+     "type": "example",
+     "title": "Count inversions",
+     "prompt": "How many inversions does [5, 2, 8, 1, 9, 3, 7, 4] have?",
+     "steps": [
+      "Count, for each item, the smaller items to its right: 5 → 2, 1, 3, 4 (4); 2 → 1 (1); 8 → 1, 3, 7, 4 (4); 1 → 0; 9 → 3, 7, 4 (3); 3 → 0; 7 → 4 (1); 4 → 0.",
+      "Sum 4 + 1 + 4 + 0 + 3 + 0 + 1 + 0."
+     ],
+     "answer": "13 inversions (verified)"
+    }
+   ]
+  },
+  {
+   "title": "Selection sort",
+   "blocks": [
+    {
+     "type": "p",
+     "text": "For i = 0, 1, …: find the smallest item in a[i..] and swap it into position i. After pass i, a[0..i] holds the i + 1 smallest items in final position."
+    },
+    {
+     "type": "example",
+     "title": "Selection sort trace",
+     "prompt": "Sort [5, 2, 8, 1, 9, 3, 7, 4], showing the array after each pass.",
+     "steps": [
+      "i = 0: min 1 at index 3 → swap with 5: [1 2 8 5 9 3 7 4].",
+      "i = 1: min 2 already in place: [1 2 8 5 9 3 7 4].",
+      "i = 2: min 3 → [1 2 3 5 9 8 7 4]. i = 3: min 4 → [1 2 3 4 9 8 7 5].",
+      "i = 4: min 5 → [1 2 3 4 5 8 7 9]. i = 5: min 7 → [1 2 3 4 5 7 8 9]. i = 6: no change."
+     ],
+     "answer": "Sorted after 7 passes (verified)"
+    },
+    {
+     "type": "list",
+     "items": [
+      "Always Θ(N²) comparisons (best = worst), at most N − 1 swaps.",
+      "In place. Not stable: a long-distance swap can jump an item over an equal one — sorting 3a, 1b, 3c, 2d, 1e by number gives 1b, 1e, 2d, 3c, 3a (3a and 3c reversed)."
+     ]
+    }
+   ]
+  },
+  {
+   "title": "Insertion sort",
+   "blocks": [
+    {
+     "type": "p",
+     "text": "For i = 1, 2, …: take a[i] and swap it leftward while it is smaller than its left neighbour. After step i, a[0..i] is sorted (but not necessarily final)."
+    },
+    {
+     "type": "code",
+     "lang": "java",
+     "text": "for (int i = 1; i < a.length; i++)\n    for (int j = i; j > 0 && a[j] < a[j - 1]; j--)\n        swap(a, j, j - 1);"
+    },
+    {
+     "type": "example",
+     "title": "Insertion sort trace",
+     "prompt": "Sort [5, 2, 8, 1, 9, 3, 7, 4], showing the array after each i.",
+     "steps": [
+      "i = 1: 2 moves left of 5: [2 5 8 1 9 3 7 4]. i = 2: 8 stays.",
+      "i = 3: 1 moves to the front: [1 2 5 8 9 3 7 4]. i = 4: 9 stays.",
+      "i = 5: 3 moves past 9, 8, 5: [1 2 3 5 8 9 7 4]. i = 6: 7 past 9, 8: [1 2 3 5 7 8 9 4].",
+      "i = 7: 4 past 9, 8, 7, 5: [1 2 3 4 5 7 8 9].",
+      "Total swaps: 1 + 0 + 3 + 0 + 3 + 2 + 4 = 13 — exactly the number of inversions."
+     ],
+     "answer": "13 swaps = 13 inversions (verified)"
+    },
+    {
+     "type": "thm",
+     "name": "Insertion sort and inversions",
+     "text": "Each swap fixes exactly one inversion, so insertion sort does exactly K swaps for K inversions and runs in Θ(N + K). Best case (sorted) Θ(N); worst (reversed) Θ(N²). On almost-sorted input it is linear: an array of N items with one adjacent swap every 10 positions needed only N/10 swaps (100 for N = 1000, 200 for N = 2000) vs ≈ N²/4 for random input (248,481 and 1,004,912)."
+    },
+    {
+     "type": "list",
+     "items": [
+      "Stable (only adjacent unequal items swap) and in place.",
+      "Excellent for small arrays (Java uses it for subarrays below a small cutoff) and nearly sorted data."
+     ]
+    }
+   ]
+  },
+  {
+   "title": "Heapsort",
+   "blocks": [
+    {
+     "type": "p",
+     "text": "Turn the array into a max-heap in place (bottom-up heapify, Θ(N)), then repeatedly swap the max (index 0) with the last unsorted position and sink the new root within the shrinking heap. With root at index 0, children of k are 2k + 1 and 2k + 2."
+    },
+    {
+     "type": "example",
+     "title": "Heapsort trace",
+     "prompt": "Sort [5, 2, 8, 1, 9, 3, 7, 4] (max-heap, root at index 0).",
+     "steps": [
+      "Heapify (sink indices 3, 2, 1, 0): [9 5 8 4 2 3 7 1].",
+      "Swap 9 to the end, sink 1: [8 5 7 4 2 3 1 | 9].",
+      "Swap 8 out, sink: [7 5 3 4 2 1 | 8 9]. Then [5 4 3 1 2 | 7 8 9], [4 2 3 1 | 5 7 8 9], [3 2 1 | 4 5 7 8 9], [2 1 | 3 …], [1 2 3 4 5 7 8 9]."
+     ],
+     "answer": "Sorted (verified)"
+    },
+    {
+     "type": "list",
+     "items": [
+      "Θ(N log N) worst case; best case Θ(N log N) for distinct keys (Θ(N) if all keys are equal).",
+      "In place (O(1) extra), but not stable, and poor cache behaviour in practice.",
+      "Recognizable mid-trace: largest items in final position at the end, a max-heap in front."
+     ]
+    }
+   ]
+  },
+  {
+   "title": "Mergesort",
+   "blocks": [
+    {
+     "type": "p",
+     "text": "Split in half, sort each half recursively, merge the two sorted halves with an auxiliary array. Merging N items costs Θ(N); T(N) = 2T(N/2) + N = Θ(N log N) in every case."
+    },
+    {
+     "type": "code",
+     "lang": "java",
+     "text": "static void merge(int[] a, int[] aux, int lo, int mid, int hi) {\n    for (int k = lo; k <= hi; k++) aux[k] = a[k];\n    int i = lo, j = mid + 1;\n    for (int k = lo; k <= hi; k++) {\n        if (i > mid)              a[k] = aux[j++];\n        else if (j > hi)          a[k] = aux[i++];\n        else if (aux[j] < aux[i]) a[k] = aux[j++];   // strict: ties take the left\n        else                      a[k] = aux[i++];\n    }\n}"
+    },
+    {
+     "type": "example",
+     "title": "Mergesort trace (top-down)",
+     "prompt": "Sort [5, 2, 8, 1, 9, 3, 7, 4]; show the array after each merge.",
+     "steps": [
+      "merge[0..1]: [2 5 8 1 9 3 7 4]. merge[2..3]: [2 5 1 8 …]. merge[0..3]: [1 2 5 8 9 3 7 4].",
+      "merge[4..5]: [… 3 9 7 4]. merge[6..7]: [… 3 9 4 7]. merge[4..7]: [1 2 5 8 3 4 7 9].",
+      "merge[0..7]: [1 2 3 4 5 7 8 9]."
+     ],
+     "answer": "Left half fully sorted before the right half starts (verified)"
+    },
+    {
+     "type": "list",
+     "items": [
+      "Θ(N log N) best and worst. Θ(N) extra memory for aux (not in place).",
+      "Stable as long as ties take from the left run (use &lt;, not &lt;=, in the comparison above).",
+      "Mid-trace signature: sorted runs of sizes 2, 4, … with the left part finished first (top-down)."
+     ]
+    }
+   ]
+  },
+  {
+   "title": "Stability, comparison table, identifying sorts",
+   "blocks": [
+    {
+     "type": "table",
+     "head": [
+      "Sort",
+      "Best",
+      "Worst",
+      "Extra space",
+      "Stable"
+     ],
+     "rows": [
+      [
+       "Selection",
+       "Θ(N²)",
+       "Θ(N²)",
+       "Θ(1)",
+       "No"
+      ],
+      [
+       "Insertion",
+       "Θ(N)",
+       "Θ(N²)",
+       "Θ(1)",
+       "Yes"
+      ],
+      [
+       "Heapsort",
+       "Θ(N log N)*",
+       "Θ(N log N)",
+       "Θ(1)",
+       "No"
+      ],
+      [
+       "Mergesort",
+       "Θ(N log N)",
+       "Θ(N log N)",
+       "Θ(N)",
+       "Yes"
+      ]
+     ]
+    },
+    {
+     "type": "p",
+     "text": "* Θ(N) if all keys are equal. Java’s Arrays.sort on objects (TimSort) is a stable mergesort/insertion hybrid; on primitives it uses a (non-stable) dual-pivot quicksort, where stability is meaningless anyway."
+    },
+    {
+     "type": "example",
+     "title": "Identify the sort from snapshots",
+     "prompt": "Input [6, 3, 9, 1, 7, 2, 8, 4]. Each snapshot was produced mid-way by selection, insertion, heapsort (max-heap) or top-down mergesort. Identify: (a) [1 2 9 6 7 3 8 4] (b) [8 7 6 4 3 2 1 9] (c) [1 3 6 9 2 7 8 4] (d) [1 3 6 7 9 2 8 4] (e) [1 2 3 6 7 9 8 4].",
+     "steps": [
+      "(a) Front holds the two smallest in final place, the rest is scrambled (6 has moved to where 1 was): selection after 2 passes.",
+      "(b) Largest item 9 at the end, a max-heap in front: heapsort after one removal.",
+      "(c) Runs [1 3 6 9] sorted and [2 7] sorted, rest untouched: mergesort after merge[4..5].",
+      "(d) Prefix [1 3 6 7 9] sorted but containing original items only (not the five smallest), suffix untouched: insertion after i = 4.",
+      "(e) Ambiguous! It is selection after 3 passes and also insertion after i = 5."
+     ],
+     "answer": "(a) selection (b) heapsort (c) mergesort (d) insertion (e) selection or insertion (all verified)"
+    },
+    {
+     "type": "tip",
+     "text": "Which sort when: nearly sorted or tiny → insertion; guaranteed N log N with O(1) memory → heapsort; stable N log N (sorting objects by several keys) → mergesort; minimal number of swaps/writes → selection."
+    }
+   ]
+  }
+ ],
+ "cards": [
+  {
+   "front": "Inversion?",
+   "back": [
+    {
+     "type": "p",
+     "text": "A pair i &lt; j with a[i] > a[j]."
+    }
+   ]
+  },
+  {
+   "front": "Max inversions for N items?",
+   "back": [
+    {
+     "type": "p",
+     "text": "N(N − 1)/2 (reverse sorted)."
+    }
+   ]
+  },
+  {
+   "front": "Insertion sort runtime in terms of inversions K?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Θ(N + K); exactly K swaps."
+    }
+   ]
+  },
+  {
+   "front": "Selection sort best/worst?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Θ(N²) both; ≤ N − 1 swaps."
+    }
+   ]
+  },
+  {
+   "front": "Is selection sort stable?",
+   "back": [
+    {
+     "type": "p",
+     "text": "No (long-distance swaps)."
+    }
+   ]
+  },
+  {
+   "front": "Is insertion sort stable?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Yes."
+    }
+   ]
+  },
+  {
+   "front": "Heapsort runtime, space, stability?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Θ(N log N) worst, Θ(1) extra, not stable."
+    }
+   ]
+  },
+  {
+   "front": "Mergesort runtime, space, stability?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Θ(N log N) always, Θ(N) extra, stable."
+    }
+   ]
+  },
+  {
+   "front": "How does merge stay stable?",
+   "back": [
+    {
+     "type": "p",
+     "text": "On ties, take from the left run (compare with strict &lt; for the right)."
+    }
+   ]
+  },
+  {
+   "front": "Insertion sort best case input?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Already sorted: Θ(N)."
+    }
+   ]
+  },
+  {
+   "front": "Heapsort mid-trace signature?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Largest items in final positions at the end; a max-heap in the front part."
+    }
+   ]
+  },
+  {
+   "front": "Selection sort mid-trace signature?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Prefix = smallest items in final position; suffix scrambled by swaps."
+    }
+   ]
+  },
+  {
+   "front": "Insertion sort mid-trace signature?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Prefix sorted but made of the original first items; suffix untouched."
+    }
+   ]
+  },
+  {
+   "front": "Mergesort mid-trace signature?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Sorted runs of power-of-two sizes; untouched remainder."
+    }
+   ]
+  },
+  {
+   "front": "Why does stability matter?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Sorting by a secondary key then stably by the primary key yields order by (primary, secondary)."
+    }
+   ]
+  },
+  {
+   "front": "Sort with O(1) extra space and Θ(N log N) worst case?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Heapsort."
+    }
+   ]
+  },
+  {
+   "front": "Why is insertion sort used inside Java’s sorts?",
+   "back": [
+    {
+     "type": "p",
+     "text": "It is fastest on small or nearly sorted subarrays."
+    }
+   ]
+  },
+  {
+   "front": "Heap child indices with root at 0?",
+   "back": [
+    {
+     "type": "p",
+     "text": "2k + 1 and 2k + 2; parent (k − 1)/2."
+    }
+   ]
+  },
+  {
+   "front": "Mergesort recurrence?",
+   "back": [
+    {
+     "type": "p",
+     "text": "T(N) = 2T(N/2) + Θ(N) = Θ(N log N)."
+    }
+   ]
+  },
+  {
+   "front": "Sorting a k-sorted array (each item ≤ k from its place)?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Min-heap of size k + 1: Θ(N log k). Insertion sort: Θ(Nk)."
+    }
+   ]
+  }
+ ],
+ "hard": [
+  {
+   "title": "Count inversions in Θ(N log N)",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "Modify mergesort to return the number of inversions of the input in Θ(N log N). Explain the counting step and verify on [5, 2, 8, 1, 9, 3, 7, 4]."
+    }
+   ],
+   "answer": "When an item is taken from the right run, add (mid − i + 1); 13 inversions",
+   "solution": [
+    {
+     "type": "code",
+     "lang": "java",
+     "text": "static long countInv(int[] a, int[] aux, int lo, int hi) {\n    if (lo >= hi) return 0;\n    int mid = (lo + hi) / 2;\n    long c = countInv(a, aux, lo, mid) + countInv(a, aux, mid + 1, hi);\n    for (int k = lo; k <= hi; k++) aux[k] = a[k];\n    int i = lo, j = mid + 1;\n    for (int k = lo; k <= hi; k++) {\n        if (i > mid) a[k] = aux[j++];\n        else if (j > hi) a[k] = aux[i++];\n        else if (aux[j] < aux[i]) { a[k] = aux[j++]; c += mid - i + 1; }\n        else a[k] = aux[i++];\n    }\n    return c;\n}"
+    },
+    {
+     "type": "p",
+     "text": "Inversions split into: inside the left half, inside the right half (counted recursively), and cross pairs (left item > right item). When aux[j] (right) is output before aux[i], it is smaller than every remaining left item aux[i..mid]: that is mid − i + 1 cross inversions, each counted exactly once."
+    },
+    {
+     "type": "p",
+     "text": "Returns 13 on the example, matching the brute-force count (verified). Same recurrence as mergesort: Θ(N log N)."
+    }
+   ]
+  },
+  {
+   "title": "Identify the sorts",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "Input [6, 3, 9, 1, 7, 2, 8, 4]. For each snapshot list every algorithm among selection, insertion, heapsort (max-heap, root at 0, bottom-up heapify) and top-down mergesort that could have produced it at some point: (a) [1 3 6 9 7 2 8 4] (b) [9 7 8 4 3 2 6 1] (c) [1 2 3 4 7 9 8 6] (d) [3 6 1 9 7 2 8 4]."
+    }
+   ],
+   "answer": "(a) insertion and mergesort (b) heapsort (c) selection (d) mergesort",
+   "solution": [
+    {
+     "type": "p",
+     "text": "(a) Insertion after i = 3 gives [1 3 6 9 | 7 2 8 4]; mergesort after merge[0..3] gives the same array. Selection would have put 1 then 2 at the front; heapsort puts maxima at the end."
+    },
+    {
+     "type": "p",
+     "text": "(b) That is exactly the heapified array (max at the root, no item yet moved to the end)."
+    },
+    {
+     "type": "p",
+     "text": "(c) The four smallest are in final place and the suffix 7 9 8 6 is a scrambled remainder: selection after 4 passes. Insertion’s prefix would contain the first five original items."
+    },
+    {
+     "type": "p",
+     "text": "(d) [3 6] and [1 9] are sorted pairs, rest untouched: mergesort after merge[0..1] and merge[2..3]. All snapshots verified against instrumented sorts."
+    }
+   ]
+  },
+  {
+   "title": "Sort a k-sorted array",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "Every item of an N-element array is at most k positions from its sorted position. Sort it in Θ(N log k) time and Θ(k) extra space; compare with insertion sort. Why is Ω(N log k) comparisons necessary?"
+    }
+   ],
+   "answer": "Sliding min-heap of size k + 1; insertion sort is Θ(Nk); lower bound from (k+1)!^(N/(k+1)) orderings",
+   "solution": [
+    {
+     "type": "p",
+     "text": "Push the first k + 1 items into a min-heap. Then repeatedly removeMin into the next output slot and push the next input item. The true next item is always among the k + 1 candidates, so the output is sorted. Each heap operation is Θ(log k): Θ(N log k). On [2 1 4 3 6 5 8 7 10 9] with k = 1 this outputs 1 … 10 (verified)."
+    },
+    {
+     "type": "p",
+     "text": "Insertion sort: an item can only be inverted with items within distance 2k of it, so there are O(Nk) inversions and insertion sort costs Θ(N + Nk) = Θ(Nk) in the worst case."
+    },
+    {
+     "type": "p",
+     "text": "Lower bound: split into N/(k + 1) blocks of k + 1 positions; each block can be any permutation independently, giving ((k + 1)!)^(N/(k+1)) inputs. log₂ of that is (N/(k+1))·Θ((k+1) log k) = Θ(N log k)."
+    }
+   ]
+  },
+  {
+   "title": "Stability puzzles",
+   "level": "hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "Records (key, tag): 3a, 1b, 3c, 2d, 1e. (a) Sort by key with selection sort; is the result stable? (b) With insertion sort? (c) You sort a list of students by name, then by section. Which sort must the second pass use so that, within each section, students appear alphabetically?"
+    }
+   ],
+   "answer": "(a) 1b 1e 2d 3c 3a (not stable) (b) 1b 1e 2d 3a 3c (stable) (c) a stable sort",
+   "solution": [
+    {
+     "type": "p",
+     "text": "(a) Pass 0 swaps 3a with 1b, sending 3a behind 3c eventually: final 1b 1e 2d 3c 3a (verified) — 3a and 3c reversed."
+    },
+    {
+     "type": "p",
+     "text": "(b) Insertion only swaps adjacent unequal items: 1b 1e 2d 3a 3c (verified)."
+    },
+    {
+     "type": "p",
+     "text": "(c) The second (by section) sort must be stable so that ties in section keep the alphabetical order from the first pass — e.g. mergesort / Java’s object sort."
+    }
+   ]
+  },
+  {
+   "title": "Runtime puzzles",
+   "level": "hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "Give Θ for: (a) insertion sort on [N, 1, 2, …, N−1]; (b) insertion sort on [2, 3, …, N, 1]; (c) selection sort on a sorted array; (d) mergesort on a sorted array; (e) heapsort on an array of all-equal keys."
+    }
+   ],
+   "answer": "(a) Θ(N) (b) Θ(N) (c) Θ(N²) (d) Θ(N log N) (e) Θ(N)",
+   "solution": [
+    {
+     "type": "p",
+     "text": "(a) The only inversions are N with each of the other N − 1 items: each new item swaps once past N, so N − 1 swaps in total: Θ(N)."
+    },
+    {
+     "type": "p",
+     "text": "(b) 1 forms N − 1 inversions; insertion moves it in the last step with N − 1 swaps: Θ(N)."
+    },
+    {
+     "type": "p",
+     "text": "(c) Selection always scans the rest: Θ(N²)."
+    },
+    {
+     "type": "p",
+     "text": "(d) Mergesort does the same splitting and merging: Θ(N log N) (without the “already ordered halves” shortcut)."
+    },
+    {
+     "type": "p",
+     "text": "(e) Heapify does no swaps, and every sink stops immediately: Θ(N)."
+    }
+   ]
+  },
+  {
+   "title": "Mergesort with an insertion-sort cutoff",
+   "level": "hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "A hybrid mergesort stops recursing on subarrays of size ≤ k and sorts them with insertion sort. Give the worst-case runtime in terms of N and k, the k that keeps it Θ(N log N), and whether the hybrid is still stable."
+    }
+   ],
+   "answer": "Θ(Nk + N log(N/k)); any k = O(log N); yes, stable",
+   "solution": [
+    {
+     "type": "p",
+     "text": "There are about N/k leaf subarrays, each sorted by insertion sort in Θ(k²) worst case: Θ(Nk) total."
+    },
+    {
+     "type": "p",
+     "text": "Above the leaves the recursion has log₂(N/k) levels, each merging Θ(N) items: Θ(N log(N/k))."
+    },
+    {
+     "type": "p",
+     "text": "Total Θ(Nk + N log(N/k)), which is Θ(N log N) whenever k = O(log N) (constant cutoffs like 7–32 are used in practice because insertion sort’s constant is tiny)."
+    },
+    {
+     "type": "p",
+     "text": "Both insertion sort and the left-preferring merge are stable, so the hybrid is stable (this is the idea behind TimSort)."
+    }
+   ]
+  }
+ ],
+ "keyFacts": [
+  "Selection: Θ(N²) always, ≤ N swaps, in place, unstable.",
+  "Insertion: Θ(N + K) for K inversions (best Θ(N), worst Θ(N²)), in place, stable.",
+  "Heapsort: heapify Θ(N) + N sinks; Θ(N log N) worst, Θ(1) space, unstable.",
+  "Mergesort: Θ(N log N) always, Θ(N) aux space, stable (ties from the left).",
+  "Inversions: 0 sorted … N(N−1)/2 reversed; insertion sort swaps = inversions.",
+  "Snapshots: selection prefix = global smallest; insertion prefix = original items sorted; heapsort suffix = largest; mergesort = sorted runs.",
+  "Stable sorts preserve earlier orderings among ties (multi-key sorting)."
+ ],
+ "parsons": [
+  {
+   "title": "Insertion sort",
+   "goal": "Sort a in place by swapping each new item leftward past larger items (stable).",
+   "lines": [
+    "static void insertionSort(int[] a) {",
+    "    for (int i = 1; i &lt; a.length; i++) {",
+    "        for (int j = i; j > 0 && a[j] &lt; a[j - 1]; j--) {",
+    "            int t = a[j]; a[j] = a[j - 1]; a[j - 1] = t;",
+    "        }",
+    "    }",
+    "}"
+   ],
+   "distractors": [
+    "        for (int j = i; j >= 0 && a[j] &lt; a[j - 1]; j--) {",
+    "        for (int j = i; j > 0 && a[j] &lt;= a[j - 1]; j--) {",
+    "    for (int i = 0; i &lt; a.length; i++) {"
+   ]
+  },
+  {
+   "title": "Selection sort",
+   "goal": "Repeatedly swap the smallest remaining item into position i.",
+   "lines": [
+    "static void selectionSort(int[] a) {",
+    "    for (int i = 0; i &lt; a.length - 1; i++) {",
+    "        int m = i;",
+    "        for (int j = i + 1; j &lt; a.length; j++) if (a[j] &lt; a[m]) m = j;",
+    "        int t = a[i]; a[i] = a[m]; a[m] = t;",
+    "    }",
+    "}"
+   ],
+   "distractors": [
+    "        int m = 0;",
+    "        for (int j = i + 1; j &lt; a.length; j++) if (a[j] &lt; a[i]) m = j;",
+    "        int t = a[i]; a[i] = a[j]; a[j] = t;"
+   ]
+  },
+  {
+   "title": "Stable merge",
+   "goal": "Merge the sorted runs a[lo..mid] and a[mid+1..hi] using the scratch array aux, taking from the left run on ties.",
+   "lines": [
+    "static void merge(int[] a, int[] aux, int lo, int mid, int hi) {",
+    "    for (int k = lo; k &lt;= hi; k++) aux[k] = a[k];",
+    "    for (int k = lo, i = lo, j = mid + 1; k &lt;= hi; k++) {",
+    "        if (i > mid) a[k] = aux[j++];",
+    "        else if (j > hi) a[k] = aux[i++];",
+    "        else if (aux[j] &lt; aux[i]) a[k] = aux[j++];",
+    "        else a[k] = aux[i++];",
+    "    }",
+    "}"
+   ],
+   "distractors": [
+    "        else if (aux[j] &lt;= aux[i]) a[k] = aux[j++];",
+    "    for (int k = lo, i = lo, j = mid; k &lt;= hi; k++) {",
+    "        if (i >= mid) a[k] = aux[j++];"
+   ]
+  },
+  {
+   "title": "Top-down mergesort",
+   "goal": "Sort a[lo..hi] recursively using merge from the previous exercise.",
+   "lines": [
+    "static void sort(int[] a, int[] aux, int lo, int hi) {",
+    "    if (lo &lt; hi) {",
+    "        int mid = lo + (hi - lo) / 2;",
+    "        sort(a, aux, lo, mid); sort(a, aux, mid + 1, hi);",
+    "        merge(a, aux, lo, mid, hi);",
+    "    }",
+    "}"
+   ],
+   "distractors": [
+    "    if (lo &lt;= hi) {",
+    "        sort(a, aux, lo, mid); sort(a, aux, mid, hi);",
+    "        merge(a, aux, lo, hi, mid);"
+   ]
+  }
+ ]
+}

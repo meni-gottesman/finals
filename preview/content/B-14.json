@@ -1,0 +1,714 @@
+{
+ "id": "B-14",
+ "course": "B",
+ "title": "Quicksort, quickselect, sorting bounds, counting/radix",
+ "source": "CS 61B Lec 34–36, 39 · Ch 31, 33",
+ "summary": "Quicksort partitions around a pivot and recurses; it is Θ(N log N) expected but Θ(N²) on bad pivots. Quickselect finds the k-th smallest in expected linear time. No comparison sort can beat Θ(N log N) because log₂(N!) comparisons are needed, but counting sort and LSD/MSD radix sorts avoid comparisons entirely. Exams trace partitions and radix passes and ask you to choose a sort under constraints.",
+ "lesson": [
+  {
+   "title": "Quicksort and partitioning",
+   "blocks": [
+    {
+     "type": "def",
+     "term": "Partition around pivot x",
+     "text": "Rearrange so that every item left of x is ≤ x and every item right of x is ≥ x. Then x is in its final sorted position; sort both sides recursively."
+    },
+    {
+     "type": "p",
+     "text": "<b>Simple 3-way partition</b> (lecture demo version): pivot = leftmost item; scan left to right, copying items into three lists — smaller, equal, larger — and concatenate. Stable, but uses Θ(N) extra space."
+    },
+    {
+     "type": "example",
+     "title": "Quicksort with the 3-way list partition",
+     "prompt": "Sort [4, 7, 1, 4, 9, 2, 6, 4].",
+     "steps": [
+      "Pivot 4: smaller [1, 2], equal [4, 4, 4], larger [7, 9, 6] (each list keeps arrival order).",
+      "[1, 2], pivot 1: [] [1] [2]. [7, 9, 6], pivot 7: [6] [7] [9].",
+      "Concatenate: 1 2 4 4 4 6 7 9. Duplicates of the pivot are finished after the first partition."
+     ],
+     "answer": "[1 2 4 4 4 6 7 9] (verified)"
+    },
+    {
+     "type": "warn",
+     "text": "Partitioned ≠ sorted: after one partition only the pivot (and its duplicates in the 3-way version) is guaranteed to be in final position."
+    }
+   ]
+  },
+  {
+   "title": "Hoare partitioning (in place)",
+   "blocks": [
+    {
+     "type": "steps",
+     "title": "Hoare partition with pivot p = a[lo]",
+     "items": [
+      "L starts at lo + 1 and moves right while a[L] &lt; p (it stops on items ≥ p).",
+      "G starts at hi and moves left while a[G] > p (it stops on items ≤ p).",
+      "If L &lt; G, swap a[L] and a[G], step both inward, repeat. Otherwise stop.",
+      "Swap the pivot a[lo] with a[G]; return G."
+     ]
+    },
+    {
+     "type": "example",
+     "title": "Hoare partition trace",
+     "prompt": "Partition [6, 9, 2, 7, 4, 1, 8, 3] with pivot 6.",
+     "steps": [
+      "L stops at index 1 (9); G stops at index 7 (3): swap → [6 3 2 7 4 1 8 9].",
+      "L moves from 2: 2 &lt; 6, stops at index 3 (7); G moves from 6: 8 > 6, stops at index 5 (1): swap → [6 3 2 1 4 7 8 9].",
+      "L moves from 4: 4 &lt; 6, stops at index 5 (7); G moves from 4: 4 ≤ 6, stops at index 4. L ≥ G: stop.",
+      "Swap pivot with index 4: [4 3 2 1 6 7 8 9]; pivot index 4."
+     ],
+     "answer": "[4 3 2 1 6 7 8 9], pivot at index 4 (verified)"
+    },
+    {
+     "type": "thm",
+     "name": "Why stop on equal items",
+     "text": "Both pointers stop on items equal to the pivot and swap them, spreading duplicates across both sides. On [4 4 4 4 4 4 4] the pivot lands at index 3 (the middle), so all-equal arrays stay Θ(N log N). A partition that sends all equal items to one side is Θ(N²) on them."
+    },
+    {
+     "type": "list",
+     "items": [
+      "In place, not stable.",
+      "Full quicksort of [6 9 2 7 4 1 8 3] then partitions [4 3 2 1] (pivot to index 3), [1 3 2] (pivot 1 stays), [3 2] → [2 3], and [7 8 9] trivially: [1 2 3 4 6 7 8 9] (verified)."
+     ]
+    }
+   ]
+  },
+  {
+   "title": "Quicksort runtime and pivots",
+   "blocks": [
+    {
+     "type": "table",
+     "head": [
+      "Case",
+      "When",
+      "Runtime"
+     ],
+     "rows": [
+      [
+       "Best / expected",
+       "pivots split into constant fractions (random pivots or shuffled input)",
+       "Θ(N log N)"
+      ],
+      [
+       "Worst",
+       "pivot is always the min or max (leftmost pivot on sorted or reverse-sorted input)",
+       "Θ(N²)"
+      ]
+     ]
+    },
+    {
+     "type": "example",
+     "title": "Measure the worst case",
+     "prompt": "Count comparisons of leftmost-pivot Hoare quicksort on sorted vs random input, N = 1000 and 2000.",
+     "steps": [
+      "Sorted input: every partition peels off only the pivot: (N − 1) + (N − 2) + ⋯ ≈ N²/2. Measured 500,499 and 2,000,999 (×4 when N doubles).",
+      "Random input: measured 12,196 and 25,675 (≈ ×2.1 when N doubles): Θ(N log N)."
+     ],
+     "answer": "Θ(N²) vs Θ(N log N) (verified)"
+    },
+    {
+     "type": "thm",
+     "name": "Why expected Θ(N log N)",
+     "text": "A random pivot lands in the middle half with probability 1/2, leaving pieces ≤ 3/4 of the size. So along any path the size shrinks by 3/4 every couple of levels: O(log N) depth, Θ(N) partition work per level. Even a consistent 10%/90% split gives depth log_{10/9} N = Θ(log N)."
+    },
+    {
+     "type": "list",
+     "items": [
+      "Defenses: shuffle first, pick a random pivot, or median-of-three. Choosing the exact median as pivot (via linear-time selection) guarantees Θ(N log N) but is slow in practice.",
+      "Quicksort uses Θ(log N) expected stack space; in practice it is the fastest general-purpose comparison sort (Java’s primitive sort is a dual-pivot quicksort)."
+     ]
+    }
+   ]
+  },
+  {
+   "title": "Quickselect",
+   "blocks": [
+    {
+     "type": "p",
+     "text": "To find the k-th smallest (0-based index k, e.g. the median), partition once. If the pivot lands at index j = k, done; otherwise continue in only the side containing k."
+    },
+    {
+     "type": "example",
+     "title": "Quickselect trace",
+     "prompt": "Find the item at sorted index 3 (the 4th smallest) of [6, 9, 2, 7, 4, 1, 8, 3] with Hoare partitioning.",
+     "steps": [
+      "Partition all: [4 3 2 1 6 7 8 9], pivot at 4 > 3 → continue in [0..3].",
+      "Partition [4 3 2 1] (pivot 4): it lands at index 3 = k: [1 3 2 4 …]."
+     ],
+     "answer": "4 (verified)"
+    },
+    {
+     "type": "thm",
+     "name": "Quickselect runtime",
+     "text": "Expected Θ(N): sizes shrink geometrically, N + N/2 + N/4 + ⋯ ≈ 2N on average. Worst case Θ(N²): finding the median of sorted [1 … 9] with a leftmost pivot partitions [0..8], [1..8], [2..8], [3..8], [4..8] before returning 5 (verified) — each partition removes one item."
+    }
+   ]
+  },
+  {
+   "title": "The comparison-sort lower bound",
+   "blocks": [
+    {
+     "type": "thm",
+     "name": "Ω(N log N) for comparison sorts",
+     "text": "A comparison sort must distinguish all N! orderings of the input. Each comparison has two outcomes, so after c comparisons at most 2ᶜ orderings can be told apart: 2ᶜ ≥ N!, i.e. c ≥ log₂(N!) ∈ Θ(N log N).",
+     "proof": [
+      {
+       "type": "p",
+       "text": "log₂(N!) ≥ log₂((N/2)^(N/2)) = (N/2) log₂(N/2) gives the Ω; log₂(N!) ≤ N log₂ N gives the O."
+      }
+     ]
+    },
+    {
+     "type": "example",
+     "title": "Minimum worst-case comparisons",
+     "prompt": "What is the minimum worst-case number of comparisons to sort 3, 5, 8 and 20 items? Can 20 items be sorted with 61 comparisons?",
+     "steps": [
+      "log₂ 3! = 2.58 → at least 3. log₂ 5! = log₂ 120 = 6.91 → at least 7. log₂ 8! = 15.30 → at least 16.",
+      "log₂ 20! = 61.08 → at least 62. So 61 comparisons can never suffice for 20 items."
+     ],
+     "answer": "≥ 3, 7, 16, 62; 61 for 20 items is impossible (verified)"
+    },
+    {
+     "type": "warn",
+     "text": "The bound applies only to comparison sorts and only to the worst case. Insertion sort is Θ(N) on sorted input, and counting/radix sorts beat N log N by not comparing."
+    }
+   ]
+  },
+  {
+   "title": "Counting sort",
+   "blocks": [
+    {
+     "type": "steps",
+     "title": "Counting sort for keys 0 … R−1",
+     "items": [
+      "Count occurrences of each key: Θ(N).",
+      "Turn counts into starting positions (running sums): Θ(R).",
+      "Scan the input left to right, placing each item at its key’s next free position: Θ(N). Left-to-right scanning makes it stable."
+     ]
+    },
+    {
+     "type": "example",
+     "title": "Counting sort trace",
+     "prompt": "Keys in 0..3 with tags: 3a 1b 0c 3d 2e 1f 3g.",
+     "steps": [
+      "Counts: key0 1, key1 2, key2 1, key3 3.",
+      "Starts: key0 0, key1 1, key2 3, key3 4.",
+      "Place: 3a → 4, 1b → 1, 0c → 0, 3d → 5, 2e → 3, 1f → 2, 3g → 6."
+     ],
+     "answer": "0c 1b 1f 2e 3a 3d 3g — ties keep input order (verified)"
+    },
+    {
+     "type": "thm",
+     "name": "Cost",
+     "text": "Θ(N + R) time and space. Excellent when R = O(N); hopeless when R is huge (keys up to 2³¹)."
+    }
+   ]
+  },
+  {
+   "title": "LSD and MSD radix sort",
+   "blocks": [
+    {
+     "type": "p",
+     "text": "<b>LSD radix sort</b>: sort by the last digit, then the second-to-last, …, finally the first, using a <b>stable</b> sort (counting sort) per digit. Stability preserves the order established by less significant digits."
+    },
+    {
+     "type": "example",
+     "title": "LSD radix trace (base 10)",
+     "prompt": "Sort 329, 457, 657, 839, 436, 720, 355, 035.",
+     "steps": [
+      "Ones digit: 720 355 035 436 457 657 329 839 (355 before 035: both 5, input order).",
+      "Tens digit: 720 329 035 436 839 355 457 657.",
+      "Hundreds digit: 035 329 355 436 457 657 720 839."
+     ],
+     "answer": "Sorted after 3 passes (verified)"
+    },
+    {
+     "type": "thm",
+     "name": "LSD cost",
+     "text": "W passes of counting sort: Θ(W(N + R)). For N 32-bit ints with R = 256: 4 passes, Θ(N)."
+    },
+    {
+     "type": "p",
+     "text": "<b>MSD radix sort</b>: sort by the first character into buckets, then recursively sort each bucket by the next character (never re-sort across buckets). Stops early in buckets of size 1, so it can examine far fewer than all characters. Worst case (many equal prefixes) Θ(W(N + R)); per-bucket count arrays make it costly for small buckets."
+    },
+    {
+     "type": "example",
+     "title": "Why MSD must recurse within buckets",
+     "prompt": "Words cab, bee, dab, bad, add, bed, ace, dad. Do the first MSD pass, then show what goes wrong if you instead re-sort the whole array by the second letter.",
+     "steps": [
+      "Pass 1 (stable, by first letter): add ace bee bad bed cab dab dad. Buckets a: {add, ace}, b: {bee, bad, bed}, c: {cab}, d: {dab, dad}.",
+      "Correct: sort each bucket by the next letters: ace add | bad bed bee | cab | dab dad.",
+      "Wrong: re-sorting everything by the 2nd letter gives bad cab dab dad ace add bee bed — the first-letter order is destroyed."
+     ],
+     "answer": "ace add bad bed bee cab dab dad (verified)"
+    },
+    {
+     "type": "warn",
+     "text": "LSD requires a stable per-digit sort. With an unstable one (e.g. heapsort), LSD on 31, 12, 21, 22 can end as 12 22 21 31 (verified with a tie-reversing per-digit sort). MSD does not rely on stability because each bucket is fully sorted on the remaining characters."
+    },
+    {
+     "type": "table",
+     "head": [
+      "Sort",
+      "Time",
+      "Space",
+      "Stable",
+      "Notes"
+     ],
+     "rows": [
+      [
+       "Quicksort (Hoare, random pivot)",
+       "Θ(N log N) expected, Θ(N²) worst",
+       "Θ(log N)",
+       "No",
+       "fastest in practice"
+      ],
+      [
+       "Counting",
+       "Θ(N + R)",
+       "Θ(N + R)",
+       "Yes",
+       "small integer keys"
+      ],
+      [
+       "LSD radix",
+       "Θ(W(N + R))",
+       "Θ(N + R)",
+       "Yes",
+       "fixed-length keys"
+      ],
+      [
+       "MSD radix",
+       "Θ(W(N + R)) worst",
+       "Θ(N + WR)",
+       "Yes (with stable passes)",
+       "early exit on distinct prefixes"
+      ]
+     ]
+    }
+   ]
+  }
+ ],
+ "cards": [
+  {
+   "front": "What does partitioning guarantee?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Pivot in final position; everything left ≤ pivot, everything right ≥ pivot (sides unsorted)."
+    }
+   ]
+  },
+  {
+   "front": "Quicksort best/expected/worst?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Θ(N log N) / Θ(N log N) / Θ(N²)."
+    }
+   ]
+  },
+  {
+   "front": "Worst-case input for leftmost-pivot quicksort?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Already sorted or reverse-sorted input."
+    }
+   ]
+  },
+  {
+   "front": "Why do Hoare pointers stop on items equal to the pivot?",
+   "back": [
+    {
+     "type": "p",
+     "text": "So duplicates are split across both sides; all-equal arrays stay Θ(N log N)."
+    }
+   ]
+  },
+  {
+   "front": "Is quicksort stable? In place?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Hoare version: not stable, in place (Θ(log N) stack). 3-way list version: stable, Θ(N) extra."
+    }
+   ]
+  },
+  {
+   "front": "Quickselect expected and worst runtime?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Θ(N) expected; Θ(N²) worst."
+    }
+   ]
+  },
+  {
+   "front": "Comparison-sort lower bound and why?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Ω(N log N): must distinguish N! orderings with yes/no comparisons, needing log₂(N!) = Θ(N log N)."
+    }
+   ]
+  },
+  {
+   "front": "Minimum worst-case comparisons to sort 5 items?",
+   "back": [
+    {
+     "type": "p",
+     "text": "⌈log₂ 120⌉ = 7."
+    }
+   ]
+  },
+  {
+   "front": "Counting sort runtime and when to use it?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Θ(N + R); keys are small integers (R = O(N))."
+    }
+   ]
+  },
+  {
+   "front": "Why is counting sort stable?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Items are placed by a left-to-right scan into increasing slots."
+    }
+   ]
+  },
+  {
+   "front": "LSD radix sort order of passes?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Least significant digit first, each pass a stable sort."
+    }
+   ]
+  },
+  {
+   "front": "LSD runtime?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Θ(W(N + R)) for W digits of radix R."
+    }
+   ]
+  },
+  {
+   "front": "Why must LSD’s per-digit sort be stable?",
+   "back": [
+    {
+     "type": "p",
+     "text": "To keep the order from less significant digits among ties on the current digit."
+    }
+   ]
+  },
+  {
+   "front": "How does MSD differ from LSD?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Most significant first; recursively sorts each bucket separately; can stop early."
+    }
+   ]
+  },
+  {
+   "front": "Does MSD need a stable per-digit sort?",
+   "back": [
+    {
+     "type": "p",
+     "text": "No: each bucket is fully sorted on its remaining characters."
+    }
+   ]
+  },
+  {
+   "front": "Sort N integers in [0, N²) in linear time?",
+   "back": [
+    {
+     "type": "p",
+     "text": "LSD radix with radix N: 2 passes of counting sort, Θ(N)."
+    }
+   ]
+  },
+  {
+   "front": "When does a comparison sort beat radix sort?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Long keys that differ early, keys with no fixed digit structure, or when only compareTo is available."
+    }
+   ]
+  },
+  {
+   "front": "Median of three?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Pivot = median of first, middle, last items; defeats sorted-input worst case."
+    }
+   ]
+  },
+  {
+   "front": "Quicksort expected depth?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Θ(log N)."
+    }
+   ]
+  },
+  {
+   "front": "3-way list partition of [4 7 1 4 9 2 6 4]?",
+   "back": [
+    {
+     "type": "p",
+     "text": "[1 2] [4 4 4] [7 9 6]."
+    }
+   ]
+  }
+ ],
+ "hard": [
+  {
+   "title": "Sort N integers in [0, N²) in Θ(N)",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "You must sort N integers, each in 0 … N² − 1, in Θ(N) time. Comparison sorts and plain counting sort are both too slow — why? Give a linear algorithm and trace it on N = 10: 73, 5, 99, 42, 18, 64, 0, 57, 31, 86."
+    }
+   ],
+   "answer": "LSD radix sort with radix N (2 passes); result 0 5 18 31 42 57 64 73 86 99",
+   "solution": [
+    {
+     "type": "p",
+     "text": "Comparison sorts need Ω(N log N). Counting sort needs R = N² buckets: Θ(N²)."
+    },
+    {
+     "type": "p",
+     "text": "Write each key in base N: two digits (x mod N, then x / N), each in 0 … N − 1. LSD radix sort with counting sort per digit: 2 passes × Θ(N + N) = Θ(N)."
+    },
+    {
+     "type": "p",
+     "text": "Pass 1 (by x mod 10, stable): 0 31 42 73 64 5 86 57 18 99. Pass 2 (by x / 10): 0 5 18 31 42 57 64 73 86 99. Verified."
+    },
+    {
+     "type": "p",
+     "text": "Generalization: keys in [0, N^c) take c passes: Θ(cN)."
+    }
+   ]
+  },
+  {
+   "title": "Lower-bound puzzles",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "(a) Can a comparison sort handle every input of 20 items with at most 61 comparisons? (b) Can a comparison-based algorithm decide whether 2023 distinct items are already sorted using 2022 comparisons? (c) You are given N items with only 3 distinct values. Does the Ω(N log N) bound apply? What’s the best runtime?"
+    }
+   ],
+   "answer": "(a) No (needs 62) (b) Yes (c) Not as stated; Θ(N) via 3-way partition/counting",
+   "solution": [
+    {
+     "type": "p",
+     "text": "(a) log₂ 20! ≈ 61.08 (verified), so ≥ 62 comparisons are needed in the worst case."
+    },
+    {
+     "type": "p",
+     "text": "(b) Checking sortedness is not sorting: compare each adjacent pair, 2022 comparisons, and any unsorted input is detected. The N! argument does not apply because the output is a single yes/no."
+    },
+    {
+     "type": "p",
+     "text": "(c) The number of distinct outcomes is the number of ways to assign the 3 values, at most 3ᴺ, so the information bound is only log₂ 3ᴺ = Θ(N). One 3-way partition (Dutch national flag) or counting by value sorts in Θ(N)."
+    }
+   ]
+  },
+  {
+   "title": "LSD with an unstable digit sort",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "Someone runs LSD radix sort but uses heapsort (unstable) for each digit pass. Show with a concrete run that the result can be wrong. Would MSD radix sort with heapsort inside each bucket still be correct?"
+    }
+   ],
+   "answer": "LSD can fail (31, 12, 21, 22 → 12 22 21 31); MSD still works",
+   "solution": [
+    {
+     "type": "p",
+     "text": "Model an unstable pass by one that reverses ties. Pass 1 (ones digit): ties 31, 21 (digit 1) reversed and 12, 22 (digit 2) reversed → 21 31 22 12. Pass 2 (tens digit): ties 21, 22 (tens 2) reversed → 12 22 21 31. Not sorted (22 before 21). Verified."
+    },
+    {
+     "type": "p",
+     "text": "MSD with heapsort per bucket: each bucket is sorted (by any correct sort) on its next character and then recursively on the remaining characters, so the relative order of earlier passes is never needed; the result is correct, just not stable."
+    }
+   ]
+  },
+  {
+   "title": "After how many partitions?",
+   "level": "hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "Leftmost-pivot Hoare quicksort (recursing on the left part first) is applied to [6, 9, 2, 7, 4, 1, 8, 3]. After how many calls to partition does the array first equal [1 3 2 4 6 7 8 9]? And when is it fully sorted?"
+    }
+   ],
+   "answer": "After 2 partitions; sorted after the 4th partition",
+   "solution": [
+    {
+     "type": "p",
+     "text": "Partition 1: [4 3 2 1 6 7 8 9]. Partition 2 (on [4 3 2 1]): [1 3 2 4 6 7 8 9]. Partition 3 (on [1 3 2]): pivot 1 stays. Partition 4 (on [3 2]): [1 2 3 4 6 7 8 9]. Later partitions on [7 8 9] change nothing. Verified."
+    }
+   ]
+  },
+  {
+   "title": "Choose a sort",
+   "level": "hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "Pick the best algorithm for each, with a one-line reason: (a) 10⁸ 32-bit ints, minimize time; (b) objects sorted by last name after already being sorted by first name, must keep first-name order on ties; (c) an array where each element is at most 5 positions from its final place; (d) memory limited to O(1) extra, worst case must be O(N log N); (e) 10⁶ strings where most differ in the first 3 characters but some are 10⁵ characters long."
+    }
+   ],
+   "answer": "(a) LSD radix (b) mergesort (stable) (c) insertion sort (d) heapsort (e) MSD radix or a comparison sort",
+   "solution": [
+    {
+     "type": "p",
+     "text": "(a) 4 passes of radix-256 counting sort, Θ(N); or tuned quicksort."
+    },
+    {
+     "type": "p",
+     "text": "(b) Needs stability → mergesort / TimSort."
+    },
+    {
+     "type": "p",
+     "text": "(c) Insertion sort is Θ(N·k) = Θ(N) for k = 5."
+    },
+    {
+     "type": "p",
+     "text": "(d) Heapsort: in place, Θ(N log N) worst case. (Quicksort’s worst case is Θ(N²); mergesort needs Θ(N) extra.)"
+    },
+    {
+     "type": "p",
+     "text": "(e) MSD radix stops after the distinguishing prefix; LSD would process all 10⁵ characters of the long keys (with padding). A comparison sort also only looks at differing prefixes."
+    }
+   ]
+  },
+  {
+   "title": "Quickselect worst case",
+   "level": "hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "Count the partitions and total comparisons (roughly) when leftmost-pivot quickselect searches for the median of the sorted array [1, 2, …, N]. Then explain how a random pivot changes the expected cost."
+    }
+   ],
+   "answer": "About N/2 partitions, Θ(N²) comparisons; expected Θ(N) with random pivots",
+   "solution": [
+    {
+     "type": "p",
+     "text": "Each partition on sorted input puts the pivot at the left end, removing one item. To reach index N/2 takes N/2 partitions of sizes N, N − 1, …, N/2: about (3/8)N² comparisons — Θ(N²). For N = 9: partitions on [0..8], [1..8], [2..8], [3..8], [4..8] (5 partitions) before returning 5 (verified)."
+    },
+    {
+     "type": "p",
+     "text": "Random pivots: expected size shrinks by a constant factor each round, so expected work ≈ N + (3/4)N + (3/4)²N + ⋯ = O(N)."
+    }
+   ]
+  }
+ ],
+ "keyFacts": [
+  "Partition: pivot final, left ≤ pivot ≤ right. Hoare: L stops at ≥ p, G stops at ≤ p, swap, cross → swap pivot with G.",
+  "Quicksort Θ(N log N) expected, Θ(N²) worst (sorted input with leftmost pivot); not stable; Θ(log N) stack.",
+  "Quickselect: recurse into one side; Θ(N) expected, Θ(N²) worst.",
+  "Comparison sorts need ≥ log₂(N!) = Θ(N log N) comparisons (5 items: 7; 20 items: 62).",
+  "Counting sort Θ(N + R), stable. LSD radix Θ(W(N + R)), needs a stable per-digit sort.",
+  "MSD radix: bucket by first char, recurse per bucket; early exit; doesn’t need stability.",
+  "Keys in [0, N²): radix N, 2 passes, Θ(N)."
+ ],
+ "parsons": [
+  {
+   "title": "Hoare partition",
+   "goal": "Partition a[lo..hi] around the pivot p = a[lo]: L stops at items ≥ p, G stops at items ≤ p, swap misfits, and finally swap the pivot into G’s position. Return the pivot’s final index.",
+   "lines": [
+    "static int partition(int[] a, int lo, int hi) {",
+    "    int p = a[lo], L = lo + 1, G = hi;",
+    "    while (true) {",
+    "        while (L &lt;= hi && a[L] &lt; p) L++; while (G > lo && a[G] > p) G--;",
+    "        if (L >= G) break;",
+    "        swap(a, L, G); L++; G--;",
+    "    }",
+    "    swap(a, lo, G);",
+    "    return G;",
+    "}"
+   ],
+   "distractors": [
+    "        while (L &lt;= hi && a[L] &lt;= p) L++; while (G > lo && a[G] >= p) G--;",
+    "    swap(a, lo, L);",
+    "        if (L > hi) break;"
+   ]
+  },
+  {
+   "title": "Quickselect",
+   "goal": "Return the k-th smallest item (0-based) of a, using partition from the previous exercise and recursing (iteratively) into one side only.",
+   "lines": [
+    "static int select(int[] a, int k) {",
+    "    int lo = 0, hi = a.length - 1;",
+    "    while (lo &lt; hi) {",
+    "        int j = partition(a, lo, hi);",
+    "        if (j == k) return a[k];",
+    "        else if (k &lt; j) hi = j - 1;",
+    "        else lo = j + 1;",
+    "    }",
+    "    return a[k];",
+    "}"
+   ],
+   "distractors": [
+    "        else if (k &lt; j) lo = j + 1;",
+    "        if (j == k) return a[j + 1];",
+    "        else hi = j;"
+   ]
+  },
+  {
+   "title": "Counting sort (stable)",
+   "goal": "Sort a whose keys are in 0 … R−1 using counts turned into starting positions.",
+   "lines": [
+    "static int[] countingSort(int[] a, int R) {",
+    "    int[] start = new int[R + 1], out = new int[a.length];",
+    "    for (int x : a) start[x + 1]++;",
+    "    for (int r = 0; r &lt; R; r++) start[r + 1] += start[r];",
+    "    for (int x : a) out[start[x]++] = x;",
+    "    return out;",
+    "}"
+   ],
+   "distractors": [
+    "    for (int x : a) start[x]++;",
+    "    for (int x : a) out[start[x]] = x;",
+    "    for (int r = 1; r &lt; R; r++) start[r] += start[r + 1];"
+   ]
+  },
+  {
+   "title": "LSD radix sort (base 10)",
+   "goal": "Sort non-negative ints with at most W decimal digits: one stable counting sort per digit, least significant digit first.",
+   "lines": [
+    "static int[] lsd(int[] a, int W) {",
+    "    for (int d = 0, pow = 1; d &lt; W; d++, pow *= 10) {",
+    "        int[] start = new int[11], out = new int[a.length];",
+    "        for (int x : a) start[x / pow % 10 + 1]++;",
+    "        for (int r = 0; r &lt; 10; r++) start[r + 1] += start[r];",
+    "        for (int x : a) out[start[x / pow % 10]++] = x;",
+    "        a = out;",
+    "    }",
+    "    return a;",
+    "}"
+   ],
+   "distractors": [
+    "    for (int d = W - 1, pow = 1; d >= 0; d--, pow *= 10) {",
+    "        for (int x : a) out[start[x % 10]++] = x;",
+    "        out = a;"
+   ]
+  }
+ ]
+}
