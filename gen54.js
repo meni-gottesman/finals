@@ -7,17 +7,27 @@ const G = (globalThis.GEN = globalThis.GEN || {});
 // ---------------------------------------------------------------- core utils
 const RETRY = { retry: true };
 function need(c){ if(!c) throw RETRY; }
-function mk(id, unit, ti, f){
+function mk(id, unit, ti, f, bal){ // bal (optional): {classes:[...], of:q=>class} — answer classes are drawn uniformly
   const type = TY[unit][ti];
   if(type === undefined) throw new Error('bad type index '+unit+' '+ti);
   return { id, type, make(r){
     const want = r.bool(); // True/False generators are balanced 50/50: retry until the truth value matches
+    const target = bal ? r.pick(bal.classes) : null;
     for(let i=0;i<4000;i++){
-      try { const q = f(r); if(q.kind==='tf' && q.answer!==want) continue; return q; }
+      try { const q = f(r); if(q.kind==='tf' && q.answer!==want) continue; if(bal && bal.of(q)!==target) continue; return finishNum(q); }
       catch(e){ if(e !== RETRY) throw e; }
     }
     throw new Error('retry exhausted: '+id);
   }};
+}
+function finishNum(q){ // rounding requests get Q.tol (decimal places) and a numeric answer; exact answers say so
+  if(q.kind!=='num' && q.kind!=='list') return q;
+  const m = /(\d+|one|two|three|four) decimal place/i.exec(q.prompt||'');
+  const toNum = x => (typeof x==='string' && /^-?\d+\/\d+$/.test(x)) ? (+x.split('/')[0])/(+x.split('/')[1]) : x;
+  if(m){ const w = {one:1,two:2,three:3,four:4}[m[1].toLowerCase()] || +m[1]; q.tol = w; q.answer = Array.isArray(q.answer) ? q.answer.map(toNum) : toNum(q.answer); }
+  else { const frac = x => typeof x==='string' && x.includes('/'); const any = Array.isArray(q.answer) ? q.answer.some(frac) : frac(q.answer);
+    if(any && !/exact/i.test(q.prompt)) q.prompt += '<p>(Give the exact value; enter a non-integer as an exact fraction a/b.)</p>'; }
+  return q;
 }
 function gcd(a,b){ a=Math.abs(a); b=Math.abs(b); while(b){ const t=a%b; a=b; b=t; } return a; }
 class F {
@@ -104,6 +114,12 @@ function imv(A,v){ return A.map(r=>r.reduce((s,a,k)=>s+a*v[k],0)); }
 function fmul(A,B){ return A.map(r=>B[0].map((_,j)=>r.reduce((s,a,k)=>s.add(F.of(a).mul(B[k][j])),F0))); }
 function fmv(A,v){ return A.map(r=>r.reduce((s,a,k)=>s.add(F.of(a).mul(v[k])),F0)); }
 const T_ = A => A[0].map((_,j)=>A.map(r=>r[j]));
+function solveWork(M, rhs, x, nm){ // show how a small square system M x = rhs was solved
+  nm = nm||'x';
+  if(M.length===2){ const [[a,b],[c,d]] = M.map(r=>r.map(F.of)); const D = a.mul(d).sub(b.mul(c));
+    return `det = (${fs(a)})(${fs(d)}) − (${fs(b)})(${fs(c)}) = ${fs(D)}, so ${nm} = (1/${fsp(D)})·${mat([[d,b.neg()],[c.neg(),a]])}${col(rhs)} = ${tup(x)}`; }
+  return `row reduce ${aug(M,rhs)} ~ [I | ${nm}] with ${nm} = ${tup(x)}`;
+}
 const maxAbs = A => Math.max(...A.flat().map(x=>Math.abs(typeof x==='number'?x:F.of(x).toNum())));
 const dotF = (u,v) => u.reduce((s,a,i)=>s.add(F.of(a).mul(v[i])),F0);
 const doti = (u,v) => u.reduce((s,a,i)=>s+a*v[i],0);
@@ -414,6 +430,20 @@ mk('54-1-tf-exist','54-1',5,r=>{
 ];
 
 // ================================================================ 54-2  Lay 1.7–1.9
+function minorOf(A,i,j){ return A.filter((_,a)=>a!==i).map(row=>row.filter((_,b)=>b!==j)); }
+function det2Work(B){ const [[a,b],[c,d]] = B.map(r=>r.map(F.of)); return `(${fs(a)})(${fs(d)}) − (${fs(b)})(${fs(c)}) = ${fs(det(B))}`; }
+function det3Work(B){ const [[a,b,c],[d,e,f],[g,h,k]] = B.map(r=>r.map(F.of));
+  return `${fsp(a)}[(${fs(e)})(${fs(k)}) − (${fs(f)})(${fs(h)})] − ${fsp(b)}[(${fs(d)})(${fs(k)}) − (${fs(f)})(${fs(g)})] + ${fsp(c)}[(${fs(d)})(${fs(h)}) − (${fs(e)})(${fs(g)})] = ${fs(det(B))}`; }
+function detNWork(B){ return B.length===2?det2Work(B):B.length===3?det3Work(B):'det = '+fs(det(B)); }
+function rowExpandWork(A,i){ // cofactor expansion of det A along row i, with each minor evaluated
+  const terms = A[i].map((a,b)=>{ if(F.of(a).isZero()) return null; const Mn = minorOf(A,i,b); const sg = (i+b)%2?'−':'+'; return { txt:`${fs(a)}·(${sg}M${sub(i+1)}${sub(b+1)}) with M${sub(i+1)}${sub(b+1)} = ${detNWork(Mn)}`, val: F.of(a).mul(det(Mn)).mul((i+b)%2?-1:1) }; }).filter(Boolean);
+  return { txt: terms.map(t=>t.txt).join('; '), sum: terms.map(t=>fsp(t.val)).join(' + ')||'0' };
+}
+function linHWork(M,i,j,D,C){
+  const Mn = minorOf(M,i,j); const sg = (i+j)%2 ? '−' : '+';
+  const M0 = M.map(x=>x.slice()); M0[i][j] = 0; const R0 = rowExpandWork(M0,i);
+  return `Expand along row ${i+1}. The h-term is h·C${sub(i+1)}${sub(j+1)} with C${sub(i+1)}${sub(j+1)} = ${sg}det${mat(Mn)} = ${sg}(${detNWork(Mn)}) = ${fs(C)}. The other entries of row ${i+1} give ${R0.txt}; their total (= det with h = 0) is ${R0.sum} = ${fs(D)}. So det = ${fs(C)}h ${D.sign()<0?'−':'+'} ${fs(D.abs())}`;
+}
 function detLinearH(r, n, maxE){ // n×n integer matrix with one entry 'h'; returns {M, pos, h0(F)} with det linear in h, coefficient ≠ 0
   const M = Array.from({length:n},()=>rvec(r,n,-4,4));
   const i = r.int(0,n-1), j = r.int(0,n-1);
@@ -447,7 +477,7 @@ mk('54-2-indep-tf','54-2',0,r=>{
   const cols = T_(disp);
   return { prompt:`<p>For what value of h are the columns of the matrix</p>${mat(disp)}<p>linearly <b>dependent</b>?</p>`,
     kind:'num', answer: ans(h0), hint:'n vectors in ℝⁿ are dependent ⇔ det = 0 (⇔ some column lacks a pivot). Expand / row reduce keeping h.',
-    solution:`<p>det is linear in h: det = ${fs(C)}·h ${D.sign()<0?'−':'+'} ${fs(D.abs())} (expand along row ${i+1} or column ${j+1}, or row reduce). Dependent ⇔ det = 0 ⇔ h = ${fs(h0)}.</p>`, _d:{M,i,j} };
+    solution:`<p>n vectors in ℝⁿ are dependent ⇔ det = 0. ${linHWork(M,i,j,D,C)}. Dependent ⇔ ${fs(C)}h ${D.sign()<0?'−':'+'} ${fs(D.abs())} = 0 ⇔ h = ${fs(h0)}.</p>`, _d:{M,i,j} };
 })),
 mk('54-2-std-geom','54-2',2,r=>{
   const k = rnz(r,-3,3);
@@ -488,7 +518,7 @@ mk('54-2-onto-11','54-2',3,r=>{
   return { prompt:`<p>Let T(x) = Ax with A = </p>${mat(A)}<p>so T: ℝ${sup(n)} → ℝ${sup(m)}. Which describes T?</p>`, kind:'mc', ...o,
     hint:'One-to-one ⇔ pivot in every column; onto ⇔ pivot in every row.',
     solution:`<p>RREF(A) = ${mat(R)} has ${rk} pivots. Columns: ${n} ⇒ ${one?'every column has a pivot ⇒ one-to-one':'a free variable ⇒ not one-to-one'}. Rows: ${m} ⇒ ${onto?'pivot in every row ⇒ onto':'a zero row ⇒ not onto'}.</p>`, _d:{A, correct} };
-}),
+}, {classes:['One-to-one and onto','One-to-one but not onto','Onto but not one-to-one','Neither one-to-one nor onto'], of:q=>q._d.correct}),
 mk('54-2-formula-11','54-2',3,r=>{
   const m = r.int(2,4), n = r.int(2,4); const rk = r.int(Math.max(1,Math.min(m,n)-1), Math.min(m,n));
   const {A} = randRank(r,m,n,rk,6); const {R} = rref(A);
@@ -500,7 +530,7 @@ mk('54-2-formula-11','54-2',3,r=>{
   return { prompt:`<p>Define T: ℝ${sup(n)} → ℝ${sup(m)} by T(${xs(n).join(', ')}) = (${comps.join(', ')}).</p><p>Which describes T?</p>`, kind:'mc', ...o,
     hint:'Write the standard matrix (coefficients row by row), then count pivots.',
     solution:`<p>Standard matrix A = ${mat(A)}, RREF ${mat(R)}: ${rk} pivots for ${n} columns and ${m} rows. ${one?'Pivot in every column ⇒ one-to-one.':'Free variable ⇒ T(x)=0 has nontrivial solutions ⇒ not one-to-one.'} ${onto?'Pivot in every row ⇒ onto.':'Zero row ⇒ not onto.'}</p>`, _d:{A, correct} };
-}),
+}, {classes:['One-to-one and onto','One-to-one but not onto','Onto but not one-to-one','Neither one-to-one nor onto'], of:q=>q._d.correct}),
 mk('54-2-tf-sets','54-2',4,r=>{
   const kind = r.pick(['zero','toomany','multiple','indep','depcombo','subset','superset']);
   let V, n, claimDep = r.bool(), note='';
@@ -595,7 +625,7 @@ mk('54-3-solve-AXB','54-3',2,r=>{
   const Ab = A.map((row,i)=>row.concat(B[i]));
   return { prompt:`<p>Solve AX = B for the 3×2 matrix X, where</p><p>A = ${mat(A)}, B = ${mat(B)}</p><p>Enter X row by row (6 numbers).</p>`, kind:'list', answer:X.flat(),
     hint:'Row reduce [A | B] (both columns of B at once); the right block becomes X = A⁻¹B.',
-    solution:`<p>[A | B] = ${mat(Ab,3)} ~ [I | X] with X = ${mat(X)}.</p>`, _d:{A,B} };
+    solution:`<p>AX = B means X = A⁻¹B, and row reducing [A | B] applies A⁻¹ to every column of B at once. A has determinant ±1 (A⁻¹ = ${mat(inv(A))}). [A | B] = ${mat(Ab,3)} ~ [I | X] with X = A⁻¹B = ${mat(X)}. Check: A·X = B.</p>`, _d:{A,B} };
 }),
 mk('54-3-elem-inverse','54-3',3,r=>{
   const e1 = elemRandom(r,3), e2 = elemRandom(r,3); const P = fmul(e2.E, e1.E); const X = inv(P);
@@ -667,7 +697,7 @@ mk('54-4-cofactor4','54-4',0,r=>{
   const nzc = A.map(row=>row.filter(x=>x===0).length);
   return { prompt:`<p>Compute det A for</p>${mat(A)}<p>Choose the row or column with the most zeros.</p>`, kind:'num', answer: ans(d),
     hint:'det A = Σⱼ aᵢⱼCᵢⱼ with Cᵢⱼ = (−1)^{i+j}Mᵢⱼ. Expand along the line with most zeros; remember the checkerboard signs.',
-    solution:`<p>Expanding along ${byRow?'row':'column'} ${k+1} (most zeros), only the nonzero entries contribute: ${(byRow?A[k]:A.map(x=>x[k])).map((a,t)=>a===0?null:(fs(a)+'·('+(((byRow?k+t:t+k)%2)?'−':'+')+'M'+sub(byRow?k+1:t+1)+sub(byRow?t+1:k+1)+')')).filter(Boolean).join(' + ')}. Evaluating the 3×3 minors gives det A = ${fs(d)}.</p>`, _d:{A} };
+    solution:`<p>Expanding along ${byRow?'row':'column'} ${k+1} (most zeros), only the nonzero entries contribute: ${(byRow?A[k]:A.map(x=>x[k])).map((a,t)=>a===0?null:(fs(a)+'·('+(((byRow?k+t:t+k)%2)?'−':'+')+'M'+sub(byRow?k+1:t+1)+sub(byRow?t+1:k+1)+')')).filter(Boolean).join(' + ')}. Minors: ${(byRow?A[k]:A.map(x=>x[k])).map((a,t)=>{ if(a===0) return null; const ii = byRow?k:t, jj = byRow?t:k; return 'M'+sub(ii+1)+sub(jj+1)+' = '+det3Work(minorOf(A,ii,jj)); }).filter(Boolean).join('; ')}. Total: det A = ${fs(d)}.</p>`, _d:{A} };
 }),
 mk('54-4-cofactor5','54-4',0,r=>{
   const A = Array.from({length:5},()=>rvec(r,5,-3,3));
@@ -677,7 +707,7 @@ mk('54-4-cofactor5','54-4',0,r=>{
   const d = det(A); need(!d.isZero());
   return { prompt:`<p>Compute det A for the 5×5 matrix</p>${mat(A)}`, kind:'num', answer: ans(d),
     hint:'Find a column (or row) with a single nonzero entry and expand; repeat on the 4×4 minor, then finish the 3×3.',
-    solution:`<p>Column ${c1+1} has a single nonzero entry ${fs(A[r1][c1])} in row ${r1+1}: det A = ${fs(A[r1][c1])}·(−1)^${r1+c1+2}·det(minor). In that minor, the row coming from row ${r2+1} of A has a single nonzero entry ${fs(A[r2][c2])}; expand again (watch the position-dependent sign in the smaller matrix), leaving a 3×3 determinant. Result: det A = ${fs(d)}.</p>`, _d:{A} };
+    solution:`<p>Column ${c1+1} has a single nonzero entry ${fs(A[r1][c1])} in row ${r1+1}: det A = ${fs(A[r1][c1])}·(−1)^${r1+c1+2}·det(minor). In that minor, the row coming from row ${r2+1} of A has a single nonzero entry ${fs(A[r2][c2])}; expand again: in the 4×4 minor it sits in position (${r2<r1?r2+1:r2}, ${c2<c1?c2+1:c2}), sign (−1)^${(r2<r1?r2+1:r2)+(c2<c1?c2+1:c2)}. The remaining 3×3 is ${mat(minorOf(minorOf(A,r1,c1), r2<r1?r2:r2-1, c2<c1?c2:c2-1))} with determinant ${det3Work(minorOf(minorOf(A,r1,c1), r2<r1?r2:r2-1, c2<c1?c2:c2-1))}. So det A = ${fs(A[r1][c1])}·(${(r1+c1)%2?'−1':'+1'})·${fsp(A[r2][c2])}·(${((r2<r1?r2:r2-1)+(c2<c1?c2:c2-1))%2?'−1':'+1'})·${fsp(det(minorOf(minorOf(A,r1,c1), r2<r1?r2:r2-1, c2<c1?c2:c2-1)))} = ${fs(d)}.</p>`, _d:{A} };
 }),
 mk('54-4-rowops','54-4',1,r=>{
   const D = rnz(r,-9,9);
@@ -739,13 +769,18 @@ mk('54-4-param-quad','54-4',3,r=>{
   const disp = at('h').map(row=>row.map(x=>x==='h'?'h':fs(x)));
   return { prompt:`<p>Find all values of h for which the matrix</p>${mat(disp)}<p>is <b>not</b> invertible. Enter them comma-separated.</p>`, kind:'list', unordered:true, answer: ansL([r1,r2]),
     hint:'Not invertible ⇔ det = 0. Expand (h appears twice, so det is quadratic in h) and solve.',
-    solution:`<p>det = ${poly([c0,c1,c2],'h')} (cofactor expansion). Setting it to 0: h = ${fs(r1)} or h = ${fs(r2)}.</p>`, _d:{M:at(null), i1,j1,i2,j2} };
+    solution:(()=>{ const P = at('h').map(row=>row.map(x=>x==='h'?[F0,F1]:[F.of(x)]));
+      const pm=(a,b)=>{ const o=Array(a.length+b.length-1).fill(F0); a.forEach((x,i)=>b.forEach((y,j)=>{o[i+j]=o[i+j].add(x.mul(y));})); return o; };
+      const pa=(a,b,c)=>{ const n=Math.max(a.length,b.length); return Array.from({length:n},(_,i)=>(a[i]||F0).add((b[i]||F0).mul(c))); };
+      const ps = q=>poly(q,'h'); const es = q=>q.length>1?'('+ps(q)+')':fsp(q[0]);
+      const terms = [0,1,2].map(b=>{ const mn = minorOf(P,0,b); const m2 = pa(pm(mn[0][0],mn[1][1]), pm(mn[0][1],mn[1][0]), -1); return { e:P[0][b], m2, t: pm(P[0][b], m2).map(x=>x.mul(b%2?-1:1)) }; });
+      return `<p>Not invertible ⇔ det = 0. Cofactor expansion along row 1: ${terms.map((T,b)=>(b%2?'− ':b?'+ ':'')+es(T.e)+'·['+ps(T.m2)+']').join(' ')} = ${poly([c0,c1,c2],'h')}. Setting it to 0 (quadratic formula, discriminant ${fs(disc)}): h = ${fs(r1)} or h = ${fs(r2)}.</p>`; })(), _d:{M:at(null), i1,j1,i2,j2} };
 }),
 mk('54-4-param-lin4','54-4',3,r=>{
   const {M,i,j,h0,D,C,disp} = detLinearH(r,4);
   return { prompt:`<p>For which value of h is det A = 0, where A = </p>${mat(disp)}`, kind:'num', answer: ans(h0),
     hint:'h appears once, so det A = (cofactor of h)·h + (det with h = 0). Compute those two numbers.',
-    solution:`<p>Expanding along row ${i+1}: det A = h·C${sub(i+1)}${sub(j+1)} + (rest) = ${fs(C)}h ${D.sign()<0?'−':'+'} ${fs(D.abs())}. It vanishes for h = ${fs(h0)}.</p>`, _d:{M,i,j} };
+    solution:`<p>${linHWork(M,i,j,D,C)}. It vanishes for h = ${fs(D.neg())}/${fsp(C)} = ${fs(h0)}.</p>`, _d:{M,i,j} };
 }),
 mk('54-4-area','54-4',4,r=>{
   const P = rvec(r,2,-4,4), u = rvec(r,2,-4,4), v = rvec(r,2,-4,4); const du = u[0]*v[1]-u[1]*v[0]; need(du!==0);
@@ -866,7 +901,7 @@ mk('54-5-in-nul-col','54-5',3,r=>{
   const st = [['u is in Nul A', inN(u)], ['u is in Col A', inC(u)], ['w is in Nul A', inN(w)], ['w is in Col A', inC(w)]];
   return { prompt:`<p>Let A = ${mat(A)}, u = ${tup(u)}, w = ${tup(w)}. Select <b>all</b> true statements.</p>`, kind:'multi', choices: st.map(x=>x[0]), answer: st.map((x,i)=>x[1]?i:-1).filter(i=>i>=0),
     hint:'Nul A: just compute Av (is it 0?). Col A: is Ax = v consistent? (row reduce [A | v]).',
-    solution:`<p>Au = ${tup(imv(A,u))} ⇒ u ${inN(u)?'∈':'∉'} Nul A. Aw = ${tup(imv(A,w))} ⇒ w ${inN(w)?'∈':'∉'} Nul A. A has rank 2, so Col A is a plane; row reducing [A | u] and [A | w] shows u ${inC(u)?'∈':'∉'} Col A and w ${inC(w)?'∈':'∉'} Col A.</p>`, _d:{A,u,w} };
+    solution:`<p>Au = ${tup(imv(A,u))} ⇒ u ${inN(u)?'∈':'∉'} Nul A. Aw = ${tup(imv(A,w))} ⇒ w ${inN(w)?'∈':'∉'} Nul A. A has rank 2, so Col A is a plane. Row reducing: [A | u] ~ ${mat(rref(A.map((row,i)=>row.concat([u[i]]))).R,3)} ⇒ u ${inC(u)?'∈ Col A (consistent)':'∉ Col A (pivot in the last column)'}; [A | w] ~ ${mat(rref(A.map((row,i)=>row.concat([w[i]]))).R,3)} ⇒ w ${inC(w)?'∈ Col A (consistent)':'∉ Col A (pivot in the last column)'}.</p>`, _d:{A,u,w} };
 }),
 mk('54-5-col-param','54-5',3,r=>{
   const {A} = randRank(r,3,4,2,8); const cs = T_(A); let n0=null;
@@ -911,7 +946,7 @@ mk('54-6-basis-param','54-6',0,r=>{
   const pstr = M.map((row,a)=>{ let s=''; row.forEach((c,b)=>{ if(a===i&&b===j){ s += (s?' + ':'')+'h'+nm[b]; return; } if(c===0) return; const body = (Math.abs(c)===1&&b>0)?nm[b]:Math.abs(c)+nm[b]; s += s ? (c<0?' − ':' + ')+body : (c<0?'−':'')+body; }); return s||'0'; });
   return { prompt:`<p>Let p₁ = ${pstr[0]}, p₂ = ${pstr[1]}, p₃ = ${pstr[2]} in ℙ₂. For which value of h is {p₁, p₂, p₃} <b>not</b> a basis of ℙ₂?</p>`, kind:'num', answer: ans(h0),
     hint:'Use coordinate vectors relative to {1, t, t²}: three polynomials form a basis of ℙ₂ ⇔ the 3×3 matrix of their coordinate vectors is invertible.',
-    solution:`<p>Coordinate vectors (constant, t, t²) as columns give a 3×3 matrix whose determinant is ${fs(C)}h ${D.sign()<0?'−':'+'} ${fs(D.abs())}. Since dim ℙ₂ = 3, the set is a basis ⇔ det ≠ 0 ⇔ h ≠ ${fs(h0)}.</p>`, _d:{M,i,j} };
+    solution:`<p>Coordinate vectors (constant, t, t²) as columns give a 3×3 matrix (rows of the display below = coefficient lists, and det Aᵀ = det A). ${linHWork(M,i,j,D,C)}. Since dim ℙ₂ = 3, the set is a basis ⇔ det ≠ 0 ⇔ h ≠ ${fs(h0)}.</p>`, _d:{M,i,j} };
 }),
 mk('54-6-coords-Rn','54-6',1,r=>{
   const B = randUnimod(r,3,4); const c = rvec(r,3,-4,4); need(c.filter(x=>x).length>=2); const x = imv(B,c); need(maxAbs([x])<=30);
@@ -1027,13 +1062,14 @@ mk('54-7-eig-triangular','54-7',1,r=>{
     solution:`<p>Top-left block ${mat(B.A)}: λ² − ${fsp(B.A[0][0]+B.A[1][1])}λ + ${fsp(B.A[0][0]*B.A[1][1]-B.A[0][1]*B.A[1][0])} = 0 ⇒ λ = ${B.D.map(fs).join(', ')}. Bottom-right block ${mat(Dm)} ⇒ λ = ${ev2.map(fs).join(', ')}. All eigenvalues: ${ev.map(fs).join(', ')}.</p>`, _d:{A} };
 }),
 mk('54-7-multiplicity','54-7',2,r=>{
-  const jordan = r.bool(); const [l,m] = r.sample([-3,-2,-1,1,2,3,4],2);
-  const {A} = diagMat(r,3,{D:[l,l,m], jordan, amax:14});
-  const g = jordan?1:2;
-  return { prompt:`<p>A = ${mat(A)} has characteristic polynomial (λ − ${fsp(l)})²(λ − ${fsp(m)}) (up to sign). What is the <b>geometric</b> multiplicity of λ = ${fs(l)} (the dimension of its eigenspace)?</p>`, kind:'num', answer:g,
-    hint:'dim Nul(A − λI) = 3 − rank(A − λI). It can be smaller than the algebraic multiplicity (2).',
-    solution:`<p>A − ${fsp(l)}I = ${mat(A.map((row,i)=>row.map((x,j)=>x-(i===j?l:0))))} has rank ${3-g}, so the eigenspace has dimension 3 − ${3-g} = ${g}. ${g===1?'Geometric (1) < algebraic (2) ⇒ A is NOT diagonalizable.':'Geometric = algebraic = 2 (and 1 for λ = '+fs(m)+') ⇒ A is diagonalizable.'}</p>`, _d:{A,l} };
-}),
+  const g = r.pick([1,2,3]); const [l,m] = r.sample([-3,-2,-1,1,2,3,4],2);
+  const P = randUnimod(r,4,2); const J = eyeI(4).map((row,i)=>row.map((x,j)=>i===j?(i<3?l:m):0)); if(g<=2) J[0][1]=1; if(g===1) J[1][2]=1;
+  const A = imul(imul(P,J), inv(P).map(x=>x.map(y=>y.n))); need(maxAbs(A)<=20);
+  const S = A.map((row,i)=>row.map((x,j)=>x-(i===j?l:0)));
+  return { prompt:`<p>A = ${mat(A)} has characteristic polynomial (λ − ${fsp(l)})³(λ − ${fsp(m)}). What is the <b>geometric</b> multiplicity of λ = ${fs(l)} (the dimension of its eigenspace)?</p>`, kind:'num', answer:g,
+    hint:'dim Nul(A − λI) = 4 − rank(A − λI). It can be smaller than the algebraic multiplicity (3).',
+    solution:`<p>A − ${fsp(l)}I = ${mat(S)} row reduces to ${mat(rref(S).R)}, which has rank ${4-g}. So the eigenspace has dimension 4 − ${4-g} = ${g}. ${g<3?'Geometric ('+g+') < algebraic (3) ⇒ A is NOT diagonalizable.':'Geometric = algebraic = 3 (and 1 for λ = '+fs(m)+') ⇒ A is diagonalizable.'}</p>`, _d:{A,l} };
+}, {classes:[1,2,3], of:q=>q.answer}),
 mk('54-7-eigenspace-basis','54-7',2,r=>{
   const [l,m] = r.sample([-3,-2,-1,1,2,3,4],2); const {A} = diagMat(r,3,{D:[l,l,m], amax:14});
   const M = A.map((row,i)=>row.map((x,j)=>x-(i===j?l:0))); const {free, vecs, R} = nullBasis(M); need(free.length===2);
@@ -1152,7 +1188,7 @@ mk('54-8-rot-scale','54-8',3,r=>{
   const rInt = Number.isInteger(rr);
   return { prompt:`<p>A = ${mat(A)} is similar to C = ${mat([['a','−b'],['b','a']])} where λ = a − bi (b > 0) is an eigenvalue of A. C = r·(rotation by φ). ${askR?`Find the scale factor r${rInt?'':' to 3 decimal places'}.`:'Find the rotation angle φ in degrees (0° < φ < 180°), to 3 decimal places.'}</p>`, kind:'num', answer: askR ? (rInt?rr:r6(rr)) : r6(phi),
     hint:'Find a and b from trace = 2a and det = a² + b². Then r = |λ| = √(a² + b²) = √det A, and φ is the argument of a + bi.',
-    solution:`<p>trace A = ${2*a} ⇒ a = ${a}; det A = ${a*a+b*b} = a² + b² ⇒ b = ${b}. r = √${a*a+b*b} ${rInt?'= '+rr:'≈ '+rr.toFixed(4)}; φ = atan2(${b}, ${a}) ≈ ${phi.toFixed(4)}°.</p>`, _d:{A, askR} };
+    solution:`<p>trace A = ${2*a} ⇒ a = ${a}; det A = ${a*a+b*b} = a² + b² ⇒ b = ${b}. r = √${a*a+b*b} ${rInt?'= '+rr:'≈ '+rr.toFixed(4)}; φ = atan2(${b}, ${a}) ≈ ${dn(phi.toFixed(4))}°.</p>`, _d:{A, askR} };
 }),
 mk('54-8-long-run','54-8',4,r=>{
   const s = r.pick([1,2,2,5]); const M = [rvec(r,2,-5,5), rvec(r,2,-5,5)]; const A = M.map(row=>row.map(x=>fr(x,s)));
@@ -1160,13 +1196,13 @@ mk('54-8-long-run','54-8',4,r=>{
   const disc = tr.mul(tr).sub(dt.mul(4)); need(!dt.isZero());
   let cls;
   if(disc.sign()<0){ cls = dt.eq(1)?'circle': (dt.toNum()<1?'in':'out'); }
-  else { const sq = Math.sqrt(disc.toNum()); const l1 = Math.abs((tr.toNum()+sq)/2), l2 = Math.abs((tr.toNum()-sq)/2); const mx = Math.max(l1,l2); need(Math.abs(mx-1)>1e-6 && Math.abs(Math.min(l1,l2)-1)>1e-6); cls = mx<1?'decay':'grow'; need(r.int(0,2)===0); }
+  else { const sq = Math.sqrt(disc.toNum()); const l1 = Math.abs((tr.toNum()+sq)/2), l2 = Math.abs((tr.toNum()-sq)/2); const mx = Math.max(l1,l2); need(Math.abs(mx-1)>1e-6 && Math.abs(Math.min(l1,l2)-1)>1e-6); cls = mx<1?'decay':'grow'; }
   const L = { in:'Spirals inward toward 0', out:'Spirals outward (grows without bound)', circle:'Rotates around a closed ellipse (neither grows nor shrinks)', decay:'Tends to 0 without rotating (real eigenvalues)', grow:'Grows without rotating (real eigenvalues, no spiral)' };
   const o = mc(r, L[cls], Object.values(L).filter(x=>x!==L[cls]));
   return { prompt:`<p>Let A = ${mat(A)} and x<sub>k+1</sub> = Ax<sub>k</sub> with a generic nonzero x₀. Describe the long-run behaviour of the points x<sub>k</sub>.</p>`, kind:'mc', ...o,
     hint:'Complex eigenvalues ⇒ rotation; |λ|² = det A decides in/out. Real eigenvalues ⇒ no rotation; compare |λ| with 1.',
     solution:`<p>trace = ${fs(tr)}, det = ${fs(dt)}, discriminant trace² − 4det = ${fs(disc)} ${disc.sign()<0?'< 0 ⇒ complex eigenvalues with |λ|² = det A = '+fs(dt)+' ('+(cls==='circle'?'= 1':cls==='in'?'< 1':'> 1')+')':'≥ 0 ⇒ real eigenvalues, largest |λ| '+(cls==='decay'?'< 1':'> 1')}. Hence: ${L[cls]}.</p>`, _d:{A, cls, label:L[cls]} };
-}),
+}, {classes:['in','out','circle','decay','grow'], of:q=>q._d.cls}),
 ];
 
 // ================================================================ 54-9  Lay 6.1–6.3
@@ -1236,9 +1272,9 @@ mk('54-9-orth-set-tf','54-9',2,r=>{
   const claim = r.pick(['orthogonal','orthonormal']); let V, truth, why;
   if(claim==='orthogonal'){ const U = orthoBasis3(r,5); const pert = r.bool(); V = U.map(v=>v.map(F.of)); if(pert){ const i=r.int(0,2), j=r.int(0,2); V[i][j]=V[i][j].add(rnz(r,-1,1)); }
     const bad = []; for(let a=0;a<3;a++) for(let b=a+1;b<3;b++) if(!dotF(V[a],V[b]).isZero()) bad.push([a,b]);
-    truth = bad.length===0; why = truth?'all three pairwise dot products are 0.':`u${sub(bad[0][0]+1)}·u${sub(bad[0][1]+1)} = ${fs(dotF(V[bad[0][0]],V[bad[0][1]]))} ≠ 0.`; }
+    truth = bad.length===0; why = truth?`u₁·u₂ = ${fs(dotF(V[0],V[1]))}, u₁·u₃ = ${fs(dotF(V[0],V[2]))}, u₂·u₃ = ${fs(dotF(V[1],V[2]))}: all three pairwise dot products are 0.`:`u${sub(bad[0][0]+1)}·u${sub(bad[0][1]+1)} = ${fs(dotF(V[bad[0][0]],V[bad[0][1]]))} ≠ 0.`; }
   else { const M = orthonormal3(r); const k = r.int(2,3); const W = M.slice(0,k); const unscale = r.bool(); const ui = r.int(0,k-1);
-    V = W.map((v,i)=>v.map(x=>(unscale&&i===ui)?F.of(x):fr(x,3))); truth = !unscale; why = truth?'pairwise dot products are 0 and each vector has length 1 (entries² sum to 9/9).':`the set is orthogonal, but u${sub(ui+1)} has length 3, not 1.`; }
+    V = W.map((v,i)=>v.map(x=>(unscale&&i===ui)?F.of(x):fr(x,3))); truth = !unscale; why = truth?`pairwise dot products are 0 (e.g. u₁·u₂ = ${fs(dotF(V[0],V[1]))}) and each vector has length 1: ‖u₁‖² = ${fs(dotF(V[0],V[0]))}, ‖u₂‖² = ${fs(dotF(V[1],V[1]))}.`:`the set is orthogonal (u₁·u₂ = ${fs(dotF(V[0],V[1]))}), but ‖u${sub(ui+1)}‖² = ${fs(dotF(V[ui],V[ui]))}, so it has length 3, not 1.`; }
   const vf = V.map(v=>v.map(x=>x.toNum()));
   return { prompt:`<p>True or false: the set {${V.map(tup).join(', ')}} is ${claim}.</p>`, kind:'tf', answer: truth,
     hint:'Orthogonal: every pair has dot product 0. Orthonormal: additionally every vector has length 1.', solution:`<p>${truth?'TRUE':'FALSE'}: ${why}</p>`, _d:{V:vf, claim} };
@@ -1300,6 +1336,11 @@ mk('54-9-tf','54-9',5,r=>{
 // polynomial with Fraction coefficients; inner product via moments m[k] = <1, t^k>
 function ipMoments(spec){ const m=[]; for(let k=0;k<=6;k++){ if(spec.pts) m.push(spec.pts.reduce((s,t)=>s.add(F.of(Math.pow(t,k))),F0)); else m.push(fr(Math.pow(spec.b,k+1)-Math.pow(spec.a,k+1), k+1)); } return m; }
 function ipPoly(p,q,m){ let s=F0; p.forEach((a,i)=>q.forEach((b,j)=>{ s = s.add(F.of(a).mul(F.of(b)).mul(m[i+j])); })); return s; }
+function polyMulF(p,q){ const r=Array(p.length+q.length-1).fill(F0); p.forEach((a,i)=>q.forEach((b,j)=>{ r[i+j]=r[i+j].add(F.of(a).mul(F.of(b))); })); return r; }
+function ipWork(p,q,ab){ const pr = polyMulF(p,q); const terms = pr.map((c,k)=>({c,k})).filter(o=>!o.c.isZero());
+  const tv = terms.map(o=>o.c.mul(fr(Math.pow(ab[1],o.k+1)-Math.pow(ab[0],o.k+1), o.k+1)));
+  const tot = tv.reduce((s,x)=>s.add(x),F0);
+  return `the integrand is ${poly(pr)}; integrating term by term with ∫ tᵏ dt = (${ab[1]}<sup>k+1</sup> − (${dn(ab[0])})<sup>k+1</sup>)/(k+1): ${terms.map((o,i)=>fsp(o.c)+'·'+fsp(fr(Math.pow(ab[1],o.k+1)-Math.pow(ab[0],o.k+1), o.k+1))).join(' + ')||'0'} = ${fs(tot)}`; }
 function ipDesc(spec){ return spec.pts ? `⟨p, q⟩ = ${spec.pts.map(t=>'p('+fs(t)+')q('+fs(t)+')').join(' + ')}` : `⟨p, q⟩ = ∫${spec.a<0?'₋'+sub(-spec.a):sub(spec.a)}${sup(spec.b)} p(t)q(t) dt`; }
 G['54-10'] = [
 mk('54-10-gs-Rn','54-10',0,r=>{
@@ -1339,7 +1380,7 @@ mk('54-10-lsq-normal','54-10',2,r=>{
   need(rank(A.map((row,i)=>row.concat([b[i]])))===3); need(x.every(v=>v.d<=60));
   return { prompt:`<p>Find the least-squares solution x̂ of Ax = b, where A = ${mat(A)}, b = ${col(b)}.</p>`, kind:'list', answer: ansL(x),
     hint:'Solve the normal equations AᵀA x̂ = Aᵀb.',
-    solution:`<p>AᵀA = ${mat(AtA)}, Aᵀb = ${tup(Atb)}. Solving: x̂ = ${tup(x)}.</p>`, _d:{A,b} };
+    solution:`<p>Normal equations AᵀAx̂ = Aᵀb with AᵀA = ${mat(AtA)}, Aᵀb = ${tup(Atb)}. Solve: ${solveWork(AtA,Atb,x,'x̂')}.</p>`, _d:{A,b} };
 }),
 mk('54-10-lsq-error','54-10',2,r=>{
   const m = r.int(3,4); const A = Array.from({length:m},()=>rvec(r,2,-3,3)); need(rank(A)===2); const b = rvec(r,m,-5,5);
@@ -1348,7 +1389,7 @@ mk('54-10-lsq-error','54-10',2,r=>{
   const s = sqrtF(e2);
   return { prompt:`<p>Find the least-squares error ‖b − Ax̂‖ for A = ${mat(A)}, b = ${col(b)}${s?'':' (to 3 decimal places)'}.</p>`, kind:'num', answer: s?ans(s):r6(Math.sqrt(e2.toNum())),
     hint:'First find x̂ from AᵀAx̂ = Aᵀb, then compute the residual b − Ax̂ and its length.',
-    solution:`<p>AᵀA = ${mat(AtA)}, Aᵀb = ${tup(Atb)} ⇒ x̂ = ${tup(x)}. Ax̂ = ${tup(A.map(row=>dotF(row,x)))}, residual = ${tup(res)}, ‖residual‖² = ${fs(e2)} ⇒ error = ${s?fs(s):'≈ '+Math.sqrt(e2.toNum()).toFixed(4)}.</p>`, _d:{A,b} };
+    solution:`<p>AᵀA = ${mat(AtA)}, Aᵀb = ${tup(Atb)}; ${solveWork(AtA,Atb,x,'x̂')}. Ax̂ = ${tup(A.map(row=>dotF(row,x)))}, residual = ${tup(res)}, ‖residual‖² = ${fs(e2)} ⇒ error = ${s?fs(s):'√('+fs(e2)+') ≈ '+Math.sqrt(e2.toNum()).toFixed(4)}.</p>`, _d:{A,b} };
 }),
 mk('54-10-lsq-qr','54-10',2,r=>{
   const M = orthonormal3(r); const Qi = T_(M.slice(0,2)); const Q = Qi.map(row=>row.map(x=>fr(x,3)));
@@ -1367,7 +1408,7 @@ mk('54-10-best-fit','54-10',3,r=>{
   if(!quad) need(!beta[1].isZero());
   return { prompt:`<p>Find the least-squares ${quad?'parabola y = β₀ + β₁x + β₂x²':'line y = β₀ + β₁x'} for the data points ${xsv.map((x,i)=>'('+fs(x)+', '+fs(ys[i])+')').join(', ')}. Enter ${quad?'β₀, β₁, β₂':'β₀, β₁'}.</p>`, kind:'list', answer: ansL(beta),
     hint:`Design matrix X with rows [1 x${quad?' x²':''}], observation vector y; solve XᵀXβ = Xᵀy.`,
-    solution:`<p>X = ${mat(X)}, y = ${tup(ys)}. XᵀX = ${mat(XtX)}, Xᵀy = ${tup(Xty)}. Solving gives β = ${tup(beta)}.</p>`, _d:{X, ys} };
+    solution:`<p>X = ${mat(X)}, y = ${tup(ys)}. XᵀX = ${mat(XtX)}, Xᵀy = ${tup(Xty)}. Normal equations XᵀXβ = Xᵀy: ${solveWork(XtX,Xty,beta,'β')}.</p>`, _d:{X, ys} };
 }),
 mk('54-10-unique','54-10',4,r=>{
   const m = r.int(3,5), n = r.int(2,3); need(m>n); const rk = r.bool()? n : n-1; const {A} = randRank(r,m,n,rk,7); const b = rvec(r,m,-5,5);
@@ -1392,9 +1433,9 @@ mk('54-10-cab-norm','54-10',5,r=>{
   const p = [r.int(-3,3), rnz(r,-3,3)].concat(r.bool()?[r.int(-2,2)]:[]); const q = [rnz(r,-3,3), r.int(-3,3)];
   const ask = r.pick(['norm2','ip','projc']);
   let val, txt, sol;
-  if(ask==='norm2'){ val = ipPoly(p,p,m); txt = `‖f‖² for f(t) = ${poly(p)}`; sol = `‖f‖² = ∫ f(t)² dt = ${fs(val)}.`; }
-  else if(ask==='ip'){ val = ipPoly(p,q,m); txt = `⟨f, g⟩ for f(t) = ${poly(p)} and g(t) = ${poly(q)}`; sol = `⟨f,g⟩ = ∫ f(t)g(t) dt = ${fs(val)}.`; }
-  else { val = ipPoly(p,q,m).div(ipPoly(q,q,m)); txt = `the coefficient c in proj<sub>g</sub> f = c·g, for f(t) = ${poly(p)} and g(t) = ${poly(q)}`; sol = `c = ⟨f,g⟩/⟨g,g⟩ = ${fs(ipPoly(p,q,m))}/${fsp(ipPoly(q,q,m))} = ${fs(val)}.`; }
+  if(ask==='norm2'){ val = ipPoly(p,p,m); txt = `‖f‖² for f(t) = ${poly(p)}`; sol = `‖f‖² = ∫ f(t)² dt: ${ipWork(p,p,ab)}.`; }
+  else if(ask==='ip'){ val = ipPoly(p,q,m); txt = `⟨f, g⟩ for f(t) = ${poly(p)} and g(t) = ${poly(q)}`; sol = `⟨f,g⟩ = ∫ f(t)g(t) dt: ${ipWork(p,q,ab)}.`; }
+  else { val = ipPoly(p,q,m).div(ipPoly(q,q,m)); txt = `the coefficient c in proj<sub>g</sub> f = c·g, for f(t) = ${poly(p)} and g(t) = ${poly(q)}`; sol = `c = ⟨f,g⟩/⟨g,g⟩. ⟨f,g⟩: ${ipWork(p,q,ab)}. ⟨g,g⟩: ${ipWork(q,q,ab)}. So c = ${fs(ipPoly(p,q,m))}/${fsp(ipPoly(q,q,m))} = ${fs(val)}.`; }
   return { prompt:`<p>In C[${ab[0]}, ${ab[1]}] with ⟨f, g⟩ = ∫${ab[0]<0?'₋'+sub(-ab[0]):sub(ab[0])}${sup(ab[1])} f(t)g(t) dt, compute ${txt}.</p>`, kind:'num', answer: ans(val),
     hint:'Multiply out the polynomials and integrate term by term: ∫ tᵏ dt = (b^{k+1} − a^{k+1})/(k+1).', solution:`<p>${sol}</p>`, _d:{ab,p,q,ask} };
 }),
@@ -1460,7 +1501,7 @@ mk('54-11-singular-values','54-11',3,r=>{
   const exact = Number.isInteger(Math.round(s*1e9)/1e9) ? Math.round(s) : null;
   return { prompt:`<p>Find the ${which===1?'largest':'smallest nonzero'} singular value of A = ${mat(A)}${exact!==null?'':' (to 3 decimal places)'}.</p>`, kind:'num', answer: exact!==null?exact:r6(s),
     hint:`Singular values are square roots of the eigenvalues of ${shape[0]===2&&shape[1]===3?'AAᵀ (the smaller Gram matrix; same nonzero eigenvalues as AᵀA)':'AᵀA'}.`,
-    solution:`<p>${shape[0]===2&&shape[1]===3?'AAᵀ':'AᵀA'} = ${mat(G2)}: λ² − ${tr}λ + ${dt} = 0 ⇒ λ = (${tr} ± √${disc})/2 ≈ ${e1.toFixed(4)}, ${e2.toFixed(4)}. σ = √λ ≈ ${Math.sqrt(e1).toFixed(4)}, ${Math.sqrt(e2).toFixed(4)}.</p>`, _d:{A, which} };
+    solution:`<p>${shape[0]===2&&shape[1]===3?'AAᵀ':'AᵀA'} = ${mat(G2)}: λ² − ${tr}λ + ${dt} = 0 ⇒ λ = (${tr} ± √${disc})/2 ≈ ${dn(e1.toFixed(4))}, ${dn(e2.toFixed(4))}. σ = √λ ≈ ${Math.sqrt(e1).toFixed(4)}, ${Math.sqrt(e2).toFixed(4)}.</p>`, _d:{A, which} };
 }),
 mk('54-11-svd-sq','54-11',3,r=>{
   const shape = r.pick([[2,2],[3,2]]); const A = Array.from({length:shape[0]},()=>rvec(r,2,-3,3)); need(rank(A)===2);
@@ -1491,7 +1532,7 @@ mk('54-11-svd-rank','54-11',4,r=>{
   return { prompt:`<p>A is ${m}×${n} with singular values ${sv.join(', ')}. Find ${Q}.</p>`, kind:'num', answer: val,
     hint:'rank A = number of NONZERO singular values; then use rank + dim Nul A = n and rank + dim Nul Aᵀ = m.',
     solution:`<p>${rk} nonzero singular values ⇒ rank A = ${rk}; dim Nul A = ${n} − ${rk} = ${n-rk}; dim Nul Aᵀ = ${m} − ${rk} = ${m-rk}. ${Q} = ${val}.</p>`, _d:{m,n,sv,ask} };
-}),
+}, {classes:[0,1,2,3,4], of:q=>q.answer}),
 mk('54-11-tf','54-11',4,r=>{
   const {A} = symMat(r, r.bool()); const B = A.map(x=>x.slice()); const sym = r.bool();
   if(!sym){ const i = r.int(0,1), j = r.int(i+1,2); B[i][j] += rnz(r,-2,2); }
@@ -1514,6 +1555,20 @@ function exL(E,L,k,w){ const d1 = exD(E,k,w), d2 = exD(d1,k,w); return exAdd(exA
 function exEval(E,k,w,t){ let s=0; for(const [key,v] of E){ const [ms,tt]=key.split('|'); s += v.toNum()*Math.pow(t,+ms)*Math.exp(k*t)*(w===0?1:(tt==='c'?Math.cos(w*t):Math.sin(w*t))); } return s; }
 function charMult(L,k,w){ const re = L.a*(k*k-w*w)+L.b*k+L.c, im = (2*L.a*k+L.b)*w; if(w!==0) return (re===0&&im===0)?1:0; if(re!==0) return 0; return (2*L.a*k+L.b===0)?2:1; }
 // try to solve L[Σ xᵢ φᵢ] = g with basis terms [[m,'c'|'s'],...]; returns coefficient array (F) or null
+function ucWork(L,k,w,U){ // the coefficient-matching equations for this instance
+  const letters = 'ABCDEFGH'; const imgs = U.basis.map(([m,t])=>exL(new Map([[m+'|'+t,F1]]),L,k,w));
+  const keys = new Set([...U.g.keys()]); imgs.forEach(I=>I.forEach((_,key)=>keys.add(key)));
+  const eqs = [...keys].sort().map(key=>{ const [m,t]=key.split('|'); const lhs = lin(imgs.map(I=>I.get(key)||F0), U.basis.map((_,i)=>letters[i])); return `[${termS(+m,k,w,t)}]: ${lhs} = ${fs(U.g.get(key)||F0)}`; });
+  const named = U.basis.map(([m,t],i)=>letters[i]+'·'+termS(m,k,w,t)).join(' + ');
+  return `Write y_p = ${named}. Substituting into ${odeS(L)} and collecting like terms gives one equation per term: ${eqs.join('; ')}. Solving: ${U.basis.map((_,i)=>letters[i]+' = '+fs(U.x[i])).join(', ')}`;
+}
+function ivpWork(H, rhs, c, t1, ypAt){ // equations for c₁, c₂ and the evaluation
+  const M = [[H.v0[0][0],H.v0[1][0]],[H.v0[0][1],H.v0[1][1]]];
+  const e1 = `${lin(M[0],['c₁','c₂'])} = ${fs(rhs[0])}`, e2 = `${lin(M[1],['c₁','c₂'])} = ${fs(rhs[1])}`;
+  let out = `From y(0): ${e1}; from y′(0): ${e2}. ${solveWork(M,rhs,c,'c')}.`;
+  if(t1!==undefined){ const y1=H.f[0](t1), y2=H.f[1](t1); out += ` At t = ${t1}: y₁ = ${d5(y1)}, y₂ = ${d5(y2)}${ypAt!==undefined?', y_p = '+d5(ypAt):''}, so y = (${fs(c[0])})(${d5(y1)}) + (${fs(c[1])})(${d5(y2)})${ypAt!==undefined?' + ('+d5(ypAt)+')':''}.`; }
+  return out;
+}
 function ucTry(L,k,w,g,basis){
   const imgs = basis.map(([m,t])=>exL(new Map([[m+'|'+t,F1]]),L,k,w));
   const keys = new Set([...g.keys()]); imgs.forEach(I=>I.forEach((_,key)=>keys.add(key)));
@@ -1596,7 +1651,7 @@ mk('54-12-ivp-hom','54-12',1,r=>{
   const t1 = r.pick([1,0.5]); const val = c[0].toNum()*H.f[0](t1)+c[1].toNum()*H.f[1](t1); need(Math.abs(val)<1e5);
   return { prompt:`<p>Solve ${odeS(L)} = 0, y(0) = ${fs(y0)}, y′(0) = ${fs(v0)}. Give y(${t1}) to 3 decimal places.</p>`, kind:'num', answer: r6(val),
     hint:'Roots of the auxiliary equation → general solution; then use y(0), y′(0) to get c₁, c₂.',
-    solution:`<p>${H.roots} ⇒ y = ${H.s}. y(0) = ${fs(y0)} and y′(0) = ${fs(v0)} give c₁ = ${fs(c[0])}, c₂ = ${fs(c[1])}. Then y(${t1}) ≈ ${val.toFixed(4)}.</p>`, _d:{L,y0,v0,t1} };
+    solution:`<p>Auxiliary equation r² ${L.b<0?'−':'+'} ${Math.abs(L.b)}r ${L.c<0?'−':'+'} ${Math.abs(L.c)} = 0: ${H.roots} ⇒ y = ${H.s}. ${ivpWork(H,[F.of(y0),F.of(v0)],c,t1)} y(${t1}) ≈ ${dn(val.toFixed(4))}.</p>`, _d:{L,y0,v0,t1} };
 }),
 mk('54-12-ivp-forced','54-12',1,r=>{
   const R = pickRoots(r); const L = {a:1,b:R.b,c:R.c}; const H = homInfo(R);
@@ -1608,7 +1663,7 @@ mk('54-12-ivp-forced','54-12',1,r=>{
   const t1 = r.pick([1,0.5]); const val = c[0].toNum()*H.f[0](t1)+c[1].toNum()*H.f[1](t1)+exEval(U.E,fc.k,fc.w,t1); need(Math.abs(val)<1e5);
   return { prompt:`<p>Solve the IVP ${odeS(L)} = ${fcS(fc)}, y(0) = ${fs(y0)}, y′(0) = ${fs(v0)}. Give y(${t1}) to 3 decimal places.</p>`, kind:'num', answer: r6(val),
     hint:'y = y_h + y_p: find y_p by undetermined coefficients FIRST, then apply the initial conditions to the whole y (not to y_h alone).',
-    solution:`<p>${H.roots} ⇒ y_h = ${H.s}. Undetermined coefficients: y_p = ${exprS(U.E,fc.k,fc.w)}. Initial conditions on y = y_h + y_p: c₁ = ${fs(c[0])}, c₂ = ${fs(c[1])}. y(${t1}) ≈ ${val.toFixed(4)}.</p>`, _d:{L,fc,y0,v0,t1} };
+    solution:`<p>${H.roots} ⇒ y_h = ${H.s}. Undetermined coefficients (s = 0, no resonance): ${ucWork(L,fc.k,fc.w,U)}, so y_p = ${exprS(U.E,fc.k,fc.w)}, with y_p(0) = ${fs(yp0)}, y_p′(0) = ${fs(yp1)}. Initial conditions on the WHOLE y = y_h + y_p: ${ivpWork(H,[F.of(y0).sub(yp0),F.of(v0).sub(yp1)],c,t1,exEval(U.E,fc.k,fc.w,t1))} y(${t1}) ≈ ${dn(val.toFixed(4))}.</p>`, _d:{L,fc,y0,v0,t1} };
 }),
 mk('54-12-find-ode','54-12',2,r=>{
   const R = pickRoots(r); const H = homInfo(R);
@@ -1630,7 +1685,7 @@ mk('54-12-uc-coef','54-12',3,r=>{
   const i = r.pick(nz); const [m,t] = U.basis[i]; need(Math.abs(U.x[i].n)<=2000 && U.x[i].d<=2000);
   return { prompt:`<p>Use undetermined coefficients to find a particular solution of ${odeS(L)} = ${fcS(fc)}. (Use the standard trial form with the smallest power tˢ that works; it contains no solutions of the homogeneous equation.) What is the coefficient of <b>${termS(m,fc.k,fc.w,t)}</b> in y_p?</p>`, kind:'num', answer: ans(U.x[i]),
     hint:'Trial form tˢ·e^{kt}(polynomial·cos + polynomial·sin), where s = multiplicity of k + iω as a root of the auxiliary equation. Substitute and match coefficients.',
-    solution:`<p>Auxiliary roots: ${homInfo(R).roots}. ${fc.w===0?'k = '+fc.k:'k + iω = '+fc.k+' + '+fc.w+'i'} is a root of multiplicity s = ${U.s}${U.s?' (resonance ⇒ multiply by t'+(U.s>1?sup(U.s):'')+')':''}. Trial: y_p = ${trialS(U.s,fc.k,fc.w,U.d)}. Substituting and matching coefficients gives y_p = ${exprS(U.E,fc.k,fc.w)}. Coefficient of ${termS(m,fc.k,fc.w,t)}: ${fs(U.x[i])}.</p>`,
+    solution:`<p>Auxiliary roots: ${homInfo(R).roots}. ${fc.w===0?'k = '+fc.k:'k + iω = '+fc.k+' + '+fc.w+'i'} is a root of multiplicity s = ${U.s}${U.s?' (resonance ⇒ multiply by t'+(U.s>1?sup(U.s):'')+')':''}. Trial: y_p = ${trialS(U.s,fc.k,fc.w,U.d)}. ${ucWork(L,fc.k,fc.w,U)}, so y_p = ${exprS(U.E,fc.k,fc.w)}. Coefficient of ${termS(m,fc.k,fc.w,t)}: ${fs(U.x[i])}.</p>`,
     _d:{L, fc, basis:U.basis, x:U.x.map(v=>v.toNum()), i} };
 }),
 mk('54-12-trial-form','54-12',3,r=>{
@@ -1662,7 +1717,7 @@ mk('54-12-form-count','54-12',4,r=>{
   return { prompt:`<p>For ${odeS(L)} = ${pieces.map(fcS).map(x=>'('+x+')').join(' + ')}, write down (do not solve) the trial form of y_p for undetermined coefficients. How many undetermined coefficients does it contain in total?</p>`, kind:'num', answer: total,
     hint:'Superposition: one trial block per forcing type. A degree-d polynomial factor needs d+1 coefficients, doubled when both cos and sin appear. The tˢ factor doesn\'t change the count.',
     solution:`<p>Auxiliary roots: ${homInfo(R).roots}. Blocks: ${pieces.map((fc,i)=>`for ${fcS(fc)}: ${forms[i]} (s = ${info[i].s}, ${info[i].cnt} coefficient${info[i].cnt>1?'s':''})`).join('; ')}. Total = ${total}.</p>`, _d:{L, pieces} };
-}),
+}, {classes:[2,3,4,5,6], of:q=>q.answer}),
 mk('54-12-form-power','54-12',4,r=>{
   const R = pickRoots(r); const L = {a:1,b:R.b,c:R.c}; let fc;
   const roll = r.int(0,3);
@@ -1672,7 +1727,7 @@ mk('54-12-form-power','54-12',4,r=>{
   return { prompt:`<p>For ${odeS(L)} = ${fcS(fc)}, the trial particular solution must be multiplied by tˢ. Find s.</p>`, kind:'num', answer: s,
     hint:'s = number of times k + iω (from the forcing e^{kt}cos ωt / sin ωt) occurs as a root of the auxiliary equation: 0, 1 or 2.',
     solution:`<p>Auxiliary roots: ${homInfo(R).roots}. Forcing number ${fc.w===0?fs(fc.k):fc.k+' + '+fc.w+'i'} is a root of multiplicity ${s}. So s = ${s}: y_p = ${trialS(s,fc.k,fc.w,Math.max(fc.Pg.length,fc.Qg.length)-1)}.</p>`, _d:{L, fc} };
-}),
+}, {classes:[0,1,2], of:q=>q.answer}),
 mk('54-12-superposition','54-12',5,r=>{
   const R = pickRoots(r); const L = {a:1,b:R.b,c:R.c}; const H = homInfo(R);
   const fc = forcingCase(r,L,{types:['exp','trig','poly']}); need(charMult(L,fc.k,fc.w)===0); const U = ucSolve(L,fc.k,fc.w,fc.Pg,fc.Qg);
@@ -1686,7 +1741,7 @@ mk('54-12-superposition','54-12',5,r=>{
   const gA = gExpr(fc.Pg.map(x=>x*alpha), fc.Qg.map(x=>x*alpha));
   return { prompt:`<p>Given that y₁ = ${exprS(U.E,fc.k,fc.w)} is a solution of ${odeS(L)} = ${fcS(fc)}, solve ${odeS(L)} = ${exprS(gA,fc.k,fc.w)}, y(0) = ${fs(y0)}, y′(0) = ${fs(v0)}. Give y(1) to 3 decimal places.</p>`, kind:'num', answer: r6(val),
     hint:'Superposition: if L[y₁] = g then L[αy₁] = αg. So y = y_h + αy₁; then fit the initial conditions.',
-    solution:`<p>The new forcing is ${alpha}·(old forcing), so y_p = ${alpha}y₁. ${H.roots} ⇒ y_h = ${H.s}. Initial conditions on y_h + ${alpha}y₁: c₁ = ${fs(c[0])}, c₂ = ${fs(c[1])}. y(1) ≈ ${val.toFixed(4)}.</p>`, _d:{L, fc, alpha, y0, v0} };
+    solution:`<p>The new forcing is ${dn(alpha)}·(old forcing), so by superposition y_p = ${dn(alpha)}y₁ (y_p(0) = ${fs(yp0)}, y_p′(0) = ${fs(yp1)}). ${H.roots} ⇒ y_h = ${H.s}. Initial conditions on y = y_h + y_p: ${ivpWork(H,[F.of(y0).sub(yp0),F.of(v0).sub(yp1)],c,1,alpha*exEval(U.E,fc.k,fc.w,1))} y(1) ≈ ${dn(val.toFixed(4))}.</p>`, _d:{L, fc, alpha, y0, v0} };
 }),
 mk('54-12-damping','54-12',5,r=>{
   const cls = r.pick(['over','crit','under','undamped']); const m = r.int(1,4); let b, k;
@@ -1753,7 +1808,7 @@ mk('54-13-ivp-coef','54-13',2,r=>{
   const {A,P,D} = diagMat(r,2,{amax:10}); const s = [rnz(r,-2,2), rnz(r,-2,2)]; const V = P.map(row=>row.map((x,j)=>x*s[j]));
   const c = [rnz(r,-3,3), r.int(-3,3)]; const x0 = imv(V,c);
   return { prompt:`<p>A = ${mat(A)} has eigenvalues ${fs(D[0])}, ${fs(D[1])} with eigenvectors v₁ = ${tup(V.map(x=>x[0]))}, v₂ = ${tup(V.map(x=>x[1]))}. The solution of x′ = Ax, x(0) = ${tup(x0)} is x(t) = c₁${expS(D[0])||''}v₁ + c₂${expS(D[1])||''}v₂. Find c₁, c₂.</p>`, kind:'list', answer:c,
-    hint:'At t = 0 the exponentials are 1: solve c₁v₁ + c₂v₂ = x(0).', solution:`<p>[v₁ v₂ | x(0)] = ${aug(V,x0)} ⇒ c₁ = ${c[0]}, c₂ = ${c[1]}.</p>`, _d:{A,V,l:D,x0} };
+    hint:'At t = 0 the exponentials are 1: solve c₁v₁ + c₂v₂ = x(0).', solution:`<p>At t = 0 every exponential equals 1, so c₁v₁ + c₂v₂ = x(0): the system [v₁ v₂ | x(0)] = ${aug(V,x0)}. Solving: ${solveWork(V,x0,c,'c')} ⇒ c₁ = ${fs(c[0])}, c₂ = ${fs(c[1])}.</p>`, _d:{A,V,l:D,x0} };
 }),
 mk('54-13-ivp-value','54-13',2,r=>{
   const n = r.int(2,3); const {A,P,D,Pi} = diagMat(r,n,{vals:[-3,-2,-1,1,2],amax:10}); const x0 = rvec(r,n,-3,3); need(x0.some(x=>x));
@@ -1761,7 +1816,7 @@ mk('54-13-ivp-value','54-13',2,r=>{
   const c = fmv(inv(P),x0);
   return { prompt:`<p>Solve x′ = Ax, x(0) = ${tup(x0)}, where A = ${mat(A)} (eigenvalues ${D.slice().sort((a,b)=>a-b).map(fs).join(', ')}). Give component ${k+1} of x(${t1}) to 3 decimal places.</p>`, kind:'num', answer: r6(xt[k]),
     hint:'Find an eigenvector for each eigenvalue, write x(0) = Σcᵢvᵢ, then x(t) = Σcᵢe^{λᵢt}vᵢ.',
-    solution:`<p>Eigenvectors (columns of P = ${mat(P)}) for λ = ${D.map(fs).join(', ')}. x(0) = ${c.map((ci,i)=>fsp(ci)+'v'+sub(i+1)).join(' + ')}. So x(t) = ${c.map((ci,i)=>fsp(ci)+'e<sup>'+fs(D[i])+'t</sup>v'+sub(i+1)).join(' + ')}; at t = ${t1}, component ${k+1} ≈ ${xt[k].toFixed(4)}.</p>`, _d:{A,x0,t1,k} };
+    solution:`<p>Eigenvectors (columns of P = ${mat(P)}) for λ = ${D.map(fs).join(', ')}. x(0) = ${c.map((ci,i)=>fsp(ci)+'v'+sub(i+1)).join(' + ')}. So x(t) = ${c.map((ci,i)=>fsp(ci)+'e<sup>'+fs(D[i])+'t</sup>v'+sub(i+1)).join(' + ')}; at t = ${t1}, component ${k+1} ≈ ${dn(xt[k].toFixed(4))}.</p>`, _d:{A,x0,t1,k} };
 }),
 mk('54-13-repeated-full','54-13',3,r=>{
   const [l,m] = r.sample([-2,-1,1,2],2); const {A,P} = diagMat(r,3,{D:[l,l,m],amax:12}); const x0 = rvec(r,3,-3,3); need(x0.some(x=>x));
@@ -1769,7 +1824,7 @@ mk('54-13-repeated-full','54-13',3,r=>{
   const Ml = A.map((row,i)=>row.map((x,j)=>x-(i===j?l:0)));
   return { prompt:`<p>A = ${mat(A)} has a double eigenvalue λ = ${fs(l)} and a simple eigenvalue ${fs(m)}. Solve x′ = Ax, x(0) = ${tup(x0)}, and give component ${k+1} of x(${t1}) to 3 decimal places.</p>`, kind:'num', answer: r6(xt[k]),
     hint:'Check dim Nul(A − λI): if it is 2 you get two independent eigenvectors and x = c₁e^{λt}v₁ + c₂e^{λt}v₂ + c₃e^{μt}v₃ — no t·e^{λt} terms needed.',
-    solution:`<p>A − ${fsp(l)}I = ${mat(Ml)} has rank 1 ⇒ eigenspace for ${fs(l)} is 2-dimensional (full). Eigenvectors: columns of ${mat(P)}. Expanding x(0) in this basis and attaching e<sup>λt</sup> to each term gives component ${k+1} of x(${t1}) ≈ ${xt[k].toFixed(4)}.</p>`, _d:{A,x0,t1,k} };
+    solution:`<p>A − ${fsp(l)}I = ${mat(Ml)} has rank 1 ⇒ eigenspace for ${fs(l)} is 2-dimensional (full). Eigenvectors v₁, v₂ (for ${fs(l)}) and v₃ (for ${fs(m)}) are the columns of P = ${mat(P)}. Solve Pc = x(0): ${solveWork(P,x0,fmv(inv(P),x0),'c')}. So x(t) = ${fmv(inv(P),x0).map((ci,i)=>fsp(ci)+'e<sup>'+fs(i<2?l:m)+'t</sup>v'+sub(i+1)).join(' + ')} (no t·e<sup>λt</sup> terms: the eigenspace is full). Component ${k+1} at t = ${t1}: ${fmv(inv(P),x0).map((ci,i)=>fsp(ci)+'·e<sup>'+dn(((i<2?l:m)*t1).toString())+'</sup>·('+fs(P[k][i])+')').join(' + ')} ≈ ${dn(xt[k].toFixed(4))}.</p>`, _d:{A,x0,t1,k} };
 }),
 mk('54-13-repeated-tf','54-13',3,r=>{
   const jordan = r.bool(); const [l,m] = r.sample([-2,-1,1,2,3],2); const {A} = diagMat(r,3,{D:[l,l,m],jordan,amax:12});
@@ -1785,7 +1840,7 @@ mk('54-13-complex-value','54-13',4,r=>{
   const y0 = imv(Pi,x0); const yt = mvF(E,y0); const xval = mvF(P,yt);
   return { prompt:`<p>Solve x′ = Ax, x(0) = ${tup(x0)}, where A = ${mat(A)} (eigenvalues ${fs(al)} ± ${be===1?'':be}i). Give component ${k+1} of x(${t1}) to 3 decimal places.</p>`, kind:'num', answer: r6(xval[k]),
     hint:'Take an eigenvector v = a + ib for λ = α + iβ; the real solutions are e^{αt}(a cos βt − b sin βt) and e^{αt}(a sin βt + b cos βt). Fit x(0).',
-    solution:`<p>Real fundamental solutions come from Re and Im of e<sup>(${cxS(al,be)})t</sup>v. Equivalently A = PCP⁻¹ with P = ${mat(P)}, C = ${mat([[al,-be],[be,al]])}, and e<sup>Ct</sup> = e<sup>${al}t</sup>[cos ${be}t, −sin ${be}t; sin ${be}t, cos ${be}t]. x(t) = P e<sup>Ct</sup>P⁻¹x(0); component ${k+1} at t = ${t1} ≈ ${xval[k].toFixed(4)}.</p>`, _d:{A,x0,t1,k} };
+    solution:`<p>Real fundamental solutions come from Re and Im of e<sup>(${cxS(al,be)})t</sup>v. Equivalently A = PCP⁻¹ with P = ${mat(P)}, C = ${mat([[al,-be],[be,al]])}, and e<sup>Ct</sup> = e<sup>${al}t</sup>[cos ${be}t, −sin ${be}t; sin ${be}t, cos ${be}t]. x(t) = P e<sup>Ct</sup>P⁻¹x(0). Here P⁻¹x(0) = ${tup(y0)}; at t = ${t1}: e<sup>${dn((al*t1).toString())}</sup> = ${d5(ea)}, cos(${dn((be*t1).toString())}) = ${d5(ct)}, sin(${dn((be*t1).toString())}) = ${d5(st)}, so e<sup>Ct</sup>P⁻¹x(0) = (${yt.map(d5).join(', ')}) and x(${t1}) = P·(that) = (${xval.map(d5).join(', ')}). Component ${k+1} ≈ ${dn(xval[k].toFixed(4))}.</p>`, _d:{A,x0,t1,k} };
 }),
 mk('54-13-complex-real','54-13',4,r=>{
   const al = r.int(-2,2), be = r.int(1,3); const P = randUnimod(r,2,3); const Pi = inv(P).map(x=>x.map(y=>y.n));
@@ -1797,7 +1852,7 @@ mk('54-13-complex-real','54-13',4,r=>{
   const val = x1(t1)[comp];
   return { prompt:`<p>For A = ${mat(A)} take the eigenvalue λ = ${cxS(al,be)} and its eigenvector of the form v = (1, w). Let x₁(t) = Re(e<sup>λt</sup>v), a real solution of x′ = Ax. Give component ${comp+1} of x₁(${t1}) to 3 decimal places.</p>`, kind:'num', answer: r6(val),
     hint:'First row of (A − λI)v = 0 gives w. Then e^{λt}v = e^{αt}(cos βt + i sin βt)(1, w); take the real part.',
-    solution:`<p>(${fs(A[0][0])} − λ)·1 + ${fsp(A[0][1])}w = 0 ⇒ w = (λ − ${fsp(A[0][0])})/${fsp(A[0][1])} = ${fs(wr)} + ${fsp(wi)}i. Re(e<sup>λt</sup>v) = ${expS(al)}(cos ${be}t, ${fs(wr)}cos ${be}t − ${fsp(wi)}sin ${be}t). At t = ${t1}: component ${comp+1} ≈ ${val.toFixed(4)}.</p>`, _d:{A,al,be,t1,comp} };
+    solution:`<p>(${fs(A[0][0])} − λ)·1 + ${fsp(A[0][1])}w = 0 ⇒ w = (λ − ${fsp(A[0][0])})/${fsp(A[0][1])} = ${fs(wr)} + ${fsp(wi)}i. Re(e<sup>λt</sup>v) = ${expS(al)}(cos ${be}t, ${fs(wr)}cos ${be}t − ${fsp(wi)}sin ${be}t). At t = ${t1}: component ${comp+1} ≈ ${dn(val.toFixed(4))}.</p>`, _d:{A,al,be,t1,comp} };
 }),
 mk('54-13-long-term','54-13',5,r=>{
   const cls = r.pick(['saddle','sink','source','spsink','spsource','center']); let A;
@@ -1834,6 +1889,29 @@ function fourierCoef(pieces, L, which, n){ // which: 'a0' | 'a' | 'b'
   for(const p of pieces) s += pieceInt(p, w, which==='a0'?'one':which==='a'?'cos':'sin');
   return s/L;
 }
+function wS(n,L){ if(L===Math.PI) return String(n); if(L===1) return (n===1?'':n)+'π'; const g=gcd(n,L); const a=n/g, b=L/g; return (a===1?'':a)+'π'+(b===1?'':'/'+b); }
+function d5(x){ const v = Math.abs(x)<5e-7?0:x; return dn(v.toFixed(5)); }
+function pieceWork(p, n, L, kind){ // shows the antiderivative and its evaluation for one piece
+  const w = n*Math.PI/L, m = p.c[1]||0, rr = p.c[2]||0, f = pieceS(p), om = wS(n,L);
+  const val = pieceInt(p, w, kind);
+  const Fv = x => pieceInt({x0:0,x1:x,c:p.c}, w, kind);
+  let A;
+  if(kind==='one') A = poly([0, p.c[0]||0, F.of(m).div(2), F.of(rr).div(3)].map(F.of), 'x');
+  else {
+    const t1 = kind==='cos' ? `(${f})·sin(${om}x)/${om}` : `−(${f})·cos(${om}x)/${om}`;
+    const t2 = (m||rr) ? (kind==='cos' ? ` + (${poly([m,2*rr],'x')})·cos(${om}x)/(${om})²` : ` + (${poly([m,2*rr],'x')})·sin(${om}x)/(${om})²`) : '';
+    const t3 = rr ? (kind==='cos' ? ` − ${dn(2*rr)}·sin(${om}x)/(${om})³` : ` + ${dn(2*rr)}·cos(${om}x)/(${om})³`) : '';
+    A = t1 + t2 + t3;
+  }
+  const trig = kind==='one' ? '' : (kind==='cos'?' cos':' sin')+'('+om+'x)';
+  return { val, html:`∫ from ${xS(p.x0,L)} to ${xS(p.x1,L)} of (${f})${trig} dx: antiderivative ${A}; value ${d5(Fv(p.x1))} − (${d5(Fv(p.x0))}) = ${d5(val)}` };
+}
+function coefWork(pieces, L, which, n, factor){ // factor: '1/L' (full) or '2/L' (half-range)
+  const kind = which==='a0'?'one':(which==='a'||which==='cos')?'cos':'sin';
+  const rows = pieces.map(p=>pieceWork(p, n||1, L, kind));
+  const tot = rows.reduce((s,x)=>s+x.val,0);
+  return { tot, html:'<ul>'+rows.map(x=>'<li>'+x.html+'</li>').join('')+'</ul><p>Sum of the pieces = '+d5(tot)+'; multiply by '+factor.replace('L',Ls(L))+'.</p>' };
+}
 function kA(j,L){ if(L===Math.PI) return (j===1?'':j)+'x'; if(j%L===0) return (j/L===1?'':j/L)+'πx'; return (j===1?'':j)+'πx/'+L; }
 function nA(L){ return L===Math.PI?'nx':L===1?'nπx':'nπx/'+L; }
 function Ls(L){ return L===Math.PI ? 'π' : fs(L); }
@@ -1857,7 +1935,7 @@ mk('54-14-fs-coef','54-14',0,r=>{
   const nm = which==='a0'?'a₀':(which==='a'?'a':'b')+sub(n);
   return { prompt:`<p>Let f be defined on [−${Ls(L)}, ${Ls(L)}] by</p>f(x) = ${pwS(pieces,L)}<p>with Fourier series a₀/2 + Σ [aₙcos(${nA(L)}) + bₙsin(${nA(L)})]. Find ${nm} to 3 decimal places.</p>`, kind:'num', answer: Math.abs(v)<1e-9?0:r6(v),
     hint:`aₙ = (1/L)∫₋L^L f(x)cos(nπx/L)dx, bₙ = (1/L)∫₋L^L f(x)sin(nπx/L)dx, a₀ = (1/L)∫₋L^L f(x)dx — split the integral at the breakpoints.`,
-    solution:`<p>${nm} = (1/${Ls(L)})·[${pieces.map(p=>'∫'+'('+xS(p.x0,L)+' to '+xS(p.x1,L)+') ('+pieceS(p)+')'+(which==='a0'?'':which==='a'?' cos('+kA(n,L)+')':' sin('+kA(n,L)+')')+' dx').join(' + ')}]. Integrating each piece (by parts for the linear pieces) gives ${nm} ≈ ${v.toFixed(5)}.</p>`, _d:{L,pieces,which,n} };
+    solution:(()=>{ const W=coefWork(pieces,L,which,n,'1/L'); return `<p>${nm} = (1/${Ls(L)})·[${pieces.map(p=>'∫'+'('+xS(p.x0,L)+' to '+xS(p.x1,L)+') ('+pieceS(p)+')'+(which==='a0'?'':which==='a'?' cos('+kA(n,L)+')':' sin('+kA(n,L)+')')+' dx').join(' + ')}]. Integrate each piece (by parts for the linear pieces):</p>${W.html}<p>${nm} = (1/${Ls(L)})·(${d5(W.tot)}) ≈ ${dn(v.toFixed(5))}.</p>`; })(), _d:{L,pieces,which,n} };
 }),
 mk('54-14-fs-poly','54-14',0,r=>{
   const L = r.pick([Math.PI,1,2]); const c = [r.int(-3,3), r.int(-3,3), rnz(r,-2,2)]; const pieces = [{x0:-L,x1:L,c}];
@@ -1865,7 +1943,7 @@ mk('54-14-fs-poly','54-14',0,r=>{
   const v = fourierCoef(pieces,L,which,n); const nm = which==='a0'?'a₀':(which==='a'?'a':'b')+sub(n);
   return { prompt:`<p>Find ${nm} (to 3 decimal places) in the Fourier series a₀/2 + Σ [aₙcos(${nA(L)}) + bₙsin(${nA(L)})] of f(x) = ${pieceS(pieces[0])} on [−${Ls(L)}, ${Ls(L)}].</p>`, kind:'num', answer: r6(v),
     hint:'Split f into even part (constant and x² terms → only aₙ) and odd part (x term → only bₙ). Integrate by parts (twice for x²).',
-    solution:`<p>Even part ${poly([c[0],0,c[2]],'x')} contributes to a's; odd part ${poly([0,c[1]],'x')} to b's. Useful formulas on [−L, L]: for x², aₙ = 4L²(−1)ⁿ/(n²π²), a₀ = 2L²/3; for x, bₙ = 2L(−1)ⁿ⁺¹/(nπ); constants only affect a₀. Result: ${nm} ≈ ${v.toFixed(5)}.</p>`, _d:{L,pieces,which,n} };
+    solution:`<p>Even part ${poly([c[0],0,c[2]],'x')} contributes to a's; odd part ${poly([0,c[1]],'x')} to b's. Useful formulas on [−L, L]: for x², aₙ = 4L²(−1)ⁿ/(n²π²), a₀ = 2L²/3; for x, bₙ = 2L(−1)ⁿ⁺¹/(nπ); constants only affect a₀. With L = ${Ls(L)}${which==='a0'?'':' and n = '+n}: ${which==='a0'?`a₀ = (1/${Ls(L)})∫(${pieceS(pieces[0])})dx = ${dn(2*c[0])} + ${dn(c[2])}·(2·${Ls(L)}²/3)`:which==='a'?`aₙ comes only from ${dn(c[2])}x²: ${nm} = ${dn(c[2])}·4·${Ls(L)}²·(${dn((-1)**n)})/(${n}²π²)`:`bₙ comes only from ${dn(c[1])}x: ${nm} = ${dn(c[1])}·2·${Ls(L)}·(${dn((-1)**(n+1))})/(${n}π)`} ≈ ${dn(v.toFixed(5))}.</p>`, _d:{L,pieces,which,n} };
 }),
 mk('54-14-even-odd','54-14',1,r=>{
   const k = r.int(1,3), c = rnz(r,-3,3), A = rnz(r,-3,3);
@@ -1892,14 +1970,16 @@ mk('54-14-even-odd','54-14',1,r=>{
 mk('54-14-symmetry-coef','54-14',1,r=>{
   const L = r.pick([Math.PI,1,2]); const sym = r.pick(['odd','even']); const A = rnz(r,-4,4), m = rnz(r,-3,3), q = r.int(-3,3);
   let pieces;
-  if(sym==='odd') pieces = r.bool() ? [{x0:-L,x1:0,c:[-A]},{x0:0,x1:L,c:[A]}] : [{x0:-L,x1:0,c:[-q, m]},{x0:0,x1:L,c:[q, m]}];
+  if(sym==='odd'){ if(r.bool()) pieces = [{x0:-L,x1:0,c:[-A]},{x0:0,x1:L,c:[A]}]; else { need(q!==0); pieces = [{x0:-L,x1:0,c:[-q, m]},{x0:0,x1:L,c:[q, m]}]; } }
   else pieces = r.bool() ? [{x0:-L,x1:0,c:[q,-m]},{x0:0,x1:L,c:[q,m]}] : [{x0:-L,x1:-L/2,c:[0]},{x0:-L/2,x1:L/2,c:[A]},{x0:L/2,x1:L,c:[0]}];
-  const which = r.pick(['a','b']); const n = r.int(1,5); const v = fourierCoef(pieces,L,which,n);
-  if(Math.abs(v)<1e-9 && ((sym==='odd'&&which==='b')||(sym==='even'&&which==='a'))) throw RETRY;
+  const live = sym==='odd'?'b':'a'; const which = r.float()<0.82 ? live : (live==='a'?'b':'a');
+  let n = r.int(1,5); if(which===live){ const ns = r.shuffle([1,2,3,4,5]).filter(k=>Math.abs(fourierCoef(pieces,L,which,k))>1e-9); need(ns.length>0); n = ns[0]; }
+  const v = fourierCoef(pieces,L,which,n);
   const nm = (which==='a'?'a':'b')+sub(n); const zero = Math.abs(v)<1e-9;
   return { prompt:`<p>f(x) = </p>${pwS(pieces,L)}<p>on [−${Ls(L)}, ${Ls(L)}]. Find the Fourier coefficient ${nm} (to 3 decimal places; it may be 0).</p>`, kind:'num', answer: zero?0:r6(v),
     hint:'Check symmetry first: odd f ⇒ aₙ = 0 and bₙ = (2/L)∫₀^L f sin; even f ⇒ bₙ = 0 and aₙ = (2/L)∫₀^L f cos.',
-    solution:`<p>f is ${sym}. ${zero?`So ${nm} = 0 by symmetry (the integrand is odd).`:`So ${nm} = (2/${Ls(L)})∫₀^${Ls(L)} f(x)${which==='a'?'cos':'sin'}(${kA(n,L)})dx ≈ ${v.toFixed(5)}.`}</p>`, _d:{L,pieces,which,n} };
+    solution:(()=>{ const half = pieces.map(p=>({x0:Math.max(p.x0,0),x1:p.x1,c:p.c})).filter(p=>p.x1>p.x0+1e-12); const W = zero?null:coefWork(half,L,which,n,'2/L');
+      return `<p>Check f(−x): ${sym==='odd'?'f(−x) = −f(x), so f is odd':'f(−x) = f(x), so f is even'}. ${zero?`Then f(x)${which==='a'?'cos':'sin'}(${kA(n,L)}) is ${sym==='odd'?'odd·even':'even·odd'} = odd, so its integral over [−${Ls(L)}, ${Ls(L)}] is 0: ${nm} = 0.`:`Then the integrand f(x)${which==='a'?'cos':'sin'}(${kA(n,L)}) is even, so ${nm} = (2/${Ls(L)})∫₀^${Ls(L)} f(x)${which==='a'?'cos':'sin'}(${kA(n,L)})dx. On [0, ${Ls(L)}]:</p>${W.html}<p>${nm} = (2/${Ls(L)})·(${d5(W.tot)}) ≈ ${dn(v.toFixed(5))}.`}</p>`; })(), _d:{L,pieces,which,n} };
 }),
 mk('54-14-converge','54-14',2,r=>{
   const L = r.pick([1,2,3,4]); const pieces = randPieces(r,L); need(pieces.some(p=>p.c.some(x=>x)));
@@ -1923,7 +2003,7 @@ mk('54-14-converge-ext','54-14',2,r=>{
     let y = x; if(side>0 && y>=L) y -= 2*L; if(side<0 && y<=-L) y += 2*L;
     if(y>0 || (y===0 && side>0)) return fOn(y,side);
     const v = fOn(-y,-side); return typ==='sine' ? v.neg() : v; };
-  const lo = ext(x0,-1), hi = ext(x0,1); const val = lo.add(hi).div(2);
+  const lo = ext(x0,-1), hi = ext(x0,1); const val = lo.add(hi).div(2); need(!val.isZero() || r.int(0,2)===0);
   return { prompt:`<p>f is defined on [0, ${L}] by</p>${pwS(pieces,L)}<p>To what value does the <b>${typ}</b> series of f (period ${2*L}) converge at x = ${xS(x0,L)}?</p>`, kind:'num', answer: ans(val),
     hint:`The ${typ} series is the Fourier series of the ${typ==='sine'?'ODD':'EVEN'} 2L-periodic extension of f; take the average of the one-sided limits of that extension.`,
     solution:`<p>Use the ${typ==='sine'?'odd':'even'} extension f̃(−x) = ${typ==='sine'?'−':''}f(x), then extend with period ${2*L}. At x = ${xS(x0,L)}: f̃(x⁻) = ${fs(lo)}, f̃(x⁺) = ${fs(hi)}, average = ${fs(val)}.${typ==='sine'&&(x0===0||Math.abs(x0)===L)?' (A sine series always gives 0 at x = 0 and x = ±L.)':''}</p>`, _d:{L,pieces,typ,x0} };
@@ -1937,7 +2017,7 @@ mk('54-14-half-range-coef','54-14',3,r=>{
   const nm = (typ==='cos'?'a':'b')+sub(n);
   return { prompt:`<p>f(x) = </p>${pwS(pieces,L)}<p>on [0, ${Ls(L)}]. Find the coefficient ${nm} of its <b>${typ==='cos'?'cosine':'sine'} series</b> f ~ ${typ==='cos'?'a₀/2 + Σ aₙcos('+nA(L)+')':'Σ bₙsin('+nA(L)+')'}, to 3 decimal places.</p>`, kind:'num', answer: r6(v),
     hint:`Half-range ${typ==='cos'?'cosine':'sine'} series: ${nm.replace(/[₀-₉]/g,'')}ₙ = (2/L)∫₀^L f(x)${typ==='cos'?'cos':'sin'}(nπx/L)dx (the ${typ==='cos'?'even':'odd'} extension doubles the half-integral).`,
-    solution:`<p>${nm} = (2/${Ls(L)})∫₀^${Ls(L)} f(x)${typ==='cos'?'cos':'sin'}(${kA(n,L)})dx, split at the breakpoints and integrate by parts: ${nm} ≈ ${v.toFixed(5)}.</p>`, _d:{L,pieces,typ,n} };
+    solution:(()=>{ const W=coefWork(pieces,L,typ,n,'2/L'); return `<p>${nm} = (2/${Ls(L)})∫₀^${Ls(L)} f(x)${typ==='cos'?'cos':'sin'}(${kA(n,L)})dx. Split at the breakpoints and integrate by parts:</p>${W.html}<p>${nm} = (2/${Ls(L)})·(${d5(W.tot)}) ≈ ${dn(v.toFixed(5))}.</p>`; })(), _d:{L,pieces,typ,n} };
 }),
 mk('54-14-half-range-a0','54-14',3,r=>{
   const L = r.pick([1,2,3,4]); const two = r.bool();
@@ -1960,7 +2040,7 @@ mk('54-14-numeric-series','54-14',4,r=>{
   if(r.bool() && fam!=='x' && fam!=='step'){ start = 2; exact -= termF(1); target = target.replace('n=1','n=2'); }
   return { prompt:`<p>Given ${series}, evaluate ${target} by plugging a suitable point into the series. Give the value to 3 decimal places.</p>`, kind:'num', answer: r6(exact),
     hint:`Plug in ${point} (check that f is continuous there, or use the average at a jump), then isolate the numerical series.`,
-    solution:`<p>${steps}. Multiply by ${k}${start===2?' and subtract the n = 1 term ('+fnum(termF(1))+')':''}: ${target} = ${exact.toFixed(5)}.</p>`, _d:{termF, start, fam, k} };
+    solution:`<p>${steps}. Multiply by ${k}${start===2?' and subtract the n = 1 term ('+fnum(termF(1))+')':''}: ${target} = ${dn(exact.toFixed(5))}.</p>`, _d:{termF, start, fam, k} };
 }),
 mk('54-14-orthogonality','54-14',5,r=>{
   const L = r.pick([1,2,3,Math.PI]); const kind = r.pick(['cc','ss','cs','sq']);
@@ -1972,10 +2052,15 @@ mk('54-14-orthogonality','54-14',5,r=>{
   else if(kind==='cs'){ txt=`∫₋${Ls(L)}^${Ls(L)} cos(${arg(m)}) sin(${arg(n)}) dx`; val = 0; f=x=>Math.cos(m*Math.PI*x/L)*Math.sin(n*Math.PI*x/L); }
   else { const a = r.int(-3,3), b = rnz(r,-3,3), c = rnz(r,-3,3); const p = r.int(1,3); let q = r.int(1,3);
     txt=`∫₋${Ls(L)}^${Ls(L)} [${lin([a,b,c],['',`cos(${arg(p)})`,`sin(${arg(q)})`])}]² dx`; val = 2*L*a*a + L*b*b + L*c*c; f=x=>(a+b*Math.cos(p*Math.PI*x/L)+c*Math.sin(q*Math.PI*x/L))**2; }
-  const isPi = L===Math.PI;
+  const isPi = L===Math.PI; need(val!==0 || r.int(0,3)===0);
   return { prompt:`<p>Evaluate ${txt}${isPi&&val!==0?' (to 3 decimal places)':''}.</p>`, kind:'num', answer: isPi?r6(val):val,
     hint:'On [−L, L]: ∫cos(mπx/L)cos(nπx/L) = ∫sin·sin = L if m = n ≥ 1, else 0; ∫cos·sin = 0 always; ∫1² = 2L. Expand squares and use these.',
-    solution:`<p>${kind==='sq'?'Expanding the square, all cross terms integrate to 0 by orthogonality; the squared terms give 2L·(const)² + L·(cos coeff)² + L·(sin coeff)²':'By orthogonality of the trigonometric system'}: value = ${isPi?(val/Math.PI)+'π ≈ '+val.toFixed(4):val}.</p>`, _d:{f, L} };
+    solution:(()=>{ const LL = Ls(L); let w;
+      if(kind==='cc') w = m===n ? `m = n = ${m}: cos²(${arg(m)}) = ½[1 + cos(${arg(2*m)})], and the cosine integrates to 0 over whole periods, leaving ½·(2·${LL}) = ${LL}` : `m = ${m} ≠ n = ${n}: cos A cos B = ½[cos(A − B) + cos(A + B)] = ½[cos(${arg(Math.abs(m-n))}) + cos(${arg(m+n)})], and each cosine of a nonzero multiple of πx/L integrates to 0 over [−${LL}, ${LL}]: 0`;
+      else if(kind==='ss') w = m===n ? `m = n = ${m}: sin²(${arg(m)}) = ½[1 − cos(${arg(2*m)})], giving ½·(2·${LL}) = ${LL}` : `m = ${m} ≠ n = ${n}: sin A sin B = ½[cos(A − B) − cos(A + B)] = ½[cos(${arg(Math.abs(m-n))}) − cos(${arg(m+n)})], each integrating to 0: 0`;
+      else if(kind==='cs') w = `cos(${arg(m)})·sin(${arg(n)}) is even·odd = odd, so its integral over the symmetric interval [−${LL}, ${LL}] is 0`;
+      else { const a_ = (val - 0) ; w = `expand the square: every cross term (constant·cos, constant·sin, cos·sin) integrates to 0 by orthogonality. Squared terms: ∫(const)² = 2L·(const)², ∫cos² = ∫sin² = L·(coeff)², with L = ${LL}. Sum = ${isPi?(val/Math.PI)+'π':val}`; }
+      return `<p>On [−L, L] with L = ${LL}: ${w}. Value = ${isPi&&val!==0?(val/Math.PI)+'π ≈ '+val.toFixed(4):val}.</p>`; })(), _d:{f, L} };
 }),
 mk('54-14-orth-coef','54-14',5,r=>{
   const m = r.int(1,3), n = r.int(1,3), p = rnz(r,-3,3), q = r.int(-3,3), s = rnz(r,-3,3), u = r.int(-3,3);
@@ -1985,7 +2070,7 @@ mk('54-14-orth-coef','54-14',5,r=>{
   const a = new Map(), b = new Map(); const add=(M,j,v)=>M.set(j,(M.get(j)||F0).add(v));
   add(a,0,F.of(2*q*u)); add(a,m,F.of(p*u)); add(b,n,F.of(q*s)); add(b,n+m,fr(p*s,2)); if(n!==m){ const j=n-m; add(b,Math.abs(j),fr(p*s*Math.sign(j),2)); }
   const which = r.pick(['a','b','b']); const keys = [...(which==='a'?a:b).keys()].filter(j=>j>0 || which==='a'); const j = r.pick(keys.concat([r.int(1,6)]));
-  const val = ((which==='a'?a:b).get(j)) || F0;
+  const val = ((which==='a'?a:b).get(j)) || F0; need(!val.isZero() || r.int(0,2)===0);
   const nm = (which==='a'?'a':'b')+sub(j);
   return { prompt:`<p>Find the Fourier coefficient ${nm} of f(x) = (${lin([p,q],[`cos(${m===1?'':m}x)`,''])})(${lin([s,u],[`sin(${n===1?'':n}x)`,''])}) on [−π, π] (convention a₀/2 + Σ aₙcos nx + bₙsin nx).</p>`, kind:'num', answer: ans(val),
     hint:'Do not integrate: expand f into a finite trig sum using cos A sin B = [sin(A+B) − sin(A−B)]/2; by orthogonality the coefficients are read off directly (remember a₀/2 is the constant term).',
@@ -2152,7 +2237,7 @@ G['54-7'].push(
 mk('54-7-power-limit','54-7',4,r=>{
   const P = randUnimod(r,2,3); const Pi = inv(P); const lam = r.pick([fr(1,2),fr(-1,2)]);
   const A = fmul(fmul(toF(P), [[F1,F0],[F0,lam]]), Pi); need(maxAbs(A)<=8);
-  const Lm = fmul(fmul(toF(P), [[F1,F0],[F0,F0]]), Pi); const i = r.int(0,1), j = r.int(0,1);
+  const Lm = fmul(fmul(toF(P), [[F1,F0],[F0,F0]]), Pi); const i = r.int(0,1), j = r.int(0,1); need(!Lm[i][j].isZero() || r.int(0,3)===0); need(!Lm[i][j].abs().eq(1) || r.int(0,1)===0);
   return { prompt:`<p>Let A = ${mat(A)}. Its eigenvalues are 1 and ${fs(lam)}. Find the (${i+1}, ${j+1}) entry of lim<sub>k→∞</sub> A<sup>k</sup>.</p>`, kind:'num', answer: ans(Lm[i][j]),
     hint:'Diagonalize A = PDP⁻¹; then Aᵏ = PDᵏP⁻¹ and Dᵏ → diag(1, 0) because |λ| < 1 for the second eigenvalue.',
     solution:`<p>Eigenvectors: for λ = 1, ${tup(P.map(x=>x[0]))}; for λ = ${fs(lam)}, ${tup(P.map(x=>x[1]))}. With P = ${mat(P)}, P⁻¹ = ${mat(Pi)}: lim Aᵏ = P·diag(1, 0)·P⁻¹ = ${mat(Lm)}. Entry (${i+1},${j+1}) = ${fs(Lm[i][j])}.</p>`, _d:{A:A.map(x=>x.map(y=>y.toNum())), i, j} };
@@ -2262,7 +2347,7 @@ mk('54-14-numeric-series-2','54-14',4,r=>{
   else { series='the cosine series of f(x) = x(π − x) on [0, π] is π²/6 − Σ<sub>m≥1</sub> cos(2mx)/m²'; point='x = π/2'; termF=n=>k*(n%2?1:-1)/(n*n); target=`Σ<sub>m=1</sub><sup>∞</sup> ${k===1?'':k}(−1)ᵐ⁺¹/m²`; exact=k*Math.PI**2/12; steps='At x = π/2: cos(mπ) = (−1)ᵐ, so π²/4 = π²/6 − Σ(−1)ᵐ/m² ⇒ Σ(−1)ᵐ⁺¹/m² = π²/12'; }
   return { prompt:`<p>Given that ${series}, evaluate ${target} (to 3 decimal places) by evaluating the series at a suitable point.</p>`, kind:'num', answer: r6(exact),
     hint:`Try ${point}; the series converges to f there (f's extension is continuous at that point).`,
-    solution:`<p>${steps}. Multiplying by ${k}: ${target} = ${exact.toFixed(5)}.</p>`, _d:{termF, start:1, fam, k} };
+    solution:`<p>${steps}. Multiplying by ${k}: ${target} = ${dn(exact.toFixed(5))}.</p>`, _d:{termF, start:1, fam, k} };
 }),
 );
 })();
