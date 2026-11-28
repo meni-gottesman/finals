@@ -138,7 +138,7 @@ const P=window.PLAN, G=window.GEN||{};
 const KEY='finals-app-v2';
 let S={done:{},start:{},err:[],check:{},notes:[],q:null,days:{},ahead:{},steps:{},hlog:{},redo:[],pos:{},scroll:{},tab:{}};
 try{ S=Object.assign(S,JSON.parse(localStorage.getItem(KEY)||'{}')); }catch(e){}
-S.steps=S.steps||{}; S.hlog=S.hlog||{}; S.redo=S.redo||[]; S.pos=S.pos||{}; S.scroll=S.scroll||{}; S.tab=S.tab||{};
+S.active=S.active||{}; S.steps=S.steps||{}; S.hlog=S.hlog||{}; S.redo=S.redo||[]; S.pos=S.pos||{}; S.scroll=S.scroll||{}; S.tab=S.tab||{};
 let VIEW='home';
 const save=()=>{ try{ localStorage.setItem(KEY,JSON.stringify(S)); }catch(e){} };
 const $=id=>document.getElementById(id);
@@ -234,8 +234,7 @@ function spread(from,rem){
 const pinnedOn=d=>allTasks().filter(t=>t.t!=='K'&&!deadlineOf(t)&&t.d===d);
 function todayList(){
   const td=today();
-  const x=redoTask();
-  return (x?[x]:[]).concat(allTasks().filter(t=>t.t!=='K'&&t.d<=td&&(!S.done[t.key]||dateOf(S.done[t.key])===td))); }
+  return [].concat(allTasks().filter(t=>t.t!=='K'&&t.d<=td&&(!S.done[t.key]||dateOf(S.done[t.key])===td))); }
 function queue(){
   const td=today(), list=todayList(), q=list.filter(t=>!S.done[t.key]);
   if(q.length||!S.ahead[td]) return {q,ahead:false};
@@ -262,9 +261,15 @@ function reqsFor(t){
   if(t.t==='L') addUnit(t.u,1);
   else if(t.t==='H') addUnit(t.u,2);
   else if(t.t==='R') reviewUnits(t).forEach(u=>addUnit(u,1,2));
-  if(t.t==='R'||(t.t==='T'&&/error-log|ERROR-LOG|error log/i.test(t.title))) dueErrors(t).forEach(e=>R.push({unit:e.unit,type:e.type,need:1,genId:e.gen,err:e.id}));
+  if(t.t==='R') dueErrors(t).forEach(e=>R.push({unit:e.unit,type:e.type,need:1,genId:e.gen,err:e.id}));
+  if(t.t==='T'){ const inC=u=>t.c==='A'||u.startsWith(t.c==='B'?'B-':t.c+'-');
+    const errs=S.err.filter(e=>!e.cleared&&e.gen&&inC(e.unit)).slice(-12); errs.forEach(e=>R.push({unit:e.unit,type:e.type,need:1,genId:e.gen,err:e.id}));
+    const cnt={}; S.err.filter(e=>inC(e.unit)).forEach(e=>cnt[e.unit]=(cnt[e.unit]||0)+1);
+    let weak=Object.keys(cnt).sort((a,b)=>cnt[b]-cnt[a]).slice(0,3); if(weak.length<3) weak=weak.concat(r.sample(learnedUnits(t.c==='A'?null:t.c).filter(u=>!weak.includes(u)),3-weak.length));
+    if(R.length<6) weak.forEach(u=>addUnit(u,1,2)); }
   if(t.t==='M'){ const c=S.check[t.key]; if(c&&c.missedUnits) c.missedUnits.forEach(u=>addUnit(u,1,2)); }
   return R; }
+function learnedUnits(c){ const L=learnedMap(); return Object.keys(L).filter(u=>!c||u.startsWith(c==='B'?'B-':c+'-')); }
 function hashStr(s){let h=2166136261;for(const c of s){h^=c.charCodeAt(0);h=Math.imul(h,16777619);}return h>>>0;}
 function dueErrors(t){ const course=t.c; return S.err.filter(e=>!e.cleared && e.due<=today() && (course==='A'||e.unit.startsWith(course==='B'?'B-':course))); }
 
@@ -335,6 +340,11 @@ function renderRedo(t,pre){
     if(b.dataset.s==='ok'){ r.cleared=true; } else { r.due=addDays(today(),2); }
     save(); render(); })); }
 
+// ---------- active study time: counts only while the page is visible and you're interacting ----------
+let LASTACT=Date.now(), CURKEY=null, ACTN=0;
+['mousemove','keydown','scroll','touchstart','pointerdown','wheel'].forEach(ev=>addEventListener(ev,()=>{LASTACT=Date.now();},{passive:true,capture:true}));
+setInterval(()=>{ if(!CURKEY||document.visibilityState!=='visible') return; const idle=Date.now()-LASTACT, inFrame=document.activeElement&&document.activeElement.tagName==='IFRAME';
+  if(idle<90000||(inFrame&&idle<300000)){ S.active[CURKEY]=(S.active[CURKEY]||0)+1000; if(++ACTN%10===0) save(); } },1000);
 // ---------- one course: friendly names, lesson player, course home ----------
 function niceName(href,label){ let x; try{ x=new URL(href); }catch(e){ return label||href; }
   const f=x.pathname.split('/').pop(), q=x.searchParams.get('deck'), h=x.hash.replace('#','');
@@ -360,6 +370,7 @@ const EMBED_CSS='body>header,header#top,header.mast,header.hero,footer,body>nav.
 function wireFrame(fr,url){ fr.addEventListener('load',()=>{ try{ const w=fr.contentWindow, d=fr.contentDocument; if(!d||!d.body) return;
     const stl=d.createElement('style'); stl.textContent=EMBED_CSS; d.head.appendChild(stl);
     if(S.scroll[url]) setTimeout(()=>w.scrollTo(0,S.scroll[url]),60);
+    ['mousemove','keydown','scroll','touchstart','pointerdown','wheel'].forEach(ev=>w.addEventListener(ev,()=>{LASTACT=Date.now();},{passive:true,capture:true}));
     let tm=null; w.addEventListener('scroll',()=>{ clearTimeout(tm); tm=setTimeout(()=>{ S.scroll[url]=w.scrollY; save(); },400); });
     d.addEventListener('click',ev=>{ const a=ev.target.closest&&ev.target.closest('a[href]'); if(!a) return; const h=a.getAttribute('href')||'';
       if(h.startsWith('#')||h.startsWith('javascript:')) return; ev.preventDefault(); openViewer(a.href,a.textContent); });
@@ -372,35 +383,29 @@ function matPane(t,i,mat){
   return tabs+(e?`<iframe class="mat" id="matframe" title="${esc(niceName(mat[cur].href,mat[cur].label))}" src="${esc(e)}"></iframe>`:`<div class="nomat">${esc(niceName(mat[cur].href,mat[cur].label))} is on a site that can’t be shown inside the course (it needs your login). <button class="btn sec" id="vext2">Open it in the browser</button></div>`); }
 function renderPlayer(t,pre,ahead,needMs){
   const st=S.start[t.key], P2=parseTask(t), n=P2.steps.length, done=S.steps[t.key]=S.steps[t.key]||{};
-  let i=S.pos[t.key]; if(i==null||i>n) { i=0; while(i<n&&done[i]) i++; } if(i>=n) i=n; S.pos[t.key]=i;
+  let i=S.pos[t.key]; if(i==null||i>n) i=0; S.pos[t.key]=i;
   document.body.classList.add('wide');
   const course=TAG[t.c]||'';
-  const pills=n?`<div class="pills">${P2.steps.map((x,j)=>`<button data-s="${j}" class="${done[j]?'ok':''} ${j===i?'cur':''}">${done[j]?'✓':j+1}</button>`).join('')}<button data-s="${n}" class="${i===n?'cur':''}">${'Check'}</button></div>`:'';
+  const pills=n?`<div class="pills">${P2.steps.map((x,j)=>`<button data-s="${j}" class="${j===i?'cur':''}">${j+1}</button>`).join('')}<button data-s="${n}" class="${i===n?'cur':''}">Check</button></div>`:'';
   const s=P2.steps[i];
-  const deckA=s&&(s.mat.find(m=>/finals\/cards\.html\?deck=/.test(m.href)));
-  const side= i<n ? `<div class="step">Step ${i+1} of ${n}</div><div class="stext">${s.html}</div>${deckA?'<p class="small" id="deckst"></p>':''}
-      <button class="btn ${done[i]?'sec':''}" id="sdone">${done[i]?'Done ✓ · go to next step':'✓ I finished this step'}</button>
+  const side= i<n ? `<div class="step">Step ${i+1} of ${n}</div><div class="stext">${s.html}</div>
+      <button class="btn sec" id="snext">${i<n-1?'Next step →':'Go to the check →'}</button>
       ${i===n-1&&P2.post?`<details class="instrbox" open><summary>You’ll be checked on</summary><div class="instr">${P2.post}</div></details>`:''}`
-    : (n?`<div class="step">Last step · prove it</div><div class="instr">${P2.post||''}</div>`
-        :`${t.t==='R'?'<div class="banner info"><b>Topics</b> (what you actually learned 3 and 7 days ago): '+reviewUnits(t).map(u=>esc(P.U[u]?P.U[u].n:u)).join(' · ')+'. These replace the list below.</div>':''}<div class="instr">${P2.full}</div>`);
+    : (n?`<div class="step">The check</div><div class="instr">${P2.post||''}</div>`
+        :`${t.t==='R'?'<div class="banner info"><b>Topics</b> (what you actually learned 3 and 7 days ago): '+reviewUnits(t).map(u=>esc(P.U[u]?P.U[u].n:u)).join(' · ')+'.</div>':''}<div class="instr">${P2.full}</div>`);
   $('main').innerHTML=pre+`<div class="card player"><div class="ptime"><span>${ahead?'Working ahead · ':''}${t.d<today()?'Catch-up from '+fmt(t.d)+' · ':''}${course}</span><span id="tm"></span></div><h2>${esc(t.title)}</h2>
     <div class="pgrid"><div class="pside">${pills}${side}<div id="hlog"></div><div id="after"></div>
       <details class="instrbox"><summary>Whole task at a glance</summary><div class="instr">${P2.full}</div></details></div>
     <div class="pmat">${i<n?matPane(t,i,s.mat):(P2.open.length?matPane(t,'o',P2.open):'')}</div></div></div>`;
-  const fr=$('matframe'); if(fr) wireFrame(fr, i<n?(s.mat[Math.min(S.tab[t.key+'|'+i]||0,s.mat.length-1)]||{}).href:(P2.open[0]||{}).href);
+  CURKEY=t.key; const fr=$('matframe'); if(fr) wireFrame(fr, i<n?(s.mat[Math.min(S.tab[t.key+'|'+i]||0,s.mat.length-1)]||{}).href:(P2.open[0]||{}).href);
   document.querySelectorAll('.mtabs button').forEach(b=>b.onclick=()=>{ S.tab[t.key+'|'+(i<n?i:'o')]=+b.dataset.j; save(); render(); });
   if($('vext2')) $('vext2').onclick=()=>{ const m=(i<n?s.mat:P2.open)[Math.min(S.tab[t.key+'|'+i]||0,(i<n?s.mat:P2.open).length-1)]; window.open(m.href,'_blank','noopener'); };
   document.querySelectorAll('.pills button').forEach(b=>b.onclick=()=>{ S.pos[t.key]=+b.dataset.s; save(); render(); });
-  const deckOK=()=>{ if(!deckA) return true; const dk=new URL(deckA.href).searchParams.get('deck'), pr=deckProgress(dk); if($('deckst')) $('deckst').innerHTML=pr?`Flashcards: <b>${pr.k}/${pr.n}</b> marked “Got it”${pr.k>=pr.n?' ✓':' · finish the deck to complete this step'}`:'Loading flashcards…'; return pr&&pr.n>0&&pr.k>=pr.n; };
-  if(deckA) loadCards().then(deckOK);
-  if($('sdone')) $('sdone').onclick=()=>{ if(!done[i]){ if(!deckOK()){ alert('Finish the flashcard deck first: every card marked “Got it”.'); return; } done[i]=Date.now(); }
-    S.pos[t.key]=i+1; save(); render(); };
-  if(t.t==='H'&&(i===n||(s&&/grade/i.test(s.text)))) mountHardLog(t,$('hlog'));
-  const draw=()=>{ const el=Date.now()-st, rem=needMs-el, sd=stepsDone(t,n);
-    $('tm').innerHTML=`<b>${clock(el)}</b> ${rem>0?'· check unlocks in '+clock(rem):''}`;
-    if(deckA) deckOK();
-    if(i===n){ if(rem<=0&&sd&&!$('ck')){ $('after').innerHTML=preCheckForm(t); bindPreCheck(t); }
-      else if(!$('ck')) $('after').innerHTML=`<p class="small">${!sd?'Finish every step first (the numbered buttons above).':'The check unlocks when the timer reaches the minimum time.'}</p>`; } };
+  if($('snext')) $('snext').onclick=()=>{ S.pos[t.key]=i+1; save(); render(); };
+  const draw=()=>{ const act=S.active[t.key]||0, rem=needMs-act;
+    $('tm').innerHTML=`<b>${clock(act)}</b> active${rem>0?' · check unlocks at '+clock(needMs):''}`;
+    if(i===n){ if(rem<=0){ if(!$('ck')){ $('after').innerHTML=`<p>The check: fresh, randomly generated questions on <b>every</b> question type. A wrong answer resets that type, shows the full solution, and comes back in 2 and 7 days. If more than 1 in 5 answers are wrong, you go another full round.</p><button class="btn" id="ck">Start the check</button>`; $('ck').onclick=()=>startCheck(t); } }
+      else $('after').innerHTML=`<p class="small">The check unlocks after ${clock(needMs)} of <b>active</b> study on this task (time only counts while this page is open and you’re working in it). ${clock(rem)} to go.</p>`; } };
   draw(); tick=setInterval(draw,1000); }
 function courseStats(){ const all=allTasks().filter(t=>t.t!=='K'); const by={};
   ['54','55','B','A'].forEach(c=>{ const ts=all.filter(t=>t.c===c); by[c]={n:ts.length,k:ts.filter(t=>S.done[t.key]).length,m:ts.reduce((s,t)=>s+(t.min||0),0),md:ts.filter(t=>S.done[t.key]).reduce((s,t)=>s+(t.min||0),0)}; });
@@ -426,7 +431,7 @@ function renderHome(){ clearInterval(tick); document.body.classList.remove('wide
   if($('cont')) $('cont').onclick=()=>{ VIEW='task'; render(); window.scrollTo(0,0); }; }
 
 function render(){
-  clearInterval(tick);
+  clearInterval(tick); CURKEY=null;
   if(VIEW==='home'){ const td0=today(), l0=todayList(), d0=l0.filter(t=>S.done[t.key]).length; $('h').textContent='Finals · '+fmt(td0); $('bar').style.width=(l0.length?100*d0/l0.length:100)+'%'; $('m1').textContent=''; $('m2').textContent=''; return renderHome(); }
   document.body.classList.remove('wide');
   const td=today(), list=todayList(), {q,ahead}=queue();
@@ -455,6 +460,50 @@ function render(){
   const t=q[0]; renderTask(t,pre,ahead);
   if($('stopAhead')) $('stopAhead').onclick=e=>{ e.preventDefault(); if(S.start[t.key]&&!S.done[t.key]&&!confirm('Stop for today? This task stays on its plan day.')) return; S.ahead[td]=false; save(); render(); }; }
 
+function startCheck(t){ const C=S.check[t.key]={phase:'check',streak:{},asked:0,wrong:0,round:1,ra:0,rw:0}; C.reqs=reqsFor(t); S.q=null; save(); render(); }
+function mockPool(t){ const pref=t.c==='B'?'B-':t.c+'-'; const L={}; allTasks().forEach(x=>{ if(x.t==='L'&&x.u&&x.u.startsWith(pref)&&x.d<=t.d) L[x.u]=1; });
+  return Object.keys(L).filter(u=>(G[u]||[]).length); }
+const mockN=t=>Math.max(8,Math.round((t.min||60)/5));
+function startMock(t){ const pool=mockPool(t), n=mockN(t), r=makeRng(freshSeed()), qs=[];
+  const pairs=[]; pool.forEach(u=>typesWithGens(u).forEach(ty=>pairs.push([u,ty])));
+  const pick=r.shuffle(pairs); for(let k=0;qs.length<n&&k<n*4;k++){ const [u,ty]=pick[k%pick.length]; const Q=makeQ(u,ty); if(Q) qs.push(Q); }
+  S.check[t.key]={phase:'mock',qs,ans:{},i:0,end:Date.now()+(t.min||60)*60000}; save(); render(); }
+function mInput(Q,v,j){ if(Q.kind==='mc') return Q.order.map(i=>`<label class="choice"><input type="radio" name="m${j}" value="${i}" ${String(v)===String(i)?'checked':''}><span>${Q.choices[i]}</span></label>`).join('');
+  if(Q.kind==='multi') return Q.choices.map((c,i)=>`<label class="choice"><input type="checkbox" name="m${j}" value="${i}" ${(v||[]).includes(i)?'checked':''}><span>${c}</span></label>`).join('')+'<p class="small">Select all that apply (possibly none).</p>';
+  if(Q.kind==='tf') return `<div class="tf"><label class="choice"><input type="radio" name="m${j}" value="1" ${v===true?'checked':''}><span>True</span></label><label class="choice"><input type="radio" name="m${j}" value="0" ${v===false?'checked':''}><span>False</span></label></div>`;
+  return `<input class="ans" id="ma" autocomplete="off" autocapitalize="off" spellcheck="false" value="${esc(v==null?'':v)}" placeholder="${Q.kind==='list'?'comma-separated':Q.kind==='num'?'number or fraction like -7/3':'answer'}">`; }
+function mRead(Q,j){ if(Q.kind==='mc'){ const c=document.querySelector(`input[name=m${j}]:checked`); return c?c.value:null; }
+  if(Q.kind==='multi') return [...document.querySelectorAll(`input[name=m${j}]:checked`)].map(x=>+x.value);
+  if(Q.kind==='tf'){ const c=document.querySelector(`input[name=m${j}]:checked`); return c?c.value==='1':null; }
+  const v=$('ma').value; return v.trim()?v:null; }
+function gradeMock(t){ const C=S.check[t.key]; let ok=0; const missed=new Set();
+  C.res=C.qs.map((Q,j)=>{ const v=C.ans[j]; const good=v!=null&&check(Q,v); if(good) ok++; else { missed.add(Q.unit);
+    S.err.push({id:'e'+Date.now()+j,unit:Q.unit,gen:Q.gen,type:Q.type,d:today(),due:addDays(today(),2),cleared:false,hits:0});
+    S.err.push({id:'f'+Date.now()+j,unit:Q.unit,gen:Q.gen,type:Q.type,d:today(),due:addDays(today(),7),cleared:false,hits:0}); } return good; });
+  C.score=ok; C.missedUnits=[...missed]; C.phase='result'; S.notes.push({d:today(),key:t.key,title:t.title,pts:ok,tot:C.qs.length,why:'auto-graded exam'}); save(); }
+function renderMock(t,pre){ const C=S.check[t.key];
+  if(!C||!C.phase) return startMock(t);
+  if(C.phase==='mock'&&Date.now()>=C.end){ gradeMock(t); }
+  if(C.phase==='result'){ const n=C.qs.length, pct=Math.round(100*C.score/n), pass=C.score/n>=0.8;
+    $('main').innerHTML=pre+`<div class="card"><div class="step">Exam result</div>${TAG[t.c]||''}<h2>${C.score} / ${n} · ${pct}%</h2>
+      <p>${pass?'Passed (≥ 80%). Review every miss below; each comes back in 2 and 7 days with new numbers.':'Below 80%: before moving on you’ll do a check on every unit you missed ('+C.missedUnits.map(u=>esc(P.U[u]?P.U[u].n:u)).join(' · ')+').'}</p>
+      ${C.qs.map((Q,j)=>`<details class="instrbox" ${C.res[j]?'':'open'}><summary>${C.res[j]?'✓':'✗'} Q${j+1} · ${esc(P.U[Q.unit]?P.U[Q.unit].n:Q.unit)}</summary><div class="q">${Q.prompt}</div><div class="fb ${C.res[j]?'ok':'bad'}"><div class="sol"><b>Solution:</b> ${Q.solution||''}</div></div></details>`).join('')}
+      <button class="btn" id="mn">${pass?'Finish':'Start the repair check'}</button></div>`;
+    $('mn').onclick=()=>{ if(pass){ finish(t); } else { const mu=C.missedUnits; const N=S.check[t.key]={phase:'check',streak:{},asked:0,wrong:0,round:1,ra:0,rw:0,missedUnits:mu}; N.reqs=reqsFor(t); S.q=null; save(); render(); } };
+    return; }
+  CURKEY=t.key; const j=Math.min(C.i||0,C.qs.length-1), Q=C.qs[j];
+  const grid=C.qs.map((q,k)=>`<button data-k="${k}" class="${C.ans[k]!=null?'ok':''} ${k===j?'cur':''}">${k+1}</button>`).join('');
+  $('main').innerHTML=pre+`<div class="card"><div class="ptime"><span>${TAG[t.c]||''} Timed exam · no feedback until you submit</span><span id="tm"></span></div><h2>Question ${j+1} of ${C.qs.length}</h2>
+    <div class="q"><div class="small">${esc(P.U[Q.unit]?P.U[Q.unit].n:Q.unit)}</div>${Q.prompt}</div>${mInput(Q,C.ans[j],j)}
+    <div class="row" style="margin-top:12px"><button class="btn sec" id="mp" ${j===0?'disabled':''}>← Previous</button><button class="btn" id="mx">${j<C.qs.length-1?'Save · next →':'Save'}</button></div>
+    <div class="pills" style="margin-top:14px">${grid}</div><button class="btn sec" id="msub">Submit the exam</button></div>`;
+  const keep=()=>{ const v=mRead(Q,j); if(v==null) delete C.ans[j]; else C.ans[j]=v; save(); };
+  $('mp').onclick=()=>{ keep(); C.i=j-1; render(); };
+  $('mx').onclick=()=>{ keep(); C.i=Math.min(j+1,C.qs.length-1); render(); };
+  document.querySelectorAll('.pills button[data-k]').forEach(b=>b.onclick=()=>{ keep(); C.i=+b.dataset.k; render(); });
+  $('msub').onclick=()=>{ keep(); const un=C.qs.length-Object.keys(C.ans).length; if(!confirm(un?`${un} unanswered (they count as wrong). Submit now?`:'Submit the exam?')) return; gradeMock(t); render(); };
+  const draw=()=>{ const rem=C.end-Date.now(); if(rem<=0){ keep(); clearInterval(tick); gradeMock(t); render(); return; } $('tm').innerHTML=`<b>${clock(rem)}</b> left`; };
+  draw(); tick=setInterval(draw,1000); }
 function renderTask(t,pre,ahead){
   if(t.t==='X') return renderRedo(t,pre);
   const main=$('main'); const st=S.start[t.key];
@@ -463,8 +512,13 @@ function renderTask(t,pre,ahead){
   const head=`${pre}<div class="card"><div class="step">${ahead?'Ahead · '+fmt(t.d):(t.d<today()?'Catch-up · from '+fmt(t.d):'Task')} · ${fm(t.min||0)}</div>${TAG[t.c]||''}<h2>${esc(t.title)}</h2>`;
   const instr=`<div class="instr">${t.t==='R'?'<div class="banner info"><b>Topics for this review</b> (picked from what you actually learned 3 and 7 days ago): '+reviewUnits(t).map(u=>esc(P.U[u]?P.U[u].n:u)).join(' · ')+'. These replace the list below.</div>':''}${t.html||''}</div>`;
   const C=S.check[t.key];
+  if(!st&&t.t==='M'){ const pool=mockPool(t), nq=mockN(t);
+    main.innerHTML=head+`<p><b>Timed exam, built and graded by the app.</b> ${nq} questions drawn from every ${TAG[t.c]?'':''}unit you’ve covered so far (${pool.length} units), ${fm(t.min)}. No feedback, hints or solutions until you submit; it submits itself when time runs out. Under 80% → you get a check on every unit you missed before you can move on. Every miss comes back in 2 and 7 days.</p>
+      <p class="small">Original plan item: ${t.title.replace(/^Timed exam: /,'')}. That real past exam stays available as extra paper practice once you finish.</p><button class="btn" id="go">Start the exam (timer starts now)</button></div>`;
+    $('go').onclick=()=>{ S.start[t.key]=Date.now(); startMock(t); }; return; }
   if(!st){ main.innerHTML=head+`<div class="instr">${prettyLinks(Object.assign(document.createElement('div'),{innerHTML:instr})).innerHTML}</div><button class="btn" id="go">Start this task</button></div>`;
     $('go').onclick=()=>{ S.start[t.key]=Date.now(); save(); render(); }; return; }
+  if(t.t==='M'&&(!C||!C.phase||C.phase==='mock'||C.phase==='result')) return renderMock(t,pre);
   if(!C||!C.phase) return renderPlayer(t,pre,ahead,needMs);
   renderCheck(t,head); }
 const clock=ms=>{ms=Math.max(0,ms);const s=Math.floor(ms/1000);return (s>=3600?Math.floor(s/3600)+':':'')+String(Math.floor(s/60)%60).padStart(2,'0')+':'+String(s%60).padStart(2,'0');};
@@ -509,7 +563,9 @@ function bindPreCheck(t){
 function renderCheck(t,head){
   const C=S.check[t.key]; const reqs=C.reqs||[];
   const open=reqs.filter(r=>(C.streak[rk(r)]||0)<r.need);
-  if(!open.length){ finish(t); return; }
+  if(!open.length){ if(C.ra>=3&&C.rw/C.ra>0.2){ C.round=(C.round||1)+1; C.streak={}; C.ra=0; C.rw=0; save();
+      $('main').innerHTML=head+`<div class="banner warn">Too many misses this round (more than 1 in 5). Every question type again, fresh questions: round ${C.round}.</div><button class="btn" id="rgo">Start round ${C.round}</button></div>`; $('rgo').onclick=render; return; }
+    finish(t); return; }
   if(!S.q || S.q.task!==t.key){ const r=makeRng(freshSeed()).pick(open); const Q=makeQ(r.unit,r.type,r.genId);
     if(!Q){ C.streak[rk(r)]=r.need; save(); return render(); }
     S.q={task:t.key,req:rk(r),Q,answered:false}; save(); }
@@ -525,10 +581,10 @@ function renderCheck(t,head){
    <div class="q"><div class="small">${esc(P.U[Q.unit]?P.U[Q.unit].n:Q.unit)} · ${esc(Q.type||'')}</div>${Q.prompt}</div>${input}
    ${Q.kind==='tf'?'':'<button class="btn" id="sub">Submit</button>'}<div id="fb"></div></div>`;
   const submit=val=>{ if(S.q.answered) return; const ok=check(Q,val); S.q.answered=true;
-    const key=S.q.req; C.asked++;
+    const key=S.q.req; C.asked++; C.ra=(C.ra||0)+1;
     if(ok){ C.streak[key]=(C.streak[key]||0)+1;
       const r=reqs.find(x=>rk(x)===key); if(r&&r.err){ const e=S.err.find(x=>x.id===r.err); if(e){ e.hits=(e.hits||0)+1; e.due=addDays(today(),e.hits>=2?99:5); if(e.hits>=2) e.cleared=true; } } }
-    else { C.streak[key]=0; C.wrong++;
+    else { C.streak[key]=0; C.wrong++; C.rw=(C.rw||0)+1;
       S.err.push({id:'e'+Date.now(),unit:Q.unit,gen:Q.gen,type:Q.type,d:today(),due:addDays(today(),2),cleared:false,hits:0});
       // also schedule a +7 recheck
       S.err.push({id:'f'+Date.now(),unit:Q.unit,gen:Q.gen,type:Q.type,d:today(),due:addDays(today(),7),cleared:false,hits:0}); }
