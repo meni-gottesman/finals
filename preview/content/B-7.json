@@ -1,0 +1,791 @@
+{
+ "id": "B-7",
+ "course": "B",
+ "title": "BSTs, B-trees, LLRBs",
+ "source": "CS 61B Lec 17–19 · Ch 16–18",
+ "summary": "Search trees: plain BSTs (insert, Hibbard deletion, validation), B-trees (2-3 and 2-3-4 trees that stay perfectly balanced by splitting), and left-leaning red-black trees, which are BSTs that secretly encode 2-3 trees. Exams ask for exact traces, the LLRB ↔ 2-3 correspondence, height bounds and recursive tree code.",
+ "lesson": [
+  {
+   "title": "Binary search trees",
+   "blocks": [
+    {
+     "type": "def",
+     "term": "BST property",
+     "text": "For every node x: every key in x’s left subtree is &lt; x.key and every key in its right subtree is > x.key (no duplicates). The property is about whole subtrees, not just children."
+    },
+    {
+     "type": "code",
+     "lang": "java",
+     "text": "private Node insert(Node n, int k) {          // returns the new subtree root\n    if (n == null) return new Node(k);\n    if (k < n.key) n.left = insert(n.left, k);\n    else if (k > n.key) n.right = insert(n.right, k);\n    return n;                                 // duplicate: no change\n}\nprivate boolean contains(Node n, int k) {\n    if (n == null) return false;\n    if (k == n.key) return true;\n    return k < n.key ? contains(n.left, k) : contains(n.right, k);\n}"
+    },
+    {
+     "type": "example",
+     "title": "BST insertion trace",
+     "prompt": "Insert 40, 20, 60, 10, 30, 50, 70, 25, 35, 33 into an empty BST. Give the shape and height.",
+     "steps": [
+      "40 is the root. 20 &lt; 40 → left; 60 → right. 10 → left of 20; 30 → right of 20; 50 → left of 60; 70 → right of 60.",
+      "25: &lt; 40, > 20, &lt; 30 → left of 30. 35: right of 30. 33: &lt; 40, > 20, > 30, &lt; 35 → left of 35.",
+      "Written as key(left, right): 40(20(10, 30(25, 35(33, ·))), 60(50, 70)).",
+      "Height (edges on the longest root-to-leaf path): 40 → 20 → 30 → 35 → 33 = 4."
+     ],
+     "answer": "40(20(10, 30(25, 35(33, ·))), 60(50, 70)), height 4 (verified)"
+    },
+    {
+     "type": "thm",
+     "name": "Height and runtime",
+     "text": "Search and insert cost Θ(height). Height ranges from about log₂ N (bushy) to N − 1 (spindly, e.g. inserting sorted keys 1, 2, …, 7 gives height 6). Random insertion order gives Θ(log N) expected height."
+    },
+    {
+     "type": "example",
+     "title": "Validate a BST (and a classic bug)",
+     "prompt": "Why does checking only <code>n.left.key &lt; n.key &lt; n.right.key</code> at every node fail? Write a correct check.",
+     "steps": [
+      "Counterexample: 10 with left child 5, and 5 has right child 12. Every parent–child pair is ordered, but 12 sits in 10’s left subtree. The local check says true; the tree is not a BST.",
+      "Correct: pass down the allowed open interval. <code>boolean isBST(Node n, long lo, long hi) { if (n == null) return true; if (n.key &lt;= lo || n.key >= hi) return false; return isBST(n.left, lo, n.key) &amp;&amp; isBST(n.right, n.key, hi); }</code>, called with (root, −∞, +∞).",
+      "Runtime Θ(N): every node checked once."
+     ],
+     "answer": "Local check: true (wrong); interval check: false (verified)"
+    }
+   ]
+  },
+  {
+   "title": "Hibbard deletion",
+   "blocks": [
+    {
+     "type": "steps",
+     "title": "Deleting key k",
+     "items": [
+      "No children: remove the node (return null to the parent).",
+      "One child: return that child to the parent (it takes the node’s place).",
+      "Two children: find the successor (go right once, then left as far as possible), copy its key into this node, then delete the successor from the right subtree (it has no left child, so that is case 1 or 2). Using the predecessor (largest in the left subtree) is the mirror version; exams say which."
+     ]
+    },
+    {
+     "type": "code",
+     "lang": "java",
+     "text": "private Node delete(Node n, int k) {\n    if (n == null) return null;\n    if (k < n.key) n.left = delete(n.left, k);\n    else if (k > n.key) n.right = delete(n.right, k);\n    else {\n        if (n.left == null) return n.right;\n        if (n.right == null) return n.left;\n        Node s = n.right;\n        while (s.left != null) s = s.left;    // successor\n        n.key = s.key;\n        n.right = delete(n.right, s.key);\n    }\n    return n;\n}"
+    },
+    {
+     "type": "example",
+     "title": "Hibbard deletion trace",
+     "prompt": "From 40(20(10, 30(25, 35(33, ·))), 60(50, 70)), delete 10, then 60, then 20, then 40 (successor version).",
+     "steps": [
+      "delete 10: leaf → removed: 40(20(·, 30(25, 35(33, ·))), 60(50, 70)).",
+      "delete 60: two children; successor = leftmost of {70} = 70. Copy 70 up, delete old 70: 40(20(·, 30(…)), 70(50, ·)).",
+      "delete 20: one child (30) → 30 replaces 20: 40(30(25, 35(33, ·)), 70(50, ·)).",
+      "delete 40: successor = go right to 70, then left to 50 (no left child). Copy 50 into the root, delete old 50: 50(30(25, 35(33, ·)), 70)."
+     ],
+     "answer": "50(30(25, 35(33, ·)), 70) (verified)"
+    },
+    {
+     "type": "warn",
+     "text": "The successor is not the right child; it is the leftmost node of the right subtree. It can have a right child but never a left child."
+    }
+   ]
+  },
+  {
+   "title": "B-trees: 2-3 and 2-3-4 trees",
+   "blocks": [
+    {
+     "type": "p",
+     "text": "A B-tree never adds a leaf below the others. New keys are stuffed into an existing leaf; an overflowing node splits and pushes one key up. The tree grows taller only when the root splits, which lifts every leaf at once, so <b>all leaves are always at the same depth</b>."
+    },
+    {
+     "type": "def",
+     "term": "2-3 tree / 2-3-4 tree",
+     "text": "Each node holds up to L sorted keys and (keys + 1) children: L = 2 gives a 2-3 tree (nodes with 1 or 2 keys), L = 3 a 2-3-4 tree. Children are ordered like a BST: in [a b], left keys &lt; a, middle between a and b, right > b."
+    },
+    {
+     "type": "steps",
+     "title": "B-tree insertion",
+     "items": [
+      "Walk down as in a BST to the correct leaf and insert the key there in sorted position.",
+      "If the leaf now has L + 1 keys, split: one key goes up to the parent and the keys on each side become two nodes. 2-3 tree (3 keys): the middle key goes up. 2-3-4 tree (4 keys): the left-middle key goes up (the convention used in this course; check each problem).",
+      "If the parent overflows, split it too, repeating upward. If the root splits, the pushed key becomes the new root and the height grows by 1."
+     ]
+    },
+    {
+     "type": "example",
+     "title": "2-3 tree insertion with cascading splits",
+     "prompt": "Insert 8, 3, 12, 5, 1, 9, 15, 4, 6, 7 into an empty 2-3 tree.",
+     "steps": [
+      "8 → [8]. 3 → [3 8]. 12 → [3 8 12] overflows: 8 up → root [8], leaves [3], [12].",
+      "5 → [3 5]. 1 → [1 3 5] overflows: 3 up → root [3 8], leaves [1] [5] [12].",
+      "9 → [9 12]. 15 → [9 12 15] overflows: 12 up → root [3 8 12] overflows: 8 up → new root [8] with children [3] and [12]; leaves [1] [5] under 3 and [9] [15] under 12. Height 2.",
+      "4 → leaf [4 5]. 6 → [4 5 6] overflows: 5 up → [3 5] with leaves [1] [4] [6].",
+      "7 → leaf [6 7]."
+     ],
+     "answer": "Root [8]; children [3 5] and [12]; leaves [1] [4] [6 7] | [9] [15] (verified)"
+    },
+    {
+     "type": "example",
+     "title": "2-3-4 tree with left-middle promotion",
+     "prompt": "Insert 10, 20, …, 90 into an empty 2-3-4 tree.",
+     "steps": [
+      "10, 20, 30 fill one node: [10 20 30].",
+      "40 → [10 20 30 40] overflows: left-middle 20 goes up: [20] over [10] and [30 40].",
+      "50 → [30 40 50]. 60 → [30 40 50 60] overflows: 40 up → root [20 40], leaves [10] [30] [50 60].",
+      "70 → [50 60 70]. 80 → overflow, 60 up → root [20 40 60], leaves [10] [30] [50] [70 80].",
+      "90 → [70 80 90]. No further split."
+     ],
+     "answer": "Root [20 40 60] with leaves [10] [30] [50] [70 80 90], height 1 (verified)"
+    },
+    {
+     "type": "thm",
+     "name": "B-tree height",
+     "text": "With N keys, every non-leaf has ≥ 2 children and all leaves share one depth, so height ≤ log₂ N; with full nodes it is about log_{L+1} N. Search and insert are Θ(log N) (each node costs ≤ L comparisons). A 2-3 tree of height H holds between 2^(H+1) − 1 and 3^(H+1) − 1 keys."
+    },
+    {
+     "type": "warn",
+     "text": "Keys enter only at leaves, never directly into an internal node, even if it “has room”. Internal nodes gain keys only from splits below them."
+    }
+   ]
+  },
+  {
+   "title": "Rotations and LLRBs",
+   "blocks": [
+    {
+     "type": "p",
+     "text": "A <b>left-leaning red-black tree</b> is a BST that represents a 2-3 tree: a 3-node [a b] is stored as b with a as its left child, joined by a <b>red</b> link. Notation: a * after a key means the link from its parent is red."
+    },
+    {
+     "type": "list",
+     "items": [
+      "Red links lean left.",
+      "No node touches two red links (that would glue a 4-node).",
+      "Every root-to-null path crosses the same number of black links (black links are the 2-3 tree edges; all 2-3 leaves have the same depth).",
+      "The root is black. LLRBs and 2-3 trees correspond one-to-one."
+     ]
+    },
+    {
+     "type": "code",
+     "lang": "java",
+     "text": "Node rotateLeft(Node h) {        // h's right child x becomes the subtree root\n    Node x = h.right;\n    h.right = x.left;            // x's old left subtree switches parents\n    x.left = h;\n    x.color = h.color;\n    h.color = RED;\n    return x;\n}\nNode rotateRight(Node h) {       // mirror image\n    Node x = h.left;\n    h.left = x.right;\n    x.right = h;\n    x.color = h.color;\n    h.color = RED;\n    return x;\n}"
+    },
+    {
+     "type": "example",
+     "title": "A rotation preserves in-order",
+     "prompt": "Apply rotateLeft to the root of the BST 4(2(1, 3), 6(5, 7)).",
+     "steps": [
+      "x = 6. h.right = x.left = 5. x.left = 4.",
+      "New tree: 6(4(2(1, 3), 5), 7).",
+      "In-order before: 1 2 3 4 5 6 7; after: 1 2 3 4 5 6 7. Height went from 2 to 3 on the left."
+     ],
+     "answer": "6(4(2(1, 3), 5), 7) (verified)"
+    },
+    {
+     "type": "thm",
+     "name": "LLRB height",
+     "text": "Black links alone form a perfectly balanced tree; at most every other link on a path is red. So if the 2-3 tree has height H, the LLRB has height between H and 2H + 1, i.e. Θ(log N)."
+    }
+   ]
+  },
+  {
+   "title": "LLRB insertion",
+   "blocks": [
+    {
+     "type": "steps",
+     "title": "Insert into an LLRB",
+     "items": [
+      "Insert as in a BST, with a red link to the new node (in 2-3 terms: add the key to an existing node).",
+      "On the way back up, at each node in this order: (1) right child red and left not red → rotateLeft; (2) left child red and its left child red → rotateRight; (3) both children red → color flip (children black, this node’s link red) — a 2-3 split pushing the middle key up.",
+      "Paint the root black at the end."
+     ]
+    },
+    {
+     "type": "code",
+     "lang": "java",
+     "text": "Node put(Node h, int k) {\n    if (h == null) return new Node(k, RED);\n    if (k < h.key) h.left = put(h.left, k);\n    else if (k > h.key) h.right = put(h.right, k);\n    if (isRed(h.right) && !isRed(h.left))     h = rotateLeft(h);\n    if (isRed(h.left) && isRed(h.left.left))  h = rotateRight(h);\n    if (isRed(h.left) && isRed(h.right))      flipColors(h);\n    return h;\n}"
+    },
+    {
+     "type": "example",
+     "title": "Insert 1 … 7 into an LLRB, mapped to the 2-3 tree",
+     "prompt": "Give the operations for each insert and the matching 2-3 tree.",
+     "steps": [
+      "1: root 1. 2-3: [1].",
+      "2: red right child of 1 → rotateLeft(1): 2(1*, ·). 2-3: [1 2].",
+      "3: red right of 2, left 1 red → flip(2); root black: 2(1, 3). 2-3: [2] over [1] [3] (root split).",
+      "4: red right of 3 → rotateLeft(3): 2(1, 4(3*, ·)). 2-3: [2] over [1] [3 4].",
+      "5: red right of 4 with red left 3 → flip(4) (4’s link red). At 2: right red, left black → rotateLeft(2): 4(2*(1, 3), 5). 2-3: [2 4] over [1] [3] [5].",
+      "6: rotateLeft(5): 4(2*(1, 3), 6(5*, ·)). 2-3: [2 4] over [1] [3] [5 6].",
+      "7: flip(6) then at 4 both children red → flip(4); root repainted black: 4(2(1, 3), 6(5, 7)). 2-3: [4] over [2] [6] over [1] [3] [5] [7]."
+     ],
+     "answer": "4 rotateLeft, 0 rotateRight, 4 flips; final perfectly balanced 4(2(1,3), 6(5,7)) (verified)"
+    },
+    {
+     "type": "example",
+     "title": "A rotateRight case",
+     "prompt": "Insert 8, 3, 12, 5, 1 into an LLRB. What operations does the last insert perform?",
+     "steps": [
+      "After 8, 3, 12: flip(8) gives 8(3, 12). 5: red right child of 3 → rotateLeft(3): 8(5(3*, ·), 12).",
+      "1: becomes red left child of 3. At 5: left 3 red and 3.left = 1 red → rotateRight(5): 3 with red children 1 and 5 → flip(3): 3’s link red.",
+      "At 8: left 3 red, right black: nothing. Tree 8(3*(1, 5), 12). 2-3: [3 8] over [1] [5] [12] — the same as the 2-3 insertion of these keys."
+     ],
+     "answer": "rotateRight(5), flip(3); tree 8(3*(1, 5), 12) (verified)"
+    },
+    {
+     "type": "warn",
+     "text": "Flips can cascade up to the root. The order of the three checks matters: rotateLeft, then rotateRight, then flip."
+    }
+   ]
+  },
+  {
+   "title": "Heights and runtimes summary",
+   "blocks": [
+    {
+     "type": "table",
+     "head": [
+      "Structure",
+      "Height",
+      "search / insert worst"
+     ],
+     "rows": [
+      [
+       "BST",
+       "between ⌊log₂ N⌋ and N − 1",
+       "Θ(N)"
+      ],
+      [
+       "BST, random insertion order",
+       "Θ(log N) expected",
+       "Θ(log N) expected"
+      ],
+      [
+       "2-3 / B-tree",
+       "Θ(log N), all leaves at one depth",
+       "Θ(log N)"
+      ],
+      [
+       "LLRB",
+       "≤ 2H + 1 where H = 2-3 height; ≤ ~2 log₂ N",
+       "Θ(log N)"
+      ]
+     ]
+    },
+    {
+     "type": "example",
+     "title": "Height bounds between a 2-3 tree and its LLRB",
+     "prompt": "A 2-3 tree has height 2 (edges). What are the minimum and maximum numbers of keys, and the minimum and maximum heights of its LLRB?",
+     "steps": [
+      "Keys: all 2-nodes → 1 + 2 + 4 = 7 = 2³ − 1; all 3-nodes → 2 + 6 + 18 = 26 = 3³ − 1.",
+      "LLRB height: all 2-nodes gives no red links: height 2.",
+      "Maximum: a path through three 3-nodes contributes 2 LLRB nodes per 2-3 level: 6 nodes, height 5 = 2·2 + 1."
+     ],
+     "answer": "Keys 7…26; LLRB height 2…5"
+    }
+   ]
+  }
+ ],
+ "cards": [
+  {
+   "front": "BST property?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Every key in the left subtree &lt; node &lt; every key in the right subtree (whole subtrees, not just children)."
+    }
+   ]
+  },
+  {
+   "front": "Why is checking only children insufficient to validate a BST?",
+   "back": [
+    {
+     "type": "p",
+     "text": "A deeper descendant can violate an ancestor’s bound (12 in the left subtree of 10). Pass (lo, hi) bounds down."
+    }
+   ]
+  },
+  {
+   "front": "BST search/insert cost?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Θ(height): Θ(log N) bushy, Θ(N) spindly."
+    }
+   ]
+  },
+  {
+   "front": "Height of BST after inserting 1, 2, …, N in order?",
+   "back": [
+    {
+     "type": "p",
+     "text": "N − 1 (a chain)."
+    }
+   ]
+  },
+  {
+   "front": "Hibbard deletion of a node with two children?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Replace its key with the successor’s (leftmost in the right subtree) and delete the successor from the right subtree (or mirror with the predecessor)."
+    }
+   ]
+  },
+  {
+   "front": "Can the successor have a left child?",
+   "back": [
+    {
+     "type": "p",
+     "text": "No (it is the leftmost node of the right subtree). It may have a right child."
+    }
+   ]
+  },
+  {
+   "front": "Why are all B-tree leaves at the same depth?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Height grows only by root splits, which lift every leaf together; new keys never create deeper leaves."
+    }
+   ]
+  },
+  {
+   "front": "2-3 tree split rule?",
+   "back": [
+    {
+     "type": "p",
+     "text": "A node with 3 keys sends the middle key up; the other two become separate nodes."
+    }
+   ]
+  },
+  {
+   "front": "2-3-4 tree split rule in this course?",
+   "back": [
+    {
+     "type": "p",
+     "text": "A node with 4 keys sends the left-middle (second) key up."
+    }
+   ]
+  },
+  {
+   "front": "Can a key be inserted directly into an internal B-tree node?",
+   "back": [
+    {
+     "type": "p",
+     "text": "No; insert at a leaf, internal nodes only gain keys from splits."
+    }
+   ]
+  },
+  {
+   "front": "Key count range for a 2-3 tree of height H?",
+   "back": [
+    {
+     "type": "p",
+     "text": "2^(H+1) − 1 (all 2-nodes) to 3^(H+1) − 1 (all 3-nodes)."
+    }
+   ]
+  },
+  {
+   "front": "How does an LLRB represent a 3-node [a b]?",
+   "back": [
+    {
+     "type": "p",
+     "text": "b with a as its left child, connected by a red link."
+    }
+   ]
+  },
+  {
+   "front": "Three LLRB invariants?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Red links lean left; no node has two red links; every root-to-null path has the same number of black links."
+    }
+   ]
+  },
+  {
+   "front": "LLRB insert fix-up order?",
+   "back": [
+    {
+     "type": "p",
+     "text": "(1) right red & left black → rotateLeft; (2) left red & left.left red → rotateRight; (3) both children red → flip."
+    }
+   ]
+  },
+  {
+   "front": "What 2-3 operation does a color flip simulate?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Splitting a temporary 4-node: the middle key moves up into the parent."
+    }
+   ]
+  },
+  {
+   "front": "rotateLeft(h) code?",
+   "back": [
+    {
+     "type": "p",
+     "text": "<code>x = h.right; h.right = x.left; x.left = h; x.color = h.color; h.color = RED; return x;</code>"
+    }
+   ]
+  },
+  {
+   "front": "What does a rotation preserve?",
+   "back": [
+    {
+     "type": "p",
+     "text": "The in-order sequence (BST property). The middle subtree switches parents."
+    }
+   ]
+  },
+  {
+   "front": "LLRB height in terms of its 2-3 tree height H?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Between H and 2H + 1; overall ≤ about 2 log₂ N."
+    }
+   ]
+  },
+  {
+   "front": "Inserting 1…7 into an LLRB: how many rotations and flips?",
+   "back": [
+    {
+     "type": "p",
+     "text": "4 rotateLefts, 0 rotateRights, 4 flips; ends perfectly balanced."
+    }
+   ]
+  },
+  {
+   "front": "How to read an LLRB as a 2-3 tree?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Merge every red node into its parent."
+    }
+   ]
+  },
+  {
+   "front": "Right child of a node in an LLRB: can it be red?",
+   "back": [
+    {
+     "type": "p",
+     "text": "No (red links lean left). So the rightmost path from any node is all black."
+    }
+   ]
+  },
+  {
+   "front": "Search cost in a 2-3 tree vs LLRB?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Both Θ(log N) worst case."
+    }
+   ]
+  },
+  {
+   "front": "Ceiling of k in a BST (smallest key ≥ k)?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Walk down: if node.key ≥ k record it and go left, else go right; return the last recorded key. Θ(height)."
+    }
+   ]
+  }
+ ],
+ "hard": [
+  {
+   "title": "Restore all colors of an LLRB",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "You are given a valid LLRB whose color bits were all erased (shape and keys intact). Write <code>restore(Node x)</code> that sets every color correctly in Θ(N). Then say which links are red in the LLRB with shape 4(2(1, 3), 6(5, ·))."
+    }
+   ],
+   "answer": "Left child c of x is red iff blackHeight(c) == blackHeight(x), where blackHeight = length of the rightmost path; in the example, 2 and 5 are red",
+   "solution": [
+    {
+     "type": "p",
+     "text": "Fact 1: right links are never red, so the rightmost path from any node is all black; its number of nodes is that node’s black height bh(x)."
+    },
+    {
+     "type": "p",
+     "text": "Fact 2: a black child has bh(child) = bh(x) − 1; a red (left) child has bh(child) = bh(x) since it lives in the same 2-3 node."
+    },
+    {
+     "type": "code",
+     "lang": "java",
+     "text": "// returns bh(x); sets colors in x's subtree\nstatic int restore(Node x) {\n    if (x == null) return 0;\n    int me = 1 + restore(x.right);        // rightmost path length\n    int l = restore(x.left);\n    x.color = BLACK;                      // parent decides x's color\n    if (x.left != null) x.left.color = (l == me) ? RED : BLACK;\n    return me;\n}"
+    },
+    {
+     "type": "p",
+     "text": "Each node visited once: Θ(N). The root ends up black. Verified on 2000 random LLRBs (colors erased then restored, compared with the original)."
+    },
+    {
+     "type": "p",
+     "text": "Example 4(2(1, 3), 6(5, ·)): bh(6) = 1 and bh(4) = 2 (rightmost path 4 → 6). bh(2) = 2 (path 2 → 3) equals bh(4), so 2 is red; bh(5) = 1 equals bh(6), so 5 is red; bh(1) = 1 ≠ bh(2) = 2 and bh(3) = 1, so 1 and 3 are black. This is exactly the LLRB obtained by inserting 1 … 6 (verified)."
+    }
+   ]
+  },
+  {
+   "title": "Convert a 2-3 tree into its LLRB",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "Given <code>class TNode { int[] keys; TNode[] kids; }</code> for a 2-3 tree (keys.length is 1 or 2; kids is null at leaves, else keys.length + 1 children), write a recursive <code>Node convert(TNode t)</code> that builds the equivalent LLRB in Θ(N)."
+    }
+   ],
+   "answer": "2-node → black node with converted children; 3-node [a b] → black b whose red left child a holds the left and middle subtrees",
+   "solution": [
+    {
+     "type": "code",
+     "lang": "java",
+     "text": "static Node convert(TNode t) {\n    if (t == null) return null;\n    boolean leaf = (t.kids == null);\n    if (t.keys.length == 1) {\n        Node x = new Node(t.keys[0], BLACK);\n        if (!leaf) { x.left = convert(t.kids[0]); x.right = convert(t.kids[1]); }\n        return x;\n    }\n    Node b = new Node(t.keys[1], BLACK);\n    Node a = new Node(t.keys[0], RED);\n    b.left = a;\n    if (!leaf) {\n        a.left = convert(t.kids[0]);     // keys < a\n        a.right = convert(t.kids[1]);    // a < keys < b\n        b.right = convert(t.kids[2]);    // keys > b\n    }\n    return b;\n}"
+    },
+    {
+     "type": "p",
+     "text": "Every converted subtree root is black (it is a whole 2-3 node), so only the internal a–b links are red. One Θ(1) step per 2-3 node: Θ(N)."
+    },
+    {
+     "type": "p",
+     "text": "Verified: for 2000 random insertion orders, converting the 2-3 tree gave exactly the LLRB built by LLRB insertion of the same keys (same keys, shape and colors)."
+    }
+   ]
+  },
+  {
+   "title": "Count LLRB operations for a sequence",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "Insert 8, 3, 12, 5, 1, 9, 15, 4, 6, 7 into an empty LLRB. List the rotations and flips performed by each insert, and give the final tree."
+    }
+   ],
+   "answer": "Final 8(5(3*(1, 4), 7(6*, ·)), 12(9, 15))",
+   "solution": [
+    {
+     "type": "p",
+     "text": "8: none. 3: none (red left). 12: flip(8). 5: rotateLeft(3). 1: rotateRight(5), flip(3). 9: none (red left of 12). 15: flip(12), flip(8) (root repainted black; 2-3 root split)."
+    },
+    {
+     "type": "p",
+     "text": "4: none (red left of 5). 6: flip(5) (4 and 6 black, 5 red as right child of 3) then rotateLeft(3) → 5 with red left 3."
+    },
+    {
+     "type": "p",
+     "text": "7: red right child of 6 → rotateLeft(6) → 7(6*, ·)."
+    },
+    {
+     "type": "p",
+     "text": "Final 8(5(3*(1, 4), 7(6*, ·)), 12(9, 15)); 2-3 view: [8] over [3 5] and [12]; leaves [1] [4] [6 7] | [9] [15], identical to the 2-3 insertion of the same keys. All operations verified by an instrumented implementation."
+    }
+   ]
+  },
+  {
+   "title": "Ceiling in a BST",
+   "level": "hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "Write <code>Integer ceiling(Node n, int k)</code> returning the smallest key ≥ k, or null, in Θ(height) and without recursion. For the BST 50(30(25, 35(33, ·)), 70), give ceiling for 34, 36, 71, 0."
+    }
+   ],
+   "answer": "35, 50, null, 25",
+   "solution": [
+    {
+     "type": "code",
+     "lang": "java",
+     "text": "static Integer ceiling(Node n, int k) {\n    Integer best = null;\n    while (n != null) {\n        if (n.key == k) return k;\n        if (n.key > k) { best = n.key; n = n.left; }   // candidate; look for smaller\n        else n = n.right;                              // too small; go right\n    }\n    return best;\n}"
+    },
+    {
+     "type": "p",
+     "text": "34: 50 (best 50) → left 30 &lt; 34 → right 35 (best 35) → left 33 &lt; 34 → right null: 35. 36: 50 → 30 → 35 → right null: best 50. 71: everything smaller: null. 0: keeps going left, last candidate 25. Verified."
+    }
+   ]
+  },
+  {
+   "title": "2-3 tree shapes and counts",
+   "level": "hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "(a) What is the minimum number of keys you must insert into an empty 2-3 tree to make its height 2? (b) Insert 10, 20, …, 90 into a 2-3-4 tree (left-middle promotion): how many splits happen, and what is the final height? (c) Same keys into a 2-3 tree: final height?"
+    }
+   ],
+   "answer": "(a) 7 (b) 3 splits, height 1 (c) height 2",
+   "solution": [
+    {
+     "type": "p",
+     "text": "(a) Height 2 needs a root split at height 1. A height-1 2-3 tree splits its root when the root holds 2 keys and a leaf overflows into it: e.g. inserting 1 … 7 in order makes height 2 exactly at the 7th key (verified: [4] over [2] [6] over [1] [3] [5] [7]). A height-2 tree has ≥ 2³ − 1 = 7 keys, so 7 is the minimum."
+    },
+    {
+     "type": "p",
+     "text": "(b) Overflows happen at 40 ([10 20 30 40], 20 up), at 60 ([30 40 50 60], 40 up) and at 80 ([50 60 70 80], 60 up): 3 splits. The root [20 40 60] never overflows, so the height is 1 (verified trace)."
+    },
+    {
+     "type": "p",
+     "text": "(c) 2-3 tree on 9 increasing keys: height 2 (root split happens at 7)."
+    }
+   ]
+  },
+  {
+   "title": "Recursive BST range count",
+   "level": "hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "Write <code>int countRange(Node n, int lo, int hi)</code> returning how many keys k satisfy lo ≤ k ≤ hi, visiting only nodes that could matter. What is the runtime for a balanced BST if the answer is R? Evaluate on 50(30(25, 35(33, ·)), 70) with lo = 26, hi = 50."
+    }
+   ],
+   "answer": "4; Θ(log N + R)",
+   "solution": [
+    {
+     "type": "code",
+     "lang": "java",
+     "text": "static int countRange(Node n, int lo, int hi) {\n    if (n == null) return 0;\n    if (n.key < lo) return countRange(n.right, lo, hi);   // whole left side too small\n    if (n.key > hi) return countRange(n.left, lo, hi);    // whole right side too big\n    return 1 + countRange(n.left, lo, hi) + countRange(n.right, lo, hi);\n}"
+    },
+    {
+     "type": "p",
+     "text": "Pruning means we visit the in-range nodes plus O(height) boundary nodes: Θ(log N + R) on a balanced tree."
+    },
+    {
+     "type": "p",
+     "text": "Keys in [26, 50]: 30, 33, 35, 50 → 4 (verified)."
+    }
+   ]
+  },
+  {
+   "title": "LLRB vs 2-3 tree heights",
+   "level": "hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "An LLRB contains N = 26 keys. (a) Minimum possible height of the corresponding 2-3 tree? (b) If that 2-3 tree has height 2 and the LLRB has height 5, what must be true of some root-to-leaf path in the 2-3 tree? (c) Can an LLRB with 26 keys have height 6?"
+    }
+   ],
+   "answer": "(a) 2 (b) it passes through three 3-nodes (c) no",
+   "solution": [
+    {
+     "type": "p",
+     "text": "(a) A 2-3 tree of height 1 holds at most 3² − 1 = 8 keys; height 2 holds up to 26. So height 2 (26 keys means every node is a 3-node)."
+    },
+    {
+     "type": "p",
+     "text": "(b) LLRB height 5 = 2H + 1 requires a path where each of the 3 levels is a 3-node (2 LLRB nodes each). In fact with 26 keys all nodes are 3-nodes."
+    },
+    {
+     "type": "p",
+     "text": "(c) The 2-3 tree has height exactly 2 (26 keys force all 3-nodes, height 2), so the LLRB height is at most 2·2 + 1 = 5."
+    }
+   ]
+  },
+  {
+   "title": "Delete and re-insert",
+   "level": "hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "In the BST 40(20(10, 30(25, 35(33, ·))), 60(50, 70)), delete 40 using Hibbard deletion with the successor, then re-insert 40. Is the result the same as the original? Give the final tree."
+    }
+   ],
+   "answer": "No: 50(20(10, 30(25, 35(33, ·))), 60(·, 70)) then 40 goes into 50’s left subtree: 50(20(10, 30(25, 35(33, 40))), 60(·, 70))",
+   "solution": [
+    {
+     "type": "p",
+     "text": "Successor of 40 = leftmost of 60(50, 70) = 50. Copy 50 into the root and delete the old 50 (a leaf): 50(20(10, 30(25, 35(33, ·))), 60(·, 70))."
+    },
+    {
+     "type": "p",
+     "text": "Re-insert 40: &lt; 50 → 20 → > 20 → 30 → > 30 → 35 → > 35 → right child of 35."
+    },
+    {
+     "type": "p",
+     "text": "Result 50(20(10, 30(25, 35(33, 40))), 60(·, 70)), height 4. Deletion is not undone by re-insertion; the root changed."
+    }
+   ]
+  }
+ ],
+ "keyFacts": [
+  "BST: left subtree &lt; node &lt; right subtree; validate with (lo, hi) bounds; operations Θ(height), height between log₂ N and N − 1.",
+  "Hibbard delete: 0/1 child easy; 2 children → copy successor (leftmost of right subtree), delete it there.",
+  "B-tree insert at a leaf; overflow splits push a key up (2-3: middle; 2-3-4: left-middle); height grows only at the root; all leaves same depth.",
+  "2-3 tree of height H has 2^(H+1) − 1 … 3^(H+1) − 1 keys.",
+  "LLRB: 3-node [a b] = b with red left child a; red links lean left; no node with two reds; equal black links on all paths.",
+  "LLRB insert fix-ups in order: rotateLeft (right red, left black), rotateRight (two left reds), flip (both children red); root black.",
+  "LLRB height ≤ 2H + 1 (H = 2-3 height), Θ(log N).",
+  "Rotations preserve in-order; the middle subtree switches parents."
+ ],
+ "parsons": [
+  {
+   "title": "BST rotateLeft",
+   "goal": "Rotate the subtree rooted at h to the left (ignore colors) and return the new subtree root.",
+   "lines": [
+    "Node rotateLeft(Node h) {",
+    "    Node x = h.right;",
+    "    h.right = x.left;",
+    "    x.left = h;",
+    "    return x;",
+    "}"
+   ],
+   "distractors": [
+    "    h.left = x.right;",
+    "    x.right = h;",
+    "    return h;"
+   ]
+  },
+  {
+   "title": "LLRB insert",
+   "goal": "Insert key k into the LLRB rooted at h (new nodes are red) and return the new subtree root; the caller paints the root black.",
+   "lines": [
+    "Node put(Node h, int k) {",
+    "    if (h == null) return new Node(k, RED);",
+    "    if (k &lt; h.key) h.left = put(h.left, k);",
+    "    else if (k > h.key) h.right = put(h.right, k);",
+    "    if (isRed(h.right) && !isRed(h.left)) h = rotateLeft(h);",
+    "    if (isRed(h.left) && isRed(h.left.left)) h = rotateRight(h);",
+    "    if (isRed(h.left) && isRed(h.right)) flipColors(h);",
+    "    return h;",
+    "}"
+   ],
+   "distractors": [
+    "    if (h == null) return new Node(k, BLACK);",
+    "    if (isRed(h.left) && !isRed(h.right)) h = rotateLeft(h);",
+    "    if (isRed(h.right) && isRed(h.right.right)) h = rotateRight(h);"
+   ]
+  },
+  {
+   "title": "Hibbard deletion",
+   "goal": "Delete key k from the BST rooted at n using the successor, and return the new subtree root.",
+   "lines": [
+    "Node delete(Node n, int k) {",
+    "    if (n == null) return null;",
+    "    if (k &lt; n.key) n.left = delete(n.left, k);",
+    "    else if (k > n.key) n.right = delete(n.right, k);",
+    "    else {",
+    "        if (n.left == null) return n.right; if (n.right == null) return n.left;",
+    "        Node s = n.right;",
+    "        while (s.left != null) s = s.left;",
+    "        n.key = s.key;",
+    "        n.right = delete(n.right, s.key);",
+    "    }",
+    "    return n;",
+    "}"
+   ],
+   "distractors": [
+    "        Node s = n.left;",
+    "        n.right = delete(n.right, k);",
+    "        while (s.left != null) s = s.right;"
+   ]
+  },
+  {
+   "title": "Validate a BST",
+   "goal": "Return true iff every key in n’s subtree lies strictly between lo and hi and the whole subtree is a BST.",
+   "lines": [
+    "static boolean isBST(Node n, long lo, long hi) {",
+    "    if (n == null) return true;",
+    "    if (n.key &lt;= lo || n.key >= hi) return false;",
+    "    return isBST(n.left, lo, n.key) && isBST(n.right, n.key, hi);",
+    "}"
+   ],
+   "distractors": [
+    "    return isBST(n.left, n.key, hi) && isBST(n.right, lo, n.key);",
+    "    if (n.left != null && n.left.key > n.key) return false;",
+    "    if (n == null) return false;"
+   ]
+  }
+ ]
+}

@@ -1,0 +1,1053 @@
+{
+ "id": "54-9",
+ "course": "54",
+ "title": "Inner products, orthogonality, orthogonal projections",
+ "source": "Lay 6.1–6.3",
+ "summary": "Lengths, angles and orthogonality in ℝⁿ, orthogonal complements (Row A ⟂ Nul A), and orthogonal projection: the closest point of a subspace to a vector, computed with an orthogonal basis. Projection is the engine behind Gram–Schmidt, least squares and Fourier series.",
+ "lesson": [
+  {
+   "title": "Dot product, length, distance, angle",
+   "blocks": [
+    {
+     "type": "def",
+     "term": "Inner (dot) product",
+     "text": "<b>u</b>·<b>v</b> = <b>u</b>ᵀ<b>v</b> = u₁v₁ + ⋯ + uₙvₙ. Properties: <b>u</b>·<b>v</b> = <b>v</b>·<b>u</b>; (<b>u</b> + <b>v</b>)·<b>w</b> = <b>u</b>·<b>w</b> + <b>v</b>·<b>w</b>; (c<b>u</b>)·<b>v</b> = c(<b>u</b>·<b>v</b>); <b>u</b>·<b>u</b> ≥ 0 with equality only for <b>u</b> = <b>0</b>."
+    },
+    {
+     "type": "def",
+     "term": "Length, unit vector, distance",
+     "text": "‖<b>u</b>‖ = √(<b>u</b>·<b>u</b>). A unit vector has length 1; <b>u</b>/‖<b>u</b>‖ is the unit vector in the direction of <b>u</b> (normalizing). dist(<b>u</b>, <b>v</b>) = ‖<b>u</b> − <b>v</b>‖."
+    },
+    {
+     "type": "formula",
+     "text": "cos θ = (u·v)/(‖u‖‖v‖)"
+    },
+    {
+     "type": "def",
+     "term": "Orthogonal",
+     "text": "<b>u</b> ⟂ <b>v</b> iff <b>u</b>·<b>v</b> = 0. (The zero vector is orthogonal to everything.)"
+    },
+    {
+     "type": "thm",
+     "name": "Pythagorean Theorem",
+     "text": "<b>u</b> ⟂ <b>v</b> ⇔ ‖<b>u</b> + <b>v</b>‖² = ‖<b>u</b>‖² + ‖<b>v</b>‖².",
+     "proof": [
+      {
+       "type": "p",
+       "text": "‖<b>u</b> + <b>v</b>‖² = (<b>u</b> + <b>v</b>)·(<b>u</b> + <b>v</b>) = ‖<b>u</b>‖² + 2<b>u</b>·<b>v</b> + ‖<b>v</b>‖²; the middle term is zero exactly when <b>u</b>·<b>v</b> = 0."
+      }
+     ]
+    },
+    {
+     "type": "example",
+     "title": "Dot product, lengths, distance, unit vector, angle",
+     "prompt": "u = (3, −1, 2), v = (1, 4, −2). Find u·v, ‖u‖, ‖v‖, dist(u, v), the unit vector in the direction of u, and the angle between u and v.",
+     "steps": [
+      "u·v = 3 − 4 − 4 = −5.",
+      "‖u‖ = √(9 + 1 + 4) = √14; ‖v‖ = √(1 + 16 + 4) = √21.",
+      "u − v = (2, −5, 4), so dist = √(4 + 25 + 16) = √45 = 3√5.",
+      "Unit vector u/√14 = (3, −1, 2)/√14.",
+      "cos θ = −5/(√14·√21) = −5/√294 ≈ −0.292, θ ≈ 107.0° (obtuse because u·v &lt; 0)."
+     ],
+     "answer": "u·v = −5, ‖u‖ = √14, ‖v‖ = √21, dist = 3√5, unit (3, −1, 2)/√14, θ ≈ 107°"
+    }
+   ]
+  },
+  {
+   "title": "Orthogonal complements and the fundamental subspaces",
+   "blocks": [
+    {
+     "type": "def",
+     "term": "Orthogonal complement",
+     "text": "W⊥ = {<b>z</b> : <b>z</b>·<b>w</b> = 0 for every <b>w</b> ∈ W}. It is a subspace, and W ∩ W⊥ = {<b>0</b>}."
+    },
+    {
+     "type": "thm",
+     "name": "Testing membership",
+     "text": "<b>x</b> ∈ W⊥ ⇔ <b>x</b> is orthogonal to every vector in a spanning set of W.",
+     "proof": [
+      {
+       "type": "p",
+       "text": "If <b>x</b>·<b>wᵢ</b> = 0 for each spanning vector, then <b>x</b>·(Σcᵢ<b>w</b>ᵢ) = Σcᵢ(<b>x</b>·<b>w</b>ᵢ) = 0."
+      }
+     ]
+    },
+    {
+     "type": "thm",
+     "name": "Fundamental subspaces",
+     "text": "(Row A)⊥ = Nul A and (Col A)⊥ = Nul Aᵀ. Also dim W + dim W⊥ = n.",
+     "proof": [
+      {
+       "type": "p",
+       "text": "A<b>x</b> = <b>0</b> says exactly that <b>x</b> dots to zero with every row of A. Apply this to Aᵀ, whose rows are the columns of A, for the second statement. The dimension count is the Rank Theorem: rank + nullity = n."
+      }
+     ]
+    },
+    {
+     "type": "steps",
+     "title": "Find W⊥",
+     "items": [
+      "Write the spanning vectors of W as the ROWS of a matrix.",
+      "W⊥ is the null space of that matrix: row reduce and write the parametric vector form.",
+      "Check: each basis vector of W⊥ dots to 0 with each spanning vector; dimensions add to n."
+     ]
+    },
+    {
+     "type": "example",
+     "title": "W⊥ as a null space",
+     "prompt": "W = Span{(1, 0, −1, 2), (0, 1, 1, −1)} ⊆ ℝ⁴. Find a basis of W⊥.",
+     "steps": [
+      "W⊥ = Nul [1 0 −1 2; 0 1 1 −1] (already in RREF).",
+      "x₁ = x₃ − 2x₄, x₂ = −x₃ + x₄, with x₃, x₄ free.",
+      "Basis: (1, −1, 1, 0) and (−2, 1, 0, 1).",
+      "Check: (1, −1, 1, 0)·(1, 0, −1, 2) = 1 − 1 = 0 and ·(0, 1, 1, −1) = −1 + 1 = 0; similarly for (−2, 1, 0, 1). dim W + dim W⊥ = 2 + 2 = 4. ✓"
+     ],
+     "answer": "W⊥ = Span{(1, −1, 1, 0), (−2, 1, 0, 1)}"
+    },
+    {
+     "type": "example",
+     "title": "(Col A)⊥ = Nul Aᵀ",
+     "prompt": "A = [1 2; 2 4; 3 6]. Find (Col A)⊥ and check its dimension.",
+     "steps": [
+      "Col A = Span{(1, 2, 3)} (column 2 = 2·column 1), a line in ℝ³.",
+      "(Col A)⊥ = Nul Aᵀ = Nul [1 2 3; 2 4 6] = {x₁ + 2x₂ + 3x₃ = 0}.",
+      "Basis (−2, 1, 0), (−3, 0, 1); dimension 2 = 3 − 1. ✓"
+     ],
+     "answer": "(Col A)⊥ = the plane x₁ + 2x₂ + 3x₃ = 0, basis {(−2, 1, 0), (−3, 0, 1)}"
+    }
+   ]
+  },
+  {
+   "title": "Orthogonal sets and orthogonal bases",
+   "blocks": [
+    {
+     "type": "def",
+     "term": "Orthogonal / orthonormal set",
+     "text": "A set where every pair of distinct vectors is orthogonal. Orthonormal: orthogonal and every vector is a unit vector."
+    },
+    {
+     "type": "thm",
+     "name": "Orthogonal ⇒ independent",
+     "text": "An orthogonal set of NONZERO vectors is linearly independent, hence a basis of the subspace it spans.",
+     "proof": [
+      {
+       "type": "p",
+       "text": "If c₁<b>u</b>₁ + ⋯ + cₚ<b>u</b>ₚ = <b>0</b>, dot with <b>u</b>ⱼ: every term vanishes except cⱼ(<b>u</b>ⱼ·<b>u</b>ⱼ), and <b>u</b>ⱼ·<b>u</b>ⱼ ≠ 0, so cⱼ = 0."
+      }
+     ]
+    },
+    {
+     "type": "thm",
+     "name": "Coordinates in an orthogonal basis",
+     "text": "If {<b>u</b>₁, …, <b>u</b>ₚ} is an orthogonal basis of W and <b>y</b> ∈ W, then <b>y</b> = c₁<b>u</b>₁ + ⋯ + cₚ<b>u</b>ₚ with cⱼ = (<b>y</b>·<b>u</b>ⱼ)/(<b>u</b>ⱼ·<b>u</b>ⱼ). No row reduction needed.",
+     "proof": [
+      {
+       "type": "p",
+       "text": "Dot <b>y</b> = Σcᵢ<b>u</b>ᵢ with <b>u</b>ⱼ; orthogonality leaves <b>y</b>·<b>u</b>ⱼ = cⱼ<b>u</b>ⱼ·<b>u</b>ⱼ."
+      }
+     ]
+    },
+    {
+     "type": "example",
+     "title": "Check orthogonality; coordinates by dot products",
+     "prompt": "u₁ = (3, 1, 1), u₂ = (−1, 2, 1), u₃ = (−1/2, −2, 7/2). Show {u₁, u₂, u₃} is an orthogonal basis of ℝ³ and write y = (6, 1, −8) in it.",
+     "steps": [
+      "u₁·u₂ = −3 + 2 + 1 = 0; u₁·u₃ = −3/2 − 2 + 7/2 = 0; u₂·u₃ = 1/2 − 4 + 7/2 = 0. Nonzero and orthogonal ⇒ independent ⇒ basis of ℝ³.",
+      "y·u₁ = 18 + 1 − 8 = 11, u₁·u₁ = 11 ⇒ c₁ = 1.",
+      "y·u₂ = −6 + 2 − 8 = −12, u₂·u₂ = 6 ⇒ c₂ = −2.",
+      "y·u₃ = −3 − 2 − 28 = −33, u₃·u₃ = 1/4 + 4 + 49/4 = 33/2 ⇒ c₃ = −2."
+     ],
+     "answer": "y = u₁ − 2u₂ − 2u₃"
+    },
+    {
+     "type": "warn",
+     "text": "An orthogonal set may contain 0 (then it is dependent). 'Orthogonal basis' excludes 0."
+    }
+   ]
+  },
+  {
+   "title": "Orthogonal projection onto a line",
+   "blocks": [
+    {
+     "type": "thm",
+     "name": "Projection onto a line",
+     "text": "For <b>u</b> ≠ <b>0</b>, the orthogonal projection of <b>y</b> onto L = Span{<b>u</b>} is ŷ = ((<b>y</b>·<b>u</b>)/(<b>u</b>·<b>u</b>))<b>u</b>, and <b>z</b> = <b>y</b> − ŷ is orthogonal to <b>u</b>.",
+     "proof": [
+      {
+       "type": "p",
+       "text": "We want ŷ = α<b>u</b> with (<b>y</b> − α<b>u</b>)·<b>u</b> = 0, i.e. <b>y</b>·<b>u</b> − α<b>u</b>·<b>u</b> = 0, so α = (<b>y</b>·<b>u</b>)/(<b>u</b>·<b>u</b>)."
+      }
+     ]
+    },
+    {
+     "type": "example",
+     "title": "Project onto a line; distance to the line",
+     "prompt": "Project y = (7, 6) onto the line through u = (4, 2). Write y as the sum of a vector in the line and a vector orthogonal to it; find the distance from y to the line.",
+     "steps": [
+      "y·u = 28 + 12 = 40, u·u = 16 + 4 = 20.",
+      "ŷ = (40/20)(4, 2) = (8, 4).",
+      "z = y − ŷ = (−1, 2). Check z·u = −4 + 4 = 0. ✓",
+      "Distance = ‖z‖ = √(1 + 4) = √5."
+     ],
+     "answer": "ŷ = (8, 4), z = (−1, 2), distance √5"
+    },
+    {
+     "type": "p",
+     "text": "The projection matrix onto Span{<b>u</b>} is P = <b>uu</b>ᵀ/(<b>u</b>ᵀ<b>u</b>). It satisfies P² = P and Pᵀ = P, has rank 1, and its eigenvalues are 1 (on the line) and 0 (on the orthogonal complement). Reflection across the line is 2P − I."
+    },
+    {
+     "type": "warn",
+     "text": "Divide by <b>u</b>·<b>u</b> = ‖<b>u</b>‖², not by ‖<b>u</b>‖."
+    }
+   ]
+  },
+  {
+   "title": "Orthogonal projection onto a subspace and best approximation",
+   "blocks": [
+    {
+     "type": "thm",
+     "name": "Orthogonal Decomposition Theorem",
+     "text": "Let W be a subspace of ℝⁿ. Every <b>y</b> can be written uniquely as <b>y</b> = ŷ + <b>z</b> with ŷ ∈ W and <b>z</b> ∈ W⊥. If {<b>u</b>₁, …, <b>u</b>ₚ} is an ORTHOGONAL basis of W, ŷ = proj<sub>W</sub> <b>y</b> = ((<b>y</b>·<b>u</b>₁)/(<b>u</b>₁·<b>u</b>₁))<b>u</b>₁ + ⋯ + ((<b>y</b>·<b>u</b>ₚ)/(<b>u</b>ₚ·<b>u</b>ₚ))<b>u</b>ₚ.",
+     "proof": [
+      {
+       "type": "p",
+       "text": "With ŷ defined by the formula, <b>z</b> = <b>y</b> − ŷ satisfies <b>z</b>·<b>u</b>ⱼ = <b>y</b>·<b>u</b>ⱼ − ((<b>y</b>·<b>u</b>ⱼ)/(<b>u</b>ⱼ·<b>u</b>ⱼ))<b>u</b>ⱼ·<b>u</b>ⱼ = 0 (the other terms die by orthogonality), so <b>z</b> ∈ W⊥."
+      },
+      {
+       "type": "p",
+       "text": "Uniqueness: if ŷ + <b>z</b> = ŷ′ + <b>z</b>′, then ŷ − ŷ′ = <b>z</b>′ − <b>z</b> lies in W ∩ W⊥ = {<b>0</b>}."
+      }
+     ]
+    },
+    {
+     "type": "thm",
+     "name": "Best Approximation Theorem",
+     "text": "ŷ = proj<sub>W</sub> <b>y</b> is the closest point of W to <b>y</b>: ‖<b>y</b> − ŷ‖ &lt; ‖<b>y</b> − <b>v</b>‖ for every <b>v</b> ∈ W, <b>v</b> ≠ ŷ. The distance from <b>y</b> to W is ‖<b>y</b> − ŷ‖ = ‖<b>z</b>‖.",
+     "proof": [
+      {
+       "type": "p",
+       "text": "<b>y</b> − <b>v</b> = (<b>y</b> − ŷ) + (ŷ − <b>v</b>). The first piece is in W⊥, the second in W, so they are orthogonal and Pythagoras gives ‖<b>y</b> − <b>v</b>‖² = ‖<b>y</b> − ŷ‖² + ‖ŷ − <b>v</b>‖² &gt; ‖<b>y</b> − ŷ‖² when <b>v</b> ≠ ŷ."
+      }
+     ]
+    },
+    {
+     "type": "tip",
+     "text": "Why y − ŷ must be orthogonal to all of W: if the error had a component along some direction in W, sliding ŷ in that direction would shorten the error. The closest point is the one where the error has nothing left in W."
+    },
+    {
+     "type": "example",
+     "title": "Projection onto a plane and distance",
+     "prompt": "u₁ = (2, 5, −1), u₂ = (−2, 1, 1), W = Span{u₁, u₂}, y = (1, 2, 3). Find proj_W y, the decomposition y = ŷ + z, and the distance from y to W.",
+     "steps": [
+      "Check orthogonal: u₁·u₂ = −4 + 5 − 1 = 0. ✓",
+      "y·u₁ = 2 + 10 − 3 = 9, u₁·u₁ = 30; y·u₂ = −2 + 2 + 3 = 3, u₂·u₂ = 6.",
+      "ŷ = (9/30)(2, 5, −1) + (3/6)(−2, 1, 1) = (3/5, 3/2, −3/10) + (−1, 1/2, 1/2) = (−2/5, 2, 1/5).",
+      "z = y − ŷ = (7/5, 0, 14/5). Check z·u₁ = 14/5 − 14/5 = 0, z·u₂ = −14/5 + 14/5 = 0. ✓",
+      "Distance = ‖z‖ = √(49/25 + 196/25) = √245/5 = 7√5/5."
+     ],
+     "answer": "ŷ = (−2/5, 2, 1/5), z = (7/5, 0, 14/5), distance 7√5/5"
+    },
+    {
+     "type": "warn",
+     "text": "The sum-of-projections formula needs an ORTHOGONAL basis. With a non-orthogonal basis, first apply Gram–Schmidt, or solve the normal equations AᵀAc = Aᵀy and take ŷ = Ac."
+    },
+    {
+     "type": "p",
+     "text": "If <b>y</b> is already in W, proj<sub>W</sub> <b>y</b> = <b>y</b>. If <b>y</b> ∈ W⊥, the projection is <b>0</b>."
+    }
+   ]
+  },
+  {
+   "title": "Matrices with orthonormal columns",
+   "blocks": [
+    {
+     "type": "thm",
+     "name": "UᵀU = I",
+     "text": "An m×n matrix U has orthonormal columns ⇔ UᵀU = Iₙ. Then ‖U<b>x</b>‖ = ‖<b>x</b>‖ and (U<b>x</b>)·(U<b>y</b>) = <b>x</b>·<b>y</b>: lengths, angles and orthogonality are preserved.",
+     "proof": [
+      {
+       "type": "p",
+       "text": "Entry (i, j) of UᵀU is <b>u</b>ᵢ·<b>u</b>ⱼ, which is 1 on the diagonal and 0 off it exactly for an orthonormal set. Then ‖U<b>x</b>‖² = <b>x</b>ᵀUᵀU<b>x</b> = <b>x</b>ᵀ<b>x</b>."
+      }
+     ]
+    },
+    {
+     "type": "thm",
+     "name": "Projection with orthonormal columns",
+     "text": "If the columns of U are an orthonormal basis of W, proj<sub>W</sub> <b>y</b> = UUᵀ<b>y</b>. UUᵀ is the projection matrix onto W; it equals I only when U is square."
+    },
+    {
+     "type": "def",
+     "term": "Orthogonal matrix",
+     "text": "A SQUARE matrix with orthonormal columns. Then U⁻¹ = Uᵀ, its rows are orthonormal too, and det U = ±1."
+    },
+    {
+     "type": "example",
+     "title": "Using UᵀU = I",
+     "prompt": "U = [1/√2 2/3; 1/√2 −2/3; 0 1/3], x = (√2, 3). Verify UᵀU = I and ‖Ux‖ = ‖x‖. Is UUᵀ = I?",
+     "steps": [
+      "Column norms: 1/2 + 1/2 + 0 = 1 and 4/9 + 4/9 + 1/9 = 1; dot: 2/(3√2) − 2/(3√2) + 0 = 0. So UᵀU = I₂.",
+      "Ux = (1 + 2, 1 − 2, 1) = (3, −1, 1), ‖Ux‖ = √11; ‖x‖ = √(2 + 9) = √11. ✓",
+      "UUᵀ is 3×3 of rank 2 (projection onto the plane Col U), so it is not I₃."
+     ],
+     "answer": "UᵀU = I₂ and ‖Ux‖ = ‖x‖ = √11; UUᵀ ≠ I (it is the projection onto Col U)."
+    },
+    {
+     "type": "warn",
+     "text": "'Orthogonal matrix' means orthonormal columns AND square. A matrix with merely orthogonal columns satisfies AᵀA = diagonal, so A⁻¹ = diag(1/‖aᵢ‖²)Aᵀ."
+    },
+    {
+     "type": "example",
+     "title": "True/False on orthogonality",
+     "prompt": "(a) If x is orthogonal to every vector in a spanning set of W, then x ∈ W⊥. (b) Every orthogonal set is independent. (c) If U has orthonormal columns, UUᵀ = I. (d) (Row A)⊥ = Nul A. (e) proj_W y depends on which orthogonal basis of W is used. (f) If ‖u + v‖² = ‖u‖² + ‖v‖², then u ⟂ v.",
+     "steps": [
+      "(a) True (linearity of the dot product).",
+      "(b) False: {0, e₁} is orthogonal but dependent.",
+      "(c) False unless U is square; UUᵀ projects onto Col U.",
+      "(d) True.",
+      "(e) False: it is the unique closest point.",
+      "(f) True: forces 2u·v = 0."
+     ],
+     "answer": "(a) T (b) F (c) F (d) T (e) F (f) T"
+    }
+   ]
+  }
+ ],
+ "cards": [
+  {
+   "front": "Length, distance, unit vector and orthogonality in ℝⁿ.",
+   "back": [
+    {
+     "type": "formula",
+     "text": "‖u‖ = √(u·u),   dist(u, v) = ‖u − v‖"
+    },
+    {
+     "type": "p",
+     "text": "Unit vector in the direction of u: u/‖u‖. Orthogonal: u·v = 0."
+    },
+    {
+     "type": "p",
+     "text": "<i>Example:</i> ‖(1, 2, 2)‖ = 3, unit vector (1, 2, 2)/3. dist((1, 2), (4, 6)) = ‖(−3, −4)‖ = 5."
+    }
+   ]
+  },
+  {
+   "front": "Pythagorean theorem in ℝⁿ: statement and why.",
+   "back": [
+    {
+     "type": "formula",
+     "text": "u ⊥ v ⟺ ‖u + v‖² = ‖u‖² + ‖v‖²"
+    },
+    {
+     "type": "p",
+     "text": "<b>Why:</b> ‖u + v‖² = ‖u‖² + 2u·v + ‖v‖², and the middle term vanishes exactly when u·v = 0."
+    }
+   ]
+  },
+  {
+   "front": "What is W⊥, and how do Row, Col and Nul fit together?",
+   "back": [
+    {
+     "type": "p",
+     "text": "W⊥ = all vectors orthogonal to every vector in W. It’s a subspace, and dim W + dim W⊥ = n."
+    },
+    {
+     "type": "formula",
+     "text": "(Row A)⊥ = Nul A,   (Col A)⊥ = Nul Aᵀ"
+    },
+    {
+     "type": "p",
+     "text": "<b>Why:</b> Ax = 0 says x is orthogonal to every row of A."
+    }
+   ]
+  },
+  {
+   "front": "Find W⊥ for W = span{(1, 2, −1), (0, 1, 1)} in ℝ³.",
+   "back": [
+    {
+     "type": "steps",
+     "title": "Steps",
+     "items": [
+      "W⊥ = Nul of the matrix with these rows: [1 2 −1; 0 1 1].",
+      "x₂ = −x₃, x₁ = −2x₂ + x₃ = 3x₃."
+     ]
+    },
+    {
+     "type": "p",
+     "text": "<i>Example:</i> W⊥ = span{<b>(3, −1, 1)</b>}. Check: 3 − 2 − 1 = 0, −1 + 1 = 0 ✓."
+    }
+   ]
+  },
+  {
+   "front": "Why is an orthogonal set of nonzero vectors linearly independent?",
+   "back": [
+    {
+     "type": "p",
+     "text": "If c₁u₁ + ⋯ + cₚuₚ = 0, dot both sides with uⱼ: every term dies except cⱼ(uⱼ·uⱼ). Since uⱼ ≠ 0, cⱼ = 0."
+    },
+    {
+     "type": "warn",
+     "text": "The zero vector is orthogonal to everything, which is why “nonzero” is needed."
+    }
+   ]
+  },
+  {
+   "front": "Coordinates in an orthogonal basis: formula and example.",
+   "back": [
+    {
+     "type": "formula",
+     "text": "y = c₁u₁ + ⋯ + cₚuₚ,   cⱼ = (y·uⱼ)/(uⱼ·uⱼ)"
+    },
+    {
+     "type": "p",
+     "text": "No row reduction needed."
+    },
+    {
+     "type": "p",
+     "text": "<i>Example:</i> Basis (1, 1), (1, −1), y = (3, 5): c₁ = 8/2 = 4, c₂ = −2/2 = −1. Check: 4(1, 1) − (1, −1) = (3, 5) ✓."
+    },
+    {
+     "type": "warn",
+     "text": "Only valid for an orthogonal basis."
+    }
+   ]
+  },
+  {
+   "front": "Projection of y onto a line spanned by u.",
+   "back": [
+    {
+     "type": "formula",
+     "text": "ŷ = (y·u / u·u) u,   z = y − ŷ ⊥ u"
+    },
+    {
+     "type": "p",
+     "text": "<i>Example:</i> y = (2, 3), u = (1, 1): ŷ = (5/2)(1, 1) = (5/2, 5/2), z = (−1/2, 1/2). z·u = 0 ✓."
+    },
+    {
+     "type": "p",
+     "text": "Distance from y to the line = ‖z‖ = 1/√2."
+    }
+   ]
+  },
+  {
+   "front": "What does UᵀU = I mean, and what do such matrices preserve?",
+   "back": [
+    {
+     "type": "p",
+     "text": "U has <b>orthonormal columns</b>. Then ‖Ux‖ = ‖x‖ and (Ux)·(Uy) = x·y."
+    },
+    {
+     "type": "p",
+     "text": "If U is square, it’s an <b>orthogonal matrix</b>: U⁻¹ = Uᵀ."
+    },
+    {
+     "type": "p",
+     "text": "<i>Example:</i> (1/5)[3 −4; 4 3] is orthogonal (a rotation)."
+    },
+    {
+     "type": "warn",
+     "text": "“Orthogonal matrix” means orthonormal columns, not just orthogonal ones."
+    }
+   ]
+  },
+  {
+   "front": "Orthogonal decomposition theorem and the projection formula.",
+   "back": [
+    {
+     "type": "p",
+     "text": "Every y splits uniquely as y = ŷ + z with ŷ ∈ W, z ∈ W⊥."
+    },
+    {
+     "type": "formula",
+     "text": "ŷ = Σ (y·uᵢ / uᵢ·uᵢ) uᵢ   (orthogonal basis of W)"
+    },
+    {
+     "type": "formula",
+     "text": "ŷ = UUᵀy   (orthonormal columns U)"
+    },
+    {
+     "type": "warn",
+     "text": "With a non-orthogonal basis, Gram–Schmidt first."
+    }
+   ]
+  },
+  {
+   "front": "Project y = (2, 0, 3) onto W = span{(1, 1, 0), (1, −1, 1)}; distance from y to W.",
+   "back": [
+    {
+     "type": "steps",
+     "title": "Steps",
+     "items": [
+      "u₁·u₂ = 0 ✓ orthogonal.",
+      "ŷ = (2/2)(1, 1, 0) + (5/3)(1, −1, 1) = <b>(8/3, −2/3, 5/3)</b>.",
+      "z = y − ŷ = (−2/3, 2/3, 4/3), orthogonal to both ✓."
+     ]
+    },
+    {
+     "type": "p",
+     "text": "<i>Example:</i> Distance = ‖z‖ = √24/3 = <b>2√6/3</b>."
+    }
+   ]
+  },
+  {
+   "front": "Best approximation theorem: what is it and why?",
+   "back": [
+    {
+     "type": "p",
+     "text": "ŷ = proj_W y is the <b>closest</b> point of W to y: ‖y − ŷ‖ &lt; ‖y − v‖ for every other v ∈ W."
+    },
+    {
+     "type": "p",
+     "text": "<b>Why:</b> y − v = (y − ŷ) + (ŷ − v) with the pieces orthogonal, so Pythagoras gives ‖y − v‖² = ‖y − ŷ‖² + ‖ŷ − v‖²."
+    }
+   ]
+  },
+  {
+   "front": "Projection matrix onto the line through u = (1, 2). Properties?",
+   "back": [
+    {
+     "type": "formula",
+     "text": "P = uuᵀ/(uᵀu) = (1/5)[1 2; 2 4]"
+    },
+    {
+     "type": "p",
+     "text": "P² = P (projecting twice changes nothing), Pᵀ = P, Pu = u, and P kills u⊥."
+    }
+   ]
+  },
+  {
+   "front": "Angle between u and v?",
+   "back": [
+    {
+     "type": "formula",
+     "text": "cos θ = u·v / (‖u‖‖v‖)"
+    },
+    {
+     "type": "p",
+     "text": "Acute if u·v &gt; 0, obtuse if u·v &lt; 0, right angle if u·v = 0."
+    }
+   ]
+  },
+  {
+   "front": "How do you find a basis of W⊥ for W = Span{w₁, …, wₚ}?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Put w₁, …, wₚ as the rows of a matrix and find its null space."
+    }
+   ]
+  },
+  {
+   "front": "Why must y − ŷ be orthogonal to every vector of W?",
+   "back": [
+    {
+     "type": "p",
+     "text": "If it had a component along some direction in W, moving ŷ that way would shorten the error. Formally, Pythagoras: ‖y − v‖² = ‖y − ŷ‖² + ‖ŷ − v‖²."
+    }
+   ]
+  },
+  {
+   "front": "Distance from y to a subspace W?",
+   "back": [
+    {
+     "type": "p",
+     "text": "‖y − proj_W y‖ = ‖z‖, the length of the orthogonal component."
+    }
+   ]
+  },
+  {
+   "front": "Projection formula requirement?",
+   "back": [
+    {
+     "type": "p",
+     "text": "The basis of W must be orthogonal; otherwise Gram–Schmidt first or use the normal equations."
+    },
+    {
+     "type": "warn",
+     "text": "Adding one-dimensional projections onto a non-orthogonal basis gives the wrong answer."
+    }
+   ]
+  },
+  {
+   "front": "Inverse of a square matrix with orthogonal (not orthonormal) columns?",
+   "back": [
+    {
+     "type": "p",
+     "text": "A⁻¹ = diag(1/‖a₁‖², …, 1/‖aₙ‖²)·Aᵀ, since AᵀA is diagonal with the squared lengths."
+    }
+   ]
+  },
+  {
+   "front": "UᵀU vs UUᵀ for U with orthonormal columns?",
+   "back": [
+    {
+     "type": "p",
+     "text": "UᵀU = I always; UUᵀ = projection onto Col U (equals I only if U is square)."
+    }
+   ]
+  },
+  {
+   "front": "Why is W ∩ W⊥ = {0}, and what does it give?",
+   "back": [
+    {
+     "type": "p",
+     "text": "A vector in both is orthogonal to itself: v·v = 0 ⇒ v = 0. It makes the orthogonal decomposition unique."
+    }
+   ]
+  }
+ ],
+ "hard": [
+  {
+   "title": "Orthogonal decomposition in ℝ⁴",
+   "level": "hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "Let <b>u</b>₁ = (1, 1, 0, 1), <b>u</b>₂ = (1, −1, 1, 0), <i>W</i> = Span{<b>u</b>₁, <b>u</b>₂}, <b>y</b> = (3, 1, 2, 4). Write <b>y</b> = <b>ŷ</b> + <b>z</b> with <b>ŷ</b> ∈ <i>W</i>, <b>z</b> ∈ <i>W</i>⊥, and find the distance from <b>y</b> to <i>W</i>."
+    }
+   ],
+   "answer": "ŷ = (4, 4/3, 4/3, 8/3), z = (−1, −1/3, 2/3, 4/3), distance √30/3",
+   "solution": [
+    {
+     "type": "steps",
+     "title": "Solution",
+     "items": [
+      "Check <b>u</b>₁·<b>u</b>₂ = 1 − 1 + 0 + 0 = 0 — orthogonal, so the projection formula applies.",
+      "<b>y</b>·<b>u</b>₁ = 8, <b>u</b>₁·<b>u</b>₁ = 3; <b>y</b>·<b>u</b>₂ = 4, <b>u</b>₂·<b>u</b>₂ = 3.",
+      "<b>ŷ</b> = (8/3)<b>u</b>₁ + (4/3)<b>u</b>₂ = <b>(4, 4/3, 4/3, 8/3)</b>.",
+      "<b>z</b> = <b>y</b> − <b>ŷ</b> = <b>(−1, −1/3, 2/3, 4/3)</b>. Check <b>z</b>·<b>u</b>₁ = −1 − 1/3 + 4/3 = 0 ✓, <b>z</b>·<b>u</b>₂ = −1 + 1/3 + 2/3 = 0 ✓.",
+      "Distance = ‖<b>z</b>‖ = √(1 + 1/9 + 4/9 + 16/9) = √(30/9) = <b>√30 / 3</b>."
+     ]
+    },
+    {
+     "type": "warn",
+     "text": "What it tests: Verify orthogonality of the basis <i>before</i> using the sum-of-projections formula, and always check <b>z</b> ⟂ each basis vector."
+    }
+   ]
+  },
+  {
+   "title": "Trap: projecting with a non-orthogonal basis",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "Find the projection of <b>y</b> = (1, 2, 3) onto <i>W</i> = Span{(1, 1, 0), (1, 0, 1)}. A classmate adds the two one-dimensional projections and gets (7/2, 3/2, 2). Explain the error."
+    }
+   ],
+   "answer": "ŷ = (7/3, 2/3, 5/3); the basis is not orthogonal so one-dimensional projections cannot be added",
+   "solution": [
+    {
+     "type": "p",
+     "text": "The basis is <i>not</i> orthogonal: (1,1,0)·(1,0,1) = 1. The term-by-term formula is invalid."
+    },
+    {
+     "type": "p",
+     "text": "Method 1 (normal equations): <i>A</i> ="
+    },
+    {
+     "type": "matrix",
+     "rows": [
+      [
+       "1",
+       "1"
+      ],
+      [
+       "1",
+       "0"
+      ],
+      [
+       "0",
+       "1"
+      ]
+     ]
+    },
+    {
+     "type": "p",
+     "text": ", <i>A</i>ᵀ<i>A</i> ="
+    },
+    {
+     "type": "matrix",
+     "rows": [
+      [
+       "2",
+       "1"
+      ],
+      [
+       "1",
+       "2"
+      ]
+     ]
+    },
+    {
+     "type": "p",
+     "text": ", <i>A</i>ᵀ<b>y</b> = (3, 4). Solve: <b>c</b> = (2/3, 5/3). <b>ŷ</b> = <i>A</i><b>c</b> = <b>(7/3, 2/3, 5/3)</b>."
+    },
+    {
+     "type": "p",
+     "text": "Method 2: normal to the plane <b>n</b> = (1,1,0)×(1,0,1) = (1, −1, −1). <b>ŷ</b> = <b>y</b> − (<b>y</b>·<b>n</b>/‖<b>n</b>‖²)<b>n</b> = (1,2,3) + (4/3)(1,−1,−1) = (7/3, 2/3, 5/3) ✓."
+    },
+    {
+     "type": "p",
+     "text": "Classmate’s vector: <b>y</b> − (7/2, 3/2, 2) = (−5/2, 1/2, 1) is not ⟂ (1,1,0) (dot = −2). So it isn’t the projection."
+    },
+    {
+     "type": "warn",
+     "text": "What it tests: Sum-of-projections needs an orthogonal basis. Otherwise use Gram–Schmidt, normal equations, or (in ℝ³) the normal vector."
+    }
+   ]
+  },
+  {
+   "title": "True/False: orthogonality",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "list",
+     "items": [
+      "1. If <b>x</b> is orthogonal to every vector in a spanning set of <i>W</i>, then <b>x</b> ∈ <i>W</i>⊥.",
+      "2. Every orthogonal set in ℝⁿ is linearly independent.",
+      "3. A matrix with orthonormal columns is invertible.",
+      "4. If <i>U</i> has orthonormal columns, then <i>UU</i>ᵀ = <i>I</i>.",
+      "5. (Row <i>A</i>)⊥ = Nul <i>A</i>.",
+      "6. proj<sub><i>W</i></sub> <b>y</b> depends on which orthogonal basis of <i>W</i> is used to compute it.",
+      "7. If ‖<b>u</b> + <b>v</b>‖² = ‖<b>u</b>‖² + ‖<b>v</b>‖², then <b>u</b> ⟂ <b>v</b>."
+     ]
+    }
+   ],
+   "answer": "1 T, 2 F, 3 F, 4 F, 5 T, 6 F, 7 T",
+   "solution": [
+    {
+     "type": "p",
+     "text": "1. <b>True.</b> Every <b>w</b> ∈ <i>W</i> is a combination Σ<i>c</i>ᵢ<b>w</b>ᵢ, so <b>x</b>·<b>w</b> = Σ<i>c</i>ᵢ(<b>x</b>·<b>w</b>ᵢ) = 0."
+    },
+    {
+     "type": "p",
+     "text": "2. <b>False.</b> {<b>0</b>, <b>e</b>₁} is orthogonal but dependent. The theorem needs <i>nonzero</i> vectors."
+    },
+    {
+     "type": "p",
+     "text": "3. <b>False.</b>"
+    },
+    {
+     "type": "matrix",
+     "rows": [
+      [
+       "1"
+      ],
+      [
+       "0"
+      ]
+     ]
+    },
+    {
+     "type": "p",
+     "text": "has an orthonormal column but is 2×1 (not square). Only square ones (orthogonal matrices) are invertible."
+    },
+    {
+     "type": "p",
+     "text": "4. <b>False.</b> <i>U</i>ᵀ<i>U</i> = <i>I</i> always; <i>UU</i>ᵀ is the projection onto Col <i>U</i>. For <i>U</i> ="
+    },
+    {
+     "type": "matrix",
+     "rows": [
+      [
+       "1"
+      ],
+      [
+       "0"
+      ]
+     ]
+    },
+    {
+     "type": "p",
+     "text": ", <i>UU</i>ᵀ ="
+    },
+    {
+     "type": "matrix",
+     "rows": [
+      [
+       "1",
+       "0"
+      ],
+      [
+       "0",
+       "0"
+      ]
+     ]
+    },
+    {
+     "type": "p",
+     "text": "5. <b>True.</b> <i>A</i><b>x</b> = <b>0</b> says exactly that <b>x</b> is orthogonal to each row."
+    },
+    {
+     "type": "p",
+     "text": "6. <b>False.</b> It is the unique closest point of <i>W</i> to <b>y</b> (orthogonal decomposition theorem), so it is basis-independent."
+    },
+    {
+     "type": "p",
+     "text": "7. <b>True.</b> ‖<b>u</b>+<b>v</b>‖² = ‖<b>u</b>‖² + 2<b>u</b>·<b>v</b> + ‖<b>v</b>‖², so <b>u</b>·<b>v</b> = 0."
+    },
+    {
+     "type": "warn",
+     "text": "What it tests: <i>U</i>ᵀ<i>U</i> = <i>I</i> vs <i>UU</i>ᵀ = proj — a perennial exam trap. “Orthogonal set” allows <b>0</b>; “orthogonal basis” does not."
+    }
+   ]
+  },
+  {
+   "title": "Inverse of a matrix with orthogonal columns",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "Construct a 3×3 matrix <i>A</i> whose columns are orthogonal but not orthonormal, with no zero entries in the first column, and write down <i>A</i>⁻¹ with almost no computation."
+    }
+   ],
+   "answer": "e.g. columns (1,1,1), (1,−1,0), (1,1,−2); A⁻¹ = diag(1/3, 1/2, 1/6)·Aᵀ",
+   "solution": [
+    {
+     "type": "p",
+     "text": "Columns (1, 1, 1), (1, −1, 0), (1, 1, −2): pairwise dots 0, 0, 1 − 1 + 0 = 0 ✓."
+    },
+    {
+     "type": "p",
+     "text": "<i>A</i>ᵀ<i>A</i> = diag(3, 2, 6) (the squared lengths)."
+    },
+    {
+     "type": "p",
+     "text": "So (<i>D</i>⁻¹<i>A</i>ᵀ)<i>A</i> = <i>I</i> with <i>D</i> = diag(3,2,6): <b><i>A</i>⁻¹ = diag(1/3, 1/2, 1/6)·<i>A</i>ᵀ</b> ="
+    },
+    {
+     "type": "matrix",
+     "rows": [
+      [
+       "1/3",
+       "1/3",
+       "1/3"
+      ],
+      [
+       "1/2",
+       "−1/2",
+       "0"
+      ],
+      [
+       "1/6",
+       "1/6",
+       "−1/3"
+      ]
+     ]
+    },
+    {
+     "type": "warn",
+     "text": "What it tests: For orthogonal (not orthonormal) columns, <i>A</i>⁻¹ is <i>A</i>ᵀ with row <i>i</i> divided by ‖column <i>i</i>‖². Forgetting the division is the common slip."
+    }
+   ]
+  },
+  {
+   "title": "Orthogonal complement in ℝ⁴",
+   "level": "hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "<i>W</i> = Span{(1, 2, −1, 0), (0, 1, 1, 1)} ⊆ ℝ⁴. Find a basis of <i>W</i>⊥ and confirm dim <i>W</i> + dim <i>W</i>⊥ = 4."
+    }
+   ],
+   "answer": "W⊥ = Span{(3, −1, 1, 0), (2, −1, 0, 1)}; 2 + 2 = 4",
+   "solution": [
+    {
+     "type": "p",
+     "text": "<i>W</i>⊥ = Nul"
+    },
+    {
+     "type": "matrix",
+     "rows": [
+      [
+       "1",
+       "2",
+       "−1",
+       "0"
+      ],
+      [
+       "0",
+       "1",
+       "1",
+       "1"
+      ]
+     ]
+    },
+    {
+     "type": "p",
+     "text": "(rows = spanning vectors)."
+    },
+    {
+     "type": "p",
+     "text": "R₁ − 2R₂: (1, 0, −3, −2). So <i>x</i>₁ = 3<i>x</i>₃ + 2<i>x</i>₄, <i>x</i>₂ = −<i>x</i>₃ − <i>x</i>₄."
+    },
+    {
+     "type": "p",
+     "text": "Basis of <i>W</i>⊥: <b>(3, −1, 1, 0), (2, −1, 0, 1)</b>. Each is ⟂ both spanning vectors ✓. 2 + 2 = 4 ✓."
+    },
+    {
+     "type": "warn",
+     "text": "What it tests: Put the spanning vectors as <i>rows</i> and take the null space. (Col <i>A</i>)⊥ = Nul <i>A</i>ᵀ."
+    }
+   ]
+  },
+  {
+   "title": "Proofs: uniqueness and isometries",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "(a) Prove the orthogonal decomposition <b>y</b> = <b>ŷ</b> + <b>z</b> (<b>ŷ</b> ∈ <i>W</i>, <b>z</b> ∈ <i>W</i>⊥) is unique. (b) Prove that if <i>U</i> is square with orthonormal columns then ‖<i>U</i><b>x</b>‖ = ‖<b>x</b>‖ and det <i>U</i> = ±1."
+    }
+   ],
+   "answer": "(a) difference lies in W ∩ W⊥ = {0} (b) ‖Ux‖² = xᵀUᵀUx = ‖x‖²; (det U)² = 1",
+   "solution": [
+    {
+     "type": "steps",
+     "title": "Solution",
+     "items": [
+      "(a) If <b>ŷ</b> + <b>z</b> = <b>ŷ</b>′ + <b>z</b>′, then <b>ŷ</b> − <b>ŷ</b>′ = <b>z</b>′ − <b>z</b> lies in <i>W</i> ∩ <i>W</i>⊥. A vector <b>v</b> in both satisfies <b>v</b>·<b>v</b> = 0, so <b>v</b> = <b>0</b>. ∎",
+      "(b) ‖<i>U</i><b>x</b>‖² = (<i>U</i><b>x</b>)ᵀ(<i>U</i><b>x</b>) = <b>x</b>ᵀ<i>U</i>ᵀ<i>U</i><b>x</b> = <b>x</b>ᵀ<b>x</b>.",
+      "det(<i>U</i>ᵀ<i>U</i>) = det <i>I</i> ⇒ (det <i>U</i>)² = 1 ⇒ det <i>U</i> = ±1. ∎"
+     ]
+    },
+    {
+     "type": "warn",
+     "text": "What it tests: <i>W</i> ∩ <i>W</i>⊥ = {<b>0</b>} is the engine of every uniqueness proof in Chapter 6."
+    }
+   ]
+  },
+  {
+   "title": "Projection and reflection matrices",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "Let <b>u</b> = (1, 2, 2). (a) Find the matrix <i>P</i> of orthogonal projection onto Span{<b>u</b>}. (b) Find its eigenvalues with eigenspaces, and its rank. (c) Find the matrix <i>R</i> of reflection across the line Span{<b>u</b>}."
+    }
+   ],
+   "answer": "(a) P = (1/9)[1 2 2; 2 4 4; 2 4 4] (b) λ = 1 on Span{u}, λ = 0 on x + 2y + 2z = 0; rank 1 (c) R = (1/9)[−7 4 4; 4 −1 8; 4 8 −1]",
+   "solution": [
+    {
+     "type": "p",
+     "text": "(a) <i>P</i> = <b>uu</b>ᵀ/(<b>u</b>·<b>u</b>) = (1/9)"
+    },
+    {
+     "type": "matrix",
+     "rows": [
+      [
+       "1",
+       "2",
+       "2"
+      ],
+      [
+       "2",
+       "4",
+       "4"
+      ],
+      [
+       "2",
+       "4",
+       "4"
+      ]
+     ]
+    },
+    {
+     "type": "p",
+     "text": "(b) <i>P</i><b>u</b> = <b>u</b> (λ = 1, eigenspace Span{<b>u</b>}); <i>P</i><b>w</b> = <b>0</b> for <b>w</b> ⟂ <b>u</b> (λ = 0, eigenspace = the plane <i>x</i> + 2<i>y</i> + 2<i>z</i> = 0, dim 2). Rank 1. Also <i>P</i>² = <i>P</i>, <i>P</i>ᵀ = <i>P</i>."
+    },
+    {
+     "type": "p",
+     "text": "(c) Reflection keeps the line component and negates the perpendicular one: <i>R</i> = <i>P</i> − (<i>I</i> − <i>P</i>) = 2<i>P</i> − <i>I</i> = (1/9)"
+    },
+    {
+     "type": "matrix",
+     "rows": [
+      [
+       "−7",
+       "4",
+       "4"
+      ],
+      [
+       "4",
+       "−1",
+       "8"
+      ],
+      [
+       "4",
+       "8",
+       "−1"
+      ]
+     ]
+    },
+    {
+     "type": "p",
+     "text": "Check: <i>R</i>² = <i>I</i>, <i>R</i><b>u</b> = <b>u</b>, <i>R</i>(2, −1, 0) = −(2, −1, 0) ✓."
+    },
+    {
+     "type": "warn",
+     "text": "What it tests: Divide by <b>u</b>·<b>u</b> (= 9), not ‖<b>u</b>‖ (= 3). Reflection = 2·projection − identity."
+    }
+   ]
+  },
+  {
+   "title": "Complete an orthogonal matrix",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "Find all (<i>a</i>, <i>b</i>, <i>c</i>) making <i>U</i> ="
+    },
+    {
+     "type": "matrix",
+     "rows": [
+      [
+       "1/3",
+       "2/3",
+       "<i>a</i>"
+      ],
+      [
+       "2/3",
+       "1/3",
+       "<i>b</i>"
+      ],
+      [
+       "2/3",
+       "−2/3",
+       "<i>c</i>"
+      ]
+     ]
+    },
+    {
+     "type": "p",
+     "text": "an orthogonal matrix."
+    }
+   ],
+   "answer": "(a, b, c) = ±(−2/3, 2/3, −1/3)",
+   "solution": [
+    {
+     "type": "steps",
+     "title": "Solution",
+     "items": [
+      "Columns 1, 2 are unit (1/9 + 4/9 + 4/9 = 1) and orthogonal (2/9 + 2/9 − 4/9 = 0). Column 3 must be a unit vector ⟂ both.",
+      "In ℝ³, that is ± the cross product: (1/3, 2/3, 2/3) × (2/3, 1/3, −2/3) = (−2/3, 2/3, −1/3) (unit length automatically).",
+      "<b>(<i>a</i>, <i>b</i>, <i>c</i>) = ±(−2/3, 2/3, −1/3)</b> — two answers (det <i>U</i> = +1 or −1)."
+     ]
+    },
+    {
+     "type": "warn",
+     "text": "What it tests: Don’t forget the ± — the orthogonal complement of a plane is a line with two unit vectors."
+    }
+   ]
+  }
+ ],
+ "keyFacts": [
+  "‖u‖ = √(u·u); dist = ‖u − v‖; cos θ = u·v/(‖u‖‖v‖); u ⟂ v ⇔ u·v = 0.",
+  "(Row A)⊥ = Nul A, (Col A)⊥ = Nul Aᵀ; dim W + dim W⊥ = n.",
+  "Orthogonal basis coordinates: cⱼ = (y·uⱼ)/(uⱼ·uⱼ).",
+  "Projection onto a line: ŷ = (y·u/u·u)u; onto W (orthogonal basis): sum of these.",
+  "y = ŷ + z uniquely, ŷ ∈ W, z ∈ W⊥; ŷ is the closest point; distance = ‖z‖.",
+  "UᵀU = I ⇔ orthonormal columns; ‖Ux‖ = ‖x‖; proj_W y = UUᵀy.",
+  "Orthogonal matrix: square with orthonormal columns, U⁻¹ = Uᵀ, det U = ±1."
+ ]
+}

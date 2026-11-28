@@ -1428,5 +1428,72 @@
   "ax ≡ b (mod m) solvable iff d = gcd(a, m) | b; then d solutions mod m, spaced m/d",
   "Divide a, b AND m by d before solving",
   "Number of divisors of ∏ pᵢ^{eᵢ} is ∏ (eᵢ + 1)"
+ ],
+ "parsons": [
+  {
+   "title": "Euclid’s lemma via Bézout",
+   "goal": "Prove: if p is prime and p | ab, then p | a or p | b.",
+   "lines": [
+    "Suppose p | ab. If p | a we are done, so assume p ∤ a.",
+    "Since p is prime and p ∤ a, the only positive common divisor of p and a is 1, so gcd(p, a) = 1.",
+    "By Bézout, there are integers s and t with sp + ta = 1.",
+    "Multiplying by b gives spb + tab = b.",
+    "p divides spb, and p divides tab because p | ab.",
+    "So p divides their sum, b. Hence p | a or p | b. ∎"
+   ],
+   "distractors": [
+    "Since p ∤ a, gcd(p, a) = p.",
+    "By Bézout, there are integers s and t with sp + ta = p.",
+    "Since p | ab, p | a and p | b."
+   ]
+  },
+  {
+   "title": "gcd(a, b) = gcd(b, r) (why Euclid works)",
+   "goal": "Let a = bq + r with integers a, b, q, r. Prove gcd(a, b) = gcd(b, r).",
+   "lines": [
+    "We show the pairs (a, b) and (b, r) have exactly the same common divisors.",
+    "Let d | a and d | b. Then d | a − qb = r, so d is a common divisor of b and r.",
+    "Conversely, let d | b and d | r. Then d | qb + r = a, so d is a common divisor of a and b.",
+    "So the two sets of common divisors are equal.",
+    "Equal sets have the same largest element, so gcd(a, b) = gcd(b, r). ∎"
+   ],
+   "distractors": [
+    "Let d | a and d | b. Then d | a + qb = r.",
+    "Conversely is similar, so gcd(a, b) = gcd(b, r).",
+    "Since r &lt; b, gcd(b, r) &lt; gcd(a, b)."
+   ]
+  },
+  {
+   "title": "Inverses mod m are unique",
+   "goal": "Prove: if ā and ã are both inverses of a modulo m (aā ≡ 1 and aã ≡ 1 (mod m)), then ā ≡ ã (mod m).",
+   "lines": [
+    "Suppose aā ≡ 1 (mod m) and aã ≡ 1 (mod m).",
+    "Then ā ≡ ā · 1 ≡ ā(aã) (mod m), using aã ≡ 1.",
+    "Regroup: ā(aã) = (āa)ã.",
+    "And (āa)ã ≡ 1 · ã = ã (mod m), using aā ≡ 1.",
+    "So ā ≡ ã (mod m): the inverse is unique modulo m. ∎"
+   ],
+   "distractors": [
+    "From aā ≡ aã (mod m), cancel a to get ā ≡ ã.",
+    "Then ā = 1/a and ã = 1/a, so they are equal.",
+    "Then ā ≡ ā · 1 ≡ ā(aā) (mod m)."
+   ]
+  },
+  {
+   "title": "gcd by a linear combination: gcd(3n + 2, 5n + 3) = 1",
+   "goal": "Prove: for every positive integer n, gcd(3n + 2, 5n + 3) = 1.",
+   "lines": [
+    "Let d be any positive common divisor of 3n + 2 and 5n + 3.",
+    "Then d divides every integer combination of them, in particular 5(3n + 2) − 3(5n + 3).",
+    "Expanding, 5(3n + 2) − 3(5n + 3) = 15n + 10 − 15n − 9 = 1.",
+    "So d | 1, which forces d = 1.",
+    "The only positive common divisor is 1, so gcd(3n + 2, 5n + 3) = 1. ∎"
+   ],
+   "distractors": [
+    "Check n = 1: gcd(5, 8) = 1, so the gcd is always 1.",
+    "Expanding, 5(3n + 2) − 3(5n + 3) = 19.",
+    "3n + 2 and 5n + 3 are both prime, so their gcd is 1."
+   ]
+  }
  ]
 }

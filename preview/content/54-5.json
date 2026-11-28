@@ -1,0 +1,1046 @@
+{
+ "id": "54-5",
+ "course": "54",
+ "title": "Vector spaces, subspaces, Nul A, Col A, kernel & range",
+ "source": "Lay 4.1–4.2",
+ "summary": "Vector spaces generalize ℝⁿ to polynomials, matrices and functions. The subspace test, and the two subspaces attached to every matrix (Nul A in ℝⁿ, Col A in ℝᵐ) and to every linear map (kernel and range), are tested on every final.",
+ "lesson": [
+  {
+   "title": "Vector spaces",
+   "blocks": [
+    {
+     "type": "def",
+     "term": "Vector space",
+     "text": "A nonempty set V of objects (vectors) with an addition and a scalar multiplication satisfying ten axioms: closure under both operations, commutativity and associativity of +, a zero vector <b>0</b>, additive inverses −<b>u</b>, distributive laws c(<b>u</b> + <b>v</b>) = c<b>u</b> + c<b>v</b> and (c + d)<b>u</b> = c<b>u</b> + d<b>u</b>, c(d<b>u</b>) = (cd)<b>u</b>, and 1<b>u</b> = <b>u</b>."
+    },
+    {
+     "type": "list",
+     "items": [
+      "ℝⁿ: column vectors.",
+      "ℙₙ: polynomials of degree at most n, a₀ + a₁t + ⋯ + aₙtⁿ (the zero polynomial included).",
+      "Mₘₓₙ: m×n matrices.",
+      "C[a, b] or C(ℝ): continuous functions; the zero vector is the zero function.",
+      "The space of all real functions on a set, or all solutions of a homogeneous linear ODE."
+     ]
+    },
+    {
+     "type": "tip",
+     "text": "The point of the abstraction: everything we proved about ℝⁿ using only + and scalar multiplication (spans, independence, linear maps, kernels) works verbatim for polynomials, matrices and functions."
+    }
+   ]
+  },
+  {
+   "title": "Subspaces and the three-part test",
+   "blocks": [
+    {
+     "type": "def",
+     "term": "Subspace",
+     "text": "A subset H of a vector space V such that (a) <b>0</b> ∈ H; (b) <b>u</b>, <b>v</b> ∈ H ⇒ <b>u</b> + <b>v</b> ∈ H; (c) <b>u</b> ∈ H, c scalar ⇒ c<b>u</b> ∈ H. A subspace is itself a vector space."
+    },
+    {
+     "type": "thm",
+     "name": "Spans are subspaces",
+     "text": "For any <b>v</b>₁, …, <b>v</b>ₚ in V, Span{<b>v</b>₁, …, <b>v</b>ₚ} is a subspace of V.",
+     "proof": [
+      {
+       "type": "p",
+       "text": "0 = 0<b>v</b>₁ + ⋯ + 0<b>v</b>ₚ; the sum of two combinations is a combination; a multiple of a combination is a combination."
+      }
+     ]
+    },
+    {
+     "type": "steps",
+     "title": "How to answer 'is H a subspace?'",
+     "items": [
+      "Check <b>0</b> ∈ H first: if not, stop, the answer is no.",
+      "If yes, try to write H as a span or as the kernel (solution set of a homogeneous linear condition) of a linear map: then it is a subspace.",
+      "Otherwise look for an explicit failure of closure: two specific members whose sum is not in H, or a member and a scalar."
+     ]
+    },
+    {
+     "type": "example",
+     "title": "A polynomial set that fails",
+     "prompt": "Is H = {p ∈ ℙ₂ : p(1) = 1} a subspace of ℙ₂? What about K = {p ∈ ℙ₂ : p(1) = 0}?",
+     "steps": [
+      "H: the zero polynomial has value 0 at t = 1, not 1. So <b>0</b> ∉ H: condition (a) fails.",
+      "(Closure fails too: p = 1 and q = t are in H but (p + q)(1) = 2; and 2p has 2p(1) = 2.)",
+      "K: 0(1) = 0 ✓; (p + q)(1) = p(1) + q(1) = 0 + 0 ✓; (cp)(1) = c·0 = 0 ✓.",
+      "Better: K is the kernel of the linear map p ↦ p(1), so it is a subspace automatically. Basis: {t − 1, t² − 1}."
+     ],
+     "answer": "H is not a subspace (no zero vector, not closed); K is a subspace."
+    },
+    {
+     "type": "example",
+     "title": "Matrix and ℝ³ sets",
+     "prompt": "Which are subspaces? (a) {A ∈ M₂ₓ₂ : det A = 0}. (b) {A ∈ M₂ₓ₂ : A = Aᵀ}. (c) {(x, y, z) : x + 2y = z}. (d) {(x, y, z) : xy = 0}.",
+     "steps": [
+      "(a) No: [1 0; 0 0] and [0 0; 0 1] have det 0 but their sum I has det 1.",
+      "(b) Yes: 0ᵀ = 0, (A + B)ᵀ = Aᵀ + Bᵀ = A + B, (cA)ᵀ = cA. (Basis [1 0; 0 0], [0 1; 1 0], [0 0; 0 1].)",
+      "(c) Yes: the null space of [1 2 −1].",
+      "(d) No: (1, 0, 0) and (0, 1, 0) are in it, (1, 1, 0) is not (a union of two planes)."
+     ],
+     "answer": "(b) and (c) are subspaces; (a) and (d) are not."
+    },
+    {
+     "type": "warn",
+     "text": "Nonlinear conditions (det = 0, xy = 0, x² + y² ≤ 1, x ≥ 0) almost never give subspaces. Unions of subspaces are usually not subspaces; intersections always are."
+    }
+   ]
+  },
+  {
+   "title": "Null space and column space",
+   "blocks": [
+    {
+     "type": "def",
+     "term": "Null space",
+     "text": "Nul A = {<b>x</b> ∈ ℝⁿ : A<b>x</b> = <b>0</b>} for an m×n matrix A. A subspace of ℝⁿ (n = number of columns). Implicitly defined: membership is easy to check, but you must solve to list elements."
+    },
+    {
+     "type": "thm",
+     "name": "Nul A is a subspace",
+     "text": "",
+     "proof": [
+      {
+       "type": "p",
+       "text": "A<b>0</b> = <b>0</b>. If A<b>u</b> = <b>0</b> and A<b>v</b> = <b>0</b>, then A(<b>u</b> + <b>v</b>) = <b>0</b> and A(c<b>u</b>) = c<b>0</b> = <b>0</b>."
+      }
+     ]
+    },
+    {
+     "type": "warn",
+     "text": "{<b>x</b> : A<b>x</b> = <b>b</b>} with <b>b</b> ≠ <b>0</b> is NEVER a subspace: <b>0</b> is not in it (A<b>0</b> = <b>0</b> ≠ <b>b</b>), and the sum of two solutions solves A<b>x</b> = 2<b>b</b>. It is a translate <b>p</b> + Nul A."
+    },
+    {
+     "type": "def",
+     "term": "Column space",
+     "text": "Col A = Span{columns of A} = {A<b>x</b> : <b>x</b> ∈ ℝⁿ} = {<b>b</b> : A<b>x</b> = <b>b</b> is consistent}. A subspace of ℝᵐ (m = number of rows). Explicitly defined: easy to list elements, but membership requires row reduction."
+    },
+    {
+     "type": "thm",
+     "name": "Col A = ℝᵐ",
+     "text": "Col A = ℝᵐ ⇔ A<b>x</b> = <b>b</b> is consistent for every <b>b</b> ⇔ pivot in every row."
+    },
+    {
+     "type": "steps",
+     "title": "Bases for Nul A and Col A",
+     "items": [
+      "Row reduce A to RREF.",
+      "Nul A: solve A<b>x</b> = <b>0</b> in parametric vector form; the vectors multiplying the free variables form a basis (one per free variable).",
+      "Col A: identify the pivot columns from the echelon form, then take those columns of the ORIGINAL A."
+     ]
+    },
+    {
+     "type": "example",
+     "title": "Bases for Nul A and Col A",
+     "prompt": "A = [−3 6 −1 1 −7; 1 −2 2 3 −1; 2 −4 5 8 −4]. Find bases for Nul A and Col A, and describe Col A by an equation.",
+     "steps": [
+      "RREF(A) = [1 −2 0 −1 3; 0 0 1 2 −2; 0 0 0 0 0]. Pivots in columns 1 and 3; x₂, x₄, x₅ free.",
+      "x₁ = 2x₂ + x₄ − 3x₅, x₃ = −2x₄ + 2x₅.",
+      "<b>x</b> = x₂(2, 1, 0, 0, 0) + x₄(1, 0, −2, 1, 0) + x₅(−3, 0, 2, 0, 1).",
+      "Col A basis: columns 1 and 3 of A: (−3, 1, 2) and (−1, 2, 5).",
+      "Col A is a plane in ℝ³ with normal (−3, 1, 2) × (−1, 2, 5) = (1, 13, −5): b₁ + 13b₂ − 5b₃ = 0."
+     ],
+     "answer": "Nul A: {(2, 1, 0, 0, 0), (1, 0, −2, 1, 0), (−3, 0, 2, 0, 1)}; Col A: {(−3, 1, 2), (−1, 2, 5)}, the plane b₁ + 13b₂ − 5b₃ = 0."
+    },
+    {
+     "type": "warn",
+     "text": "Row operations change the column space. The pivot columns of RREF(A) here are e₁, e₂, which are not even in Col A (check: 1 + 0 − 0 ≠ 0)."
+    },
+    {
+     "type": "example",
+     "title": "Membership in Nul A and Col A",
+     "prompt": "For the same A: is u = (3, 1, −2, 1, 0) in Nul A? Is (1, 1, 1, 0, −1)? Is (2, 1, 3) in Col A? Is (1, 0, 0)?",
+     "steps": [
+      "Nul A: just multiply. A u = (−9 + 6 + 2 + 1 + 0, 3 − 2 − 4 + 3 + 0, 6 − 4 − 10 + 8 + 0) = (0, 0, 0): yes.",
+      "A(1, 1, 1, 0, −1) = (−3 + 6 − 1 + 7, 1 − 2 + 2 + 1, 2 − 4 + 5 + 4) = (9, 2, 7) ≠ 0: no.",
+      "Col A: test the consistency condition b₁ + 13b₂ − 5b₃ = 0 (or row reduce [A | b]). (2, 1, 3): 2 + 13 − 15 = 0, yes.",
+      "(1, 0, 0): 1 ≠ 0, no."
+     ],
+     "answer": "u ∈ Nul A; (1, 1, 1, 0, −1) ∉ Nul A; (2, 1, 3) ∈ Col A; (1, 0, 0) ∉ Col A."
+    }
+   ]
+  },
+  {
+   "title": "Row space and comparing Nul A with Col A",
+   "blocks": [
+    {
+     "type": "def",
+     "term": "Row space",
+     "text": "Row A = Span{rows of A} = Col Aᵀ, a subspace of ℝⁿ."
+    },
+    {
+     "type": "thm",
+     "name": "Row operations preserve the row space",
+     "text": "If B is row equivalent to A, Row B = Row A. The nonzero rows of an echelon form of A are a basis of Row A.",
+     "proof": [
+      {
+       "type": "p",
+       "text": "Each new row is a combination of old rows and vice versa (operations are reversible)."
+      }
+     ]
+    },
+    {
+     "type": "table",
+     "head": [
+      "",
+      "Nul A",
+      "Col A"
+     ],
+     "rows": [
+      [
+       "Lives in",
+       "ℝⁿ (columns)",
+       "ℝᵐ (rows)"
+      ],
+      [
+       "Defined",
+       "implicitly (A x = 0)",
+       "explicitly (span of columns)"
+      ],
+      [
+       "Membership test",
+       "compute A v",
+       "row reduce [A | v]"
+      ],
+      [
+       "Basis",
+       "free-variable vectors from RREF",
+       "pivot columns of original A"
+      ],
+      [
+       "Preserved by row ops?",
+       "yes",
+       "no"
+      ],
+      [
+       "= whole space iff",
+       "never unless A = 0 (Nul = ℝⁿ)",
+       "pivot in every row"
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "title": "Linear transformations between vector spaces: kernel and range",
+   "blocks": [
+    {
+     "type": "def",
+     "term": "Linear transformation",
+     "text": "T: V → W with T(<b>u</b> + <b>v</b>) = T(<b>u</b>) + T(<b>v</b>) and T(c<b>u</b>) = cT(<b>u</b>)."
+    },
+    {
+     "type": "def",
+     "term": "Kernel and range",
+     "text": "Ker T = {<b>u</b> ∈ V : T(<b>u</b>) = <b>0</b>}, a subspace of V. Range T = {T(<b>u</b>) : <b>u</b> ∈ V}, a subspace of W. For T(<b>x</b>) = A<b>x</b>: Ker T = Nul A and Range T = Col A."
+    },
+    {
+     "type": "steps",
+     "title": "Kernel and range of a map on ℙₙ or matrices",
+     "items": [
+      "Check linearity using linearity of evaluation, differentiation, transpose or integration.",
+      "Write a general input (a + bt + ct², or [a b; c d]) and compute T of it.",
+      "Kernel: set the output to zero and solve for the coefficients.",
+      "Range: the span of the images of a basis; simplify to a basis. Check: dim Ker + dim Range = dim V."
+     ]
+    },
+    {
+     "type": "example",
+     "title": "Kernel and range of p ↦ (p(0), p(1))",
+     "prompt": "T: ℙ₂ → ℝ², T(p) = (p(0), p(1)). Show T is linear; find its kernel and range.",
+     "steps": [
+      "Linear: (p + q)(0) = p(0) + q(0), (cp)(0) = c·p(0), and the same at 1.",
+      "For p = a + bt + ct²: T(p) = (a, a + b + c). (Matrix relative to {1, t, t²}: [1 0 0; 1 1 1].)",
+      "Kernel: a = 0 and a + b + c = 0 ⇒ c = −b. p = b(t − t²). Ker T = Span{t − t²} (the polynomials vanishing at 0 and 1: multiples of t(t − 1)).",
+      "Range: T(1) = (1, 1), T(t) = (0, 1) are independent, so the range is all of ℝ²: T is onto.",
+      "Check: dim Ker + dim Range = 1 + 2 = 3 = dim ℙ₂."
+     ],
+     "answer": "Ker T = Span{t − t²}; Range T = ℝ² (onto)."
+    },
+    {
+     "type": "example",
+     "title": "Linear or not?",
+     "prompt": "Which are linear? (a) T: ℙ₂ → ℙ₂, T(p) = p + 1. (b) T: M₂ₓ₂ → ℝ, T(A) = trace A. (c) T: ℙ₂ → ℝ, T(p) = p(0)·p(1).",
+     "steps": [
+      "(a) Not linear: T(0) = 1 ≠ 0.",
+      "(b) Linear: tr(A + B) = tr A + tr B, tr(cA) = c tr A. Kernel = trace-zero matrices (dimension 3).",
+      "(c) Not linear: T(2p) = 4T(p), e.g. p = 1 gives T(2) = 4 ≠ 2 = 2T(1)."
+     ],
+     "answer": "Only (b) is linear."
+    }
+   ]
+  },
+  {
+   "title": "True/False on subspaces",
+   "blocks": [
+    {
+     "type": "example",
+     "title": "Six True/False",
+     "prompt": "(a) Nul A is the set of all linear combinations of the columns of A. (b) If A is 3×5, Nul A is a subspace of ℝ³. (c) The intersection of two subspaces is a subspace. (d) The union of two subspaces is a subspace. (e) Col A is the set of all b for which Ax = b has a solution. (f) The kernel of a linear map is a subspace of the codomain.",
+     "steps": [
+      "(a) False: that is Col A.",
+      "(b) False: Nul A ⊆ ℝ⁵ (number of columns).",
+      "(c) True: closure in each gives closure in both.",
+      "(d) False: x-axis ∪ y-axis contains e₁, e₂ but not e₁ + e₂.",
+      "(e) True.",
+      "(f) False: it is a subspace of the domain."
+     ],
+     "answer": "(a) F (b) F (c) T (d) F (e) T (f) F"
+    },
+    {
+     "type": "tip",
+     "text": "Remember: Nul A ↔ inputs ↔ ℝⁿ ↔ uniqueness. Col A ↔ outputs ↔ ℝᵐ ↔ existence."
+    }
+   ]
+  }
+ ],
+ "cards": [
+  {
+   "front": "Three conditions for a subspace H of V?",
+   "back": [
+    {
+     "type": "p",
+     "text": "0 ∈ H; closed under addition; closed under scalar multiplication."
+    }
+   ]
+  },
+  {
+   "front": "Fastest way to prove a set IS a subspace?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Show it is a span, or the kernel / null space of a linear map (solutions of a homogeneous linear condition)."
+    }
+   ]
+  },
+  {
+   "front": "Fastest way to prove a set is NOT a subspace?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Show 0 is missing; otherwise give two specific elements whose sum (or a scalar multiple) leaves the set."
+    }
+   ]
+  },
+  {
+   "front": "Is {p ∈ ℙ₂ : p(1) = 1} a subspace?",
+   "back": [
+    {
+     "type": "p",
+     "text": "No: the zero polynomial has p(1) = 0 ≠ 1 (and closure fails: (p + q)(1) = 2)."
+    }
+   ]
+  },
+  {
+   "front": "Why is Nul A always a subspace but {x : Ax = b}, b ≠ 0, never?",
+   "back": [
+    {
+     "type": "p",
+     "text": "A0 = 0 and A is linear, so solutions of Ax = 0 are closed. For b ≠ 0, A0 = 0 ≠ b, so 0 is missing; the set is p + Nul A."
+    }
+   ]
+  },
+  {
+   "front": "Is ℝ² a subspace of ℝ³?",
+   "back": [
+    {
+     "type": "p",
+     "text": "No: it is not even a subset. The plane {(x, y, 0)} is a subspace that looks like ℝ²."
+    }
+   ]
+  },
+  {
+   "front": "Nul A: definition and where it lives?",
+   "back": [
+    {
+     "type": "p",
+     "text": "{x : Ax = 0} ⊆ ℝⁿ (n = number of columns). Implicit description."
+    }
+   ]
+  },
+  {
+   "front": "Col A: definition and where it lives?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Span of the columns = {Ax} = {b : Ax = b consistent} ⊆ ℝᵐ (m = number of rows). Explicit description."
+    }
+   ]
+  },
+  {
+   "front": "Basis for Nul A?",
+   "back": [
+    {
+     "type": "p",
+     "text": "RREF, parametric vector form of Ax = 0; the vectors multiplying the free variables. Count = number of free variables."
+    }
+   ]
+  },
+  {
+   "front": "Basis for Col A?",
+   "back": [
+    {
+     "type": "p",
+     "text": "The pivot columns of the ORIGINAL A (row operations change the column space)."
+    }
+   ]
+  },
+  {
+   "front": "Basis for Row A?",
+   "back": [
+    {
+     "type": "p",
+     "text": "The nonzero rows of an echelon form of A (row operations preserve the row space)."
+    }
+   ]
+  },
+  {
+   "front": "Which of Nul A, Col A, Row A do row operations preserve?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Nul A and Row A. Not Col A."
+    }
+   ]
+  },
+  {
+   "front": "Test whether v ∈ Nul A; whether v ∈ Col A.",
+   "back": [
+    {
+     "type": "p",
+     "text": "Nul: compute Av and see if it is 0. Col: row reduce [A | v] and check consistency."
+    }
+   ]
+  },
+  {
+   "front": "Kernel and range of linear T: V → W?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Ker T = {u : T(u) = 0} ⊆ V; Range T = {T(u)} ⊆ W. For T(x) = Ax they are Nul A and Col A."
+    }
+   ]
+  },
+  {
+   "front": "Kernel of T: ℙ₂ → ℝ², p ↦ (p(0), p(1))?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Span{t − t²} (polynomials with roots 0 and 1); the range is ℝ²."
+    }
+   ]
+  },
+  {
+   "front": "Is the union of two subspaces a subspace? The intersection?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Union: usually not (x-axis ∪ y-axis). Intersection: always."
+    }
+   ]
+  },
+  {
+   "front": "Solutions of y″ + p(t)y′ + q(t)y = 0: a subspace?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Yes: the kernel of the linear operator L[y] = y″ + py′ + qy. With a nonzero forcing g, no (0 is not a solution); they form yₚ + Ker L."
+    }
+   ]
+  },
+  {
+   "front": "Is {A ∈ M₂ₓ₂ : det A = 0} a subspace?",
+   "back": [
+    {
+     "type": "p",
+     "text": "No: [1 0; 0 0] + [0 0; 0 1] = I has det 1."
+    }
+   ]
+  },
+  {
+   "front": "Is T(p) = p + 1 linear on ℙ₂?",
+   "back": [
+    {
+     "type": "p",
+     "text": "No: T(0) = 1 ≠ 0."
+    }
+   ]
+  },
+  {
+   "front": "Col A = ℝᵐ iff?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Pivot in every row (Ax = b consistent for every b)."
+    }
+   ]
+  }
+ ],
+ "hard": [
+  {
+   "title": "Subspace test, seven sets",
+   "level": "hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "Decide which of these are subspaces. Give a proof or a specific failure."
+    },
+    {
+     "type": "list",
+     "items": [
+      "1. {<i>p</i> ∈ ℙ₃ : <i>p</i>(2) = 0} is a subspace of ℙ₃.",
+      "2. {<i>p</i> ∈ ℙ₃ : <i>p</i>(0) = 1} is a subspace of ℙ₃.",
+      "3. {<i>A</i> ∈ <i>M</i>₂ₓ₂ : det <i>A</i> = 0} is a subspace.",
+      "4. {<i>f</i> ∈ <i>C</i>[0, 1] : ∫₀¹ <i>f</i>(<i>t</i>) d<i>t</i> = 0} is a subspace.",
+      "5. {(<i>x</i>, <i>y</i>, <i>z</i>) : <i>xy</i> = 0} is a subspace of ℝ³.",
+      "6. For a fixed <i>B</i>, {<i>A</i> ∈ <i>M</i>₂ₓ₂ : <i>AB</i> = <i>BA</i>} is a subspace.",
+      "7. {<i>f</i> : ℝ → ℝ with <i>f</i>(<i>x</i> + 1) = 2<i>f</i>(<i>x</i>) for all <i>x</i>} is a subspace of the space of all functions."
+     ]
+    }
+   ],
+   "answer": "1 T, 2 F, 3 F, 4 T, 5 F, 6 T, 7 T",
+   "solution": [
+    {
+     "type": "p",
+     "text": "1. <b>True.</b> Contains 0; (<i>p</i>+<i>q</i>)(2) = 0 + 0; (<i>cp</i>)(2) = 0. (It is the kernel of the linear map <i>p</i> ↦ <i>p</i>(2).)"
+    },
+    {
+     "type": "p",
+     "text": "2. <b>False.</b> The zero polynomial has value 0 at 0. Fails at the very first test."
+    },
+    {
+     "type": "p",
+     "text": "3. <b>False.</b>"
+    },
+    {
+     "type": "matrix",
+     "rows": [
+      [
+       "1",
+       "0"
+      ],
+      [
+       "0",
+       "0"
+      ]
+     ]
+    },
+    {
+     "type": "p",
+     "text": "and"
+    },
+    {
+     "type": "matrix",
+     "rows": [
+      [
+       "0",
+       "0"
+      ],
+      [
+       "0",
+       "1"
+      ]
+     ]
+    },
+    {
+     "type": "p",
+     "text": "are in it; their sum <i>I</i> has det 1. Not closed under addition."
+    },
+    {
+     "type": "p",
+     "text": "4. <b>True.</b> Integration is linear, so this is the kernel of a linear map."
+    },
+    {
+     "type": "p",
+     "text": "5. <b>False.</b> (1, 0, 0) and (0, 1, 0) are in it; their sum (1, 1, 0) is not. (It’s the union of two planes.)"
+    },
+    {
+     "type": "p",
+     "text": "6. <b>True.</b> Kernel of the linear map <i>A</i> ↦ <i>AB</i> − <i>BA</i>."
+    },
+    {
+     "type": "p",
+     "text": "7. <b>True.</b> If <i>f</i>, <i>g</i> satisfy it, (<i>af</i> + <i>bg</i>)(<i>x</i>+1) = 2<i>af</i>(<i>x</i>) + 2<i>bg</i>(<i>x</i>); and 0 works. (2<sup><i>x</i></sup> is a nonzero member.)"
+    },
+    {
+     "type": "warn",
+     "text": "What it tests: Three checks: contains 0, closed under +, closed under scalar multiples. Fastest proof of “yes”: show it is the kernel of a linear map. Fastest “no”: 0 missing, or one explicit failing sum."
+    }
+   ]
+  },
+  {
+   "title": "Nul A and Col A with membership",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "<i>A</i> ="
+    },
+    {
+     "type": "matrix",
+     "rows": [
+      [
+       "1",
+       "−2",
+       "0",
+       "3",
+       "−1"
+      ],
+      [
+       "2",
+       "−4",
+       "1",
+       "8",
+       "0"
+      ],
+      [
+       "−1",
+       "2",
+       "1",
+       "−1",
+       "3"
+      ]
+     ]
+    },
+    {
+     "type": "p",
+     "text": "(a) Nul <i>A</i> is a subspace of ℝ^? and Col <i>A</i> of ℝ^? (b) Find bases for Nul <i>A</i> and Col <i>A</i>. (c) Describe Col <i>A</i> by one equation. (d) Is (1, 1, 1) in Col <i>A</i>? Is (1, 4, 1)?"
+    }
+   ],
+   "answer": "(a) ℝ⁵, ℝ³ (b) Nul: (2,1,0,0,0), (−3,0,−2,1,0), (1,0,−2,0,1); Col: (1,2,−1), (0,1,1) (c) 3b₁ − b₂ + b₃ = 0 (d) (1,1,1) no; (1,4,1) yes",
+   "solution": [
+    {
+     "type": "p",
+     "text": "(a) Nul <i>A</i> ⊆ <b>ℝ⁵</b> (inputs), Col <i>A</i> ⊆ <b>ℝ³</b> (outputs)."
+    },
+    {
+     "type": "p",
+     "text": "rref <i>A</i> ="
+    },
+    {
+     "type": "matrix",
+     "rows": [
+      [
+       "1",
+       "−2",
+       "0",
+       "3",
+       "−1"
+      ],
+      [
+       "0",
+       "0",
+       "1",
+       "2",
+       "2"
+      ],
+      [
+       "0",
+       "0",
+       "0",
+       "0",
+       "0"
+      ]
+     ]
+    },
+    {
+     "type": "p",
+     "text": ". Pivots in columns 1 and 3."
+    },
+    {
+     "type": "p",
+     "text": "Nul: <i>x</i>₁ = 2<i>x</i>₂ − 3<i>x</i>₄ + <i>x</i>₅, <i>x</i>₃ = −2<i>x</i>₄ − 2<i>x</i>₅. Basis: <b>(2,1,0,0,0), (−3,0,−2,1,0), (1,0,−2,0,1)</b>."
+    },
+    {
+     "type": "p",
+     "text": "Col: pivot columns <i>of the original <i>A</i></i>: <b>(1, 2, −1), (0, 1, 1)</b>."
+    },
+    {
+     "type": "p",
+     "text": "(c) Normal = (1,2,−1) × (0,1,1) = (3, −1, 1): Col <i>A</i> = {<b>3<i>b</i>₁ − <i>b</i>₂ + <i>b</i>₃ = 0</b>}."
+    },
+    {
+     "type": "p",
+     "text": "(d) (1,1,1): 3 − 1 + 1 = 3 ≠ 0, <b>no</b>. (1,4,1): 3 − 4 + 1 = 0, <b>yes</b>."
+    },
+    {
+     "type": "warn",
+     "text": "What it tests: Col basis comes from the original matrix’s pivot columns, never from rref (rref’s columns all have last entry 0 here). Nul basis vectors = one per free variable."
+    }
+   ]
+  },
+  {
+   "title": "True/False: Nul, Col, unions",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "list",
+     "items": [
+      "1. Col <i>A</i> is the set of all solutions of <i>A</i><b>x</b> = <b>b</b>.",
+      "2. If <i>A</i> is 4×6, Col <i>A</i> can equal ℝ⁴.",
+      "3. If <i>A</i> is 4×6, Nul <i>A</i> can be {<b>0</b>}.",
+      "4. A line in ℝ³ not through the origin is a subspace.",
+      "5. The union of two subspaces of <i>V</i> is a subspace.",
+      "6. The intersection of two subspaces of <i>V</i> is a subspace."
+     ]
+    }
+   ],
+   "answer": "1 F, 2 T, 3 F, 4 F, 5 F, 6 T",
+   "solution": [
+    {
+     "type": "list",
+     "items": [
+      "1. <b>False.</b> Col <i>A</i> is the set of all <b>b</b> for which <i>A</i><b>x</b> = <b>b</b> is solvable (lives in ℝᵐ); solution sets live in ℝⁿ.",
+      "2. <b>True.</b> E.g. [<i>I</i>₄ 0]. Four pivots fit in a 4×6 matrix.",
+      "3. <b>False.</b> At most 4 pivots ⇒ at least 2 free variables.",
+      "4. <b>False.</b> Doesn’t contain <b>0</b>.",
+      "5. <b>False.</b> The <i>x</i>-axis ∪ the <i>y</i>-axis in ℝ² contains <b>e</b>₁ and <b>e</b>₂ but not <b>e</b>₁ + <b>e</b>₂.",
+      "6. <b>True.</b> If <b>u</b>, <b>v</b> are in both, so is any combination, since each subspace is closed."
+     ]
+    },
+    {
+     "type": "warn",
+     "text": "What it tests: Keep the two homes straight: Nul <i>A</i> ⊆ ℝⁿ (number of columns), Col <i>A</i> ⊆ ℝᵐ (number of rows)."
+    }
+   ]
+  },
+  {
+   "title": "Kernel and range of X ↦ X − Xᵀ",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "Define <i>T</i>: <i>M</i>₂ₓ₂ → <i>M</i>₂ₓ₂ by <i>T</i>(<i>X</i>) = <i>X</i> − <i>X</i>ᵀ. Show <i>T</i> is linear and find bases for its kernel and range. Check that dimensions add up."
+    }
+   ],
+   "answer": "Kernel = symmetric matrices (dim 3); range = Span{[0 1; −1 0]} (dim 1)",
+   "solution": [
+    {
+     "type": "p",
+     "text": "Linear: (<i>X</i> + <i>Y</i>)ᵀ = <i>X</i>ᵀ + <i>Y</i>ᵀ and (<i>cX</i>)ᵀ = <i>cX</i>ᵀ."
+    },
+    {
+     "type": "p",
+     "text": "<i>T</i>("
+    },
+    {
+     "type": "matrix",
+     "rows": [
+      [
+       "<i>a</i>",
+       "<i>b</i>"
+      ],
+      [
+       "<i>c</i>",
+       "<i>d</i>"
+      ]
+     ]
+    },
+    {
+     "type": "p",
+     "text": ") ="
+    },
+    {
+     "type": "matrix",
+     "rows": [
+      [
+       "0",
+       "<i>b</i>−<i>c</i>"
+      ],
+      [
+       "<i>c</i>−<i>b</i>",
+       "0"
+      ]
+     ]
+    },
+    {
+     "type": "p",
+     "text": "= (<i>b</i> − <i>c</i>)"
+    },
+    {
+     "type": "matrix",
+     "rows": [
+      [
+       "0",
+       "1"
+      ],
+      [
+       "−1",
+       "0"
+      ]
+     ]
+    },
+    {
+     "type": "p",
+     "text": "Kernel: <i>b</i> = <i>c</i>, the symmetric matrices. Basis"
+    },
+    {
+     "type": "matrix",
+     "rows": [
+      [
+       "1",
+       "0"
+      ],
+      [
+       "0",
+       "0"
+      ]
+     ]
+    },
+    {
+     "type": "matrix",
+     "rows": [
+      [
+       "0",
+       "1"
+      ],
+      [
+       "1",
+       "0"
+      ]
+     ]
+    },
+    {
+     "type": "matrix",
+     "rows": [
+      [
+       "0",
+       "0"
+      ],
+      [
+       "0",
+       "1"
+      ]
+     ]
+    },
+    {
+     "type": "p",
+     "text": ". Dimension 3."
+    },
+    {
+     "type": "p",
+     "text": "Range: multiples of"
+    },
+    {
+     "type": "matrix",
+     "rows": [
+      [
+       "0",
+       "1"
+      ],
+      [
+       "−1",
+       "0"
+      ]
+     ]
+    },
+    {
+     "type": "p",
+     "text": "(skew-symmetric matrices). Dimension 1."
+    },
+    {
+     "type": "p",
+     "text": "3 + 1 = 4 = dim <i>M</i>₂ₓ₂ ✓."
+    },
+    {
+     "type": "warn",
+     "text": "What it tests: Kernel and range of maps on matrix spaces are sets of <i>matrices</i>. The rank theorem still applies with dim <i>M</i>₂ₓ₂ = 4."
+    }
+   ]
+  },
+  {
+   "title": "Kernel and range on ℙ₃",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "<i>T</i>: ℙ₃ → ℙ₃, <i>T</i>(<i>p</i>) = <i>t</i>·<i>p</i>′(<i>t</i>) − <i>p</i>(<i>t</i>). Find the kernel and range of <i>T</i>. Is <i>t</i>³ + 1 in the range? Is <i>t</i> + 1?"
+    }
+   ],
+   "answer": "Ker = Span{t}; Range = Span{1, t², t³}; t³ + 1 yes, t + 1 no",
+   "solution": [
+    {
+     "type": "steps",
+     "title": "Solution",
+     "items": [
+      "On monomials: <i>T</i>(<i>t</i>ᵏ) = <i>k</i><i>t</i>ᵏ − <i>t</i>ᵏ = (<i>k</i> − 1)<i>t</i>ᵏ. So <i>T</i>(1) = −1, <i>T</i>(<i>t</i>) = 0, <i>T</i>(<i>t</i>²) = <i>t</i>², <i>T</i>(<i>t</i>³) = 2<i>t</i>³.",
+      "<i>T</i>(<i>a</i> + <i>bt</i> + <i>ct</i>² + <i>dt</i>³) = −<i>a</i> + <i>ct</i>² + 2<i>dt</i>³.",
+      "Kernel: <i>a</i> = <i>c</i> = <i>d</i> = 0: <b>Span{<i>t</i>}</b>. Range: <b>Span{1, <i>t</i>², <i>t</i>³}</b> (dim 3; 1 + 3 = 4 ✓).",
+      "<i>t</i>³ + 1 = <i>T</i>(−1 + ½<i>t</i>³): <b>yes</b>. <i>t</i> + 1 has a <i>t</i> term: <b>no</b>."
+     ]
+    },
+    {
+     "type": "warn",
+     "text": "What it tests: Compute <i>T</i> on a basis. The range is spanned by the images; the missing direction (<i>t</i>) is exactly why <i>t</i> + 1 is unreachable."
+    }
+   ]
+  },
+  {
+   "title": "Col A = Nul A",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "(a) Find a 2×2 matrix <i>A</i> with Col <i>A</i> = Nul <i>A</i>. (b) Prove no 3×3 matrix has Col <i>A</i> = Nul <i>A</i>."
+    }
+   ],
+   "answer": "(a) A = [0 1; 0 0] (b) rank = nullity would make 3 even",
+   "solution": [
+    {
+     "type": "p",
+     "text": "(a) <i>A</i> ="
+    },
+    {
+     "type": "matrix",
+     "rows": [
+      [
+       "0",
+       "1"
+      ],
+      [
+       "0",
+       "0"
+      ]
+     ]
+    },
+    {
+     "type": "p",
+     "text": ": Col <i>A</i> = Span{<b>e</b>₁}; <i>A</i><b>x</b> = (<i>x</i>₂, 0) = 0 ⇔ <i>x</i>₂ = 0, so Nul <i>A</i> = Span{<b>e</b>₁}. ✓"
+    },
+    {
+     "type": "p",
+     "text": "(b) If Col <i>A</i> = Nul <i>A</i>, then rank = nullity, but rank + nullity = 3 is odd. Impossible. ∎"
+    },
+    {
+     "type": "warn",
+     "text": "What it tests: Rank theorem parity trick. In general Col <i>A</i> = Nul <i>A</i> needs <i>n</i> even and <i>A</i>² = 0."
+    }
+   ]
+  },
+  {
+   "title": "Sum of subspaces",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "<i>H</i>, <i>K</i> are subspaces of <i>V</i>. Prove <i>H</i> + <i>K</i> = {<b>h</b> + <b>k</b> : <b>h</b> ∈ <i>H</i>, <b>k</b> ∈ <i>K</i>} is a subspace of <i>V</i>, and that it contains both <i>H</i> and <i>K</i>."
+    }
+   ],
+   "answer": "H + K contains 0 and is closed under + and scalars by regrouping; h = h + 0",
+   "solution": [
+    {
+     "type": "steps",
+     "title": "Solution",
+     "items": [
+      "<b>0</b> = <b>0</b> + <b>0</b> ∈ <i>H</i> + <i>K</i>.",
+      "(<b>h</b>₁ + <b>k</b>₁) + (<b>h</b>₂ + <b>k</b>₂) = (<b>h</b>₁ + <b>h</b>₂) + (<b>k</b>₁ + <b>k</b>₂), with the parentheses in <i>H</i> and <i>K</i> respectively.",
+      "<i>c</i>(<b>h</b> + <b>k</b>) = <i>c</i><b>h</b> + <i>c</i><b>k</b>. ∎",
+      "<b>h</b> = <b>h</b> + <b>0</b> shows <i>H</i> ⊆ <i>H</i> + <i>K</i>; same for <i>K</i>. (Unlike <i>H</i> ∪ <i>K</i>, this <i>is</i> a subspace — the smallest one containing both.)"
+     ]
+    },
+    {
+     "type": "warn",
+     "text": "What it tests: Write general elements with names and regroup. Each step uses closure of <i>H</i> or <i>K</i>."
+    }
+   ]
+  },
+  {
+   "title": "Col(AB) ⊆ Col A and Nul B ⊆ Nul(AB)",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "<i>A</i> is <i>m</i>×<i>n</i>, <i>B</i> is <i>n</i>×<i>p</i>. Prove Col(<i>AB</i>) ⊆ Col <i>A</i> and Nul <i>B</i> ⊆ Nul(<i>AB</i>). Give 2×2 matrices for which <i>both</i> inclusions are strict."
+    }
+   ],
+   "answer": "ABx = A(Bx); Bx = 0 ⇒ ABx = 0; e.g. A = [1 0; 0 0], B = [0 0; 0 1]",
+   "solution": [
+    {
+     "type": "p",
+     "text": "If <b>y</b> = <i>AB</i><b>x</b>, then <b>y</b> = <i>A</i>(<i>B</i><b>x</b>) ∈ Col <i>A</i>."
+    },
+    {
+     "type": "p",
+     "text": "If <i>B</i><b>x</b> = <b>0</b>, then <i>AB</i><b>x</b> = <i>A</i><b>0</b> = <b>0</b>. ∎"
+    },
+    {
+     "type": "p",
+     "text": "<i>A</i> ="
+    },
+    {
+     "type": "matrix",
+     "rows": [
+      [
+       "1",
+       "0"
+      ],
+      [
+       "0",
+       "0"
+      ]
+     ]
+    },
+    {
+     "type": "p",
+     "text": ", <i>B</i> ="
+    },
+    {
+     "type": "matrix",
+     "rows": [
+      [
+       "0",
+       "0"
+      ],
+      [
+       "0",
+       "1"
+      ]
+     ]
+    },
+    {
+     "type": "p",
+     "text": ": <i>AB</i> = 0. Col(<i>AB</i>) = {<b>0</b>} ⊊ Span{<b>e</b>₁} = Col <i>A</i>; Nul <i>B</i> = Span{<b>e</b>₁} ⊊ ℝ² = Nul(<i>AB</i>)."
+    },
+    {
+     "type": "warn",
+     "text": "What it tests: These two inclusions give rank(<i>AB</i>) ≤ rank <i>A</i> and rank(<i>AB</i>) ≤ rank <i>B</i>."
+    }
+   ]
+  },
+  {
+   "title": "Solution spaces of linear ODEs",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "Let <i>p</i>, <i>q</i>, <i>g</i> be continuous on ℝ. (a) Show the solutions of <i>y</i>″ + <i>p</i>(<i>t</i>)<i>y</i>′ + <i>q</i>(<i>t</i>)<i>y</i> = 0 form a subspace of <i>C</i>²(ℝ). (b) Show the solutions of <i>y</i>″ + <i>p</i><i>y</i>′ + <i>q</i><i>y</i> = <i>g</i> with <i>g</i> ≢ 0 do not, and describe them in terms of (a). (c) Is {sin²<i>t</i>, cos²<i>t</i>, 1} linearly independent in <i>C</i>(ℝ)?"
+    }
+   ],
+   "answer": "(a) kernel of the linear operator L (b) 0 is not a solution; solutions = yₚ + Ker L (c) No: sin²t + cos²t − 1 = 0",
+   "solution": [
+    {
+     "type": "steps",
+     "title": "Solution",
+     "items": [
+      "(a) <i>L</i>[<i>y</i>] = <i>y</i>″ + <i>p</i><i>y</i>′ + <i>q</i><i>y</i> is linear: <i>L</i>[<i>a</i><i>y</i>₁ + <i>b</i><i>y</i>₂] = <i>a</i><i>L</i>[<i>y</i>₁] + <i>b</i><i>L</i>[<i>y</i>₂]. The solution set is Ker <i>L</i>, a subspace.",
+      "(b) <i>y</i> = 0 gives <i>L</i>[0] = 0 ≠ <i>g</i>, so 0 is not a solution. If <i>y</i>ₚ is one solution, all solutions are <i>y</i>ₚ + Ker <i>L</i> (exactly like <b>p</b> + Nul <i>A</i>).",
+      "(c) <b>No</b>: sin²<i>t</i> + cos²<i>t</i> − 1 = 0 for all <i>t</i> is a nontrivial relation."
+     ]
+    },
+    {
+     "type": "warn",
+     "text": "What it tests: Linear ODEs are linear maps on function spaces. “General solution = particular + homogeneous” is the same theorem as p + Nul A for linear systems."
+    }
+   ]
+  }
+ ],
+ "keyFacts": [
+  "Subspace: contains 0, closed under + and scalar multiplication. Spans and kernels are always subspaces.",
+  "Nul A = {x : Ax = 0} ⊆ ℝⁿ; Col A = span of columns = {b : Ax = b consistent} ⊆ ℝᵐ.",
+  "{x : Ax = b}, b ≠ 0, is never a subspace (no 0); it is p + Nul A.",
+  "Nul A basis: free-variable vectors from RREF. Col A basis: pivot columns of the ORIGINAL A.",
+  "Row operations preserve Nul A and Row A, not Col A.",
+  "v ∈ Nul A: check Av = 0. v ∈ Col A: row reduce [A | v].",
+  "Ker T ⊆ domain, Range T ⊆ codomain; for T(x) = Ax they are Nul A, Col A."
+ ]
+}

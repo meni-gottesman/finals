@@ -1,0 +1,897 @@
+{
+ "id": "54-10",
+ "course": "54",
+ "title": "Gram–Schmidt, QR, least squares, inner product spaces",
+ "source": "Lay 6.4–6.5, 6.7",
+ "summary": "Gram–Schmidt turns any basis into an orthogonal one (and gives A = QR); least squares finds the best approximate solution of an inconsistent system through the normal equations AᵀAx̂ = Aᵀb. The same projection ideas work in any inner product space, including polynomials and functions.",
+ "lesson": [
+  {
+   "title": "The Gram–Schmidt process",
+   "blocks": [
+    {
+     "type": "thm",
+     "name": "Gram–Schmidt",
+     "text": "Given a basis {<b>x</b>₁, …, <b>x</b>ₚ} of W, define <b>v</b>₁ = <b>x</b>₁, <b>v</b>₂ = <b>x</b>₂ − ((<b>x</b>₂·<b>v</b>₁)/(<b>v</b>₁·<b>v</b>₁))<b>v</b>₁, and in general <b>v</b>ₖ = <b>x</b>ₖ − (projection of <b>x</b>ₖ onto Span{<b>v</b>₁, …, <b>v</b>ₖ₋₁}). Then {<b>v</b>₁, …, <b>v</b>ₚ} is an orthogonal basis of W, and Span{<b>v</b>₁, …, <b>v</b>ₖ} = Span{<b>x</b>₁, …, <b>x</b>ₖ} for every k.",
+     "proof": [
+      {
+       "type": "p",
+       "text": "Each <b>v</b>ₖ is <b>x</b>ₖ minus its projection onto Wₖ₋₁ = Span{<b>v</b>₁, …, <b>v</b>ₖ₋₁}, so by the orthogonal decomposition theorem it is orthogonal to Wₖ₋₁, i.e. to all earlier <b>v</b>'s. It is nonzero because <b>x</b>ₖ ∉ Wₖ₋₁ (the x's are independent). The projection formula is valid because the earlier v's are already orthogonal."
+      }
+     ]
+    },
+    {
+     "type": "tip",
+     "text": "Why subtract projections onto the earlier vectors: what remains of <b>x</b>ₖ after removing everything that points along the directions already chosen is exactly the new, perpendicular direction. You must project onto the new v's (which are orthogonal), not the old x's."
+    },
+    {
+     "type": "tip",
+     "text": "You may rescale any <b>v</b>ₖ (e.g. clear fractions) before continuing; it changes neither the span nor later projections. Normalize at the end to get an orthonormal basis."
+    },
+    {
+     "type": "example",
+     "title": "Gram–Schmidt in ℝ³",
+     "prompt": "Apply Gram–Schmidt to x₁ = (1, 1, 0), x₂ = (1, 0, 1), x₃ = (0, 1, 1), then normalize.",
+     "steps": [
+      "v₁ = (1, 1, 0).",
+      "x₂·v₁ = 1, v₁·v₁ = 2: v₂ = (1, 0, 1) − ½(1, 1, 0) = (1/2, −1/2, 1). Rescale: v₂ = (1, −1, 2).",
+      "x₃·v₁ = 1, x₃·v₂ = −1 + 2 = 1, v₂·v₂ = 6: v₃ = (0, 1, 1) − ½(1, 1, 0) − (1/6)(1, −1, 2) = (−2/3, 2/3, 2/3). Rescale: v₃ = (−1, 1, 1).",
+      "Check: v₁·v₃ = 0, v₂·v₃ = −1 − 1 + 2 = 0, v₁·v₂ = 0. ✓",
+      "Normalize: (1, 1, 0)/√2, (1, −1, 2)/√6, (−1, 1, 1)/√3."
+     ],
+     "answer": "Orthogonal basis (1, 1, 0), (1, −1, 2), (−1, 1, 1); orthonormal: divide by √2, √6, √3."
+    }
+   ]
+  },
+  {
+   "title": "QR factorization",
+   "blocks": [
+    {
+     "type": "thm",
+     "name": "QR factorization",
+     "text": "If A is m×n with linearly independent columns, A = QR where Q is m×n with orthonormal columns forming a basis of Col A, and R is n×n upper triangular, invertible, with positive diagonal.",
+     "proof": [
+      {
+       "type": "p",
+       "text": "Gram–Schmidt (normalized) on the columns of A gives Q. Since Span{<b>q</b>₁, …, <b>q</b>ₖ} = Span{<b>a</b>₁, …, <b>a</b>ₖ}, each <b>a</b>ₖ is a combination of <b>q</b>₁, …, <b>q</b>ₖ only, so the coefficient matrix R is upper triangular. Multiply A = QR on the left by Qᵀ and use QᵀQ = I: R = QᵀA."
+      }
+     ]
+    },
+    {
+     "type": "steps",
+     "title": "Find QR",
+     "items": [
+      "Gram–Schmidt on the columns of A; normalize to get the columns of Q.",
+      "Compute R = QᵀA (entries are dot products qᵢ·aⱼ; below-diagonal ones are 0).",
+      "Check: diagonal of R positive; QR = A."
+     ]
+    },
+    {
+     "type": "example",
+     "title": "QR of a 3×2 matrix",
+     "prompt": "Find a QR factorization of A = [1 4; 2 5; 2 2].",
+     "steps": [
+      "a₁ = (1, 2, 2), ‖a₁‖ = 3 ⇒ q₁ = (1, 2, 2)/3.",
+      "a₂·a₁ = 4 + 10 + 4 = 18, a₁·a₁ = 9: v₂ = (4, 5, 2) − 2(1, 2, 2) = (2, 1, −2), ‖v₂‖ = 3 ⇒ q₂ = (2, 1, −2)/3.",
+      "R = QᵀA: q₁·a₁ = 3, q₁·a₂ = 18/3 = 6, q₂·a₁ = 0, q₂·a₂ = (8 + 5 − 4)/3 = 3.",
+      "So Q = [1/3 2/3; 2/3 1/3; 2/3 −2/3], R = [3 6; 0 3]."
+     ],
+     "answer": "Q = (1/3)[1 2; 2 1; 2 −2], R = [3 6; 0 3]"
+    }
+   ]
+  },
+  {
+   "title": "Least-squares problems",
+   "blocks": [
+    {
+     "type": "def",
+     "term": "Least-squares solution",
+     "text": "For an (often inconsistent) system A<b>x</b> = <b>b</b>, x̂ is a least-squares solution if ‖<b>b</b> − Ax̂‖ ≤ ‖<b>b</b> − A<b>x</b>‖ for all <b>x</b>. The number ‖<b>b</b> − Ax̂‖ is the least-squares error."
+    },
+    {
+     "type": "thm",
+     "name": "Normal equations",
+     "text": "The least-squares solutions of A<b>x</b> = <b>b</b> are exactly the solutions of AᵀA<b>x</b> = Aᵀ<b>b</b>. Equivalently, Ax̂ = b̂ = proj<sub>Col A</sub> <b>b</b>.",
+     "proof": [
+      {
+       "type": "p",
+       "text": "A<b>x</b> ranges over Col A, so the closest A<b>x</b> to <b>b</b> is b̂ = proj<sub>Col A</sub> <b>b</b> (best approximation). The error <b>b</b> − Ax̂ must be orthogonal to Col A, i.e. to every column of A: Aᵀ(<b>b</b> − Ax̂) = <b>0</b>, which is AᵀAx̂ = Aᵀ<b>b</b>. The steps reverse."
+      }
+     ]
+    },
+    {
+     "type": "steps",
+     "title": "Least squares by normal equations",
+     "items": [
+      "Compute AᵀA (n×n, symmetric) and Aᵀ<b>b</b>.",
+      "Solve AᵀAx̂ = Aᵀ<b>b</b> (row reduce, or invert if 2×2).",
+      "Least-squares error: ‖<b>b</b> − Ax̂‖."
+     ]
+    },
+    {
+     "type": "example",
+     "title": "Least squares via the normal equations",
+     "prompt": "Find the least-squares solution and error for A = [4 0; 0 2; 1 1], b = (2, 0, 11).",
+     "steps": [
+      "AᵀA = [17 1; 1 5], Aᵀb = (4·2 + 0 + 11, 0 + 0 + 11) = (19, 11).",
+      "Solve: det = 84; x̂ = (1/84)[5 −1; −1 17](19, 11) = (1/84)(84, 168) = (1, 2).",
+      "Ax̂ = (4, 4, 3); b − Ax̂ = (−2, −4, 8); error = √(4 + 16 + 64) = √84 = 2√21."
+     ],
+     "answer": "x̂ = (1, 2), least-squares error 2√21 ≈ 9.17"
+    },
+    {
+     "type": "thm",
+     "name": "Least squares with QR",
+     "text": "If A = QR (independent columns), the unique least-squares solution is x̂ = R⁻¹Qᵀ<b>b</b>; in practice solve Rx̂ = Qᵀ<b>b</b> by back-substitution.",
+     "proof": [
+      {
+       "type": "p",
+       "text": "Qᵀ<b>b</b> gives the coordinates of b̂ = QQᵀ<b>b</b> in the basis Q, and A<b>x</b> = QR<b>x</b> = b̂ ⇔ R<b>x</b> = Qᵀ<b>b</b>."
+      }
+     ]
+    },
+    {
+     "type": "example",
+     "title": "Least squares via QR",
+     "prompt": "With A = [1 4; 2 5; 2 2] = QR as above, find the least-squares solution of Ax = (1, 2, 3).",
+     "steps": [
+      "Qᵀb = ((1 + 4 + 6)/3, (2 + 2 − 6)/3) = (11/3, −2/3).",
+      "Back-substitute Rx̂ = Qᵀb with R = [3 6; 0 3]: 3x̂₂ = −2/3 ⇒ x̂₂ = −2/9.",
+      "3x̂₁ + 6(−2/9) = 11/3 ⇒ 3x̂₁ = 11/3 + 4/3 = 5 ⇒ x̂₁ = 5/3.",
+      "Same as solving AᵀAx̂ = Aᵀb."
+     ],
+     "answer": "x̂ = (5/3, −2/9)"
+    },
+    {
+     "type": "tip",
+     "text": "If the columns of A are orthogonal, AᵀA is diagonal and x̂ⱼ = (<b>b</b>·<b>a</b>ⱼ)/(<b>a</b>ⱼ·<b>a</b>ⱼ): just projection coefficients."
+    }
+   ]
+  },
+  {
+   "title": "Uniqueness, and curve fitting",
+   "blocks": [
+    {
+     "type": "thm",
+     "name": "When is x̂ unique?",
+     "text": "TFAE: (a) AᵀA<b>x</b> = Aᵀ<b>b</b> has a unique solution for every <b>b</b>; (b) the columns of A are linearly independent; (c) AᵀA is invertible. Then x̂ = (AᵀA)⁻¹Aᵀ<b>b</b>.",
+     "proof": [
+      {
+       "type": "p",
+       "text": "Nul(AᵀA) = Nul A: if AᵀA<b>x</b> = <b>0</b>, then 0 = <b>x</b>ᵀAᵀA<b>x</b> = ‖A<b>x</b>‖², so A<b>x</b> = <b>0</b>. So AᵀA (square) is invertible ⇔ Nul A = {<b>0</b>}."
+      }
+     ]
+    },
+    {
+     "type": "warn",
+     "text": "If the columns are dependent there are infinitely many least-squares solutions (a translate of Nul A), but b̂ = Ax̂ is still unique. Example: A = [1 1 2; 1 −1 0; 1 1 2; 1 −1 0] has column 3 = column 1 + column 2, so its least-squares solutions form a line."
+    },
+    {
+     "type": "def",
+     "term": "Least-squares line",
+     "text": "Fit y = β₀ + β₁x to data (x₁, y₁), …, (xₙ, yₙ): design matrix X with rows (1, xᵢ), parameter vector β = (β₀, β₁), observation vector <b>y</b>. Solve XᵀXβ = Xᵀ<b>y</b>. XᵀX = [n Σxᵢ; Σxᵢ Σxᵢ²], Xᵀ<b>y</b> = (Σyᵢ, Σxᵢyᵢ)."
+    },
+    {
+     "type": "example",
+     "title": "Line of best fit",
+     "prompt": "Find the least-squares line for (2, 1), (5, 2), (7, 3), (8, 3).",
+     "steps": [
+      "X = [1 2; 1 5; 1 7; 1 8], y = (1, 2, 3, 3).",
+      "XᵀX = [4 22; 22 142], Xᵀy = (9, 2 + 10 + 21 + 24) = (9, 57).",
+      "det = 568 − 484 = 84. β = (1/84)[142 −22; −22 4](9, 57) = (1/84)(1278 − 1254, −198 + 228) = (24/84, 30/84) = (2/7, 5/14)."
+     ],
+     "answer": "y = 2/7 + (5/14)x"
+    },
+    {
+     "type": "example",
+     "title": "Set up a curve fit (do not solve)",
+     "prompt": "Set up the least-squares problem for fitting y = β₀ + β₁x + β₂x² to (−1, 2), (0, 1), (1, 1), (2, 4).",
+     "steps": [
+      "Each data point gives one equation β₀ + β₁xᵢ + β₂xᵢ² = yᵢ.",
+      "Design matrix rows (1, xᵢ, xᵢ²): X = [1 −1 1; 1 0 0; 1 1 1; 1 2 4].",
+      "y = (2, 1, 1, 4); solve XᵀXβ = Xᵀy."
+     ],
+     "answer": "X = [1 −1 1; 1 0 0; 1 1 1; 1 2 4], y = (2, 1, 1, 4), normal equations XᵀXβ = Xᵀy."
+    }
+   ]
+  },
+  {
+   "title": "Inner product spaces",
+   "blocks": [
+    {
+     "type": "def",
+     "term": "Inner product",
+     "text": "A function ⟨<b>u</b>, <b>v</b>⟩ on a vector space V with: (1) ⟨<b>u</b>, <b>v</b>⟩ = ⟨<b>v</b>, <b>u</b>⟩; (2) ⟨<b>u</b> + <b>v</b>, <b>w</b>⟩ = ⟨<b>u</b>, <b>w</b>⟩ + ⟨<b>v</b>, <b>w</b>⟩; (3) ⟨c<b>u</b>, <b>v</b>⟩ = c⟨<b>u</b>, <b>v</b>⟩; (4) ⟨<b>u</b>, <b>u</b>⟩ ≥ 0, and ⟨<b>u</b>, <b>u</b>⟩ = 0 only for <b>u</b> = <b>0</b>. Length, distance, orthogonality, projections and Gram–Schmidt are then defined exactly as in ℝⁿ."
+    },
+    {
+     "type": "list",
+     "items": [
+      "Evaluation inner product on ℙₙ: ⟨p, q⟩ = p(t₀)q(t₀) + ⋯ + p(tₖ)q(tₖ) with DISTINCT points; it is an inner product iff k + 1 ≥ n + 1 points (a nonzero p of degree ≤ n cannot vanish at n + 1 points).",
+      "Integral inner product on C[a, b]: ⟨f, g⟩ = ∫ₐᵇ f(t)g(t) dt. Then ‖f‖² = ∫ₐᵇ f(t)² dt."
+     ]
+    },
+    {
+     "type": "thm",
+     "name": "Cauchy–Schwarz and triangle inequalities",
+     "text": "|⟨<b>u</b>, <b>v</b>⟩| ≤ ‖<b>u</b>‖‖<b>v</b>‖ and ‖<b>u</b> + <b>v</b>‖ ≤ ‖<b>u</b>‖ + ‖<b>v</b>‖ in every inner product space.",
+     "proof": [
+      {
+       "type": "p",
+       "text": "If <b>u</b> ≠ <b>0</b>, the projection of <b>v</b> onto <b>u</b> has length |⟨<b>v</b>, <b>u</b>⟩|/‖<b>u</b>‖, which is at most ‖<b>v</b>‖ by Pythagoras."
+      }
+     ]
+    },
+    {
+     "type": "example",
+     "title": "Check the axioms",
+     "prompt": "Is ⟨p, q⟩ = p(0)q(0) + p(1)q(1) an inner product on ℙ₂? Is ⟨x, y⟩ = x₁y₁ + 2x₂y₂ one on ℝ²?",
+     "steps": [
+      "Symmetry and linearity hold for both (evaluation and multiplication are linear).",
+      "ℙ₂ case: p = t(t − 1) = t² − t is nonzero but p(0) = p(1) = 0, so ⟨p, p⟩ = 0. Axiom 4 fails.",
+      "ℝ² case: ⟨x, x⟩ = x₁² + 2x₂² &gt; 0 unless x = 0. All four axioms hold."
+     ],
+     "answer": "First: no (positivity fails for t² − t). Second: yes."
+    },
+    {
+     "type": "example",
+     "title": "Gram–Schmidt in ℙ₂ with an integral inner product",
+     "prompt": "Orthogonalize 1, t, t² with ⟨f, g⟩ = ∫₀¹ f(t)g(t) dt.",
+     "steps": [
+      "v₁ = 1, ⟨1, 1⟩ = 1.",
+      "⟨t, 1⟩ = 1/2 ⇒ v₂ = t − (1/2)/1 = t − 1/2. ⟨v₂, v₂⟩ = ∫₀¹ (t − 1/2)² dt = 1/12.",
+      "⟨t², 1⟩ = 1/3, ⟨t², t − 1/2⟩ = 1/4 − 1/6 = 1/12.",
+      "v₃ = t² − (1/3)·1 − ((1/12)/(1/12))(t − 1/2) = t² − t + 1/6.",
+      "Check: ∫₀¹ (t² − t + 1/6) dt = 1/3 − 1/2 + 1/6 = 0 and ∫₀¹ t(t² − t + 1/6) dt = 1/4 − 1/3 + 1/12 = 0. ✓"
+     ],
+     "answer": "{1, t − 1/2, t² − t + 1/6}"
+    },
+    {
+     "type": "example",
+     "title": "Norm and best approximation in C[0, 1]",
+     "prompt": "With ⟨f, g⟩ = ∫₀¹ fg dt, find ‖t‖ and the best approximation to t² by a polynomial of degree ≤ 1.",
+     "steps": [
+      "‖t‖² = ∫₀¹ t² dt = 1/3 ⇒ ‖t‖ = 1/√3.",
+      "Use the orthogonal basis {1, t − 1/2} of ℙ₁ from the previous example.",
+      "proj = (⟨t², 1⟩/⟨1, 1⟩)·1 + (⟨t², t − 1/2⟩/⟨t − 1/2, t − 1/2⟩)(t − 1/2) = 1/3 + (1/12)/(1/12)·(t − 1/2).",
+      "= t − 1/6."
+     ],
+     "answer": "‖t‖ = 1/√3; best approximation t − 1/6"
+    },
+    {
+     "type": "warn",
+     "text": "Orthogonality depends on the inner product: 1 and t are orthogonal for ∫₋₁¹ but not for ∫₀¹."
+    }
+   ]
+  }
+ ],
+ "cards": [
+  {
+   "front": "Gram–Schmidt process: steps and example.",
+   "back": [
+    {
+     "type": "steps",
+     "title": "Steps",
+     "items": [
+      "v₁ = x₁.",
+      "v₂ = x₂ − (x₂·v₁/v₁·v₁)v₁.",
+      "vₖ = xₖ − (projection onto span of v₁, …, vₖ₋₁).",
+      "Normalize if you want orthonormal."
+     ]
+    },
+    {
+     "type": "p",
+     "text": "<i>Example:</i> x₁ = (1, 1, 0), x₂ = (2, 0, 1): v₂ = (2, 0, 1) − (2/2)(1, 1, 0) = <b>(1, −1, 1)</b>."
+    },
+    {
+     "type": "warn",
+     "text": "Subtract projections onto the new v’s, not the old x’s."
+    }
+   ]
+  },
+  {
+   "front": "QR factorization: what are Q and R, and how do you find them?",
+   "back": [
+    {
+     "type": "p",
+     "text": "A (independent columns) = QR: Q has orthonormal columns (Gram–Schmidt on A’s columns, normalized), R is upper triangular with positive diagonal."
+    },
+    {
+     "type": "formula",
+     "text": "R = QᵀA"
+    },
+    {
+     "type": "p",
+     "text": "<i>Example:</i> A = [1 2; 1 0; 0 1]: Q = [(1, 1, 0)/√2, (1, −1, 1)/√3], R = [√2 √2; 0 √3]."
+    }
+   ]
+  },
+  {
+   "front": "What is a least-squares solution and what are the normal equations?",
+   "back": [
+    {
+     "type": "p",
+     "text": "x̂ minimizes ‖b − Ax‖: Ax̂ = proj of b onto Col A."
+    },
+    {
+     "type": "formula",
+     "text": "AᵀAx̂ = Aᵀb"
+    },
+    {
+     "type": "p",
+     "text": "<b>Why:</b> b − Ax̂ ⊥ Col A means Aᵀ(b − Ax̂) = 0."
+    },
+    {
+     "type": "p",
+     "text": "Least-squares error = ‖b − Ax̂‖."
+    }
+   ]
+  },
+  {
+   "front": "When is the least-squares solution unique?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Exactly when the columns of A are linearly independent ⟺ AᵀA is invertible. Then x̂ = (AᵀA)⁻¹Aᵀb."
+    },
+    {
+     "type": "warn",
+     "text": "Otherwise there are infinitely many x̂ (all with the same Ax̂)."
+    }
+   ]
+  },
+  {
+   "front": "Fit the least-squares line y = β₀ + β₁x to (0, 1), (1, 1), (2, 4).",
+   "back": [
+    {
+     "type": "steps",
+     "title": "Steps",
+     "items": [
+      "X = [1 0; 1 1; 1 2], y = (1, 1, 4).",
+      "XᵀX = [3 3; 3 5], Xᵀy = (6, 9).",
+      "Solve: β = (1/2, 3/2)."
+     ]
+    },
+    {
+     "type": "p",
+     "text": "<i>Example:</i> y = <b>1/2 + (3/2)x</b>. Residuals (1/2, −1, 1/2), squared error 3/2."
+    }
+   ]
+  },
+  {
+   "front": "Least squares with QR, or with orthogonal columns: shortcuts?",
+   "back": [
+    {
+     "type": "formula",
+     "text": "A = QR ⟹ Rx̂ = Qᵀb   (back-substitute)"
+    },
+    {
+     "type": "p",
+     "text": "If A’s columns a₁, …, aₙ are orthogonal: x̂ⱼ = (b·aⱼ)/(aⱼ·aⱼ), just projection coefficients."
+    }
+   ]
+  },
+  {
+   "front": "Four axioms of an inner product ⟨u, v⟩.",
+   "back": [
+    {
+     "type": "steps",
+     "title": "Steps",
+     "items": [
+      "⟨u, v⟩ = ⟨v, u⟩.",
+      "⟨u + v, w⟩ = ⟨u, w⟩ + ⟨v, w⟩.",
+      "⟨cu, v⟩ = c⟨u, v⟩.",
+      "⟨u, u⟩ ≥ 0, with ⟨u, u⟩ = 0 only for u = 0."
+     ]
+    },
+    {
+     "type": "warn",
+     "text": "Axiom 4 (positivity) is the one that usually fails."
+    }
+   ]
+  },
+  {
+   "front": "On P₂ use ⟨p, q⟩ = p(−1)q(−1) + p(0)q(0) + p(1)q(1). Compute ⟨t, t²⟩, ‖1‖, ‖t‖.",
+   "back": [
+    {
+     "type": "steps",
+     "title": "Steps",
+     "items": [
+      "⟨t, t²⟩ = (−1)(1) + 0 + (1)(1) = <b>0</b>: orthogonal.",
+      "‖1‖² = 3, so ‖1‖ = √3.",
+      "‖t‖² = 1 + 0 + 1 = 2, ‖t‖ = √2."
+     ]
+    },
+    {
+     "type": "p",
+     "text": "<b>Why it’s an inner product:</b> A nonzero degree-≤2 polynomial can’t vanish at 3 points, so ⟨p, p⟩ &gt; 0."
+    }
+   ]
+  },
+  {
+   "front": "Why is ⟨p, q⟩ = p(0)q(0) + p(1)q(1) NOT an inner product on P₂?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Positivity fails: p = t² − t is nonzero but p(0) = p(1) = 0, so ⟨p, p⟩ = 0."
+    },
+    {
+     "type": "warn",
+     "text": "Evaluation at k points works on Pₙ only when k ≥ n + 1."
+    }
+   ]
+  },
+  {
+   "front": "Integral inner product on C[a, b]; Gram–Schmidt on 1, t over [0, 1].",
+   "back": [
+    {
+     "type": "formula",
+     "text": "⟨f, g⟩ = ∫ₐᵇ f(t)g(t) dt"
+    },
+    {
+     "type": "steps",
+     "title": "Steps",
+     "items": [
+      "⟨1, t⟩ = 1/2, ⟨1, 1⟩ = 1.",
+      "v₂ = t − (1/2)/1·1 = <b>t − 1/2</b>."
+     ]
+    },
+    {
+     "type": "p",
+     "text": "<i>Example:</i> Orthogonal basis of P₁ on [0, 1]: {1, t − 1/2}."
+    }
+   ]
+  },
+  {
+   "front": "Best approximation in a function space: project t² onto span{1, t} with ∫₋₁¹.",
+   "back": [
+    {
+     "type": "steps",
+     "title": "Steps",
+     "items": [
+      "1 and t are orthogonal on [−1, 1] (t is odd).",
+      "⟨t², 1⟩/⟨1, 1⟩ = (2/3)/2 = 1/3; ⟨t², t⟩ = 0."
+     ]
+    },
+    {
+     "type": "p",
+     "text": "<i>Example:</i> Best linear approximation: <b>1/3</b> (a constant!)."
+    },
+    {
+     "type": "p",
+     "text": "Same projection formula as ℝⁿ; only the inner product changed."
+    }
+   ]
+  },
+  {
+   "front": "Cauchy–Schwarz and triangle inequalities.",
+   "back": [
+    {
+     "type": "formula",
+     "text": "|⟨u, v⟩| ≤ ‖u‖‖v‖,   ‖u + v‖ ≤ ‖u‖ + ‖v‖"
+    },
+    {
+     "type": "p",
+     "text": "Hold in every inner product space. Equality in Cauchy–Schwarz ⟺ u, v are parallel."
+    },
+    {
+     "type": "p",
+     "text": "<b>Why:</b> ‖proj_u v‖ ≤ ‖v‖ since v = proj + orthogonal part."
+    }
+   ]
+  },
+  {
+   "front": "Why does Gram–Schmidt subtract projections onto the earlier vectors?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Removing the components along the already-chosen orthogonal directions leaves exactly the part of xₖ perpendicular to them; the projection formula works because the earlier v's are orthogonal."
+    }
+   ]
+  },
+  {
+   "front": "Why does a least-squares solution satisfy AᵀAx̂ = Aᵀb?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Ax̂ must be the projection of b onto Col A, so the error b − Ax̂ is orthogonal to every column: Aᵀ(b − Ax̂) = 0."
+    }
+   ]
+  },
+  {
+   "front": "Least-squares error?",
+   "back": [
+    {
+     "type": "p",
+     "text": "‖b − Ax̂‖ (the distance from b to Col A)."
+    }
+   ]
+  },
+  {
+   "front": "If b ∈ Col A, what are the least-squares solutions?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Exactly the ordinary solutions of Ax = b (b̂ = b, error 0)."
+    }
+   ]
+  },
+  {
+   "front": "Design matrix for fitting y = β₀ + β₁x + β₂x²?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Rows (1, xᵢ, xᵢ²); solve XᵀXβ = Xᵀy."
+    }
+   ]
+  },
+  {
+   "front": "Why is Nul(AᵀA) = Nul A?",
+   "back": [
+    {
+     "type": "p",
+     "text": "AᵀAx = 0 ⇒ xᵀAᵀAx = ‖Ax‖² = 0 ⇒ Ax = 0."
+    }
+   ]
+  }
+ ],
+ "hard": [
+  {
+   "title": "Gram–Schmidt, QR and least squares in ℝ⁴",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "<i>A</i> has columns <b>x</b>₁ = (1, 1, 1, 1), <b>x</b>₂ = (0, 1, 1, 1), <b>x</b>₃ = (0, 0, 1, 1). (a) Apply Gram–Schmidt. (b) Find a QR factorization. (c) Use it to find the least-squares solution of <i>A</i><b>x</b> = (1, 0, 2, 3)."
+    }
+   ],
+   "answer": "v = (1,1,1,1), (−3,1,1,1), (0,−2,1,1); Q = [(1,1,1,1)/2, (−3,1,1,1)/√12, (0,−2,1,1)/√6], R = [2 3/2 1; 0 √3/2 √3/3; 0 0 √6/3]; x̂ = (1, −1, 5/2)",
+   "solution": [
+    {
+     "type": "p",
+     "text": "<b>v</b>₁ = (1,1,1,1)."
+    },
+    {
+     "type": "p",
+     "text": "<b>v</b>₂ = <b>x</b>₂ − (3/4)<b>v</b>₁ = (−3/4, 1/4, 1/4, 1/4); scale to <b>v</b>₂ = (−3, 1, 1, 1)."
+    },
+    {
+     "type": "p",
+     "text": "<b>v</b>₃ = <b>x</b>₃ − (2/4)<b>v</b>₁ − (2/12)(−3,1,1,1) = (0, −2/3, 1/3, 1/3); scale to (0, −2, 1, 1)."
+    },
+    {
+     "type": "p",
+     "text": "<i>Q</i> = [ (1,1,1,1)/2, (−3,1,1,1)/√12, (0,−2,1,1)/√6 ]."
+    },
+    {
+     "type": "p",
+     "text": "<i>R</i> = <i>Q</i>ᵀ<i>A</i> ="
+    },
+    {
+     "type": "matrix",
+     "rows": [
+      [
+       "2",
+       "3/2",
+       "1"
+      ],
+      [
+       "0",
+       "√3/2",
+       "√3/3"
+      ],
+      [
+       "0",
+       "0",
+       "√6/3"
+      ]
+     ]
+    },
+    {
+     "type": "p",
+     "text": "(upper triangular, positive diagonal)."
+    },
+    {
+     "type": "p",
+     "text": "(c) Solve <i>R</i><b>x̂</b> = <i>Q</i>ᵀ<b>b</b>: <i>Q</i>ᵀ<b>b</b> = (3, 2/√12, 5/√6) = (3, √3/3, 5√6/6). Back-substitute: <i>x̂</i>₃ = (5√6/6)/(√6/3) = 5/2; <i>x̂</i>₂ = (√3/3 − (√3/3)(5/2))/(√3/2) = −1; <i>x̂</i>₁ = (3 − (3/2)(−1) − 5/2)/2 = 1."
+    },
+    {
+     "type": "p",
+     "text": "<b>x̂ = (1, −1, 5/2)</b> (same as solving <i>A</i>ᵀ<i>A</i><b>x</b> = <i>A</i>ᵀ<b>b</b>)."
+    },
+    {
+     "type": "warn",
+     "text": "What it tests: Rescaling <b>v</b>ᵢ mid-process is fine (it doesn’t change the span or later projections). <i>R</i> = <i>Q</i>ᵀ<i>A</i> — no need to track coefficients."
+    }
+   ]
+  },
+  {
+   "title": "Least-squares line with residuals",
+   "level": "hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "Find the least-squares line <i>y</i> = β₀ + β₁<i>x</i> for the data (−1, 0), (0, 1), (1, 1), (2, 3), and the sum of squared residuals."
+    }
+   ],
+   "answer": "y = 0.8 + 0.9x; sum of squared residuals 0.7",
+   "solution": [
+    {
+     "type": "p",
+     "text": "<i>X</i> has rows (1, <i>x</i>ᵢ). <i>X</i>ᵀ<i>X</i> ="
+    },
+    {
+     "type": "matrix",
+     "rows": [
+      [
+       "4",
+       "2"
+      ],
+      [
+       "2",
+       "6"
+      ]
+     ]
+    },
+    {
+     "type": "p",
+     "text": ", <i>X</i>ᵀ<b>y</b> = (Σ<i>y</i>, Σ<i>xy</i>) = (5, 7)."
+    },
+    {
+     "type": "p",
+     "text": "Solve: det = 20, β₀ = (6·5 − 2·7)/20 = 4/5, β₁ = (4·7 − 2·5)/20 = 9/10."
+    },
+    {
+     "type": "p",
+     "text": "<b><i>y</i> = 0.8 + 0.9<i>x</i></b>."
+    },
+    {
+     "type": "p",
+     "text": "Predicted −0.1, 0.8, 1.7, 2.6; residuals 0.1, 0.2, −0.7, 0.4; sum of squares <b>0.7</b>."
+    },
+    {
+     "type": "warn",
+     "text": "What it tests: Normal equations <i>X</i>ᵀ<i>X</i>β = <i>X</i>ᵀ<b>y</b>; the first row of <i>X</i> is all ones (intercept column)."
+    }
+   ]
+  },
+  {
+   "title": "True/False: QR, least squares, inner products",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "list",
+     "items": [
+      "1. If <i>A</i> = <i>QR</i> where <i>Q</i> has orthonormal columns, then <i>R</i> = <i>Q</i>ᵀ<i>A</i>.",
+      "2. The least-squares solution of <i>A</i><b>x</b> = <b>b</b> is unique.",
+      "3. If <b>b</b> ∈ Col <i>A</i>, every least-squares solution is an exact solution.",
+      "4. ⟨<i>p</i>, <i>q</i>⟩ = <i>p</i>(0)<i>q</i>(0) + <i>p</i>(1)<i>q</i>(1) is an inner product on ℙ₂.",
+      "5. In Gram–Schmidt, Span{<b>v</b>₁, …, <b>v</b>ₖ} = Span{<b>x</b>₁, …, <b>x</b>ₖ} for every <i>k</i>.",
+      "6. |⟨<b>u</b>, <b>v</b>⟩| ≤ ‖<b>u</b>‖‖<b>v</b>‖ holds in every inner product space."
+     ]
+    }
+   ],
+   "answer": "1 T, 2 F, 3 T, 4 F, 5 T, 6 T",
+   "solution": [
+    {
+     "type": "list",
+     "items": [
+      "1. <b>True.</b> <i>Q</i>ᵀ<i>A</i> = <i>Q</i>ᵀ<i>QR</i> = <i>R</i>.",
+      "2. <b>False.</b> Unique ⇔ columns of <i>A</i> independent. With dependent columns there are infinitely many.",
+      "3. <b>True.</b> Then <b>b̂</b> = <b>b</b>, and LS solutions are the solutions of <i>A</i><b>x</b> = <b>b̂</b>.",
+      "4. <b>False.</b> <i>p</i> = <i>t</i>(<i>t</i> − 1) ≠ 0 has ⟨<i>p</i>, <i>p</i>⟩ = 0. Positivity fails: need at least 3 evaluation points for ℙ₂.",
+      "5. <b>True.</b> Each <b>v</b>ₖ is <b>x</b>ₖ minus a combination of earlier <b>v</b>’s, and vice versa.",
+      "6. <b>True.</b> Cauchy–Schwarz uses only the inner product axioms."
+     ]
+    },
+    {
+     "type": "warn",
+     "text": "What it tests: LS uniqueness ⇔ <i>A</i>ᵀ<i>A</i> invertible ⇔ independent columns. An inner product must be positive on every nonzero vector."
+    }
+   ]
+  },
+  {
+   "title": "Least squares with dependent columns",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "<i>A</i> ="
+    },
+    {
+     "type": "matrix",
+     "rows": [
+      [
+       "1",
+       "1",
+       "2"
+      ],
+      [
+       "1",
+       "−1",
+       "0"
+      ],
+      [
+       "1",
+       "1",
+       "2"
+      ],
+      [
+       "1",
+       "−1",
+       "0"
+      ]
+     ]
+    },
+    {
+     "type": "p",
+     "text": ", <b>b</b> = (1, 2, 3, 6). Find <b>b̂</b> and <i>all</i> least-squares solutions."
+    }
+   ],
+   "answer": "b̂ = (2, 4, 2, 4); x̂ = (3, −1, 0) + t(−1, −1, 1)",
+   "solution": [
+    {
+     "type": "steps",
+     "title": "Solution",
+     "items": [
+      "Column 3 = column 1 + column 2, so LS solutions are not unique. Col <i>A</i> = Span{<b>a</b>₁, <b>a</b>₂}, and <b>a</b>₁·<b>a</b>₂ = 0.",
+      "<b>b̂</b> = (<b>b</b>·<b>a</b>₁/4)<b>a</b>₁ + (<b>b</b>·<b>a</b>₂/4)<b>a</b>₂ = 3<b>a</b>₁ − <b>a</b>₂ = <b>(2, 4, 2, 4)</b>.",
+      "Solve <i>A</i><b>x</b> = <b>b̂</b>: <i>x</i>₁<b>a</b>₁ + <i>x</i>₂<b>a</b>₂ + <i>x</i>₃(<b>a</b>₁+<b>a</b>₂) = 3<b>a</b>₁ − <b>a</b>₂ ⇒ <i>x</i>₁ + <i>x</i>₃ = 3, <i>x</i>₂ + <i>x</i>₃ = −1.",
+      "<b>x̂ = (3, −1, 0) + <i>t</i>(−1, −1, 1)</b>, <i>t</i> ∈ ℝ. (<i>A</i>ᵀ<i>A</i> has rank 2, so the normal equations have one free variable — same answer.)"
+     ]
+    },
+    {
+     "type": "warn",
+     "text": "What it tests: Dependent columns ⇒ a whole line of LS solutions; <b>b̂</b> is still unique. Using an orthogonal basis of Col <i>A</i> avoids solving a singular 3×3 system."
+    }
+   ]
+  },
+  {
+   "title": "Evaluation inner product on ℙ₂",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "On ℙ₂ use ⟨<i>p</i>, <i>q</i>⟩ = <i>p</i>(−1)<i>q</i>(−1) + <i>p</i>(0)<i>q</i>(0) + <i>p</i>(1)<i>q</i>(1). (a) Orthogonalize 1, <i>t</i>, <i>t</i>². (b) Find the best approximation to <i>t</i>³ in ℙ₁ (polynomials of degree ≤ 1) and explain why it’s so good."
+    }
+   ],
+   "answer": "(a) 1, t, t² − 2/3 (b) t (exact at −1, 0, 1)",
+   "solution": [
+    {
+     "type": "steps",
+     "title": "Solution",
+     "items": [
+      "⟨1, <i>t</i>⟩ = −1 + 0 + 1 = 0, so 1 and <i>t</i> are already orthogonal.",
+      "⟨<i>t</i>², 1⟩ = 2, ⟨1, 1⟩ = 3, ⟨<i>t</i>², <i>t</i>⟩ = 0 ⇒ third vector <i>t</i>² − 2/3. Norms²: 3, 2, (1/3)² + (2/3)² + (1/3)² = 2/3.",
+      "(b) ⟨<i>t</i>³, 1⟩ = 0, ⟨<i>t</i>³, <i>t</i>⟩ = 1 + 0 + 1 = 2 ⇒ projection = (2/2)<i>t</i> = <b><i>t</i></b>.",
+      "Error <i>t</i>³ − <i>t</i> vanishes at −1, 0, 1, so its norm in this inner product is 0 — on the three sample points the approximation is exact."
+     ]
+    },
+    {
+     "type": "warn",
+     "text": "What it tests: An evaluation inner product only “sees” the sample points. Orthogonality depends on the inner product — 1 and <i>t</i>² are not orthogonal here."
+    }
+   ]
+  },
+  {
+   "title": "Best approximation in C[−1, 1]",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "With ⟨<i>f</i>, <i>g</i>⟩ = ∫₋₁¹ <i>f</i><i>g</i> d<i>t</i>, find the best approximation to <i>t</i>³ by polynomials of degree ≤ 1, and then by degree ≤ 2. Why are they equal?"
+    }
+   ],
+   "answer": "(3/5)t for both degrees",
+   "solution": [
+    {
+     "type": "steps",
+     "title": "Solution",
+     "items": [
+      "Orthogonal basis of ℙ₂: 1, <i>t</i>, <i>t</i>² − 1/3 (∫<i>t</i> = 0, ∫<i>t</i>³ = 0, ∫(<i>t</i>² − 1/3) = 0).",
+      "⟨<i>t</i>³, 1⟩ = 0, ⟨<i>t</i>³, <i>t</i>⟩ = ∫<i>t</i>⁴ = 2/5, ⟨<i>t</i>, <i>t</i>⟩ = 2/3 ⇒ coefficient 3/5.",
+      "Degree ≤ 1: <b>(3/5)<i>t</i></b>.",
+      "⟨<i>t</i>³, <i>t</i>² − 1/3⟩ = ∫(<i>t</i>⁵ − <i>t</i>³/3) = 0 (odd integrand). So degree ≤ 2 gives the same <b>(3/5)<i>t</i></b>: <i>t</i>³ is odd and the new basis vector is even."
+     ]
+    },
+    {
+     "type": "warn",
+     "text": "What it tests: Odd × even integrates to 0 on symmetric intervals — saves almost all integration. The answer is <i>not</i> <i>t</i> (t is the answer for a three-point evaluation inner product, not this one)."
+    }
+   ]
+  },
+  {
+   "title": "Proof: AᵀA invertible ⇔ independent columns",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "Prove: <i>A</i>ᵀ<i>A</i> is invertible if and only if the columns of <i>A</i> are linearly independent."
+    }
+   ],
+   "answer": "Nul(AᵀA) = Nul A via xᵀAᵀAx = ‖Ax‖²",
+   "solution": [
+    {
+     "type": "steps",
+     "title": "Solution",
+     "items": [
+      "Claim Nul(<i>A</i>ᵀ<i>A</i>) = Nul <i>A</i>. ⊇ is clear: <i>A</i><b>x</b> = 0 ⇒ <i>A</i>ᵀ<i>A</i><b>x</b> = 0.",
+      "⊆: if <i>A</i>ᵀ<i>A</i><b>x</b> = 0 then 0 = <b>x</b>ᵀ<i>A</i>ᵀ<i>A</i><b>x</b> = ‖<i>A</i><b>x</b>‖², so <i>A</i><b>x</b> = 0.",
+      "<i>A</i>ᵀ<i>A</i> is square, so invertible ⇔ Nul(<i>A</i>ᵀ<i>A</i>) = {0} ⇔ Nul <i>A</i> = {0} ⇔ independent columns. ∎"
+     ]
+    },
+    {
+     "type": "warn",
+     "text": "What it tests: The trick is multiplying by <b>x</b>ᵀ to create a squared length. Also gives rank(<i>A</i>ᵀ<i>A</i>) = rank <i>A</i>."
+    }
+   ]
+  },
+  {
+   "title": "Build an inner product with prescribed orthogonality",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "Find a symmetric matrix <i>M</i> so that ⟨<b>x</b>, <b>y</b>⟩ = <b>x</b>ᵀ<i>M</i><b>y</b> is an inner product on ℝ² in which (1, 0) and (1, 1) are orthogonal. Verify positivity."
+    }
+   ],
+   "answer": "e.g. M = [1 −1; −1 2]",
+   "solution": [
+    {
+     "type": "p",
+     "text": "<i>M</i> ="
+    },
+    {
+     "type": "matrix",
+     "rows": [
+      [
+       "<i>a</i>",
+       "<i>b</i>"
+      ],
+      [
+       "<i>b</i>",
+       "<i>c</i>"
+      ]
+     ]
+    },
+    {
+     "type": "p",
+     "text": ": ⟨(1,0),(1,1)⟩ = <i>a</i> + <i>b</i> = 0 ⇒ <i>b</i> = −<i>a</i>."
+    },
+    {
+     "type": "p",
+     "text": "Take <i>M</i> ="
+    },
+    {
+     "type": "matrix",
+     "rows": [
+      [
+       "1",
+       "−1"
+      ],
+      [
+       "−1",
+       "2"
+      ]
+     ]
+    },
+    {
+     "type": "p",
+     "text": "Positivity: <b>x</b>ᵀ<i>M</i><b>x</b> = <i>x</i>₁² − 2<i>x</i>₁<i>x</i>₂ + 2<i>x</i>₂² = (<i>x</i>₁ − <i>x</i>₂)² + <i>x</i>₂² &gt; 0 for <b>x</b> ≠ 0. Symmetry and linearity come from <i>M</i> = <i>M</i>ᵀ. ✓"
+    },
+    {
+     "type": "warn",
+     "text": "What it tests: Any positive-definite symmetric <i>M</i> works (eigenvalues &gt; 0). <i>M</i> = [1 −1; −1 1] would fail positivity."
+    }
+   ]
+  }
+ ],
+ "keyFacts": [
+  "Gram–Schmidt: vₖ = xₖ − Σⱼ₍ₖ (xₖ·vⱼ/vⱼ·vⱼ)vⱼ; spans agree at every step.",
+  "A = QR: Q = normalized Gram–Schmidt on columns, R = QᵀA (upper triangular, positive diagonal).",
+  "Least squares: AᵀAx̂ = Aᵀb; Ax̂ = proj_{Col A} b; error ‖b − Ax̂‖.",
+  "With A = QR: solve Rx̂ = Qᵀb by back-substitution.",
+  "x̂ unique ⇔ columns of A independent ⇔ AᵀA invertible.",
+  "Line fit: X rows (1, xᵢ); XᵀX = [n Σx; Σx Σx²], Xᵀy = (Σy, Σxy).",
+  "Inner product axioms: symmetric, linear, positive (⟨u, u⟩ = 0 only for u = 0).",
+  "C[a, b]: ⟨f, g⟩ = ∫ₐᵇ fg dt; same projection and Gram–Schmidt formulas as ℝⁿ."
+ ]
+}

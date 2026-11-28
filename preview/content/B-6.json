@@ -1,0 +1,737 @@
+{
+ "id": "B-6",
+ "course": "B",
+ "title": "Disjoint sets",
+ "source": "CS 61B Lec 14 · Ch 15",
+ "summary": "The disjoint-sets (union-find) structure answers “are these two items connected?” while connections are added. You must trace Quick Find, Quick Union, Weighted Quick Union and path compression on arrays, know why WQU height is at most log₂ N, give operation runtimes, and model connectivity problems (grids, Kruskal, percolation) with it.",
+ "lesson": [
+  {
+   "title": "The problem and Quick Find",
+   "blocks": [
+    {
+     "type": "p",
+     "text": "Items 0 … N−1. Two operations: <code>connect(p, q)</code> merges the groups of p and q; <code>isConnected(p, q)</code> asks whether p and q are in the same group. Connectivity is an equivalence relation (reflexive, symmetric, transitive), so the items are partitioned into disjoint sets."
+    },
+    {
+     "type": "def",
+     "term": "Quick Find",
+     "text": "Array <code>id</code> where id[i] is the set label of i. isConnected compares two labels: Θ(1). connect(p, q) relabels every item with id[p]’s label to id[q]’s label: a full scan, Θ(N)."
+    },
+    {
+     "type": "code",
+     "lang": "java",
+     "text": "public void connect(int p, int q) {          // Quick Find\n    int pid = id[p], qid = id[q];\n    for (int i = 0; i < id.length; i++)\n        if (id[i] == pid) id[i] = qid;\n}\npublic boolean isConnected(int p, int q) { return id[p] == id[q]; }"
+    },
+    {
+     "type": "example",
+     "title": "Quick Find trace",
+     "prompt": "N = 6, id = [0 1 2 3 4 5]. connect(0,1), connect(2,3), connect(1,3), connect(4,5), connect(5,0).",
+     "steps": [
+      "connect(0,1): relabel 0s to 1 → [1 1 2 3 4 5].",
+      "connect(2,3) → [1 1 3 3 4 5].",
+      "connect(1,3): label of 1 is 1; relabel all 1s to 3 → [3 3 3 3 4 5].",
+      "connect(4,5) → [3 3 3 3 5 5].",
+      "connect(5,0): label of 5 is 5; relabel 5s to 3 → [3 3 3 3 3 3]."
+     ],
+     "answer": "[3 3 3 3 3 3] (verified)"
+    }
+   ]
+  },
+  {
+   "title": "Quick Union",
+   "blocks": [
+    {
+     "type": "def",
+     "term": "Quick Union",
+     "text": "Array <code>parent</code>: each item points to a parent; a root points to itself. find(p) follows parents to the root. connect(p, q): parent[find(p)] = find(q). isConnected: find(p) == find(q)."
+    },
+    {
+     "type": "p",
+     "text": "Both operations cost Θ(height). Nothing prevents the trees from becoming long chains, so the worst case is Θ(N) per operation."
+    },
+    {
+     "type": "example",
+     "title": "The spindly tree",
+     "prompt": "N = 6, quick union, connect(0,1), connect(1,2), connect(2,3), connect(3,4), connect(4,5).",
+     "steps": [
+      "Each connect puts the current root i under i + 1.",
+      "parent = [1 2 3 4 5 5]: the chain 0 → 1 → 2 → 3 → 4 → 5, height 5.",
+      "find(0) now takes 5 steps; in general a chain of N items has height N − 1."
+     ],
+     "answer": "parent [1 2 3 4 5 5], height N − 1 (verified)"
+    },
+    {
+     "type": "warn",
+     "text": "Always link roots: <code>parent[find(p)] = find(q)</code>. Writing <code>parent[p] = q</code> tears p away from the rest of its group."
+    }
+   ]
+  },
+  {
+   "title": "Weighted Quick Union (WQU)",
+   "blocks": [
+    {
+     "type": "p",
+     "text": "Fix: when connecting, hang the root of the <b>smaller</b> tree (fewer items) under the root of the larger one. Store sizes compactly by letting a root hold −(size of its tree); any negative entry is a root."
+    },
+    {
+     "type": "thm",
+     "name": "Tie-breaking convention",
+     "text": "When sizes are equal, a rule must be given. The convention used here: the first argument’s root goes under the second argument’s root. Always read the rule stated in a problem."
+    },
+    {
+     "type": "code",
+     "lang": "java",
+     "text": "public int find(int p) {\n    while (parent[p] >= 0) p = parent[p];\n    return p;\n}\npublic void connect(int p, int q) {\n    int a = find(p), b = find(q);\n    if (a == b) return;\n    if (-parent[a] <= -parent[b]) {          // a's tree is smaller or tied\n        parent[b] += parent[a];              // sizes are negative: add them\n        parent[a] = b;\n    } else {\n        parent[a] += parent[b];\n        parent[b] = a;\n    }\n}"
+    },
+    {
+     "type": "example",
+     "title": "WQU trace with −size roots",
+     "prompt": "N = 8, all entries −1. connect(0,1), connect(2,3), connect(0,2), connect(4,5), connect(6,7), connect(4,6), connect(0,4). Give the array after each step and the final height.",
+     "steps": [
+      "connect(0,1): sizes 1, 1 tie → 0 under 1: [1 −2 −1 −1 −1 −1 −1 −1].",
+      "connect(2,3): [1 −2 3 −2 −1 −1 −1 −1].",
+      "connect(0,2): find(0) = 1 (size 2), find(2) = 3 (size 2), tie → 1 under 3: [1 3 3 −4 −1 −1 −1 −1].",
+      "connect(4,5): [1 3 3 −4 5 −2 −1 −1]. connect(6,7): [1 3 3 −4 5 −2 7 −2].",
+      "connect(4,6): roots 5 and 7, sizes 2, 2 → 5 under 7: [1 3 3 −4 5 7 7 −4].",
+      "connect(0,4): roots 3 and 7, sizes 4, 4 → 3 under 7: [1 3 3 7 5 7 7 −8].",
+      "Height: 0 → 1 → 3 → 7 is 3 = log₂ 8. Equal-size merges every time is the worst case."
+     ],
+     "answer": "[1 3 3 7 5 7 7 −8], height 3 (verified)"
+    },
+    {
+     "type": "example",
+     "title": "Smaller under larger",
+     "prompt": "N = 6: connect(0,1), connect(2,3), connect(4,5), connect(1,3), connect(5,0).",
+     "steps": [
+      "First three: [1 −2 3 −2 5 −2].",
+      "connect(1,3): roots 1 and 3 tie → 1 under 3: [1 3 3 −4 5 −2].",
+      "connect(5,0): find(5) = 5 (size 2), find(0) = 3 (size 4) → 5 under 3 regardless of argument order: [1 3 3 −6 5 3]."
+     ],
+     "answer": "[1 3 3 −6 5 3], height 2 (verified)"
+    },
+    {
+     "type": "thm",
+     "name": "Height of WQU is at most log₂ N",
+     "text": "An item’s depth increases (by exactly 1) only when its tree is hung under another root, which only happens if its tree is the smaller (or tied) one, so the merged tree is at least twice as big. After d increases its tree has ≥ 2ᵈ items, and 2ᵈ ≤ N gives d ≤ log₂ N.",
+     "proof": [
+      {
+       "type": "p",
+       "text": "The bound is tight: merging equal sizes 1+1, 2+2, 4+4, … reaches height exactly log₂ N when N is a power of 2. Consequently, a WQU tree of height h has at least 2ʰ items: 6 items can have height at most 2."
+      }
+     ]
+    },
+    {
+     "type": "warn",
+     "text": "Weight by size (number of items), not by height, unless a problem explicitly says “union by height/rank”. The two rules can produce different trees."
+    }
+   ]
+  },
+  {
+   "title": "Path compression",
+   "blocks": [
+    {
+     "type": "p",
+     "text": "Every find(x) walks to the root, so it learns the root of every node on the path. Path compression re-points all of them directly at the root. Sizes at roots do not change; only the shape gets flatter."
+    },
+    {
+     "type": "code",
+     "lang": "java",
+     "text": "public int find(int p) {                 // WQU with path compression\n    int r = p;\n    while (parent[r] >= 0) r = parent[r];          // find the root\n    while (parent[p] >= 0) {                        // re-point the path\n        int next = parent[p];\n        parent[p] = r;\n        p = next;\n    }\n    return r;\n}"
+    },
+    {
+     "type": "example",
+     "title": "Path compression trace",
+     "prompt": "Start from [1 3 3 7 5 7 7 −8] (the WQU result above). Call find(0).",
+     "steps": [
+      "Path: 0 → 1 → 3 → 7. Root 7.",
+      "Re-point 0 and 1 to 7 (3 already points to 7).",
+      "Result [7 7 3 7 5 7 7 −8]. Now 0 and 1 are one step from the root."
+     ],
+     "answer": "[7 7 3 7 5 7 7 −8] (verified)"
+    },
+    {
+     "type": "example",
+     "title": "WQU with path compression, longer trace",
+     "prompt": "N = 10, WQU (tie: first under second): connect(1,0), connect(3,2), connect(1,3), connect(5,4), connect(7,6), connect(5,7), connect(9,8), connect(3,7), connect(8,1). Then, separately from that state: (a) find(1) with compression, (b) connect(9,2) with compression.",
+     "steps": [
+      "(1,0): 1 under 0. (3,2): 3 under 2. (1,3): roots 0, 2 tie → 0 under 2. (5,4): 5 under 4. (7,6): 7 under 6. (5,7): roots 4, 6 tie → 4 under 6. (9,8): 9 under 8.",
+      "(3,7): roots 2 (size 4) and 6 (size 4) tie → 2 under 6. (8,1): roots 8 (size 2) and 6 (size 8) → 8 under 6.",
+      "State: [2 0 6 2 6 4 −10 6 6 8], height 3 (path 1 → 0 → 2 → 6).",
+      "(a) find(1): path 1 → 0 → 2 → 6, re-point 1 and 0 to 6: [6 6 6 2 6 4 −10 6 6 8].",
+      "(b) connect(9,2): find(9) walks 9 → 8 → 6 and re-points 9 to 6; find(2) is one step; same root, so no union: [2 0 6 2 6 4 −10 6 6 6]."
+     ],
+     "answer": "(a) [6 6 6 2 6 4 −10 6 6 8] (b) [2 0 6 2 6 4 −10 6 6 6] (verified)"
+    },
+    {
+     "type": "thm",
+     "name": "Runtime with both optimizations",
+     "text": "M operations on N items cost O(N + M α(N)) where α is the inverse Ackermann function (≤ 4 for any practical N); the course also quotes the slightly weaker O(N + M log* N). Effectively constant amortized time per operation."
+    }
+   ]
+  },
+  {
+   "title": "Runtimes and using disjoint sets",
+   "blocks": [
+    {
+     "type": "table",
+     "head": [
+      "Implementation",
+      "constructor",
+      "connect",
+      "isConnected"
+     ],
+     "rows": [
+      [
+       "Quick Find",
+       "Θ(N)",
+       "Θ(N)",
+       "Θ(1)"
+      ],
+      [
+       "Quick Union",
+       "Θ(N)",
+       "O(N)",
+       "O(N)"
+      ],
+      [
+       "Weighted QU",
+       "Θ(N)",
+       "O(log N)",
+       "O(log N)"
+      ],
+      [
+       "WQU + path compression",
+       "Θ(N)",
+       "amortized ≈ Θ(1) (α(N))",
+       "amortized ≈ Θ(1)"
+      ]
+     ]
+    },
+    {
+     "type": "example",
+     "title": "Runtime of a loop over different implementations",
+     "prompt": "For N items: <code>for (i = 0; i &lt; N − 1; i++) connect(i, i + 1); for (i = 0; i &lt; N; i++) isConnected(0, i);</code> Give Θ for Quick Union and for WQU. What if the first loop calls connect(i + 1, i) under Quick Union?",
+     "steps": [
+      "QU, connect(i, i+1): i is always the current root, so each connect is cheap, but it builds the chain 0 → 1 → ⋯ → N−1. Each isConnected(0, i) walks the whole chain from 0: Θ(N) each, Θ(N²) total (≈ 1.5N² steps counted: 1,498,500 for N = 1000).",
+      "WQU: each new singleton goes under the big root, giving a star of height 1: Θ(N) total.",
+      "QU with connect(i+1, i): find(i) leads to root 0 in at most one step, and i+1 is placed directly under 0 — also a star, Θ(N) total."
+     ],
+     "answer": "QU Θ(N²); WQU Θ(N); QU with reversed arguments Θ(N) (verified by counting)"
+    },
+    {
+     "type": "steps",
+     "title": "Modeling with disjoint sets",
+     "items": [
+      "Decide what the items are (cells, people, vertices) and map each to an integer 0 … N−1 (e.g. cell (r, c) ↦ r·W + c), or use a HashMap for arbitrary items.",
+      "Decide which events call connect (adjacent open cells, a friendship, an edge).",
+      "Answer the question with isConnected, or by counting roots (components), or with virtual nodes (e.g. a virtual top connected to every top-row cell)."
+     ]
+    },
+    {
+     "type": "example",
+     "title": "Count islands",
+     "prompt": "A grid has land (1) and water (0); islands are 4-directionally connected land. Count islands in 1 1 0 / 0 1 0 / 1 0 1 using disjoint sets.",
+     "steps": [
+      "Items: cells r·3 + c. For each land cell, connect it with its land neighbour to the right and below.",
+      "(0,0)–(0,1) and (0,1)–(1,1) connect cells 0, 1, 4.",
+      "Cells 6 and 8 have no land neighbours.",
+      "Count the land cells that are roots: the set {0,1,4}, {6}, {8}."
+     ],
+     "answer": "3 islands"
+    },
+    {
+     "type": "tip",
+     "text": "Percolation: add a virtual top node connected to all open top-row cells and a virtual bottom node connected to all open bottom-row cells; the system percolates iff isConnected(top, bottom). One query instead of N²."
+    }
+   ]
+  }
+ ],
+ "cards": [
+  {
+   "front": "What two operations does disjoint sets support?",
+   "back": [
+    {
+     "type": "p",
+     "text": "connect(p, q) (merge their sets) and isConnected(p, q) (same set?)."
+    }
+   ]
+  },
+  {
+   "front": "Quick Find: representation and costs?",
+   "back": [
+    {
+     "type": "p",
+     "text": "id[] of set labels. isConnected Θ(1); connect Θ(N) (relabel scan)."
+    }
+   ]
+  },
+  {
+   "front": "Quick Union: representation and costs?",
+   "back": [
+    {
+     "type": "p",
+     "text": "parent[]; root points to itself. Both operations Θ(height), worst Θ(N) (chains)."
+    }
+   ]
+  },
+  {
+   "front": "Quick Union connect code?",
+   "back": [
+    {
+     "type": "p",
+     "text": "<code>parent[find(p)] = find(q);</code> — link roots, never items."
+    }
+   ]
+  },
+  {
+   "front": "WQU rule?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Hang the root of the smaller tree (fewer items) under the root of the larger; break ties by the stated rule."
+    }
+   ]
+  },
+  {
+   "front": "How does 61B’s WQU store sizes?",
+   "back": [
+    {
+     "type": "p",
+     "text": "A root stores −(size of its tree) in the parent array; negative entry ⇔ root."
+    }
+   ]
+  },
+  {
+   "front": "Max height of WQU on N items? Why?",
+   "back": [
+    {
+     "type": "p",
+     "text": "⌊log₂ N⌋: an item’s depth grows only when its tree at least doubles in size."
+    }
+   ]
+  },
+  {
+   "front": "Can a WQU tree on 6 items have height 3?",
+   "back": [
+    {
+     "type": "p",
+     "text": "No. Height h needs ≥ 2ʰ = 8 items. Max height for 6 is 2."
+    }
+   ]
+  },
+  {
+   "front": "Minimum number of items (and connects) for a WQU tree of height 4?",
+   "back": [
+    {
+     "type": "p",
+     "text": "16 items, built by 15 equal-size merges."
+    }
+   ]
+  },
+  {
+   "front": "What does path compression do?",
+   "back": [
+    {
+     "type": "p",
+     "text": "During find, re-point every node on the path directly at the root. Root sizes don’t change."
+    }
+   ]
+  },
+  {
+   "front": "Runtime of WQU + path compression?",
+   "back": [
+    {
+     "type": "p",
+     "text": "O(N + M α(N)) for M operations: amortized nearly constant (α ≤ 4; course also quotes log*)."
+    }
+   ]
+  },
+  {
+   "front": "WQU connect/isConnected worst case?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Θ(log N)."
+    }
+   ]
+  },
+  {
+   "front": "Why are both QU operations Θ(height)?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Both call find, which walks from the item to its root."
+    }
+   ]
+  },
+  {
+   "front": "Disjoint sets over arbitrary objects?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Use HashMaps (item → parent, root → size) instead of arrays; add items on first sight."
+    }
+   ]
+  },
+  {
+   "front": "How to count components with disjoint sets?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Count roots, or start at N and decrement on every connect that merges two different roots."
+    }
+   ]
+  },
+  {
+   "front": "Percolation trick?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Virtual top and bottom nodes; percolates iff isConnected(top, bottom)."
+    }
+   ]
+  },
+  {
+   "front": "Map grid cell (r, c) in an R×W grid to an index?",
+   "back": [
+    {
+     "type": "p",
+     "text": "r·W + c."
+    }
+   ]
+  },
+  {
+   "front": "Weighted by size vs by height: same tree?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Not always. Both guarantee log height, but traces differ; use the rule given."
+    }
+   ]
+  },
+  {
+   "front": "QU loop connect(i, i+1) for i = 0..N−2, then isConnected(0, i) for all i?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Θ(N²): the connects build a chain from 0 and every find(0) walks it."
+    }
+   ]
+  },
+  {
+   "front": "Same loop with WQU?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Θ(N): singletons always go under the big root (height 1)."
+    }
+   ]
+  },
+  {
+   "front": "Is connectivity an equivalence relation?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Yes: reflexive, symmetric, transitive — so the items split into disjoint sets."
+    }
+   ]
+  },
+  {
+   "front": "Quick Find: after connect(p, q), which entries change?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Every entry equal to id[p] (before the call) becomes id[q]."
+    }
+   ]
+  }
+ ],
+ "hard": [
+  {
+   "title": "Is this a valid WQU array?",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "Write <code>static boolean valid(int[] w)</code>: w is a WQU parent array (roots store −size). Return true iff some sequence of WQU connect calls (no path compression; ties may go either way because the caller chooses argument order) produces exactly w. Target O(N log N). Then decide: [−6, 0, 0, 1, 1, 0] and [−5, 0, 0, 1, 1]."
+    }
+   ],
+   "answer": "Check root sizes and, for every node, that its children sorted by subtree size satisfy size(cᵢ) ≤ 1 + Σ_{j&lt;i} size(cⱼ); first is valid, second is not",
+   "solution": [
+    {
+     "type": "p",
+     "text": "Key facts: (1) once x is hung under p, x is never a root again, so x’s subtree is frozen at that moment; (2) when child c was attached to p, p’s tree consisted of p plus the children attached earlier (with their frozen subtrees), and WQU requires size(c) ≤ size(p’s tree then)."
+    },
+    {
+     "type": "p",
+     "text": "So a node p is consistent iff its children can be ordered c₁, …, c_k with size(cᵢ) ≤ 1 + size(c₁) + ⋯ + size(cᵢ₋₁). Sorting children by size ascending is optimal (moving a larger child earlier only shrinks the right side for it)."
+    },
+    {
+     "type": "code",
+     "lang": "java",
+     "text": "static boolean valid(int[] w) {\n    int n = w.length;\n    // 1. structure: parents in range, no cycles; compute subtree sizes bottom-up\n    //    (sort nodes by depth, deepest first: size[x] += 1; size[w[x]] += size[x])\n    // 2. every root r has -w[r] == size[r]\n    // 3. for each node p: sort its children by size;\n    //    acc = 1; for each child c: if (size[c] > acc) return false; acc += size[c];\n    return true;\n}"
+    },
+    {
+     "type": "p",
+     "text": "Cost: depths O(N log N) (heights are ≤ log N in any valid array, and we can abort if a walk exceeds log₂ N + 1), plus sorting children: O(N log N)."
+    },
+    {
+     "type": "p",
+     "text": "[−6, 0, 0, 1, 1, 0]: root 0 has size 6 ✓; children 2 (1), 5 (1), 1 (3): 1 ≤ 1, 1 ≤ 2, 3 ≤ 3 ✓. Node 1’s children 3, 4: ✓. Valid."
+    },
+    {
+     "type": "p",
+     "text": "[−5, 0, 0, 1, 1]: root 0’s children are 2 (size 1) and 1 (size 3): 1 ≤ 1, then 3 ≤ 2 fails. Invalid: a 3-item tree can never be hung under a 2-item tree."
+    },
+    {
+     "type": "p",
+     "text": "This checker was verified against a brute-force search of every array reachable by WQU connects for N = 4, 5, 6 (65, 376 and 3157 reachable arrays; the checker agreed on all 2,985,984 candidate arrays for N = 6)."
+    }
+   ]
+  },
+  {
+   "title": "Earliest moment everyone is connected",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "A log has M entries (time, a, b) sorted by time, meaning people a and b became friends at that time. Among N people, find the earliest time at which everyone is in one friend group, or −1. Give an algorithm and its runtime using WQU with path compression."
+    }
+   ],
+   "answer": "Process the log in order with a component counter; O(N + M α(N))",
+   "solution": [
+    {
+     "type": "p",
+     "text": "Initialize WQU on N items and components = N."
+    },
+    {
+     "type": "p",
+     "text": "For each entry in time order: if find(a) ≠ find(b), connect them and decrement components; if components == 1, return this time."
+    },
+    {
+     "type": "p",
+     "text": "Return −1 after the log ends."
+    },
+    {
+     "type": "p",
+     "text": "Each entry costs two finds and maybe a union: O(M α(N)) plus O(N) setup. (If the log were unsorted, sort it first: O(M log M).) This is exactly the skeleton of Kruskal’s algorithm."
+    }
+   ]
+  },
+  {
+   "title": "Recover the missing entry",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "A WQU array (no path compression; roots store −size) on items 0–7 is [3, 3, ?, −6, 2, −2, 5, 3] with one entry erased. Which values are possible for the ?"
+    }
+   ],
+   "answer": "3 only",
+   "solution": [
+    {
+     "type": "p",
+     "text": "Root 5 has size 2: {5, 6}. Root 3 must have size 6: {0, 1, 2, 3, 4, 7}. Item 4’s parent is 2, so 2 is not a root and cannot be in 5’s tree (that tree is full). So 2 is in 3’s tree and its parent is one of 0, 1, 3, 7 (4 would make a cycle)."
+    },
+    {
+     "type": "p",
+     "text": "Subtree of 2 is {2, 4}, size 2. If 2’s parent were 0, 1 or 7 (each a leaf child of 3 otherwise), that node would have subtree size 3 and could only have received the 2-tree when its own tree had size 1: 2 > 1 violates WQU. If parent is 3: children of 3 are 0, 1, 7 (size 1 each) and 2 (size 2): sorted 1, 1, 1, 2 → 1 ≤ 1, 1 ≤ 2, 1 ≤ 3, 2 ≤ 4 ✓."
+    },
+    {
+     "type": "p",
+     "text": "So ? = 3. (Checked with the WQU validity checker: [3,3,3,−6,2,−2,5,3] is valid; 0, 1 or 7 in that slot is not.)"
+    }
+   ]
+  },
+  {
+   "title": "Write compress()",
+   "level": "hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "Add <code>void compress()</code> to a WQU class (array <code>parent</code>, roots store −size) that makes every item point directly to its root, in Θ(N log N) worst case without path compression elsewhere. Can you do Θ(N)?"
+    }
+   ],
+   "answer": "Loop i: parent[i] = find(i) for non-roots; Θ(N log N), or Θ(N) with compression/memoization",
+   "solution": [
+    {
+     "type": "code",
+     "lang": "java",
+     "text": "public void compress() {\n    for (int i = 0; i < parent.length; i++) {\n        if (parent[i] >= 0) parent[i] = find(i);   // sizes at roots unchanged\n    }\n}"
+    },
+    {
+     "type": "p",
+     "text": "Each find is O(log N) in WQU, so Θ(N log N) worst case. Correctness: re-pointing i at its root never changes any root or any set."
+    },
+    {
+     "type": "p",
+     "text": "Θ(N): use a path-compressing find. Every node’s pointer changes at most once to a root, and after that every walk through it is one step, so the total work over the loop is O(N)."
+    }
+   ]
+  },
+  {
+   "title": "Which sequences build this tree?",
+   "level": "hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "Using WQU with ties “first argument’s root under the second’s”, give a shortest sequence of connect calls on items 0–5 producing [1, 3, 3, −6, 5, 3]. Then explain why no sequence of WQU connects on 6 items produces a tree of height 3."
+    }
+   ],
+   "answer": "connect(0,1), connect(2,3), connect(4,5), connect(1,3), connect(5,0); height 3 needs ≥ 8 items",
+   "solution": [
+    {
+     "type": "p",
+     "text": "The final tree: 3 is the root with children 1, 2, 5; 0 under 1; 4 under 5. Five connects are needed (6 items → 1 set). The sequence above gives [1 −2 3 −2 5 −2] → [1 3 3 −4 5 −2] → [1 3 3 −6 5 3] (verified)."
+    },
+    {
+     "type": "p",
+     "text": "Height 3 would require some item’s tree to double three times: ≥ 2³ = 8 items. With 6, max height is 2."
+    }
+   ]
+  },
+  {
+   "title": "Union-find over arbitrary objects",
+   "level": "hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "Implement <code>class UF&lt;T></code> with <code>connect(T a, T b)</code> and <code>isConnected(T a, T b)</code> where items are added on first use (no N given in advance), using weighted quick union. Give the expected runtime per operation."
+    }
+   ],
+   "answer": "HashMap parent + HashMap size; O(log N) per op expected",
+   "solution": [
+    {
+     "type": "code",
+     "lang": "java",
+     "text": "class UF<T> {\n    private Map<T, T> parent = new HashMap<>();\n    private Map<T, Integer> size = new HashMap<>();\n    private T find(T x) {\n        if (!parent.containsKey(x)) { parent.put(x, x); size.put(x, 1); }\n        while (!parent.get(x).equals(x)) x = parent.get(x);\n        return x;\n    }\n    public void connect(T a, T b) {\n        T ra = find(a), rb = find(b);\n        if (ra.equals(rb)) return;\n        if (size.get(ra) <= size.get(rb)) { parent.put(ra, rb); size.put(rb, size.get(ra) + size.get(rb)); }\n        else { parent.put(rb, ra); size.put(ra, size.get(ra) + size.get(rb)); }\n    }\n    public boolean isConnected(T a, T b) { return find(a).equals(find(b)); }\n}"
+    },
+    {
+     "type": "p",
+     "text": "Each hash map access is Θ(1) expected (good hashCode); the walk is O(log N) by the WQU height bound. Adding path compression makes it nearly constant amortized."
+    }
+   ]
+  },
+  {
+   "title": "Path compression changes the trace",
+   "level": "hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "Starting from [2, 0, 6, 2, 6, 4, −10, 6, 6, 8] (WQU without compression so far), we now switch on path compression and run find(1) then find(9). Give the array after each call and the new height."
+    }
+   ],
+   "answer": "[6, 6, 6, 2, 6, 4, −10, 6, 6, 8] then [6, 6, 6, 2, 6, 4, −10, 6, 6, 6]; height 2",
+   "solution": [
+    {
+     "type": "p",
+     "text": "find(1): path 1 → 0 → 2 → 6; re-point 1 and 0: [6 6 6 2 6 4 −10 6 6 8] (verified)."
+    },
+    {
+     "type": "p",
+     "text": "find(9): path 9 → 8 → 6; re-point 9: [6 6 6 2 6 4 −10 6 6 6]."
+    },
+    {
+     "type": "p",
+     "text": "Remaining depth-2 nodes: 3 (→ 2 → 6) and 5 (→ 4 → 6): height 2. Sizes at root 6 stay −10."
+    }
+   ]
+  },
+  {
+   "title": "Disjoint-set runtimes in loops",
+   "level": "hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "N items. Give Θ for each: (a) Quick Find: N − 1 connects connect(i, i+1). (b) Quick Union: connect(i, i+1) for all i, then N calls isConnected(0, i). (c) WQU: N/2 connects pairing (2i, 2i+1), then N/4 connects of the pair roots, and so on (a perfect merge), then N calls find(i). (d) Same as (c) with path compression."
+    }
+   ],
+   "answer": "(a) Θ(N²) (b) Θ(N²) (c) Θ(N log N) (d) Θ(N)",
+   "solution": [
+    {
+     "type": "p",
+     "text": "(a) Each Quick Find connect scans the whole array: (N − 1)·N = Θ(N²)."
+    },
+    {
+     "type": "p",
+     "text": "(b) Connects are Θ(1) each but build a chain from 0 of length N − 1; every find(0) walks it: Θ(N²) (counted ≈ 1.5N²)."
+    },
+    {
+     "type": "p",
+     "text": "(c) Perfect merges give a tree of height log₂ N whose average depth is (log₂ N)/2, so N finds cost Θ(N log N). Counted: 5120 = 1024·10/2 parent steps for N = 1024, and 114,688 = 16384·14/2 for N = 16384."
+    },
+    {
+     "type": "p",
+     "text": "(d) With path compression, the first finds flatten the tree; each node is re-pointed at most once to the root, and later finds are one step: Θ(N) total for the finds (counted: 2036 steps for N = 1024, 32,752 for N = 16384, about 2N)."
+    }
+   ]
+  }
+ ],
+ "keyFacts": [
+  "Quick Find: connect Θ(N), isConnected Θ(1). Quick Union: both Θ(height), worst Θ(N).",
+  "QU connect: parent[find(p)] = find(q) — link roots.",
+  "WQU: smaller tree’s root under larger’s; roots store −size; tie rule as stated (here: first under second).",
+  "WQU height ≤ log₂ N (depth grows only when the tree doubles); height h needs ≥ 2ʰ items.",
+  "Path compression: re-point every node on a find path to the root; sizes unchanged.",
+  "WQU + PC: M ops in O(N + M α(N)) — nearly constant amortized.",
+  "Model: items ↦ ints (grid r·W + c) or HashMap; components = roots; virtual top/bottom for percolation."
+ ],
+ "parsons": [
+  {
+   "title": "find with path compression",
+   "goal": "parent[] stores a parent index, or −(size) at a root. Return p’s root and re-point every node on the path directly at it.",
+   "lines": [
+    "public int find(int p) {",
+    "    int r = p;",
+    "    while (parent[r] >= 0) r = parent[r];",
+    "    while (parent[p] >= 0) {",
+    "        int next = parent[p];",
+    "        parent[p] = r;",
+    "        p = next;",
+    "    }",
+    "    return r;",
+    "}"
+   ],
+   "distractors": [
+    "        p = parent[p];",
+    "    while (parent[r] > 0) r = parent[r];",
+    "        parent[next] = r;"
+   ]
+  },
+  {
+   "title": "Weighted union by size",
+   "goal": "Same representation (roots hold −size). Merge the sets of p and q, hanging the smaller tree’s root under the larger’s (on a tie, q’s root goes under p’s).",
+   "lines": [
+    "public void connect(int p, int q) {",
+    "    int a = find(p), b = find(q);",
+    "    if (a == b) return;",
+    "    if (parent[a] > parent[b]) { int t = a; a = b; b = t; }",
+    "    parent[a] += parent[b];",
+    "    parent[b] = a;",
+    "}"
+   ],
+   "distractors": [
+    "    parent[p] = q;",
+    "    if (parent[a] &lt; parent[b]) { int t = a; a = b; b = t; }",
+    "    parent[a] = b;"
+   ]
+  },
+  {
+   "title": "Quick Find connect",
+   "goal": "id[i] is the set label of i. Merge p’s set into q’s set.",
+   "lines": [
+    "public void connect(int p, int q) {",
+    "    int pid = id[p], qid = id[q];",
+    "    for (int i = 0; i &lt; id.length; i++) {",
+    "        if (id[i] == pid) id[i] = qid;",
+    "    }",
+    "}"
+   ],
+   "distractors": [
+    "        if (id[i] == id[p]) id[i] = id[q];",
+    "    for (int i = 0; i &lt; id.length - 1; i++) {",
+    "        if (i == p) id[i] = qid;"
+   ]
+  }
+ ]
+}

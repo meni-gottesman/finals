@@ -1306,5 +1306,41 @@
   "Dₙ = n! Σ (−1)ᵏ/k!; D₃ = 2, D₄ = 9, D₅ = 44; Dₙ/n! → 1/e",
   "Onto m → n: Σ (−1)ʳ C(n, r)(n − r)ᵐ; 4 → 3 gives 36, 5 → 3 gives 150",
   "φ(n) = n ∏(1 − 1/p) over distinct primes p | n"
+ ],
+ "parsons": [
+  {
+   "title": "Inclusion–exclusion counts each element exactly once",
+   "goal": "Show that an element lying in exactly r ≥ 1 of the sets A₁, …, Aₙ is counted exactly once by Σ|Aᵢ| − Σ|Aᵢ ∩ Aⱼ| + Σ|Aᵢ ∩ Aⱼ ∩ Aₖ| − ⋯ + (−1)<sup>n+1</sup>|A₁ ∩ ⋯ ∩ Aₙ|.",
+   "lines": [
+    "Fix an element x that lies in exactly r ≥ 1 of the sets.",
+    "x lies in an intersection of k of the sets iff all k are among its r sets, so x is counted in exactly C(r, k) of the k-fold intersections.",
+    "With the alternating signs, x contributes C(r,1) − C(r,2) + C(r,3) − ⋯ + (−1)<sup>r+1</sup>C(r,r) in total.",
+    "By the binomial theorem, 0 = (1 − 1)<sup>r</sup> = C(r,0) − C(r,1) + C(r,2) − ⋯ + (−1)<sup>r</sup>C(r,r).",
+    "Rearranging, C(r,1) − C(r,2) + ⋯ + (−1)<sup>r+1</sup>C(r,r) = C(r,0) = 1.",
+    "So every element of the union is counted exactly once, and elements in none of the sets are never counted. ∎"
+   ],
+   "distractors": [
+    "x is counted in exactly C(n, k) of the k-fold intersections.",
+    "By the binomial theorem, 2<sup>r</sup> = (1 + 1)<sup>r</sup> = C(r,0) + C(r,1) + ⋯ + C(r,r), so x contributes 2<sup>r</sup> − 1.",
+    "With the alternating signs, x contributes C(r,1) + C(r,2) + ⋯ + C(r,r) in total."
+   ]
+  },
+  {
+   "title": "Deriving the derangement formula",
+   "goal": "Show Dₙ = n!(1 − 1/1! + 1/2! − ⋯ + (−1)ⁿ/n!), where Dₙ is the number of permutations of {1, …, n} with no fixed point.",
+   "lines": [
+    "Let Aᵢ be the set of permutations that fix i; then Dₙ = n! − |A₁ ∪ ⋯ ∪ Aₙ|.",
+    "A permutation fixing k chosen points permutes the other n − k points freely, so each k-fold intersection has (n − k)! elements.",
+    "There are C(n, k) choices of the k fixed points, so the k-th inclusion–exclusion sum is C(n, k)(n − k)! = n!/k!.",
+    "Inclusion–exclusion: |A₁ ∪ ⋯ ∪ Aₙ| = Σ<sub>k=1</sub><sup>n</sup> (−1)<sup>k+1</sup> n!/k!.",
+    "So Dₙ = n! − Σ<sub>k=1</sub><sup>n</sup> (−1)<sup>k+1</sup> n!/k! = n! Σ<sub>k=0</sub><sup>n</sup> (−1)<sup>k</sup>/k!.",
+    "Check: D₄ = 24(1 − 1 + 1/2 − 1/6 + 1/24) = 9. ∎"
+   ],
+   "distractors": [
+    "Each k-fold intersection has (n − 1)! elements, since one point is fixed.",
+    "Inclusion–exclusion: |A₁ ∪ ⋯ ∪ Aₙ| = Σ<sub>k=1</sub><sup>n</sup> n!/k!.",
+    "There are C(n, k) choices of the k fixed points, so the k-th sum is C(n, k)·(n − k)!·k!."
+   ]
+  }
  ]
 }

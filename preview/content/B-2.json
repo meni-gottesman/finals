@@ -1,0 +1,897 @@
+{
+ "id": "B-2",
+ "course": "B",
+ "title": "Testing, SLLists, DLLists, sentinels, ALists & resizing",
+ "source": "CS 61B Lec 5–8 · Ch 5–8",
+ "summary": "Two ways to build a list that grows: chains of nodes (fast at the ends) and resizing arrays (fast by index), plus how to test them. Final questions ask you to write pointer surgery with sentinels, trace circular-array deques, compute resizing costs and find the bug a test would expose.",
+ "lesson": [
+  {
+   "title": "Testing with JUnit",
+   "blocks": [
+    {
+     "type": "p",
+     "text": "A <b>test</b> runs your code on an input whose correct answer you already know and fails loudly if the answer differs. A method annotated <code>@Test</code> is run by the test runner; each test passes or fails independently."
+    },
+    {
+     "type": "def",
+     "term": "Unit test / integration test",
+     "text": "A unit test checks one small piece (one method) in isolation; an integration test checks that several pieces work together."
+    },
+    {
+     "type": "def",
+     "term": "Assertion",
+     "text": "A line that fails the test when a condition is false. With JUnit + Truth: <code>assertThat(actual).isEqualTo(expected);</code>, <code>assertThat(list).containsExactly(1, 2, 3).inOrder();</code>, <code>assertThat(b).isTrue();</code>."
+    },
+    {
+     "type": "def",
+     "term": "Test-driven development (TDD)",
+     "text": "Write the test first, watch it fail, then write code until it passes."
+    },
+    {
+     "type": "def",
+     "term": "Randomized comparison test",
+     "text": "Apply the same random sequence of operations to your structure and to a trusted one (e.g. java.util.ArrayDeque) and assert they agree after every step."
+    },
+    {
+     "type": "code",
+     "lang": "java",
+     "text": "@Test\npublic void addRemoveAddAgain() {\n    ArrayDeque61B<Integer> d = new ArrayDeque61B<>();\n    d.addLast(1);\n    assertThat(d.removeFirst()).isEqualTo(1);\n    assertThat(d.isEmpty()).isTrue();     // back to empty\n    d.addFirst(2);                        // empty -> nonempty again\n    assertThat(d.toList()).containsExactly(2).inOrder();\n}"
+    },
+    {
+     "type": "steps",
+     "title": "Designing a good test suite",
+     "items": [
+      "Edge sizes: empty, one element, exactly full (resize boundary), one past full.",
+      "Transitions: empty → nonempty → empty → nonempty (where sentinels and front/back pointers break).",
+      "Mix operations at both ends, then check the whole contents in order, not just one return value.",
+      "Wrap-around: for circular arrays, push the front index past 0 and the back index past the end.",
+      "Keep each test small and specific so a failure points at one bug."
+     ]
+    },
+    {
+     "type": "example",
+     "title": "Design a test that exposes a bug",
+     "prompt": "A DLList’s <code>removeFirst</code> updates <code>sentinel.next</code> but forgets <code>first.next.prev = sentinel</code>. Which short test fails?",
+     "steps": [
+      "The forward links stay correct, so tests that only add and remove at the front pass.",
+      "The stale prev pointer is only followed later, from the back. So remove at the front, then work at the back, then check the whole contents.",
+      "Test: addLast(1), addLast(2), removeFirst() (returns 1), removeLast() (returns 2), addLast(3), then assert the contents are exactly [3].",
+      "Buggy run: after removeFirst, node 2’s prev still points at the removed node 1. removeLast sets sentinel.prev to node 1 and fixes node 1’s next, but sentinel.next still points at node 2. addLast(3) hangs 3 after node 1. A forward walk from the sentinel prints [2] with size 1."
+     ],
+     "answer": "addLast(1); addLast(2); removeFirst(); removeLast(); addLast(3); contents should be [3] — the buggy list gives [2] (verified)"
+    },
+    {
+     "type": "warn",
+     "text": "Passing tests show correctness only on the cases tested. Also, <code>isEqualTo</code> uses equals: for two arrays that compares addresses unless you use an array-aware assertion."
+    }
+   ]
+  },
+  {
+   "title": "SLList and the sentinel node",
+   "blocks": [
+    {
+     "type": "p",
+     "text": "An <b>SLList</b> wraps a chain of nodes in a class: users never see nodes, the size is cached, and a permanent dummy node — the <b>sentinel</b> — sits before the first real item so that the empty list is not a special case."
+    },
+    {
+     "type": "def",
+     "term": "Invariant",
+     "text": "A fact that is true between every pair of operations. SLList: the sentinel is never null; the first real item (if any) is <code>sentinel.next</code>; <code>size</code> equals the number of real nodes."
+    },
+    {
+     "type": "code",
+     "lang": "java",
+     "text": "public class SLList {\n    private static class IntNode {          // static: never needs the outer list\n        int item; IntNode next;\n        IntNode(int i, IntNode n) { item = i; next = n; }\n    }\n    private IntNode sentinel = new IntNode(-999, null);\n    private int size = 0;\n\n    public void addFirst(int x) {\n        sentinel.next = new IntNode(x, sentinel.next);\n        size += 1;\n    }\n    public void addLast(int x) {\n        IntNode p = sentinel;               // never null, even when empty\n        while (p.next != null) p = p.next;\n        p.next = new IntNode(x, null);\n        size += 1;\n    }\n    public void insert(int i, int x) {      // 0 <= i <= size\n        IntNode p = sentinel;\n        for (int k = 0; k < i; k++) p = p.next;   // p = node BEFORE position i\n        p.next = new IntNode(x, p.next);\n        size += 1;\n    }\n}"
+    },
+    {
+     "type": "thm",
+     "name": "Why the sentinel works",
+     "text": "Every real node has a predecessor (possibly the sentinel), so insert/remove code never has to check “is this the first node?” or “is the list empty?”. Without it, <code>addLast</code> on an empty list must special-case <code>first == null</code> — forgetting that is a NullPointerException."
+    },
+    {
+     "type": "example",
+     "title": "SLList operations, step by step",
+     "prompt": "Starting empty: addFirst(10), addLast(20), addFirst(5), insert(1, 7), insert(4, 99), then reverse in place. Show the list after each step.",
+     "steps": [
+      "addFirst(10): S → 10.",
+      "addLast(20): walk from S to 10, hang 20: S → 10 → 20.",
+      "addFirst(5): S → 5 → 10 → 20, size 3.",
+      "insert(1, 7): p moves 1 step to node 5; new node after it: S → 5 → 7 → 10 → 20.",
+      "insert(4, 99): p moves 4 steps to node 20 (the last node), so 99 goes at the end: S → 5 → 7 → 10 → 20 → 99, size 5.",
+      "reverse: run prev/p/next on the real nodes starting at sentinel.next, then set sentinel.next = prev: S → 99 → 20 → 10 → 7 → 5."
+     ],
+     "answer": "[99 20 10 7 5], size 5 (verified)"
+    },
+    {
+     "type": "table",
+     "head": [
+      "SLList op",
+      "Time",
+      "Why"
+     ],
+     "rows": [
+      [
+       "addFirst, getFirst, removeFirst",
+       "Θ(1)",
+       "only touch sentinel.next"
+      ],
+      [
+       "size",
+       "Θ(1)",
+       "cached field"
+      ],
+      [
+       "addLast, getLast",
+       "Θ(n) (Θ(1) with a last pointer)",
+       "walk to the end"
+      ],
+      [
+       "removeLast",
+       "Θ(n) even with last",
+       "need the node before the last"
+      ],
+      [
+       "get(i), insert(i, x)",
+       "Θ(i)",
+       "follow i arrows"
+      ]
+     ]
+    },
+    {
+     "type": "warn",
+     "text": "A <code>last</code> pointer makes addLast Θ(1) but not removeLast: after removing you must set last to the second-to-last node, which a singly linked list can only find by walking from the front."
+    },
+    {
+     "type": "tip",
+     "text": "Generics: <code>SLList&lt;T></code> stores any reference type. Type arguments must be reference types (<code>SLList&lt;Integer></code>, not <code>SLList&lt;int></code>); autoboxing converts int ↔ Integer automatically."
+    }
+   ]
+  },
+  {
+   "title": "DLList and the circular sentinel",
+   "blocks": [
+    {
+     "type": "p",
+     "text": "Give each node both <code>prev</code> and <code>next</code>. Best design: one sentinel whose <code>next</code> is the first item and whose <code>prev</code> is the last item, making the list a circle. Empty list: <code>sentinel.next == sentinel.prev == sentinel</code>. No operation ever meets null."
+    },
+    {
+     "type": "code",
+     "lang": "java",
+     "text": "public void addLast(T x) {\n    Node last = sentinel.prev;\n    Node n = new Node(last, x, sentinel);   // prev, item, next\n    last.next = n;\n    sentinel.prev = n;\n    size += 1;\n}\npublic T removeFirst() {\n    if (size == 0) return null;\n    Node first = sentinel.next;\n    sentinel.next = first.next;\n    first.next.prev = sentinel;             // the line people forget\n    size -= 1;\n    return first.item;\n}\npublic void insert(int index, T x) {        // 0 <= index <= size\n    Node p = sentinel;                      // p = node before the slot\n    if (index <= size / 2) {\n        for (int i = 0; i < index; i++) p = p.next;\n    } else {\n        for (int i = size; i > index; i--) p = p.prev;\n        p = p.prev;\n    }\n    Node n = new Node(p, x, p.next);\n    p.next.prev = n;\n    p.next = n;\n    size += 1;\n}"
+    },
+    {
+     "type": "thm",
+     "name": "Four-arrow rule",
+     "text": "Inserting a node sets its own 2 arrows and fixes 2 arrows on its neighbours; removing a node fixes 2 arrows on its neighbours (<code>p.prev.next = p.next; p.next.prev = p.prev;</code>). If you change fewer, the list is inconsistent forward vs backward."
+    },
+    {
+     "type": "example",
+     "title": "DLList insert/remove trace (check both directions)",
+     "prompt": "Start empty; addLast(5), addLast(10), addFirst(1), insert(2, 7), insert(4, 99), insert(0, 0), remove(3). Give the list forward and backward after each insert/remove.",
+     "steps": [
+      "After the adds: forward [1 5 10], backward [10 5 1].",
+      "insert(2, 7): 2 ≤ 3/2? No (3/2 = 1), so walk backward: start at S, step from i = 3 down to 2 → p = node 10, then p = p.prev = node 5. Insert after 5: [1 5 7 10] / [10 7 5 1].",
+      "insert(4, 99): index = size, walk 0 steps back then p = S.prev = node 10: [1 5 7 10 99] / [99 10 7 5 1].",
+      "insert(0, 0): forward branch, p = S: [0 1 5 7 10 99] / [99 10 7 5 1 0].",
+      "remove(3): walk to node 7, set 5.next = 10 and 10.prev = 5; returns 7: [0 1 5 10 99] / [99 10 5 1 0]."
+     ],
+     "answer": "Final [0 1 5 10 99], backward [99 10 5 1 0] (verified)"
+    },
+    {
+     "type": "example",
+     "title": "Reverse a circular DLList in place",
+     "prompt": "How do you reverse a circular-sentinel DLList with no new nodes in Θ(n)?",
+     "steps": [
+      "Observation: reversing means every node’s next and prev swap roles — including the sentinel’s.",
+      "Code: <code>Node p = sentinel; do { Node t = p.next; p.next = p.prev; p.prev = t; p = t; } while (p != sentinel);</code>",
+      "We advance with t (the old next), which is safe because we saved it before swapping.",
+      "On [0 1 5 10 99] this gives forward [99 10 5 1 0] and backward [0 1 5 10 99] (verified)."
+     ],
+     "answer": "Swap next/prev in every node including the sentinel"
+    },
+    {
+     "type": "warn",
+     "text": "In a one-item circular DLList, sentinel.next = sentinel.prev = x and x.next = x.prev = sentinel. Removing x must restore sentinel.next = sentinel.prev = sentinel."
+    }
+   ]
+  },
+  {
+   "title": "AList: resizing arrays and amortized Θ(1)",
+   "blocks": [
+    {
+     "type": "p",
+     "text": "An <b>AList</b> stores items in an array for Θ(1) <code>get(i)</code>. When the array is full, it copies everything into a bigger one. The crucial choice: <b>multiply</b> the capacity (×2, ×1.5, ×3), never add a constant."
+    },
+    {
+     "type": "code",
+     "lang": "java",
+     "text": "public class AList<T> {\n    private T[] items = (T[]) new Object[8];   // new T[8] is a compile error\n    private int size = 0;                      // next free slot\n    public void addLast(T x) {\n        if (size == items.length) resize(size * 2);\n        items[size] = x;\n        size += 1;\n    }\n    private void resize(int cap) {\n        T[] a = (T[]) new Object[cap];\n        System.arraycopy(items, 0, a, 0, size);\n        items = a;\n    }\n    public T removeLast() {\n        T x = items[size - 1];\n        items[size - 1] = null;                // avoid loitering\n        size -= 1;\n        return x;\n    }\n}"
+    },
+    {
+     "type": "def",
+     "term": "Amortized cost",
+     "text": "Total cost of any sequence of n operations divided by n (worst case over sequences). A single operation may still be expensive."
+    },
+    {
+     "type": "thm",
+     "name": "Geometric resizing is amortized Θ(1)",
+     "text": "With doubling, resizes copy 1 + 2 + 4 + … + 2ᵏ = 2ᵏ⁺¹ − 1 &lt; 2n items over n adds: Θ(n) total, Θ(1) per add. With +c growth, resizes copy about c + 2c + 3c + … ≈ n²/(2c) items: Θ(n²) total, Θ(n) per add."
+    },
+    {
+     "type": "formula",
+     "text": "1 + 2 + 4 + ⋯ + 2ᵏ = 2ᵏ⁺¹ − 1 &lt; 2 · (largest term)"
+    },
+    {
+     "type": "example",
+     "title": "Count copies for different growth policies",
+     "prompt": "Start at capacity 1 and do n addLasts; a resize copies all current items. Count copies for ×2 with n = 1000, +1 with n = 1000, +10 with n = 1000, ×3 with n = 100.",
+     "steps": [
+      "×2: resizes at sizes 1, 2, 4, …, 512 → 1 + 2 + ⋯ + 512 = 1023.",
+      "+1: resizes at every size 1 … 999 → 999·1000/2 = 499,500.",
+      "+10: resizes at sizes 1, 11, 21, …, 991 (100 resizes) → 100 + 10·(0 + 1 + ⋯ + 99) = 100 + 49,500 = 49,600.",
+      "×3: resizes at 1, 3, 9, 27, 81 → 121."
+     ],
+     "answer": "1023, 499,500, 49,600, 121 (all verified by simulation)"
+    },
+    {
+     "type": "thm",
+     "name": "Accounting (banker’s) argument",
+     "text": "Charge each add 3 coins: 1 pays for writing the item, 2 are saved. After a resize from C to 2C the bank is empty; the next C adds save 2C coins, exactly enough to copy 2C items at the next resize. The balance never goes negative, so total cost ≤ 3n."
+    },
+    {
+     "type": "thm",
+     "name": "Shrinking",
+     "text": "Halve the array when usage drops to ¼ (not ½). If you halved at ½, alternating add/remove at the boundary resizes on every operation: starting full at capacity 8, ten add/remove pairs cost 160 copies instead of 0."
+    },
+    {
+     "type": "table",
+     "head": [
+      "Op",
+      "AList",
+      "DLList"
+     ],
+     "rows": [
+      [
+       "get(i)",
+       "Θ(1)",
+       "Θ(n)"
+      ],
+      [
+       "addLast",
+       "Θ(1) amortized, Θ(n) worst single call",
+       "Θ(1)"
+      ],
+      [
+       "addFirst",
+       "Θ(n) (shift) unless circular",
+       "Θ(1)"
+      ],
+      [
+       "removeLast",
+       "Θ(1) (amortized with shrinking)",
+       "Θ(1)"
+      ]
+     ]
+    },
+    {
+     "type": "warn",
+     "text": "Read the question: “worst case of one addLast” is Θ(n); “amortized/average over a sequence” is Θ(1) only for multiplicative growth."
+    }
+   ]
+  },
+  {
+   "title": "Circular arrays: nextFirst / nextLast",
+   "blocks": [
+    {
+     "type": "p",
+     "text": "To make both ends Θ(1) in an array, let items wrap around. A common convention keeps two indices: <code>nextFirst</code> (where the next addFirst writes) and <code>nextLast</code> (where the next addLast writes). Stepping left from index 0 wraps to the last index."
+    },
+    {
+     "type": "formula",
+     "text": "addFirst: items[nextFirst] = x; nextFirst = (nextFirst − 1 + cap) % cap"
+    },
+    {
+     "type": "formula",
+     "text": "addLast: items[nextLast] = x; nextLast = (nextLast + 1) % cap"
+    },
+    {
+     "type": "formula",
+     "text": "get(i) = items[(nextFirst + 1 + i) % cap]"
+    },
+    {
+     "type": "code",
+     "lang": "java",
+     "text": "public void addFirst(T x) {\n    if (size == items.length) resize(items.length * 2);\n    items[nextFirst] = x;\n    nextFirst = Math.floorMod(nextFirst - 1, items.length);\n    size += 1;\n}\npublic T removeLast() {\n    if (size == 0) return null;\n    nextLast = Math.floorMod(nextLast - 1, items.length);\n    T x = items[nextLast];\n    items[nextLast] = null;\n    size -= 1;\n    return x;\n}\nprivate void resize(int cap) {          // unroll in logical order\n    T[] a = (T[]) new Object[cap];\n    for (int i = 0; i < size; i++) a[i] = get(i);\n    items = a;\n    nextFirst = cap - 1;                // just left of index 0 (wraps)\n    nextLast = size;\n}"
+    },
+    {
+     "type": "example",
+     "title": "Trace a circular deque including a resize",
+     "prompt": "Capacity 8, nextFirst = 0, nextLast = 1. Do addLast(1), addLast(2), addFirst(9), addFirst(8); then addLast 10, 11, 12, 13; then addFirst(7); then removeLast(), removeFirst().",
+     "steps": [
+      "addLast(1) at index 1, addLast(2) at 2 (nextLast = 3). addFirst(9) at 0, nextFirst = 7. addFirst(8) at 7, nextFirst = 6.",
+      "Array [9, 1, 2, _, _, _, _, 8], nF = 6, nL = 3. Logical order: get(0) = items[7] = 8, then 9, 1, 2.",
+      "addLast 10, 11, 12, 13 at indices 3–6: [9, 1, 2, 10, 11, 12, 13, 8], nF = 6, nL = 7, size 8 (full).",
+      "addFirst(7): full, so resize to 16 first: copy in logical order to 0…7 → [8, 9, 1, 2, 10, 11, 12, 13, _ …], nF = 15, nL = 8. Then write 7 at 15, nF = 14.",
+      "removeLast: nL = 7, returns 13. removeFirst: nF = 15, returns 7."
+     ],
+     "answer": "Final [8, 9, 1, 2, 10, 11, 12, _, …, _] (16 slots), nF = 15, nL = 7, size 7 (verified)"
+    },
+    {
+     "type": "example",
+     "title": "Wrap-around with a small array",
+     "prompt": "Capacity 4, nextFirst = 2, nextLast = 3. addFirst(1), addFirst(2), addFirst(3), addLast(4), addLast(5), removeFirst().",
+     "steps": [
+      "addFirst(1) at 2 → nF 1; addFirst(2) at 1 → nF 0; addFirst(3) at 0 → nF = floorMod(−1, 4) = 3. Array [3, 2, 1, _], nL = 3.",
+      "addLast(4) at 3 → nL = 0. Array [3, 2, 1, 4], full; note nF = nL = 3 and 0 respectively.",
+      "addLast(5): full → resize to 8 in logical order: get(0) = items[(3 + 1) % 4] = 3, then 2, 1, 4 → [3, 2, 1, 4, _, _, _, _], nF = 7, nL = 4. Write 5 at 4, nL = 5.",
+      "removeFirst: nF = (7 + 1) % 8 = 0, returns 3."
+     ],
+     "answer": "Returns 3; array [_, 2, 1, 4, 5, _, _, _], nF = 0, nL = 5 (verified)"
+    },
+    {
+     "type": "warn",
+     "text": "In Java <code>-1 % 8</code> is −1, not 7. Use <code>Math.floorMod(-1, 8)</code> or <code>(i - 1 + cap) % cap</code>. And never resize a wrapped deque with one straight arraycopy of the old array: the wrapped half would land in the wrong place."
+    }
+   ]
+  },
+  {
+   "title": "Finding bugs in list code",
+   "blocks": [
+    {
+     "type": "steps",
+     "title": "Bug checklist for linked/array lists",
+     "items": [
+      "Empty list: does the code dereference a null first/last? (Sentinels fix this.)",
+      "Single element: after removing it, are both ends reset (sentinel points to itself / indices consistent)?",
+      "Every pointer change has its mirror (next and prev).",
+      "Size is updated on every add and remove.",
+      "Loops stop at the right node: “node before position i” means i steps from the sentinel.",
+      "Circular arrays: negative mod, resize unrolling, nextFirst/nextLast reset after resize.",
+      "Removed slots set to null (loitering), and generic array creation via (T[]) new Object[n]."
+     ]
+    },
+    {
+     "type": "example",
+     "title": "Spot the crash",
+     "prompt": "<code>class BadSL { N first; void addLast(int x) { N p = first; while (p.next != null) p = p.next; p.next = new N(x, null); } }</code> What happens on <code>new BadSL().addLast(3)</code>, and what are two fixes?",
+     "steps": [
+      "first is null on an empty list, so <code>p.next</code> dereferences null.",
+      "Result: NullPointerException (verified).",
+      "Fix 1: special case <code>if (first == null) { first = new N(x, null); return; }</code>.",
+      "Fix 2 (better): use a sentinel so p always starts at a real node."
+     ],
+     "answer": "NullPointerException; add the empty case or use a sentinel"
+    },
+    {
+     "type": "example",
+     "title": "Repair the one corrupted pointer",
+     "prompt": "In a circular-sentinel DLList holding [1 2 3 4 5], exactly one prev pointer is wrong (node 4’s prev points to node 2). What does a backward walk print, and how do you find and fix the bad pointer in Θ(n)?",
+     "steps": [
+      "Backward walk: S.prev = 5 → 4 → (bad) 2 → 1 → S: prints [5 4 2 1].",
+      "Forward links are all intact, so walk forward from the sentinel and check, for each node p, whether <code>p.next.prev == p</code>.",
+      "The first p failing the check is node 3 (3.next = 4 but 4.prev = 2). Fix: <code>p.next.prev = p</code>.",
+      "After repair the backward walk prints [5 4 3 2 1]."
+     ],
+     "answer": "Backward walk [5 4 2 1]; fix by setting p.next.prev = p at the first p where it fails (verified)"
+    }
+   ]
+  }
+ ],
+ "cards": [
+  {
+   "front": "What is a sentinel node?",
+   "back": [
+    {
+     "type": "p",
+     "text": "A permanent dummy node that is always present (holding a junk item). Real items start at sentinel.next, so the empty list and the first position are no longer special cases."
+    }
+   ]
+  },
+  {
+   "front": "Why is IntNode declared <code>private static</code> inside SLList?",
+   "back": [
+    {
+     "type": "p",
+     "text": "private: hide implementation; static: a node never uses the enclosing SLList instance, so it doesn’t need a hidden pointer to it (saves memory)."
+    }
+   ]
+  },
+  {
+   "front": "SLList with a last pointer: why is removeLast still Θ(n)?",
+   "back": [
+    {
+     "type": "p",
+     "text": "You must update last to the second-to-last node, which can only be found by walking from the front."
+    }
+   ]
+  },
+  {
+   "front": "Circular-sentinel DLList: what does the empty list look like?",
+   "back": [
+    {
+     "type": "p",
+     "text": "sentinel.next == sentinel and sentinel.prev == sentinel."
+    }
+   ]
+  },
+  {
+   "front": "Where is the last item of a circular-sentinel DLList?",
+   "back": [
+    {
+     "type": "p",
+     "text": "sentinel.prev."
+    }
+   ]
+  },
+  {
+   "front": "How many arrows change when inserting into a DLList?",
+   "back": [
+    {
+     "type": "p",
+     "text": "4: the new node’s prev and next, plus the predecessor’s next and the successor’s prev."
+    }
+   ]
+  },
+  {
+   "front": "Removing node p from a DLList (code)?",
+   "back": [
+    {
+     "type": "p",
+     "text": "<code>p.prev.next = p.next; p.next.prev = p.prev; size -= 1;</code>"
+    }
+   ]
+  },
+  {
+   "front": "Why multiply capacity when resizing an AList?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Geometric growth makes total copying Θ(n) for n adds (amortized Θ(1)); adding a constant makes it Θ(n²) (amortized Θ(n))."
+    }
+   ]
+  },
+  {
+   "front": "Total copies for 1000 addLasts from capacity 1 with doubling?",
+   "back": [
+    {
+     "type": "p",
+     "text": "1 + 2 + ⋯ + 512 = 1023."
+    }
+   ]
+  },
+  {
+   "front": "What does amortized Θ(1) promise?",
+   "back": [
+    {
+     "type": "p",
+     "text": "The total cost of n operations is Θ(n), so the average per operation is Θ(1). One operation may still be Θ(n)."
+    }
+   ]
+  },
+  {
+   "front": "When should an AList shrink, and why not at ½?",
+   "back": [
+    {
+     "type": "p",
+     "text": "At ¼ full (halve the capacity). At ½, alternating add/remove at the boundary would resize every operation."
+    }
+   ]
+  },
+  {
+   "front": "Why can’t you write <code>new T[8]</code>?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Generic array creation is illegal. Write <code>(T[]) new Object[8]</code> (unchecked warning, not an error)."
+    }
+   ]
+  },
+  {
+   "front": "Why null out <code>items[size-1]</code> in removeLast?",
+   "back": [
+    {
+     "type": "p",
+     "text": "To avoid loitering: otherwise the array keeps a reference and the object can’t be garbage-collected."
+    }
+   ]
+  },
+  {
+   "front": "Circular array: formulas for addFirst/addLast with nextFirst/nextLast?",
+   "back": [
+    {
+     "type": "p",
+     "text": "addFirst writes items[nextFirst], then nextFirst = (nextFirst − 1 + cap) % cap. addLast writes items[nextLast], then nextLast = (nextLast + 1) % cap."
+    }
+   ]
+  },
+  {
+   "front": "Circular array: index of logical item i?",
+   "back": [
+    {
+     "type": "p",
+     "text": "(nextFirst + 1 + i) % cap (or (front + i) % cap with a front index)."
+    }
+   ]
+  },
+  {
+   "front": "What is <code>-1 % 8</code> in Java?",
+   "back": [
+    {
+     "type": "p",
+     "text": "−1. Use Math.floorMod(−1, 8) = 7 for wrap-around."
+    }
+   ]
+  },
+  {
+   "front": "How do you resize a circular array deque?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Copy items in logical order (get(0) … get(size−1)) into the new array starting at 0; then nextFirst = cap − 1, nextLast = size."
+    }
+   ]
+  },
+  {
+   "front": "AList vs DLList: get(i) and addFirst?",
+   "back": [
+    {
+     "type": "p",
+     "text": "AList get Θ(1), addFirst Θ(n) unless circular. DLList get Θ(n), addFirst Θ(1)."
+    }
+   ]
+  },
+  {
+   "front": "Unit vs integration test?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Unit: one method in isolation. Integration: several components together."
+    }
+   ]
+  },
+  {
+   "front": "What is test-driven development?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Write a failing test first, then write the code until it passes."
+    }
+   ]
+  },
+  {
+   "front": "What is a randomized comparison test?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Run random operations on your structure and on a trusted one, asserting they agree after every step."
+    }
+   ]
+  },
+  {
+   "front": "Two transition sequences every deque test suite should include?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Empty → one item → empty → one item again; and filling past a resize, then removing from both ends and checking order."
+    }
+   ]
+  },
+  {
+   "front": "Truth assertion to check exact list contents in order?",
+   "back": [
+    {
+     "type": "p",
+     "text": "<code>assertThat(list).containsExactly(1, 2, 3).inOrder();</code>"
+    }
+   ]
+  },
+  {
+   "front": "Why does <code>assertThat(arr1).isEqualTo(arr2)</code> mislead for plain arrays in some frameworks?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Equality of arrays via equals is address equality; use an array-aware assertion (or compare lists)."
+    }
+   ]
+  },
+  {
+   "front": "Insert at index i in an SLList with a sentinel: where does p stop?",
+   "back": [
+    {
+     "type": "p",
+     "text": "At the node before position i: start at sentinel and take i steps; then p.next = new IntNode(x, p.next)."
+    }
+   ]
+  }
+ ],
+ "hard": [
+  {
+   "title": "Insert at index from the nearer end",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "Write <code>insert(int index, T x)</code> for a circular-sentinel DLList (0 ≤ index ≤ size) that walks from whichever end is closer, so it takes at most about size/2 steps. Then give forward and backward contents after: addLast(5), addLast(10), addFirst(1), insert(2, 7), insert(4, 99), insert(0, 0)."
+    }
+   ],
+   "answer": "[0 1 5 7 10 99] forward, [99 10 7 5 1 0] backward",
+   "solution": [
+    {
+     "type": "code",
+     "lang": "java",
+     "text": "public void insert(int index, T x) {\n    Node p = sentinel;                       // p will be the node BEFORE the slot\n    if (index <= size / 2) {\n        for (int i = 0; i < index; i++) p = p.next;\n    } else {\n        for (int i = size; i > index; i--) p = p.prev;  // p = node AT index\n        p = p.prev;                                      // step to its predecessor\n    }\n    Node n = new Node(p, x, p.next);\n    p.next.prev = n;\n    p.next = n;\n    size += 1;\n}"
+    },
+    {
+     "type": "p",
+     "text": "Backward branch reasoning: starting at the sentinel (think of it as position size), each prev step lowers the position by 1, so after size − index steps p is the node at index; its predecessor is the node before the slot. index == size takes 0 steps, then p = sentinel.prev = last node, correctly appending."
+    },
+    {
+     "type": "p",
+     "text": "Trace: [1 5 10] → insert(2,7) uses the backward branch (2 > 1) → [1 5 7 10]; insert(4,99) appends → [1 5 7 10 99]; insert(0,0) → [0 1 5 7 10 99]. Backward walk [99 10 7 5 1 0]. Verified by running."
+    }
+   ]
+  },
+  {
+   "title": "Repair a corrupted doubly linked list",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "A circular-sentinel DLList is consistent except that exactly one node’s <code>prev</code> pointer is wrong (it points to some other node in the list). Write <code>int repair()</code> that fixes it in Θ(n) with O(1) extra memory and returns the index (sentinel = 0, first item = 1, …) of the node whose <code>next</code> exposed the problem, or −1 if nothing is wrong. On [1 2 3 4 5] with 4.prev = 2, what is returned and what does a backward walk print before and after?"
+    }
+   ],
+   "answer": "returns 3; before [5 4 2 1], after [5 4 3 2 1]",
+   "solution": [
+    {
+     "type": "code",
+     "lang": "java",
+     "text": "int repair() {\n    int idx = 0;\n    Node p = sentinel;\n    do {\n        if (p.next.prev != p) {     // the forward link is trusted\n            p.next.prev = p;\n            return idx;\n        }\n        p = p.next; idx++;\n    } while (p != sentinel);\n    return -1;\n}"
+    },
+    {
+     "type": "p",
+     "text": "Since all next pointers are correct, the forward walk visits every node exactly once and ends at the sentinel. For every correct node, p.next.prev == p. The single violation is at the predecessor of the corrupted node."
+    },
+    {
+     "type": "p",
+     "text": "Here p = node 3 (index 3) has next = 4 but 4.prev = 2. Before: backward S → 5 → 4 → 2 → 1 → S. After repair: 5 4 3 2 1. Verified."
+    }
+   ]
+  },
+  {
+   "title": "Reverse a circular DLList in one loop",
+   "level": "hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "Write <code>reverse()</code> for a circular-sentinel DLList with no new nodes, no extra data structures, and a single loop. Explain why the loop terminates and why it does not need a special case for the empty list."
+    }
+   ],
+   "answer": "Swap next/prev in every node including the sentinel, advancing via the saved old next",
+   "solution": [
+    {
+     "type": "code",
+     "lang": "java",
+     "text": "public void reverse() {\n    Node p = sentinel;\n    do {\n        Node t = p.next;\n        p.next = p.prev;\n        p.prev = t;\n        p = t;                 // old next\n    } while (p != sentinel);\n}"
+    },
+    {
+     "type": "p",
+     "text": "Reversing a circle = every node’s successor becomes its predecessor. Following old next pointers visits the circle once and returns to the sentinel; the do–while processes the sentinel first."
+    },
+    {
+     "type": "p",
+     "text": "Empty list: sentinel.next = sentinel.prev = sentinel; one iteration swaps them (no change) and p = sentinel ends the loop. Verified: reversing [0 1 5 10 99] gives forward [99 10 5 1 0], and removeFirst then returns 99."
+    }
+   ]
+  },
+  {
+   "title": "Write resize for a nextFirst/nextLast deque",
+   "level": "hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "An array deque uses <code>nextFirst</code>/<code>nextLast</code>. Write <code>resize(int cap)</code> so that afterward the items are in logical order starting at index 0. Then trace: capacity 4, nextFirst = 2, nextLast = 3; addFirst(1), addFirst(2), addFirst(3), addLast(4), addLast(5) (doubling when full), removeFirst(). Give the final array, nextFirst, nextLast and the removed value."
+    }
+   ],
+   "answer": "[_, 2, 1, 4, 5, _, _, _], nF = 0, nL = 5, removed 3",
+   "solution": [
+    {
+     "type": "code",
+     "lang": "java",
+     "text": "private void resize(int cap) {\n    T[] a = (T[]) new Object[cap];\n    for (int i = 0; i < size; i++) {\n        a[i] = items[(nextFirst + 1 + i) % items.length];\n    }\n    items = a;\n    nextFirst = cap - 1;\n    nextLast = size;\n}"
+    },
+    {
+     "type": "p",
+     "text": "After three addFirsts: [3, 2, 1, _], nF = 3 (wrapped from −1), nL = 3. addLast(4) → [3, 2, 1, 4], nL = 0, full."
+    },
+    {
+     "type": "p",
+     "text": "addLast(5): resize to 8: logical order starts at (3 + 1) % 4 = 0: 3, 2, 1, 4 → [3, 2, 1, 4, _, _, _, _], nF = 7, nL = 4; write 5 at 4, nL = 5."
+    },
+    {
+     "type": "p",
+     "text": "removeFirst: nF = 0, returns 3, slot nulled. Verified by running."
+    }
+   ]
+  },
+  {
+   "title": "Amortized cost of unusual growth policies",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "Starting from capacity 1, do n addLasts; a resize to capacity c′ copies all current items. (a) For n = 1000, how many copies with ceil(1.5·cap) growth? (b) With +10 growth? (c) For each policy give the amortized cost per add. (d) A list grows ×2 when full and shrinks to half when size ≤ cap/2 after a remove. Starting full at capacity 8, alternate add, remove 10 times: how many copies?"
+    }
+   ],
+   "answer": "(a) 2120 (b) 49,600 (c) Θ(1) and Θ(n) (d) 160",
+   "solution": [
+    {
+     "type": "p",
+     "text": "(a) Simulation: capacities 1, 2, 3, 5, 8, 12, 18, 27, …; copies sum to 2120 (verified) ≈ 2.1 per add: any factor > 1 keeps the geometric series bounded by a constant times n."
+    },
+    {
+     "type": "p",
+     "text": "(b) Resizes at sizes 1, 11, …, 991: 100 + 10·(0 + ⋯ + 99) = 49,600 ≈ n²/20."
+    },
+    {
+     "type": "p",
+     "text": "(c) ×1.5: Θ(n) total, Θ(1) amortized. +10: Θ(n²) total, Θ(n) amortized."
+    },
+    {
+     "type": "p",
+     "text": "(d) add at size 8 → resize to 16 (8 copies), size 9; remove → size 8 ≤ 16/2 → shrink (8 copies). 16 copies per pair, 160 total (verified). Shrinking at ¼ avoids this thrashing."
+    }
+   ]
+  },
+  {
+   "title": "Remove adjacent duplicates in an SLList",
+   "level": "hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "Write <code>removeAdjDups()</code> for a sentinel SLList of ints that destructively collapses each run of equal adjacent items into one, maintaining <code>size</code>, in Θ(n). Result on [1 1 2 2 2 3 1 1]?"
+    }
+   ],
+   "answer": "[1 2 3 1], size 4",
+   "solution": [
+    {
+     "type": "code",
+     "lang": "java",
+     "text": "public void removeAdjDups() {\n    IntNode p = sentinel.next;\n    while (p != null && p.next != null) {\n        if (p.next.item == p.item) { p.next = p.next.next; size -= 1; }\n        else p = p.next;\n    }\n}"
+    },
+    {
+     "type": "p",
+     "text": "Only advance when the neighbour differs, so a run of three 2s is collapsed in two splices. The trailing 1 1 run is separate from the leading one because a 3 sits between them. Verified: [1 2 3 1], size 4."
+    }
+   ]
+  },
+  {
+   "title": "Which test catches it?",
+   "level": "hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "Each implementation below has one bug. For each, give the shortest sequence of public calls whose observable result is wrong. (a) A circular-array deque computes addFirst’s new index as <code>(nextFirst - 1) % cap</code>. (b) resize copies with <code>System.arraycopy(items, 0, a, 0, size)</code> in a circular deque. (c) A DLList’s removeLast sets <code>sentinel.prev = last.prev</code> but not <code>last.prev.next = sentinel</code>."
+    }
+   ],
+   "answer": "(a) two addFirsts from nextFirst = 0 → ArrayIndexOutOfBoundsException; (b) wrap, fill, resize, check order; (c) add 2, removeLast, walk forward",
+   "solution": [
+    {
+     "type": "p",
+     "text": "(a) Start with nextFirst = 0 and call addFirst twice: after the first, nextFirst = (0 − 1) % cap = −1, and the second addFirst writes items[−1]: ArrayIndexOutOfBoundsException. If nextFirst starts elsewhere, add more items until it passes 0."
+    },
+    {
+     "type": "p",
+     "text": "(b) The straight copy keeps physical order, but nextFirst/nextLast are reset as if the items were in logical order. Test (capacity 4, nextFirst = 1, nextLast = 2): addLast(1), addLast(2), addLast(3), addFirst(9) (array [3, 9, 1, 2], full), addLast(5) (resize). Expected contents 9 1 2 3 5; the buggy version gives 3 9 1 2 5 (verified)."
+    },
+    {
+     "type": "p",
+     "text": "(c) addLast(1), addLast(2), removeLast() returns 2, but a forward walk still shows [1 2] because node 1’s next still points at the removed node, while size says 1 (verified)."
+    }
+   ]
+  },
+  {
+   "title": "Design: deque with get(i) and both ends fast",
+   "level": "hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "You need a list supporting addFirst, addLast, removeFirst, removeLast and get(i), each in Θ(1) (amortized allowed), using Θ(n) memory. Which of SLList, DLList, AList, circular array deque work? For the ones that fail, which operation fails?"
+    }
+   ],
+   "answer": "Only the circular array deque",
+   "solution": [
+    {
+     "type": "p",
+     "text": "SLList: removeLast Θ(n), get Θ(n). DLList: get(i) Θ(n). Plain AList: addFirst/removeFirst Θ(n) from shifting."
+    },
+    {
+     "type": "p",
+     "text": "Circular array with geometric resizing (and shrink at ¼): every end operation is Θ(1) amortized and get(i) is one index computation (nextFirst + 1 + i) % cap."
+    }
+   ]
+  }
+ ],
+ "keyFacts": [
+  "Sentinel = permanent dummy node; removes empty/first special cases. Circular DLList: last = sentinel.prev; empty ⇔ sentinel.next == sentinel.",
+  "DLList insert/remove touch 4/2 arrows: always update both next and prev.",
+  "Resize by multiplying (×2): n adds copy &lt; 2n items → amortized Θ(1). +c growth → Θ(n²) total.",
+  "Shrink when ¼ full, not ½ (avoids thrashing).",
+  "Circular deque: get(i) = items[(nextFirst + 1 + i) % cap]; use Math.floorMod for −1; resize by copying in logical order then nextFirst = cap − 1, nextLast = size.",
+  "SLList: addLast Θ(n) without last pointer; removeLast Θ(n) even with one.",
+  "Generic arrays: (T[]) new Object[n]; null out removed slots to avoid loitering.",
+  "Good tests: empty → 1 → empty → 1; resize boundaries; wrap-around; both ends; compare with a trusted implementation."
+ ],
+ "parsons": [
+  {
+   "title": "DLList removeFirst (circular sentinel)",
+   "goal": "Remove and return the first item of a circular-sentinel DLList that has no size field; return null if empty.",
+   "lines": [
+    "public T removeFirst() {",
+    "    if (sentinel.next == sentinel) return null;",
+    "    T item = sentinel.next.item;",
+    "    sentinel.next = sentinel.next.next;",
+    "    sentinel.next.prev = sentinel;",
+    "    return item;",
+    "}"
+   ],
+   "distractors": [
+    "    if (sentinel == null) return null;",
+    "    sentinel.next.next.prev = sentinel;",
+    "    sentinel.prev = sentinel.next;"
+   ]
+  },
+  {
+   "title": "SLList insert at index (sentinel)",
+   "goal": "Insert x so that it ends up at position i (0 ≤ i ≤ number of items) in an SLList with a sentinel and no size field.",
+   "lines": [
+    "public void insert(int i, int x) {",
+    "    IntNode p = sentinel;",
+    "    for (int k = 0; k &lt; i; k++) p = p.next;",
+    "    p.next = new IntNode(x, p.next);",
+    "}"
+   ],
+   "distractors": [
+    "    IntNode p = sentinel.next;",
+    "    for (int k = 0; k &lt;= i; k++) p = p.next;",
+    "    p.next.next = new IntNode(x, null);"
+   ]
+  },
+  {
+   "title": "AList addLast with doubling",
+   "goal": "Append x to an array list, doubling the backing array when it is full.",
+   "lines": [
+    "public void addLast(T x) {",
+    "    if (size == items.length) {",
+    "        T[] a = (T[]) new Object[size * 2];",
+    "        System.arraycopy(items, 0, a, 0, size);",
+    "        items = a;",
+    "    }",
+    "    items[size] = x;",
+    "    size += 1;",
+    "}"
+   ],
+   "distractors": [
+    "        T[] a = (T[]) new Object[size + 1];",
+    "    items[size + 1] = x;",
+    "        a = items;"
+   ]
+  },
+  {
+   "title": "Circular deque resize",
+   "goal": "Resize a nextFirst/nextLast array deque to capacity cap, laying the items out in logical order from index 0 (get(i) returns logical item i using the current nextFirst).",
+   "lines": [
+    "private void resize(int cap) {",
+    "    T[] a = (T[]) new Object[cap];",
+    "    for (int i = 0; i &lt; size; i++) a[i] = get(i);",
+    "    items = a;",
+    "    nextFirst = items.length - 1; nextLast = size;",
+    "}"
+   ],
+   "distractors": [
+    "    System.arraycopy(items, 0, a, 0, size);",
+    "    for (int i = 0; i &lt; size; i++) a[i] = items[i];",
+    "    nextFirst = 0; nextLast = size + 1;"
+   ]
+  }
+ ]
+}

@@ -1,0 +1,1028 @@
+{
+ "id": "54-11",
+ "course": "54",
+ "title": "Symmetric matrices (spectral theorem) & SVD",
+ "source": "Lay 7.1, 7.4",
+ "summary": "Symmetric matrices are exactly the ones with an orthonormal eigenbasis (A = PDPᵀ), and every matrix, even rectangular, has a singular value decomposition A = UΣVᵀ built from the symmetric matrix AᵀA. The SVD exposes rank and orthonormal bases of all four fundamental subspaces.",
+ "lesson": [
+  {
+   "title": "Symmetric matrices and why they are special",
+   "blocks": [
+    {
+     "type": "def",
+     "term": "Symmetric matrix",
+     "text": "A square matrix with Aᵀ = A (entries mirror across the diagonal)."
+    },
+    {
+     "type": "thm",
+     "name": "Orthogonal eigenvectors",
+     "text": "If A is symmetric, eigenvectors from different eigenspaces are orthogonal.",
+     "proof": [
+      {
+       "type": "p",
+       "text": "Let A<b>v</b>₁ = λ₁<b>v</b>₁, A<b>v</b>₂ = λ₂<b>v</b>₂, λ₁ ≠ λ₂. Then λ₁(<b>v</b>₁·<b>v</b>₂) = (A<b>v</b>₁)ᵀ<b>v</b>₂ = <b>v</b>₁ᵀAᵀ<b>v</b>₂ = <b>v</b>₁ᵀA<b>v</b>₂ = λ₂(<b>v</b>₁·<b>v</b>₂). So (λ₁ − λ₂)(<b>v</b>₁·<b>v</b>₂) = 0, forcing <b>v</b>₁·<b>v</b>₂ = 0. The only use of symmetry is Aᵀ = A."
+      }
+     ]
+    },
+    {
+     "type": "thm",
+     "name": "Real eigenvalues",
+     "text": "A real symmetric matrix has only real eigenvalues.",
+     "proof": [
+      {
+       "type": "p",
+       "text": "Suppose A<b>v</b> = λ<b>v</b> with <b>v</b> ≠ <b>0</b> possibly complex. Then <b>v̄</b>ᵀA<b>v</b> = λ<b>v̄</b>ᵀ<b>v</b> = λ‖<b>v</b>‖². Take the conjugate transpose of the scalar <b>v̄</b>ᵀA<b>v</b>: since A is real and symmetric it equals itself, so it is real. Hence λ = (real)/(‖<b>v</b>‖² &gt; 0) is real."
+      }
+     ]
+    },
+    {
+     "type": "warn",
+     "text": "Inside ONE eigenspace (a repeated eigenvalue) a basis found by row reduction need not be orthogonal: you must run Gram–Schmidt there. Non-symmetric matrices like [1 1; 0 2] have non-orthogonal eigenvectors (1, 0), (1, 1)."
+    }
+   ]
+  },
+  {
+   "title": "The Spectral Theorem and orthogonal diagonalization",
+   "blocks": [
+    {
+     "type": "def",
+     "term": "Orthogonally diagonalizable",
+     "text": "A = PDPᵀ with P orthogonal (P⁻¹ = Pᵀ) and D diagonal."
+    },
+    {
+     "type": "thm",
+     "name": "Spectral Theorem",
+     "text": "An n×n real matrix is orthogonally diagonalizable ⇔ it is symmetric. For symmetric A: (a) n real eigenvalues counting multiplicity; (b) each eigenspace has dimension equal to the algebraic multiplicity; (c) eigenspaces are mutually orthogonal; (d) A = PDPᵀ.",
+     "proof": [
+      {
+       "type": "p",
+       "text": "⇐ direction (orthogonally diagonalizable ⇒ symmetric) is one line: (PDPᵀ)ᵀ = PDᵀPᵀ = PDPᵀ. The ⇒ direction uses the two theorems above plus an induction argument for (b)."
+      }
+     ]
+    },
+    {
+     "type": "steps",
+     "title": "Orthogonally diagonalize a symmetric A",
+     "items": [
+      "Find the eigenvalues (they are real).",
+      "Find a basis of each eigenspace.",
+      "Run Gram–Schmidt INSIDE each eigenspace of dimension ≥ 2 (different eigenspaces are already orthogonal).",
+      "Normalize every vector; P = [u₁ ⋯ uₙ], D = diag of the matching eigenvalues. Then A = PDPᵀ."
+     ]
+    },
+    {
+     "type": "example",
+     "title": "Orthogonal diagonalization with a repeated eigenvalue",
+     "prompt": "Orthogonally diagonalize A = [3 −2 4; −2 6 2; 4 2 3] (characteristic polynomial −(λ − 7)²(λ + 2)).",
+     "steps": [
+      "λ = 7: A − 7I = [−4 −2 4; −2 −1 2; 4 2 −4], rank 1: 2x₁ + x₂ − 2x₃ = 0. Basis (1, 0, 1), (−1, 2, 0). Not orthogonal: dot = −1.",
+      "Gram–Schmidt in the eigenspace: (−1, 2, 0) − (−1/2)(1, 0, 1) = (−1/2, 2, 1/2) → (−1, 4, 1). Still an eigenvector (it is in the eigenspace).",
+      "λ = −2: A + 2I = [5 −2 4; −2 8 2; 4 2 5] → eigenvector (−2, −1, 2). Check it is orthogonal to both λ = 7 vectors: −2 + 0 + 2 = 0, 2 − 4 + 2 = 0. ✓",
+      "Normalize: (1, 0, 1)/√2, (−1, 4, 1)/√18, (−2, −1, 2)/3.",
+      "P = [1/√2 −1/√18 −2/3; 0 4/√18 −1/3; 1/√2 1/√18 2/3], D = diag(7, 7, −2)."
+     ],
+     "answer": "A = PDPᵀ with columns (1, 0, 1)/√2, (−1, 4, 1)/√18, (−2, −1, 2)/3 and D = diag(7, 7, −2)."
+    },
+    {
+     "type": "table",
+     "head": [
+      "",
+      "Diagonalizable",
+      "Orthogonally diagonalizable"
+     ],
+     "rows": [
+      [
+       "Form",
+       "A = PDP⁻¹, any invertible P",
+       "A = PDPᵀ, P orthogonal"
+      ],
+      [
+       "Happens exactly when",
+       "n independent eigenvectors",
+       "A is symmetric"
+      ],
+      [
+       "Example",
+       "[1 1; 0 2]",
+       "[3 1; 1 3]"
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "title": "Spectral decomposition",
+   "blocks": [
+    {
+     "type": "thm",
+     "name": "Spectral decomposition",
+     "text": "If A = PDPᵀ with orthonormal columns u₁, …, uₙ, then A = λ₁u₁u₁ᵀ + λ₂u₂u₂ᵀ + ⋯ + λₙuₙuₙᵀ. Each uⱼuⱼᵀ is the n×n rank-1 matrix of orthogonal projection onto Span{uⱼ}.",
+     "proof": [
+      {
+       "type": "p",
+       "text": "Column-row expansion of the product: PDPᵀ = [λ₁u₁ ⋯ λₙuₙ][u₁ᵀ; …; uₙᵀ] = Σλⱼuⱼuⱼᵀ."
+      }
+     ]
+    },
+    {
+     "type": "tip",
+     "text": "A acts by splitting a vector into its components along the orthonormal eigenvectors and scaling each by its eigenvalue. This also gives Aᵏ = Σλⱼᵏuⱼuⱼᵀ and A⁻¹ = Σλⱼ⁻¹uⱼuⱼᵀ."
+    },
+    {
+     "type": "example",
+     "title": "Spectral decomposition of a 2×2",
+     "prompt": "Write the spectral decomposition of A = [7 2; 2 4].",
+     "steps": [
+      "tr = 11, det = 24: λ² − 11λ + 24 = (λ − 8)(λ − 3).",
+      "λ = 8: A − 8I = [−1 2; 2 −4] ⇒ (2, 1), u₁ = (2, 1)/√5. λ = 3: (−1, 2), u₂ = (−1, 2)/√5. (Orthogonal, as promised.)",
+      "8u₁u₁ᵀ = (8/5)[4 2; 2 1] = [32/5 16/5; 16/5 8/5]; 3u₂u₂ᵀ = (3/5)[1 −2; −2 4] = [3/5 −6/5; −6/5 12/5].",
+      "Sum: [35/5 10/5; 10/5 20/5] = [7 2; 2 4]. ✓"
+     ],
+     "answer": "A = 8u₁u₁ᵀ + 3u₂u₂ᵀ = [32/5 16/5; 16/5 8/5] + [3/5 −6/5; −6/5 12/5], u₁ = (2, 1)/√5, u₂ = (−1, 2)/√5"
+    }
+   ]
+  },
+  {
+   "title": "The singular value decomposition",
+   "blocks": [
+    {
+     "type": "p",
+     "text": "Non-square or non-symmetric matrices have no orthogonal eigenbasis, but AᵀA is always symmetric. That is the door to the SVD."
+    },
+    {
+     "type": "def",
+     "term": "Singular values",
+     "text": "Let λ₁ ≥ ⋯ ≥ λₙ be the eigenvalues of AᵀA with orthonormal eigenvectors v₁, …, vₙ. The singular values of A are σᵢ = √λᵢ = ‖Avᵢ‖."
+    },
+    {
+     "type": "thm",
+     "name": "Singular values are ≥ 0",
+     "text": "Each eigenvalue of AᵀA satisfies λᵢ = ‖Avᵢ‖² ≥ 0, so σᵢ is a well-defined nonnegative number: the amount A stretches the unit vector vᵢ.",
+     "proof": [
+      {
+       "type": "p",
+       "text": "‖Avᵢ‖² = (Avᵢ)ᵀ(Avᵢ) = vᵢᵀAᵀAvᵢ = vᵢᵀ(λᵢvᵢ) = λᵢ (vᵢ is a unit vector)."
+      }
+     ]
+    },
+    {
+     "type": "thm",
+     "name": "SVD",
+     "text": "Every m×n matrix of rank r factors as A = UΣVᵀ: V (n×n) and U (m×m) orthogonal, Σ m×n with σ₁ ≥ ⋯ ≥ σᵣ &gt; 0 in the top-left diagonal and zeros elsewhere. The columns of V are right singular vectors, of U left singular vectors, and Avᵢ = σᵢuᵢ.",
+     "proof": [
+      {
+       "type": "p",
+       "text": "{Av₁, …, Avᵣ} are orthogonal: (Avᵢ)·(Avⱼ) = vᵢᵀAᵀAvⱼ = λⱼ vᵢ·vⱼ = 0 for i ≠ j. Normalizing gives uᵢ = Avᵢ/σᵢ; extend to an orthonormal basis of ℝᵐ. Then AV = UΣ, so A = UΣVᵀ."
+      }
+     ]
+    },
+    {
+     "type": "steps",
+     "title": "SVD recipe",
+     "items": [
+      "Compute AᵀA (n×n; for a wide matrix you may use AAᵀ instead, see below).",
+      "Its eigenvalues in decreasing order; σᵢ = √λᵢ. Number of nonzero σ's = rank.",
+      "Orthonormal eigenvectors v₁, …, vₙ → V.",
+      "uᵢ = Avᵢ/σᵢ for each σᵢ &gt; 0.",
+      "If r &lt; m, extend u₁, …, uᵣ to an orthonormal basis of ℝᵐ using Nul Aᵀ (Gram–Schmidt if needed) → U.",
+      "Σ has the same shape as A."
+     ]
+    },
+    {
+     "type": "warn",
+     "text": "Do not compute U separately from eigenvectors of AAᵀ: signs may not match and A ≠ UΣVᵀ. Always use uᵢ = Avᵢ/σᵢ."
+    },
+    {
+     "type": "example",
+     "title": "SVD of a 2×2",
+     "prompt": "Find an SVD of A = [3 0; 4 5].",
+     "steps": [
+      "AᵀA = [25 20; 20 25], eigenvalues 45 and 5 (eigenvectors (1, 1), (−1, 1)).",
+      "σ₁ = √45 = 3√5, σ₂ = √5. v₁ = (1, 1)/√2, v₂ = (−1, 1)/√2.",
+      "Av₁ = (3, 9)/√2 ⇒ u₁ = (3, 9)/(√2·3√5) = (1, 3)/√10.",
+      "Av₂ = (−3, 1)/√2 ⇒ u₂ = (−3, 1)/(√2·√5) = (−3, 1)/√10.",
+      "A = UΣVᵀ with U = [1/√10 −3/√10; 3/√10 1/√10], Σ = diag(3√5, √5), V = [1/√2 −1/√2; 1/√2 1/√2]."
+     ],
+     "answer": "σ = 3√5, √5; U = (1/√10)[1 −3; 3 1], V = (1/√2)[1 −1; 1 1]"
+    },
+    {
+     "type": "example",
+     "title": "SVD of a 3×2 (rank 1)",
+     "prompt": "Find an SVD of A = [1 −1; −2 2; 2 −2].",
+     "steps": [
+      "AᵀA = [9 −9; −9 9], eigenvalues 18, 0 ⇒ σ₁ = 3√2, σ₂ = 0, rank 1.",
+      "v₁ = (1, −1)/√2, v₂ = (1, 1)/√2.",
+      "u₁ = Av₁/σ₁ = (2, −4, 4)/√2 ÷ 3√2 = (1, −2, 2)/3.",
+      "Extend with Nul Aᵀ = {x₁ − 2x₂ + 2x₃ = 0}: basis (2, 1, 0), (−2, 0, 1); Gram–Schmidt gives (2, 1, 0) and (−2/5, 4/5, 1) → (−2, 4, 5). u₂ = (2, 1, 0)/√5, u₃ = (−2, 4, 5)/(3√5).",
+      "Σ = [3√2 0; 0 0; 0 0]."
+     ],
+     "answer": "A = UΣVᵀ, U = [(1, −2, 2)/3, (2, 1, 0)/√5, (−2, 4, 5)/(3√5)], Σ = [3√2 0; 0 0; 0 0], V = [(1, −1)/√2, (1, 1)/√2]"
+    },
+    {
+     "type": "example",
+     "title": "SVD of a 2×3",
+     "prompt": "Find the singular values and the SVD of A = [4 11 14; 8 7 −2].",
+     "steps": [
+      "AᵀA = [80 100 40; 100 170 140; 40 140 200], eigenvalues 360, 90, 0.",
+      "σ₁ = √360 = 6√10, σ₂ = √90 = 3√10.",
+      "Unit eigenvectors: v₁ = (1, 2, 2)/3, v₂ = (−2, −1, 2)/3, v₃ = (2, −2, 1)/3 (Av₃ = 0).",
+      "Av₁ = (18, 6) ⇒ u₁ = (18, 6)/(6√10) = (3, 1)/√10. Av₂ = (3, −9) ⇒ u₂ = (1, −3)/√10.",
+      "Σ = [6√10 0 0; 0 3√10 0]."
+     ],
+     "answer": "σ = 6√10, 3√10; U = (1/√10)[3 1; 1 −3], V = [(1,2,2)/3, (−2,−1,2)/3, (2,−2,1)/3]"
+    },
+    {
+     "type": "tip",
+     "text": "For a wide matrix (m &lt; n) it is often faster to work with the smaller matrix AAᵀ, whose nonzero eigenvalues are the same σᵢ², and then use vᵢ = Aᵀuᵢ/σᵢ."
+    }
+   ]
+  },
+  {
+   "title": "What the SVD tells you: rank and the four subspaces",
+   "blocks": [
+    {
+     "type": "thm",
+     "name": "Bases from the SVD",
+     "text": "If A = UΣVᵀ has r nonzero singular values: rank A = r; {u₁, …, uᵣ} is an orthonormal basis of Col A; {uᵣ₊₁, …, uₘ} of Nul Aᵀ; {v₁, …, vᵣ} of Row A; {vᵣ₊₁, …, vₙ} of Nul A.",
+     "proof": [
+      {
+       "type": "p",
+       "text": "Avᵢ = σᵢuᵢ ≠ 0 for i ≤ r and Avᵢ = 0 for i &gt; r. So vᵣ₊₁, …, vₙ are n − r orthonormal vectors in Nul A, which has dimension n − r. The uᵢ = Avᵢ/σᵢ span Col A. The rest follow from Row A = (Nul A)⊥ and Nul Aᵀ = (Col A)⊥."
+      }
+     ]
+    },
+    {
+     "type": "example",
+     "title": "Read off the subspaces",
+     "prompt": "For A = [1 −1; −2 2; 2 −2] with the SVD above, give rank A and orthonormal bases of Col A, Nul A, Row A, Nul Aᵀ; and the maximum of ‖Ax‖ over unit x.",
+     "steps": [
+      "One nonzero singular value ⇒ rank 1.",
+      "Col A: u₁ = (1, −2, 2)/3. Nul Aᵀ: u₂ = (2, 1, 0)/√5, u₃ = (−2, 4, 5)/(3√5).",
+      "Row A: v₁ = (1, −1)/√2. Nul A: v₂ = (1, 1)/√2 (indeed A(1, 1) = 0).",
+      "max ‖Ax‖ = σ₁ = 3√2, attained at x = v₁."
+     ],
+     "answer": "rank 1; Col: {u₁}; Nul Aᵀ: {u₂, u₃}; Row: {v₁}; Nul: {v₂}; max ‖Ax‖ = 3√2"
+    },
+    {
+     "type": "list",
+     "items": [
+      "Singular values ≠ eigenvalues in general ([0 1; 0 0]: eigenvalues 0, 0; singular values 1, 0). For symmetric A, σᵢ = |λᵢ|.",
+      "A and Aᵀ have the same nonzero singular values.",
+      "For square A, |det A| = σ₁σ₂⋯σₙ, and A is invertible iff all σᵢ &gt; 0.",
+      "σ₁ = max ‖Ax‖ over unit x; σₙ (for n ≤ m) = min."
+     ]
+    },
+    {
+     "type": "example",
+     "title": "True/False",
+     "prompt": "(a) Every symmetric matrix is orthogonally diagonalizable. (b) The singular values of a square matrix are the absolute values of its eigenvalues. (c) The number of nonzero singular values equals rank A. (d) If A is orthogonally diagonalizable, A is symmetric. (e) Singular values can be negative.",
+     "steps": [
+      "(a) True (Spectral Theorem).",
+      "(b) False: [1 1; 0 1] has eigenvalues 1, 1 but singular values (√5 ± 1)/2. True only for symmetric (more generally normal) matrices.",
+      "(c) True.",
+      "(d) True: (PDPᵀ)ᵀ = PDPᵀ.",
+      "(e) False: σᵢ = ‖Avᵢ‖ ≥ 0."
+     ],
+     "answer": "(a) T (b) F (c) T (d) T (e) F"
+    }
+   ]
+  }
+ ],
+ "cards": [
+  {
+   "front": "Why are eigenvectors of a symmetric matrix from different eigenvalues orthogonal?",
+   "back": [
+    {
+     "type": "p",
+     "text": "λ₁v₁·v₂ = (Av₁)·v₂ = v₁·(Aᵀv₂) = v₁·(Av₂) = λ₂v₁·v₂. With λ₁ ≠ λ₂, v₁·v₂ = 0."
+    },
+    {
+     "type": "warn",
+     "text": "Within one eigenspace they need not be orthogonal: use Gram–Schmidt there."
+    }
+   ]
+  },
+  {
+   "front": "Spectral theorem for real symmetric matrices.",
+   "back": [
+    {
+     "type": "p",
+     "text": "For A = Aᵀ (n×n real):"
+    },
+    {
+     "type": "list",
+     "items": [
+      "n real eigenvalues (with multiplicity).",
+      "Each eigenspace has dimension = multiplicity.",
+      "Eigenspaces are mutually orthogonal.",
+      "A is <b>orthogonally diagonalizable</b>: A = PDPᵀ."
+     ]
+    },
+    {
+     "type": "p",
+     "text": "Conversely, orthogonally diagonalizable ⟹ symmetric."
+    }
+   ]
+  },
+  {
+   "front": "Recipe to orthogonally diagonalize a symmetric A.",
+   "back": [
+    {
+     "type": "steps",
+     "title": "Steps",
+     "items": [
+      "Find eigenvalues.",
+      "Basis of each eigenspace.",
+      "Gram–Schmidt inside each eigenspace (different eigenspaces are already orthogonal).",
+      "Normalize; P = [u₁ ⋯ uₙ], D = diag(λ’s) in the same order."
+     ]
+    },
+    {
+     "type": "formula",
+     "text": "A = PDPᵀ,   P⁻¹ = Pᵀ"
+    }
+   ]
+  },
+  {
+   "front": "Orthogonally diagonalize A = [3 1; 1 3] and write its spectral decomposition.",
+   "back": [
+    {
+     "type": "steps",
+     "title": "Steps",
+     "items": [
+      "λ = 4: (1, 1); λ = 2: (1, −1).",
+      "P = (1/√2)[1 1; 1 −1], D = diag(4, 2)."
+     ]
+    },
+    {
+     "type": "formula",
+     "text": "A = 4u₁u₁ᵀ + 2u₂u₂ᵀ = 4·½[1 1; 1 1] + 2·½[1 −1; −1 1]"
+    },
+    {
+     "type": "p",
+     "text": "Each uᵢuᵢᵀ is the projection onto that eigenline."
+    }
+   ]
+  },
+  {
+   "front": "Diagonalizable vs orthogonally diagonalizable.",
+   "back": [
+    {
+     "type": "p",
+     "text": "Diagonalizable: A = PDP⁻¹ with any invertible P (needs n independent eigenvectors)."
+    },
+    {
+     "type": "p",
+     "text": "Orthogonally diagonalizable: P orthogonal; happens <b>exactly</b> for symmetric A."
+    },
+    {
+     "type": "p",
+     "text": "<i>Example:</i> [1 1; 0 2] is diagonalizable (distinct eigenvalues) but not orthogonally: eigenvectors (1, 0), (1, 1) aren’t orthogonal."
+    }
+   ]
+  },
+  {
+   "front": "What is the singular value decomposition?",
+   "back": [
+    {
+     "type": "formula",
+     "text": "A = UΣVᵀ"
+    },
+    {
+     "type": "p",
+     "text": "A is m×n; U (m×m) and V (n×n) orthogonal; Σ is m×n with σ₁ ≥ σ₂ ≥ ⋯ ≥ σᵣ &gt; 0 on the diagonal, zeros elsewhere."
+    },
+    {
+     "type": "p",
+     "text": "Every matrix has one, not just square or symmetric ones."
+    },
+    {
+     "type": "p",
+     "text": "Meaning: A maps the orthonormal vᵢ to σᵢuᵢ."
+    }
+   ]
+  },
+  {
+   "front": "Why are singular values √(eigenvalues of AᵀA), and why is that legal?",
+   "back": [
+    {
+     "type": "p",
+     "text": "AᵀA is symmetric, so it has an orthonormal eigenbasis v₁, …, vₙ. For a unit eigenvector,"
+    },
+    {
+     "type": "formula",
+     "text": "‖Avᵢ‖² = vᵢᵀAᵀAvᵢ = λᵢ ≥ 0"
+    },
+    {
+     "type": "p",
+     "text": "So σᵢ = √λᵢ = ‖Avᵢ‖ is the stretch in direction vᵢ."
+    }
+   ]
+  },
+  {
+   "front": "Recipe for the SVD.",
+   "back": [
+    {
+     "type": "steps",
+     "title": "Steps",
+     "items": [
+      "Eigenvalues of AᵀA, in decreasing order; σᵢ = √λᵢ.",
+      "Orthonormal eigenvectors v₁, …, vₙ → V.",
+      "uᵢ = Avᵢ/σᵢ for σᵢ &gt; 0.",
+      "Extend u’s to an orthonormal basis of ℝᵐ (e.g. via Nul Aᵀ) → U."
+     ]
+    },
+    {
+     "type": "warn",
+     "text": "Don’t compute U independently from AAᵀ eigenvectors: the signs may not match. Use uᵢ = Avᵢ/σᵢ."
+    }
+   ]
+  },
+  {
+   "front": "Find the SVD of A = [2 2; 1 −1].",
+   "back": [
+    {
+     "type": "steps",
+     "title": "Steps",
+     "items": [
+      "AᵀA = [5 3; 3 5], eigenvalues 8, 2: σ₁ = 2√2, σ₂ = √2.",
+      "v₁ = (1, 1)/√2, v₂ = (1, −1)/√2.",
+      "Av₁ = (4, 0)/√2 → u₁ = (1, 0); Av₂ = (0, 2)/√2 → u₂ = (0, 1)."
+     ]
+    },
+    {
+     "type": "p",
+     "text": "<i>Example:</i> A = I · diag(2√2, √2) · Vᵀ."
+    }
+   ]
+  },
+  {
+   "front": "SVD of the 1×2 matrix A = [3 4].",
+   "back": [
+    {
+     "type": "steps",
+     "title": "Steps",
+     "items": [
+      "AᵀA = [9 12; 12 16], eigenvalues 25, 0: σ₁ = 5.",
+      "v₁ = (3, 4)/5, v₂ = (−4, 3)/5.",
+      "u₁ = Av₁/5 = 1."
+     ]
+    },
+    {
+     "type": "p",
+     "text": "<i>Example:</i> A = [1]·[5 0]·Vᵀ. Rank 1."
+    }
+   ]
+  },
+  {
+   "front": "What does the SVD tell you about rank and the four fundamental subspaces?",
+   "back": [
+    {
+     "type": "p",
+     "text": "r = rank A = number of nonzero singular values."
+    },
+    {
+     "type": "list",
+     "items": [
+      "u₁, …, uᵣ: orthonormal basis of Col A.",
+      "uᵣ₊₁, …, uₘ: Nul Aᵀ.",
+      "v₁, …, vᵣ: Row A.",
+      "vᵣ₊₁, …, vₙ: Nul A."
+     ]
+    }
+   ]
+  },
+  {
+   "front": "Singular values vs eigenvalues.",
+   "back": [
+    {
+     "type": "p",
+     "text": "Different in general."
+    },
+    {
+     "type": "p",
+     "text": "<i>Example:</i> [0 1; 0 0]: eigenvalues 0, 0, but singular values 1, 0."
+    },
+    {
+     "type": "p",
+     "text": "For symmetric A, σᵢ = |λᵢ|. Also: max ‖Ax‖ over unit x is σ₁ (attained at v₁)."
+    },
+    {
+     "type": "warn",
+     "text": "Singular values are never negative."
+    }
+   ]
+  },
+  {
+   "front": "Pseudoinverse and minimum-length least squares; condition number.",
+   "back": [
+    {
+     "type": "formula",
+     "text": "A⁺ = VᵣDᵣ⁻¹Uᵣᵀ,   x̂ = A⁺b"
+    },
+    {
+     "type": "p",
+     "text": "x̂ is the least-squares solution of smallest length (Ax̂ = proj of b onto Col A)."
+    },
+    {
+     "type": "p",
+     "text": "<b>Condition number</b> (square invertible A): σ₁/σₙ. Large means sensitive to errors."
+    },
+    {
+     "type": "p",
+     "text": "<i>Example:</i> [2 2; 1 −1]: condition number 2√2/√2 = 2."
+    }
+   ]
+  },
+  {
+   "front": "Why does a real symmetric matrix have real eigenvalues?",
+   "back": [
+    {
+     "type": "p",
+     "text": "v̄ᵀAv = λ‖v‖² and v̄ᵀAv equals its own conjugate (A real symmetric), so it is real; hence λ is real."
+    }
+   ]
+  },
+  {
+   "front": "Spectral decomposition used for powers and inverses?",
+   "back": [
+    {
+     "type": "p",
+     "text": "A = Σλⱼuⱼuⱼᵀ ⇒ Aᵏ = Σλⱼᵏuⱼuⱼᵀ, A⁻¹ = Σλⱼ⁻¹uⱼuⱼᵀ."
+    }
+   ]
+  },
+  {
+   "front": "Singular values of a rank-one matrix abᵀ?",
+   "back": [
+    {
+     "type": "p",
+     "text": "σ₁ = ‖a‖‖b‖, all others 0. Check: σ₁² = sum of squares of all entries."
+    }
+   ]
+  },
+  {
+   "front": "For square A, how is |det A| related to the SVD?",
+   "back": [
+    {
+     "type": "p",
+     "text": "|det A| = σ₁σ₂⋯σₙ."
+    }
+   ]
+  }
+ ],
+ "hard": [
+  {
+   "title": "Orthogonal diagonalization, repeated eigenvalue",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "Orthogonally diagonalize <i>A</i> ="
+    },
+    {
+     "type": "matrix",
+     "rows": [
+      [
+       "5",
+       "−4",
+       "−2"
+      ],
+      [
+       "−4",
+       "5",
+       "2"
+      ],
+      [
+       "−2",
+       "2",
+       "2"
+      ]
+     ]
+    }
+   ],
+   "answer": "Eigenvalues 10, 1, 1; P = [(2,−2,−1)/3, (1,1,0)/√2, (1,−1,4)/√18], D = diag(10, 1, 1)",
+   "solution": [
+    {
+     "type": "p",
+     "text": "Eigenvalues: <b>10</b> and <b>1 (double)</b>. (Check: trace 12 = 10 + 1 + 1; <i>A</i> − <i>I</i> ="
+    },
+    {
+     "type": "matrix",
+     "rows": [
+      [
+       "4",
+       "−4",
+       "−2"
+      ],
+      [
+       "−4",
+       "4",
+       "2"
+      ],
+      [
+       "−2",
+       "2",
+       "1"
+      ]
+     ]
+    },
+    {
+     "type": "p",
+     "text": "has rank 1.)"
+    },
+    {
+     "type": "p",
+     "text": "λ = 10: <i>A</i> − 10<i>I</i> ⇒ (2, −2, −1)."
+    },
+    {
+     "type": "p",
+     "text": "λ = 1: 2<i>x</i> − 2<i>y</i> − <i>z</i> = 0. Basis (1, 1, 0), (1, 0, 2) — <b>not orthogonal</b> (dot 1)."
+    },
+    {
+     "type": "p",
+     "text": "Gram–Schmidt inside the eigenspace: (1,0,2) − ½(1,1,0) = (½, −½, 2) → (1, −1, 4)."
+    },
+    {
+     "type": "p",
+     "text": "Normalize: <i>P</i> = [ (2,−2,−1)/3, (1,1,0)/√2, (1,−1,4)/√18 ], <i>D</i> = diag(10, 1, 1), <i>A</i> = <i>PDP</i>ᵀ."
+    },
+    {
+     "type": "warn",
+     "text": "What it tests: Vectors from different eigenspaces are automatically orthogonal; inside a repeated eigenspace you must run Gram–Schmidt yourself."
+    }
+   ]
+  },
+  {
+   "title": "Spectral decomposition: powers and inverse",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "For <i>A</i> = [5 −4 −2; −4 5 2; −2 2 2] (eigenvalues 10, 1, 1, with eigenvector <b>w</b> for 10), show <i>A</i> = <i>I</i> + <b>ww</b>ᵀ with <b>w</b> = (2, −2, −1). Use this to find <i>A</i>⁻¹ and <i>A</i>ᵏ without row reduction."
+    }
+   ],
+   "answer": "A = I + wwᵀ; Aᵏ = I + ((10ᵏ − 1)/9)wwᵀ; A⁻¹ = I − (1/10)wwᵀ",
+   "solution": [
+    {
+     "type": "p",
+     "text": "Spectral decomposition: <i>A</i> = 10<b>u</b>₁<b>u</b>₁ᵀ + 1·(<i>I</i> − <b>u</b>₁<b>u</b>₁ᵀ) = <i>I</i> + 9<b>u</b>₁<b>u</b>₁ᵀ, with <b>u</b>₁ = <b>w</b>/3. So <i>A</i> = <i>I</i> + <b>ww</b>ᵀ. (Check: <b>ww</b>ᵀ ="
+    },
+    {
+     "type": "matrix",
+     "rows": [
+      [
+       "4",
+       "−4",
+       "−2"
+      ],
+      [
+       "−4",
+       "4",
+       "2"
+      ],
+      [
+       "−2",
+       "2",
+       "1"
+      ]
+     ]
+    },
+    {
+     "type": "p",
+     "text": ", plus <i>I</i> ✓.)"
+    },
+    {
+     "type": "p",
+     "text": "With <i>Q</i> = <b>u</b>₁<b>u</b>₁ᵀ (projection), <i>A</i> = 10<i>Q</i> + (<i>I</i> − <i>Q</i>), so <i>A</i>ᵏ = 10ᵏ<i>Q</i> + (<i>I</i> − <i>Q</i>) = <i>I</i> + (10ᵏ − 1)<i>Q</i> = <b><i>I</i> + ((10ᵏ − 1)/9)<b>ww</b>ᵀ</b>."
+    },
+    {
+     "type": "p",
+     "text": "<i>k</i> = −1: <b><i>A</i>⁻¹ = <i>I</i> − (1/10)<b>ww</b>ᵀ</b>."
+    },
+    {
+     "type": "warn",
+     "text": "What it tests: <i>A</i> = Σλᵢ<b>u</b>ᵢ<b>u</b>ᵢᵀ turns functions of <i>A</i> into functions of the eigenvalues."
+    }
+   ]
+  },
+  {
+   "title": "SVD of a 3×2 matrix",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "Find an SVD of <i>A</i> ="
+    },
+    {
+     "type": "matrix",
+     "rows": [
+      [
+       "1",
+       "1"
+      ],
+      [
+       "0",
+       "1"
+      ],
+      [
+       "1",
+       "0"
+      ]
+     ]
+    },
+    {
+     "type": "p",
+     "text": ". Then give orthonormal bases for Col <i>A</i> and Nul <i>A</i>ᵀ, and the maximum of ‖<i>A</i><b>x</b>‖ over unit <b>x</b>."
+    }
+   ],
+   "answer": "σ = √3, 1; U = [(2,1,1)/√6, (0,−1,1)/√2, (1,−1,−1)/√3], V = [(1,1)/√2, (1,−1)/√2]; Col A {u₁, u₂}, Nul Aᵀ {u₃}; max ‖Ax‖ = √3",
+   "solution": [
+    {
+     "type": "p",
+     "text": "<i>A</i>ᵀ<i>A</i> ="
+    },
+    {
+     "type": "matrix",
+     "rows": [
+      [
+       "2",
+       "1"
+      ],
+      [
+       "1",
+       "2"
+      ]
+     ]
+    },
+    {
+     "type": "p",
+     "text": ", eigenvalues 3, 1 ⇒ σ₁ = √3, σ₂ = 1. <b>v</b>₁ = (1,1)/√2, <b>v</b>₂ = (1,−1)/√2."
+    },
+    {
+     "type": "p",
+     "text": "<b>u</b>₁ = <i>A</i><b>v</b>₁/σ₁ = (2,1,1)/√6; <b>u</b>₂ = <i>A</i><b>v</b>₂/σ₂ = (0,−1,1)/√2."
+    },
+    {
+     "type": "p",
+     "text": "<b>u</b>₃ ⟂ both: (1, −1, −1)/√3."
+    },
+    {
+     "type": "p",
+     "text": "<i>A</i> = <i>U</i>Σ<i>V</i>ᵀ with <i>U</i> = [<b>u</b>₁ <b>u</b>₂ <b>u</b>₃], Σ ="
+    },
+    {
+     "type": "matrix",
+     "rows": [
+      [
+       "√3",
+       "0"
+      ],
+      [
+       "0",
+       "1"
+      ],
+      [
+       "0",
+       "0"
+      ]
+     ]
+    },
+    {
+     "type": "p",
+     "text": ", <i>V</i> = [<b>v</b>₁ <b>v</b>₂]."
+    },
+    {
+     "type": "p",
+     "text": "Col <i>A</i>: {<b>u</b>₁, <b>u</b>₂}. Nul <i>A</i>ᵀ: {<b>u</b>₃}. max ‖<i>A</i><b>x</b>‖ = σ₁ = <b>√3</b> at <b>x</b> = <b>v</b>₁."
+    },
+    {
+     "type": "warn",
+     "text": "What it tests: Get <b>u</b>ᵢ from <i>A</i><b>v</b>ᵢ/σᵢ — computing eigenvectors of <i>AA</i>ᵀ separately can produce sign mismatches that break <i>A</i> = <i>U</i>Σ<i>V</i>ᵀ."
+    }
+   ]
+  },
+  {
+   "title": "Rank-one SVD",
+   "level": "hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "Find the singular values and a (reduced) SVD of <i>A</i> ="
+    },
+    {
+     "type": "matrix",
+     "rows": [
+      [
+       "1",
+       "2"
+      ],
+      [
+       "2",
+       "4"
+      ],
+      [
+       "−2",
+       "−4"
+      ]
+     ]
+    },
+    {
+     "type": "p",
+     "text": "in under a minute."
+    }
+   ],
+   "answer": "σ₁ = 3√5, σ₂ = 0; A = 3√5·u₁v₁ᵀ, u₁ = (1,2,−2)/3, v₁ = (1,2)/√5",
+   "solution": [
+    {
+     "type": "steps",
+     "title": "Solution",
+     "items": [
+      "Every row is a multiple of (1, 2): <i>A</i> = (1, 2, −2)(1, 2)ᵀ = <b>a</b><b>b</b>ᵀ, rank 1.",
+      "<i>A</i> = ‖<b>a</b>‖‖<b>b</b>‖ (<b>a</b>/‖<b>a</b>‖)(<b>b</b>/‖<b>b</b>‖)ᵀ = 3·√5 · <b>u</b>₁<b>v</b>₁ᵀ with <b>u</b>₁ = (1,2,−2)/3, <b>v</b>₁ = (1,2)/√5.",
+      "Singular values: <b>σ₁ = 3√5</b>, σ₂ = 0."
+     ]
+    },
+    {
+     "type": "warn",
+     "text": "What it tests: Spot rank one, write it as an outer product, normalize. σ₁² = sum of squares of all entries (45) is a good check."
+    }
+   ]
+  },
+  {
+   "title": "True/False: spectral theorem and SVD",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "list",
+     "items": [
+      "1. Every real symmetric matrix is orthogonally diagonalizable.",
+      "2. If <i>A</i> is orthogonally diagonalizable, then <i>A</i> is symmetric.",
+      "3. The singular values of a square matrix are the absolute values of its eigenvalues.",
+      "4. <i>A</i> and <i>A</i>ᵀ have the same nonzero singular values.",
+      "5. The number of nonzero singular values equals rank <i>A</i>.",
+      "6. For square <i>A</i>, |det <i>A</i>| = product of the singular values."
+     ]
+    }
+   ],
+   "answer": "1 T, 2 T, 3 F, 4 T, 5 T, 6 T",
+   "solution": [
+    {
+     "type": "p",
+     "text": "1. <b>True.</b> Spectral theorem."
+    },
+    {
+     "type": "p",
+     "text": "2. <b>True.</b> <i>A</i> = <i>PDP</i>ᵀ ⇒ <i>A</i>ᵀ = <i>PD</i>ᵀ<i>P</i>ᵀ = <i>PDP</i>ᵀ = <i>A</i>."
+    },
+    {
+     "type": "p",
+     "text": "3. <b>False.</b>"
+    },
+    {
+     "type": "matrix",
+     "rows": [
+      [
+       "1",
+       "1"
+      ],
+      [
+       "0",
+       "1"
+      ]
+     ]
+    },
+    {
+     "type": "p",
+     "text": "has eigenvalues 1, 1 but singular values (√5 ± 1)/2 ≈ 1.618, 0.618. True for symmetric matrices only."
+    },
+    {
+     "type": "p",
+     "text": "4. <b>True.</b> <i>A</i> = <i>U</i>Σ<i>V</i>ᵀ ⇒ <i>A</i>ᵀ = <i>V</i>Σᵀ<i>U</i>ᵀ."
+    },
+    {
+     "type": "p",
+     "text": "5. <b>True.</b> <i>A</i><b>v</b>₁, …, <i>A</i><b>v</b>ᵣ is an orthogonal basis of Col <i>A</i>."
+    },
+    {
+     "type": "p",
+     "text": "6. <b>True.</b> |det <i>A</i>| = |det <i>U</i>|·det Σ·|det <i>V</i>ᵀ| = det Σ."
+    },
+    {
+     "type": "warn",
+     "text": "What it tests: Singular values come from <i>A</i>ᵀ<i>A</i>, never directly from eigenvalues of <i>A</i> — unless <i>A</i> is symmetric."
+    }
+   ]
+  },
+  {
+   "title": "Proof: orthogonal eigenvectors",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "Prove: if <i>A</i> is symmetric, eigenvectors <b>v</b>₁, <b>v</b>₂ for distinct eigenvalues λ₁ ≠ λ₂ are orthogonal."
+    }
+   ],
+   "answer": "(λ₁ − λ₂)(v₁·v₂) = 0 using Aᵀ = A",
+   "solution": [
+    {
+     "type": "steps",
+     "title": "Solution",
+     "items": [
+      "λ₁(<b>v</b>₁·<b>v</b>₂) = (<i>A</i><b>v</b>₁)·<b>v</b>₂ = <b>v</b>₁ᵀ<i>A</i>ᵀ<b>v</b>₂ = <b>v</b>₁ᵀ<i>A</i><b>v</b>₂ = <b>v</b>₁·(λ₂<b>v</b>₂) = λ₂(<b>v</b>₁·<b>v</b>₂).",
+      "(λ₁ − λ₂)(<b>v</b>₁·<b>v</b>₂) = 0 with λ₁ ≠ λ₂ ⇒ <b>v</b>₁·<b>v</b>₂ = 0. ∎"
+     ]
+    },
+    {
+     "type": "warn",
+     "text": "What it tests: The only place symmetry is used is <i>A</i>ᵀ = <i>A</i>. Without it the result fails (e.g. [1 1; 0 2])."
+    }
+   ]
+  },
+  {
+   "title": "Build a symmetric matrix from eigen-data",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "Construct a symmetric 3×3 matrix with eigenvalues 4, 1, 1 for which (1, 1, 1) is an eigenvector for 4."
+    }
+   ],
+   "answer": "A = I + J = [2 1 1; 1 2 1; 1 1 2]",
+   "solution": [
+    {
+     "type": "p",
+     "text": "Spectral decomposition: <i>A</i> = 4<b>uu</b>ᵀ + 1·(<i>I</i> − <b>uu</b>ᵀ) = <i>I</i> + 3<b>uu</b>ᵀ with <b>u</b> = (1,1,1)/√3."
+    },
+    {
+     "type": "p",
+     "text": "3<b>uu</b>ᵀ = all-ones matrix <i>J</i>. <i>A</i> = <i>I</i> + <i>J</i> ="
+    },
+    {
+     "type": "matrix",
+     "rows": [
+      [
+       "2",
+       "1",
+       "1"
+      ],
+      [
+       "1",
+       "2",
+       "1"
+      ],
+      [
+       "1",
+       "1",
+       "2"
+      ]
+     ]
+    },
+    {
+     "type": "p",
+     "text": "Check: <i>A</i>(1,1,1) = (4,4,4); <i>A</i>(1,−1,0) = (1,−1,0) ✓."
+    },
+    {
+     "type": "warn",
+     "text": "What it tests: Building from the spectral decomposition guarantees the eigenvectors are orthogonal — required for a symmetric matrix."
+    }
+   ]
+  },
+  {
+   "title": "Reading an SVD",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "<i>A</i> is 3×3 with SVD <i>A</i> = <i>U</i>Σ<i>V</i>ᵀ, singular values 5, 2, 0, <i>U</i> = [<b>u</b>₁ <b>u</b>₂ <b>u</b>₃], <i>V</i> = [<b>v</b>₁ <b>v</b>₂ <b>v</b>₃]. Answer in terms of these: (a) rank <i>A</i>, bases of Col <i>A</i>, Nul <i>A</i>, Row <i>A</i>. (b) Is <i>A</i> invertible? (c) min and max of ‖<i>A</i><b>x</b>‖ over unit <b>x</b>. (d) For which <b>b</b> is <i>A</i><b>x</b> = <b>b</b> consistent?"
+    }
+   ],
+   "answer": "(a) rank 2; Col {u₁, u₂}, Nul {v₃}, Row {v₁, v₂} (b) No (c) max 5, min 0 (d) b·u₃ = 0",
+   "solution": [
+    {
+     "type": "steps",
+     "title": "Solution",
+     "items": [
+      "(a) rank 2. Col <i>A</i> = Span{<b>u</b>₁, <b>u</b>₂}; Nul <i>A</i> = Span{<b>v</b>₃}; Row <i>A</i> = Span{<b>v</b>₁, <b>v</b>₂}.",
+      "(b) No (σ₃ = 0 ⇔ det = 0).",
+      "(c) max 5 (at <b>v</b>₁), min 0 (at <b>v</b>₃).",
+      "(d) <b>b</b> ∈ Col <i>A</i> ⇔ <b>b</b>·<b>u</b>₃ = 0. For other <b>b</b>, the least-squares solution of minimum length is (<b>u</b>₁·<b>b</b>/5)<b>v</b>₁ + (<b>u</b>₂·<b>b</b>/2)<b>v</b>₂."
+     ]
+    },
+    {
+     "type": "warn",
+     "text": "What it tests: The SVD hands you orthonormal bases of all four fundamental subspaces at once: <b>u</b>’s for Col and Nul <i>A</i>ᵀ, <b>v</b>’s for Row and Nul."
+    }
+   ]
+  }
+ ],
+ "keyFacts": [
+  "Symmetric ⇒ real eigenvalues, orthogonal eigenvectors for distinct eigenvalues.",
+  "Spectral Theorem: orthogonally diagonalizable (A = PDPᵀ) ⇔ symmetric.",
+  "Repeated eigenvalue: Gram–Schmidt inside that eigenspace, then normalize.",
+  "Spectral decomposition A = Σλⱼuⱼuⱼᵀ (projections onto eigenlines).",
+  "σᵢ = √(eigenvalues of AᵀA) = ‖Avᵢ‖ ≥ 0; uᵢ = Avᵢ/σᵢ.",
+  "A = UΣVᵀ; rank = # nonzero σ; u₁..uᵣ: Col A, rest: Nul Aᵀ; v₁..vᵣ: Row A, rest: Nul A.",
+  "σ₁ = max ‖Ax‖ over unit x; singular values ≠ |eigenvalues| unless A symmetric."
+ ]
+}

@@ -1,0 +1,1228 @@
+{
+ "id": "54-7",
+ "course": "54",
+ "title": "Eigenvalues, characteristic equation, diagonalization",
+ "source": "Lay 5.1–5.3",
+ "summary": "Eigenvectors are the directions a matrix only stretches. Finding eigenvalues from det(A − λI) = 0, eigenspaces from Nul(A − λI), and deciding whether A = PDP⁻¹ (and using it to compute Aᵏ) is one of the most heavily tested skills on the final.",
+ "lesson": [
+  {
+   "title": "Eigenvectors and eigenvalues",
+   "blocks": [
+    {
+     "type": "def",
+     "term": "Eigenvector / eigenvalue",
+     "text": "A <b>nonzero</b> vector <b>x</b> with A<b>x</b> = λ<b>x</b> for some scalar λ. λ is then an eigenvalue of A (λ = 0 is allowed; <b>x</b> = <b>0</b> is not)."
+    },
+    {
+     "type": "tip",
+     "text": "Geometrically: A just stretches <b>x</b> (by λ) without turning it off its line. These are the directions in which A acts like a number, which is what makes powers Aᵏ easy."
+    },
+    {
+     "type": "thm",
+     "name": "λ is an eigenvalue ⇔ A − λI is singular",
+     "text": "A<b>x</b> = λ<b>x</b> ⇔ (A − λI)<b>x</b> = <b>0</b>. A nonzero solution exists ⇔ A − λI is not invertible ⇔ det(A − λI) = 0.",
+     "proof": [
+      {
+       "type": "p",
+       "text": "Rewrite A<b>x</b> − λ<b>x</b> = <b>0</b> as (A − λI)<b>x</b> = <b>0</b> (note λI, not λ alone). Nontrivial null space ⇔ singular (IMT)."
+      }
+     ]
+    },
+    {
+     "type": "def",
+     "term": "Eigenspace",
+     "text": "For an eigenvalue λ, the eigenspace is Nul(A − λI): all eigenvectors for λ together with <b>0</b>. It is a subspace."
+    },
+    {
+     "type": "example",
+     "title": "Verify an eigenvector / eigenvalue",
+     "prompt": "A = [1 6; 5 2]. Are u = (6, −5) and v = (3, −2) eigenvectors? Is 7 an eigenvalue?",
+     "steps": [
+      "Au = (6 − 30, 30 − 10) = (−24, 20) = −4(6, −5): u is an eigenvector with λ = −4.",
+      "Av = (3 − 12, 15 − 4) = (−9, 11), not a multiple of (3, −2): v is not an eigenvector.",
+      "A − 7I = [−6 6; 5 −5] has dependent columns ⇒ singular ⇒ 7 is an eigenvalue. Solve: x₁ = x₂, eigenvector (1, 1). Check A(1, 1) = (7, 7). ✓"
+     ],
+     "answer": "u is an eigenvector (λ = −4); v is not; 7 is an eigenvalue with eigenvector (1, 1)."
+    },
+    {
+     "type": "thm",
+     "name": "Triangular matrices",
+     "text": "The eigenvalues of a triangular matrix are its diagonal entries.",
+     "proof": [
+      {
+       "type": "p",
+       "text": "A − λI is triangular with diagonal aᵢᵢ − λ; its det is ∏(aᵢᵢ − λ), zero exactly when λ = some aᵢᵢ."
+      }
+     ]
+    },
+    {
+     "type": "thm",
+     "name": "Distinct eigenvalues ⇒ independent eigenvectors",
+     "text": "Eigenvectors <b>v</b>₁, …, <b>v</b>ᵣ for distinct eigenvalues λ₁, …, λᵣ are linearly independent.",
+     "proof": [
+      {
+       "type": "p",
+       "text": "Suppose not; take the first <b>v</b>ₚ₊₁ that is a combination c₁<b>v</b>₁ + ⋯ + cₚ<b>v</b>ₚ of earlier independent ones. Apply A: λₚ₊₁<b>v</b>ₚ₊₁ = Σcᵢλᵢ<b>v</b>ᵢ. Subtract λₚ₊₁ times the original: 0 = Σcᵢ(λᵢ − λₚ₊₁)<b>v</b>ᵢ. Independence gives cᵢ(λᵢ − λₚ₊₁) = 0, and λᵢ ≠ λₚ₊₁, so all cᵢ = 0, making <b>v</b>ₚ₊₁ = 0, impossible."
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "title": "The characteristic equation",
+   "blocks": [
+    {
+     "type": "def",
+     "term": "Characteristic polynomial",
+     "text": "det(A − λI), a polynomial of degree n in λ. Its roots (the solutions of the characteristic equation det(A − λI) = 0) are the eigenvalues."
+    },
+    {
+     "type": "def",
+     "term": "Algebraic multiplicity",
+     "text": "The multiplicity of λ as a root of the characteristic polynomial."
+    },
+    {
+     "type": "formula",
+     "text": "2×2: det(A − λI) = λ² − (tr A)λ + det A"
+    },
+    {
+     "type": "thm",
+     "name": "Trace and determinant",
+     "text": "Counting complex roots with multiplicity, the product of the eigenvalues is det A and their sum is tr A (sum of diagonal entries). In particular 0 is an eigenvalue ⇔ det A = 0 ⇔ A is singular."
+    },
+    {
+     "type": "example",
+     "title": "Characteristic polynomial of a 2×2",
+     "prompt": "Find the eigenvalues of [2 3; 3 −6].",
+     "steps": [
+      "tr = −4, det = −12 − 9 = −21.",
+      "λ² + 4λ − 21 = (λ + 7)(λ − 3)."
+     ],
+     "answer": "λ = 3 and λ = −7"
+    },
+    {
+     "type": "example",
+     "title": "Characteristic polynomial of a 3×3",
+     "prompt": "Find the characteristic polynomial and eigenvalues of B = [2 0 0; 1 2 1; −1 0 1].",
+     "steps": [
+      "det(B − λI) = det [2−λ 0 0; 1 2−λ 1; −1 0 1−λ].",
+      "Expand along row 1 (two zeros): (2 − λ)·det [2−λ 1; 0 1−λ] = (2 − λ)(2 − λ)(1 − λ).",
+      "Characteristic polynomial −(λ − 2)²(λ − 1)."
+     ],
+     "answer": "Eigenvalues 2 (algebraic multiplicity 2) and 1."
+    },
+    {
+     "type": "example",
+     "title": "Triangular matrix",
+     "prompt": "Eigenvalues of [5 −2 6 −1; 0 3 −8 0; 0 0 5 4; 0 0 0 1]?",
+     "steps": [
+      "Triangular ⇒ read the diagonal.",
+      "Characteristic polynomial (5 − λ)²(3 − λ)(1 − λ)."
+     ],
+     "answer": "5 (multiplicity 2), 3, 1"
+    },
+    {
+     "type": "warn",
+     "text": "Row reduction changes eigenvalues. Never row reduce A before finding eigenvalues; you may only row reduce A − λI to find eigenvectors once λ is known."
+    }
+   ]
+  },
+  {
+   "title": "Eigenspaces and multiplicities",
+   "blocks": [
+    {
+     "type": "steps",
+     "title": "Eigenspace basis",
+     "items": [
+      "For each eigenvalue λ, form A − λI (subtract λ down the diagonal).",
+      "Row reduce and solve (A − λI)<b>x</b> = <b>0</b> in parametric vector form.",
+      "The free-variable vectors form a basis of the eigenspace. Its dimension is the <b>geometric multiplicity</b> = n − rank(A − λI)."
+     ]
+    },
+    {
+     "type": "thm",
+     "name": "Geometric ≤ algebraic",
+     "text": "For each eigenvalue, 1 ≤ dim(eigenspace) ≤ algebraic multiplicity."
+    },
+    {
+     "type": "example",
+     "title": "Eigenspace with a repeated eigenvalue",
+     "prompt": "A = [4 −1 6; 2 1 6; 2 −1 8] has characteristic polynomial −(λ − 9)(λ − 2)². Find a basis for each eigenspace.",
+     "steps": [
+      "λ = 2: A − 2I = [2 −1 6; 2 −1 6; 2 −1 6], rank 1 ⇒ eigenspace dimension 3 − 1 = 2.",
+      "Equation 2x₁ − x₂ + 6x₃ = 0 ⇒ x₂ = 2x₁ + 6x₃. Basis (1, 2, 0), (0, 6, 1); equivalently (1, 2, 0), (−3, 0, 1).",
+      "λ = 9: A − 9I = [−5 −1 6; 2 −8 6; 2 −1 −1]. Row sums are 0, so (1, 1, 1) is in the null space; rank 2 ⇒ basis (1, 1, 1).",
+      "Check: A(1, 1, 1) = (9, 9, 9). ✓ A(−3, 0, 1) = (−12 + 6, −6 + 6, −6 + 8) = (−6, 0, 2) = 2(−3, 0, 1). ✓"
+     ],
+     "answer": "λ = 2: {(1, 2, 0), (−3, 0, 1)} (geometric = algebraic = 2); λ = 9: {(1, 1, 1)}."
+    }
+   ]
+  },
+  {
+   "title": "Diagonalization",
+   "blocks": [
+    {
+     "type": "def",
+     "term": "Similar matrices",
+     "text": "A and B are similar if B = P⁻¹AP for some invertible P."
+    },
+    {
+     "type": "thm",
+     "name": "Similar matrices share the characteristic polynomial",
+     "text": "Hence the same eigenvalues with the same multiplicities, the same determinant, trace and rank. (Not the same eigenvectors.)",
+     "proof": [
+      {
+       "type": "p",
+       "text": "det(P⁻¹AP − λI) = det(P⁻¹(A − λI)P) = det P⁻¹ · det(A − λI) · det P = det(A − λI)."
+      }
+     ]
+    },
+    {
+     "type": "def",
+     "term": "Diagonalizable",
+     "text": "A = PDP⁻¹ with D diagonal."
+    },
+    {
+     "type": "thm",
+     "name": "Diagonalization Theorem",
+     "text": "An n×n matrix A is diagonalizable ⇔ A has n linearly independent eigenvectors. Then the columns of P are those eigenvectors and the diagonal entries of D are the corresponding eigenvalues, in the same order.",
+     "proof": [
+      {
+       "type": "p",
+       "text": "AP = A[<b>v</b>₁ ⋯ <b>v</b>ₙ] = [λ₁<b>v</b>₁ ⋯ λₙ<b>v</b>ₙ] = PD. P is invertible exactly when its columns are independent, and then A = PDP⁻¹. Conversely AP = PD read column by column says each column of P is an eigenvector."
+      }
+     ]
+    },
+    {
+     "type": "thm",
+     "name": "Tests",
+     "text": "(1) n distinct eigenvalues ⇒ diagonalizable (sufficient, not necessary). (2) A is diagonalizable ⇔ for every eigenvalue, geometric multiplicity = algebraic multiplicity (and the characteristic polynomial factors fully over ℝ), i.e. the eigenspace dimensions add to n."
+    },
+    {
+     "type": "tip",
+     "text": "Why distinct eigenvalues suffice: one eigenvector each, and eigenvectors for distinct eigenvalues are independent, so n of them form a basis. A repeated eigenvalue decides nothing by itself: you must check whether its eigenspace is big enough. I (eigenvalue 1 repeated) is diagonal; [1 1; 0 1] (eigenvalue 1 repeated) is not diagonalizable."
+    },
+    {
+     "type": "steps",
+     "title": "Diagonalize A",
+     "items": [
+      "Find the eigenvalues (characteristic polynomial).",
+      "Find a basis of each eigenspace.",
+      "If the total number of basis vectors is n, put them as columns of P and the matching eigenvalues on the diagonal of D. Otherwise A is not diagonalizable.",
+      "Check AP = PD (avoids computing P⁻¹)."
+     ]
+    },
+    {
+     "type": "example",
+     "title": "Diagonalize a 3×3",
+     "prompt": "Diagonalize A = [1 3 3; −3 −5 −3; 3 3 1], given its characteristic polynomial −(λ − 1)(λ + 2)².",
+     "steps": [
+      "λ = 1: A − I = [0 3 3; −3 −6 −3; 3 3 0] → x₁ = x₃, x₂ = −x₃: v₁ = (1, −1, 1).",
+      "λ = −2: A + 2I = [3 3 3; −3 −3 −3; 3 3 3], rank 1 ⇒ x₁ = −x₂ − x₃: v₂ = (−1, 1, 0), v₃ = (−1, 0, 1).",
+      "3 independent eigenvectors ⇒ diagonalizable.",
+      "P = [1 −1 −1; −1 1 0; 1 0 1], D = diag(1, −2, −2). Check Av₁ = (1 − 3 + 3, −3 + 5 − 3, 3 − 3 + 1) = (1, −1, 1). ✓"
+     ],
+     "answer": "A = PDP⁻¹ with P = [1 −1 −1; −1 1 0; 1 0 1], D = diag(1, −2, −2)."
+    },
+    {
+     "type": "example",
+     "title": "Prove a matrix is not diagonalizable",
+     "prompt": "Show A = [2 4 3; −4 −6 −3; 3 3 1] is not diagonalizable (its characteristic polynomial is also −(λ − 1)(λ + 2)²). Also explain [1 1; 0 1].",
+     "steps": [
+      "λ = −2 has algebraic multiplicity 2. A + 2I = [4 4 3; −4 −4 −3; 3 3 3].",
+      "R₂ + R₁ → 0; 4R₃ − 3R₁ → [0 0 3]: rank 2 ⇒ eigenspace dimension 3 − 2 = 1 &lt; 2.",
+      "Only 1 + 1 = 2 independent eigenvectors in total, fewer than 3.",
+      "[1 1; 0 1]: eigenvalue 1 twice, but A − I = [0 1; 0 0] has rank 1, so only one independent eigenvector (1, 0)."
+     ],
+     "answer": "Not diagonalizable: geometric multiplicity of −2 is 1 but algebraic is 2. Same for [1 1; 0 1] with λ = 1."
+    },
+    {
+     "type": "warn",
+     "text": "A 2×2 matrix with a repeated eigenvalue λ is diagonalizable only if it already equals λI."
+    }
+   ]
+  },
+  {
+   "title": "Powers via diagonalization",
+   "blocks": [
+    {
+     "type": "thm",
+     "name": "Powers",
+     "text": "If A = PDP⁻¹ then Aᵏ = PDᵏP⁻¹, and Dᵏ just raises each diagonal entry to the k-th power.",
+     "proof": [
+      {
+       "type": "p",
+       "text": "A² = PDP⁻¹PDP⁻¹ = PD²P⁻¹; the inner P⁻¹P cancel, and so on by induction."
+      }
+     ]
+    },
+    {
+     "type": "tip",
+     "text": "To compute Aᵏ<b>x</b> for one vector, skip P⁻¹: write <b>x</b> = c₁<b>v</b>₁ + ⋯ + cₙ<b>v</b>ₙ in eigenvectors; then Aᵏ<b>x</b> = c₁λ₁ᵏ<b>v</b>₁ + ⋯ + cₙλₙᵏ<b>v</b>ₙ. As k → ∞ the term with the largest |λ| dominates."
+    },
+    {
+     "type": "example",
+     "title": "Formula for Aᵏ",
+     "prompt": "Find Aᵏ for A = [7 2; −4 1].",
+     "steps": [
+      "tr = 8, det = 7 + 8 = 15: λ² − 8λ + 15 = (λ − 5)(λ − 3).",
+      "λ = 5: A − 5I = [2 2; −4 −4] ⇒ (1, −1). λ = 3: A − 3I = [4 2; −4 −2] ⇒ (1, −2).",
+      "P = [1 1; −1 −2], D = diag(5, 3), P⁻¹ = (1/(−1))[−2 −1; 1 1] = [2 1; −1 −1].",
+      "Aᵏ = P diag(5ᵏ, 3ᵏ) P⁻¹ = [5ᵏ 3ᵏ; −5ᵏ −2·3ᵏ][2 1; −1 −1].",
+      "Check k = 3: A³ = [223 98; −196 −71], and the formula gives 2·125 − 27 = 223, 125 − 27 = 98, 54 − 250 = −196, 54 − 125 = −71. ✓"
+     ],
+     "answer": "Aᵏ = [2·5ᵏ − 3ᵏ, 5ᵏ − 3ᵏ; 2·3ᵏ − 2·5ᵏ, 2·3ᵏ − 5ᵏ]"
+    }
+   ]
+  },
+  {
+   "title": "Similarity invariants and True/False",
+   "blocks": [
+    {
+     "type": "table",
+     "head": [
+      "Shared by similar matrices",
+      "NOT shared in general"
+     ],
+     "rows": [
+      [
+       "characteristic polynomial, eigenvalues + multiplicities",
+       "eigenvectors (they differ by P)"
+      ],
+      [
+       "det, trace, rank, invertibility",
+       "being row equivalent ≠ being similar"
+      ],
+      [
+       "dimension of each eigenspace",
+       "entries, symmetry"
+      ]
+     ]
+    },
+    {
+     "type": "example",
+     "title": "Similar or not?",
+     "prompt": "(a) Are [1 2; 3 4] and [0 1; 2 5] similar? (b) Are [1 1; 0 1] and I similar?",
+     "steps": [
+      "(a) Both have trace 5 and det −2, so both have characteristic polynomial λ² − 5λ − 2, with discriminant 25 + 8 = 33 &gt; 0: two distinct real eigenvalues. Each is similar to the same diagonal matrix, hence to each other.",
+      "(b) Same characteristic polynomial (λ − 1)², but P⁻¹IP = I for every P, so the only matrix similar to I is I itself."
+     ],
+     "answer": "(a) Similar. (b) Not similar (same eigenvalues are not enough)."
+    },
+    {
+     "type": "example",
+     "title": "Six True/False",
+     "prompt": "(a) A diagonalizable matrix is invertible. (b) An invertible matrix is diagonalizable. (c) A 3×3 matrix with 3 distinct eigenvalues is diagonalizable. (d) A and Aᵀ have the same eigenvalues. (e) If A is diagonalizable, its eigenvalues are distinct. (f) The sum of two eigenvectors is an eigenvector.",
+     "steps": [
+      "(a) False: diag(0, 1).",
+      "(b) False: [1 1; 0 1].",
+      "(c) True: three independent eigenvectors.",
+      "(d) True: det(Aᵀ − λI) = det((A − λI)ᵀ) = det(A − λI) (but eigenvectors can differ).",
+      "(e) False: I is diagonal with eigenvalue 1 repeated.",
+      "(f) False in general: eigenvectors for different eigenvalues don't add to an eigenvector (and v + (−v) = 0 is not one)."
+     ],
+     "answer": "(a) F (b) F (c) T (d) T (e) F (f) F"
+    },
+    {
+     "type": "tip",
+     "text": "Diagonalizable is about having enough eigenvectors; invertible is about 0 not being an eigenvalue. They are independent properties."
+    }
+   ]
+  }
+ ],
+ "cards": [
+  {
+   "front": "Definition of eigenvector and eigenvalue?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Ax = λx with x ≠ 0. λ may be 0; x may not."
+    }
+   ]
+  },
+  {
+   "front": "How do you check if λ is an eigenvalue?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Check whether A − λI is singular (det(A − λI) = 0, or row reduce and look for a free variable)."
+    }
+   ]
+  },
+  {
+   "front": "How do you verify that u is an eigenvector?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Compute Au and see whether it is a scalar multiple of u; the multiple is the eigenvalue."
+    }
+   ]
+  },
+  {
+   "front": "Eigenspace for λ?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Nul(A − λI): the eigenvectors for λ plus 0. Its dimension is the geometric multiplicity."
+    }
+   ]
+  },
+  {
+   "front": "Characteristic polynomial of a 2×2?",
+   "back": [
+    {
+     "type": "p",
+     "text": "λ² − (tr A)λ + det A."
+    }
+   ]
+  },
+  {
+   "front": "Eigenvalues of a triangular matrix?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Its diagonal entries."
+    }
+   ]
+  },
+  {
+   "front": "Sum and product of eigenvalues?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Sum = trace; product = det (with multiplicity, complex included)."
+    }
+   ]
+  },
+  {
+   "front": "0 is an eigenvalue ⇔ ?",
+   "back": [
+    {
+     "type": "p",
+     "text": "A is singular (det A = 0, Nul A ≠ {0})."
+    }
+   ]
+  },
+  {
+   "front": "Does row reduction preserve eigenvalues?",
+   "back": [
+    {
+     "type": "p",
+     "text": "No. Find eigenvalues from det(A − λI) of the original A."
+    }
+   ]
+  },
+  {
+   "front": "Algebraic vs geometric multiplicity?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Algebraic: multiplicity as a root of det(A − λI). Geometric: dim Nul(A − λI) = n − rank(A − λI). Always 1 ≤ geometric ≤ algebraic."
+    }
+   ]
+  },
+  {
+   "front": "Diagonalization Theorem?",
+   "back": [
+    {
+     "type": "p",
+     "text": "A = PDP⁻¹ ⇔ A has n independent eigenvectors; P's columns are eigenvectors, D's diagonal the matching eigenvalues."
+    }
+   ]
+  },
+  {
+   "front": "Why does having n distinct eigenvalues guarantee diagonalizability?",
+   "back": [
+    {
+     "type": "p",
+     "text": "One eigenvector per eigenvalue, and eigenvectors for distinct eigenvalues are independent: n independent eigenvectors."
+    }
+   ]
+  },
+  {
+   "front": "Does a repeated eigenvalue mean not diagonalizable?",
+   "back": [
+    {
+     "type": "p",
+     "text": "No. I has a repeated eigenvalue and is diagonal. You must check that each eigenspace dimension equals the algebraic multiplicity."
+    }
+   ]
+  },
+  {
+   "front": "A 2×2 matrix that is not diagonalizable, and why?",
+   "back": [
+    {
+     "type": "p",
+     "text": "[1 1; 0 1]: eigenvalue 1 twice, but A − I = [0 1; 0 0] has rank 1, so only one independent eigenvector."
+    }
+   ]
+  },
+  {
+   "front": "Aᵏ from A = PDP⁻¹?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Aᵏ = PDᵏP⁻¹, Dᵏ = diag(λ₁ᵏ, …, λₙᵏ)."
+    }
+   ]
+  },
+  {
+   "front": "Fast Aᵏx without P⁻¹?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Write x = Σcᵢvᵢ in eigenvectors; Aᵏx = Σcᵢλᵢᵏvᵢ."
+    }
+   ]
+  },
+  {
+   "front": "What do similar matrices share?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Characteristic polynomial, eigenvalues with multiplicities, det, trace, rank, eigenspace dimensions. Not eigenvectors."
+    }
+   ]
+  },
+  {
+   "front": "Same eigenvalues ⇒ similar?",
+   "back": [
+    {
+     "type": "p",
+     "text": "No: [1 1; 0 1] and I have the same eigenvalues but are not similar. (True if both are diagonalizable.)"
+    }
+   ]
+  },
+  {
+   "front": "Diagonalizable vs invertible?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Independent properties: diag(0, 1) is diagonalizable but singular; [1 1; 0 1] is invertible but not diagonalizable."
+    }
+   ]
+  },
+  {
+   "front": "If Ax = λx, what are A²x and A⁻¹x?",
+   "back": [
+    {
+     "type": "p",
+     "text": "λ²x; λ⁻¹x (if A invertible, so λ ≠ 0)."
+    }
+   ]
+  },
+  {
+   "front": "If A² = A, possible eigenvalues?",
+   "back": [
+    {
+     "type": "p",
+     "text": "0 and 1 (λ² = λ)."
+    }
+   ]
+  },
+  {
+   "front": "Check a diagonalization without inverting P?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Verify AP = PD column by column."
+    }
+   ]
+  }
+ ],
+ "hard": [
+  {
+   "title": "Diagonalize and compute Aⁿx",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "Diagonalize <i>A</i> ="
+    },
+    {
+     "type": "matrix",
+     "rows": [
+      [
+       "4",
+       "0",
+       "1"
+      ],
+      [
+       "2",
+       "3",
+       "2"
+      ],
+      [
+       "1",
+       "0",
+       "4"
+      ]
+     ]
+    },
+    {
+     "type": "p",
+     "text": ", then find a formula for <i>A</i>ⁿ(1, 0, 3)."
+    }
+   ],
+   "answer": "P = [0 −1 1; 1 0 2; 0 1 1], D = diag(3, 3, 5); Aⁿ(1, 0, 3) = (2·5ⁿ − 3ⁿ, 4·5ⁿ − 4·3ⁿ, 2·5ⁿ + 3ⁿ)",
+   "solution": [
+    {
+     "type": "p",
+     "text": "Expand det(<i>A</i> − λ<i>I</i>) along column 2: (3 − λ)[(4−λ)² − 1] = (3 − λ)(3 − λ)(5 − λ). Eigenvalues <b>3 (double), 5</b>."
+    },
+    {
+     "type": "p",
+     "text": "λ = 3: <i>A</i> − 3<i>I</i> ="
+    },
+    {
+     "type": "matrix",
+     "rows": [
+      [
+       "1",
+       "0",
+       "1"
+      ],
+      [
+       "2",
+       "0",
+       "2"
+      ],
+      [
+       "1",
+       "0",
+       "1"
+      ]
+     ]
+    },
+    {
+     "type": "p",
+     "text": ", rank 1 ⇒ eigenspace dim 2: <i>x</i>₁ = −<i>x</i>₃, <i>x</i>₂ free: (0, 1, 0), (−1, 0, 1)."
+    },
+    {
+     "type": "p",
+     "text": "λ = 5: <i>A</i> − 5<i>I</i> ="
+    },
+    {
+     "type": "matrix",
+     "rows": [
+      [
+       "−1",
+       "0",
+       "1"
+      ],
+      [
+       "2",
+       "−2",
+       "2"
+      ],
+      [
+       "1",
+       "0",
+       "−1"
+      ]
+     ]
+    },
+    {
+     "type": "p",
+     "text": "⇒ <i>x</i>₃ = <i>x</i>₁, <i>x</i>₂ = 2<i>x</i>₁: (1, 2, 1)."
+    },
+    {
+     "type": "p",
+     "text": "<i>P</i> ="
+    },
+    {
+     "type": "matrix",
+     "rows": [
+      [
+       "0",
+       "−1",
+       "1"
+      ],
+      [
+       "1",
+       "0",
+       "2"
+      ],
+      [
+       "0",
+       "1",
+       "1"
+      ]
+     ]
+    },
+    {
+     "type": "p",
+     "text": ", <i>D</i> = diag(3, 3, 5), <i>A</i> = <i>PDP</i>⁻¹. (Geometric = algebraic multiplicity for λ = 3, so diagonalizable.)"
+    },
+    {
+     "type": "p",
+     "text": "Write (1, 0, 3) = −4(0,1,0) + 1(−1,0,1) + 2(1,2,1) (solve <i>P</i><b>c</b> = (1,0,3))."
+    },
+    {
+     "type": "p",
+     "text": "<i>A</i>ⁿ(1,0,3) = −4·3ⁿ(0,1,0) + 3ⁿ(−1,0,1) + 2·5ⁿ(1,2,1) = <b>(2·5ⁿ − 3ⁿ, 4·5ⁿ − 4·3ⁿ, 2·5ⁿ + 3ⁿ)</b>. (<i>n</i> = 0 gives (1,0,3) ✓.)"
+    },
+    {
+     "type": "warn",
+     "text": "What it tests: Repeated eigenvalue ≠ not diagonalizable: check the rank of <i>A</i> − λ<i>I</i>. For <i>A</i>ⁿ<b>x</b>, expand <b>x</b> in eigenvectors instead of computing <i>P</i>⁻¹."
+    }
+   ]
+  },
+  {
+   "title": "Diagonalizability with parameters",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "(a) For which <i>h</i> is"
+    },
+    {
+     "type": "matrix",
+     "rows": [
+      [
+       "2",
+       "<i>h</i>",
+       "1"
+      ],
+      [
+       "0",
+       "2",
+       "0"
+      ],
+      [
+       "0",
+       "0",
+       "3"
+      ]
+     ]
+    },
+    {
+     "type": "p",
+     "text": "diagonalizable? (b) For <i>B</i> ="
+    },
+    {
+     "type": "matrix",
+     "rows": [
+      [
+       "<i>a</i>",
+       "1"
+      ],
+      [
+       "−1",
+       "0"
+      ]
+     ]
+    },
+    {
+     "type": "p",
+     "text": ", classify by <i>a</i>: two distinct real eigenvalues / one repeated / complex. When is <i>B</i> diagonalizable over ℝ?"
+    }
+   ],
+   "answer": "(a) h = 0 (b) |a| &gt; 2 distinct real (diagonalizable), a = ±2 repeated (not), |a| &lt; 2 complex; diagonalizable over ℝ iff |a| &gt; 2",
+   "solution": [
+    {
+     "type": "p",
+     "text": "(a) Triangular: eigenvalues 2, 2, 3. Need dim Nul(<i>A</i> − 2<i>I</i>) = 2. <i>A</i> − 2<i>I</i> ="
+    },
+    {
+     "type": "matrix",
+     "rows": [
+      [
+       "0",
+       "<i>h</i>",
+       "1"
+      ],
+      [
+       "0",
+       "0",
+       "0"
+      ],
+      [
+       "0",
+       "0",
+       "1"
+      ]
+     ]
+    },
+    {
+     "type": "p",
+     "text": ": rank 1 if <i>h</i> = 0 (rows (0,0,1) twice), rank 2 otherwise. Diagonalizable ⇔ <b><i>h</i> = 0</b>."
+    },
+    {
+     "type": "p",
+     "text": "(b) Characteristic polynomial λ² − <i>a</i>λ + 1, discriminant <i>a</i>² − 4."
+    },
+    {
+     "type": "p",
+     "text": "|<i>a</i>| &gt; 2: two distinct real ⇒ diagonalizable over ℝ. |<i>a</i>| &lt; 2: complex pair, <b>not</b> diagonalizable over ℝ (but is over ℂ)."
+    },
+    {
+     "type": "p",
+     "text": "<i>a</i> = ±2: λ = ±1 repeated; <i>B</i> ≠ λ<i>I</i>, so the eigenspace is 1-D ⇒ <b>not diagonalizable</b>. Answer: <b>|<i>a</i>| &gt; 2</b>."
+    },
+    {
+     "type": "warn",
+     "text": "What it tests: A 2×2 matrix with a repeated eigenvalue is diagonalizable only if it is already λ<i>I</i>. In (a) the 1 in the corner is irrelevant; only <i>h</i> matters."
+    }
+   ]
+  },
+  {
+   "title": "True/False: eigenvalues and diagonalization",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "list",
+     "items": [
+      "1. If <i>A</i> is diagonalizable, then <i>A</i> is invertible.",
+      "2. If <i>A</i> is invertible, then <i>A</i> is diagonalizable.",
+      "3. A 3×3 matrix with 3 distinct eigenvalues is diagonalizable.",
+      "4. <i>A</i> and <i>A</i>ᵀ have the same eigenvectors.",
+      "5. If <i>A</i> is similar to <i>B</i>, they have the same eigenvalues.",
+      "6. Row reduction preserves eigenvalues."
+     ]
+    }
+   ],
+   "answer": "1 F, 2 F, 3 T, 4 F, 5 T, 6 F",
+   "solution": [
+    {
+     "type": "p",
+     "text": "1. <b>False.</b>"
+    },
+    {
+     "type": "matrix",
+     "rows": [
+      [
+       "0",
+       "0"
+      ],
+      [
+       "0",
+       "1"
+      ]
+     ]
+    },
+    {
+     "type": "p",
+     "text": "is diagonal (hence diagonalizable) and singular. Eigenvalue 0 is allowed."
+    },
+    {
+     "type": "p",
+     "text": "2. <b>False.</b>"
+    },
+    {
+     "type": "matrix",
+     "rows": [
+      [
+       "1",
+       "1"
+      ],
+      [
+       "0",
+       "1"
+      ]
+     ]
+    },
+    {
+     "type": "p",
+     "text": ": invertible, eigenvalue 1 with only a 1-D eigenspace."
+    },
+    {
+     "type": "p",
+     "text": "3. <b>True.</b> Eigenvectors for distinct eigenvalues are independent, giving 3 independent eigenvectors."
+    },
+    {
+     "type": "p",
+     "text": "4. <b>False.</b> Same eigenvalues (same characteristic polynomial), but"
+    },
+    {
+     "type": "matrix",
+     "rows": [
+      [
+       "1",
+       "1"
+      ],
+      [
+       "0",
+       "2"
+      ]
+     ]
+    },
+    {
+     "type": "p",
+     "text": "has eigenvector (1, 0) and its transpose"
+    },
+    {
+     "type": "matrix",
+     "rows": [
+      [
+       "1",
+       "0"
+      ],
+      [
+       "1",
+       "2"
+      ]
+     ]
+    },
+    {
+     "type": "p",
+     "text": "does not ((1,0) ↦ (1,1))."
+    },
+    {
+     "type": "p",
+     "text": "5. <b>True.</b> det(<i>P</i>⁻¹<i>A</i><i>P</i> − λ<i>I</i>) = det(<i>P</i>⁻¹(<i>A</i> − λ<i>I</i>)<i>P</i>) = det(<i>A</i> − λ<i>I</i>). (Eigenvectors differ by <i>P</i>.)"
+    },
+    {
+     "type": "p",
+     "text": "6. <b>False.</b>"
+    },
+    {
+     "type": "matrix",
+     "rows": [
+      [
+       "2",
+       "0"
+      ],
+      [
+       "0",
+       "1"
+      ]
+     ]
+    },
+    {
+     "type": "p",
+     "text": "→"
+    },
+    {
+     "type": "matrix",
+     "rows": [
+      [
+       "1",
+       "0"
+      ],
+      [
+       "0",
+       "1"
+      ]
+     ]
+    },
+    {
+     "type": "p",
+     "text": "by scaling row 1: eigenvalues change from {2, 1} to {1}."
+    },
+    {
+     "type": "warn",
+     "text": "What it tests: Diagonalizable and invertible are independent properties: one is about eigenvectors, the other about whether 0 is an eigenvalue."
+    }
+   ]
+  },
+  {
+   "title": "Build A from eigen-data; Aᵏ",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "(a) Find the 2×2 matrix with eigenvalues 2 and −1 and corresponding eigenvectors (1, 1) and (1, 2). (b) Find a formula for its <i>k</i>-th power."
+    }
+   ],
+   "answer": "(a) A = [5 −3; 6 −4] (b) Aᵏ = [2·2ᵏ − (−1)ᵏ, (−1)ᵏ − 2ᵏ; 2·2ᵏ − 2(−1)ᵏ, 2(−1)ᵏ − 2ᵏ]",
+   "solution": [
+    {
+     "type": "p",
+     "text": "<i>P</i> ="
+    },
+    {
+     "type": "matrix",
+     "rows": [
+      [
+       "1",
+       "1"
+      ],
+      [
+       "1",
+       "2"
+      ]
+     ]
+    },
+    {
+     "type": "p",
+     "text": ", <i>D</i> = diag(2, −1), <i>P</i>⁻¹ ="
+    },
+    {
+     "type": "matrix",
+     "rows": [
+      [
+       "2",
+       "−1"
+      ],
+      [
+       "−1",
+       "1"
+      ]
+     ]
+    },
+    {
+     "type": "p",
+     "text": "<i>A</i> = <i>PDP</i>⁻¹ ="
+    },
+    {
+     "type": "matrix",
+     "rows": [
+      [
+       "2",
+       "−1"
+      ],
+      [
+       "2",
+       "−2"
+      ]
+     ]
+    },
+    {
+     "type": "matrix",
+     "rows": [
+      [
+       "2",
+       "−1"
+      ],
+      [
+       "−1",
+       "1"
+      ]
+     ]
+    },
+    {
+     "type": "p",
+     "text": "="
+    },
+    {
+     "type": "matrix",
+     "rows": [
+      [
+       "5",
+       "−3"
+      ],
+      [
+       "6",
+       "−4"
+      ]
+     ]
+    },
+    {
+     "type": "p",
+     "text": ". Check: trace 1 = 2 + (−1), det −2 = 2·(−1) ✓; <i>A</i>(1,2) = (−1, −2) ✓."
+    },
+    {
+     "type": "p",
+     "text": "<i>A</i>ᵏ = <i>P</i><i>D</i>ᵏ<i>P</i>⁻¹ ="
+    },
+    {
+     "type": "matrix",
+     "rows": [
+      [
+       "2·2ᵏ−(−1)ᵏ",
+       "(−1)ᵏ−2ᵏ"
+      ],
+      [
+       "2·2ᵏ−2(−1)ᵏ",
+       "2(−1)ᵏ−2ᵏ"
+      ]
+     ]
+    },
+    {
+     "type": "p",
+     "text": ". (<i>k</i> = 0 gives <i>I</i> ✓.)"
+    },
+    {
+     "type": "warn",
+     "text": "What it tests: Order matters: the <i>i</i>-th column of <i>P</i> must match the <i>i</i>-th diagonal entry of <i>D</i>. Sanity-check with trace and determinant."
+    }
+   ]
+  },
+  {
+   "title": "Eigenvalues of A², A⁻¹, idempotents",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "(a) If <i>A</i><b>x</b> = λ<b>x</b> with <b>x</b> ≠ <b>0</b>, show <i>A</i>²<b>x</b> = λ²<b>x</b>, and if <i>A</i> is invertible, <i>A</i>⁻¹<b>x</b> = λ⁻¹<b>x</b>. (b) Deduce: if <i>A</i>² = <i>A</i>, every eigenvalue is 0 or 1."
+    }
+   ],
+   "answer": "A²x = λ²x, A⁻¹x = λ⁻¹x; λ² = λ ⇒ λ ∈ {0, 1}",
+   "solution": [
+    {
+     "type": "steps",
+     "title": "Solution",
+     "items": [
+      "<i>A</i>²<b>x</b> = <i>A</i>(λ<b>x</b>) = λ<i>A</i><b>x</b> = λ²<b>x</b>.",
+      "If <i>A</i> is invertible, λ ≠ 0 (else <i>A</i><b>x</b> = 0 with <b>x</b> ≠ 0). Apply <i>A</i>⁻¹ to <i>A</i><b>x</b> = λ<b>x</b>: <b>x</b> = λ<i>A</i>⁻¹<b>x</b> ⇒ <i>A</i>⁻¹<b>x</b> = λ⁻¹<b>x</b>.",
+      "(b) λ<b>x</b> = <i>A</i><b>x</b> = <i>A</i>²<b>x</b> = λ²<b>x</b> ⇒ (λ² − λ)<b>x</b> = 0 with <b>x</b> ≠ 0 ⇒ λ ∈ {0, 1}. ∎"
+     ]
+    },
+    {
+     "type": "warn",
+     "text": "What it tests: Use <b>x</b> ≠ <b>0</b> explicitly when cancelling. This polynomial trick works for any equation <i>p</i>(<i>A</i>) = 0."
+    }
+   ]
+  },
+  {
+   "title": "Diagonalizable from ranks",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "<i>A</i> is 4×4 with characteristic polynomial λ²(λ − 1)². (a) If rank <i>A</i> = 3, is <i>A</i> diagonalizable? (b) If rank <i>A</i> = 2, can you decide? (c) If rank <i>A</i> = 2 and rank(<i>A</i> − <i>I</i>) = 2?"
+    }
+   ],
+   "answer": "(a) No (b) Cannot decide (c) Yes",
+   "solution": [
+    {
+     "type": "p",
+     "text": "dim of the 0-eigenspace = dim Nul <i>A</i> = 4 − rank <i>A</i>."
+    },
+    {
+     "type": "p",
+     "text": "(a) dim Nul <i>A</i> = 1 &lt; 2 = algebraic multiplicity of 0 ⇒ <b>not diagonalizable</b>."
+    },
+    {
+     "type": "p",
+     "text": "(b) 0-eigenspace has dim 2 (good), but the 1-eigenspace could be 1- or 2-dimensional: <b>cannot decide</b>. Example of each: diag(0,0,1,1) vs. 0 ⊕ 0 ⊕"
+    },
+    {
+     "type": "matrix",
+     "rows": [
+      [
+       "1",
+       "1"
+      ],
+      [
+       "0",
+       "1"
+      ]
+     ]
+    },
+    {
+     "type": "p",
+     "text": "(c) dim Nul(<i>A</i> − <i>I</i>) = 2 too ⇒ 2 + 2 = 4 independent eigenvectors ⇒ <b>diagonalizable</b>."
+    },
+    {
+     "type": "warn",
+     "text": "What it tests: Every eigenvalue must pass “geometric = algebraic”. Rank of <i>A</i> only speaks about λ = 0."
+    }
+   ]
+  },
+  {
+   "title": "Eigenvalues from trace and det",
+   "level": "hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "A real 3×3 matrix has det <i>A</i> = 6, trace <i>A</i> = 6, and 1 is an eigenvalue. Find all eigenvalues. Is <i>A</i> diagonalizable? Is <i>A</i> − 2<i>I</i> invertible?"
+    }
+   ],
+   "answer": "Eigenvalues 1, 2, 3; diagonalizable; A − 2I is singular",
+   "solution": [
+    {
+     "type": "steps",
+     "title": "Solution",
+     "items": [
+      "λ₁λ₂λ₃ = 6, λ₁ + λ₂ + λ₃ = 6, λ₁ = 1 ⇒ λ₂ + λ₃ = 5, λ₂λ₃ = 6 ⇒ λ² − 5λ + 6 = 0 ⇒ <b>2, 3</b>.",
+      "Eigenvalues 1, 2, 3 are distinct ⇒ <b>diagonalizable</b>.",
+      "2 is an eigenvalue ⇒ <i>A</i> − 2<i>I</i> is <b>singular</b>."
+     ]
+    },
+    {
+     "type": "warn",
+     "text": "What it tests: det = product and trace = sum of eigenvalues (with multiplicity, complex included)."
+    }
+   ]
+  },
+  {
+   "title": "Shift operator on ℙ₂",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "<i>T</i>: ℙ₂ → ℙ₂, <i>T</i>(<i>p</i>)(<i>t</i>) = <i>p</i>(<i>t</i> + 1). Find the matrix of <i>T</i> relative to {1, <i>t</i>, <i>t</i>²}, its eigenvalues and eigenvectors, and show <i>T</i> is not diagonalizable."
+    }
+   ],
+   "answer": "Matrix [1 1 1; 0 1 2; 0 0 1]; only eigenvalue 1, eigenvectors the constants; not diagonalizable",
+   "solution": [
+    {
+     "type": "p",
+     "text": "<i>T</i>(1) = 1, <i>T</i>(<i>t</i>) = 1 + <i>t</i>, <i>T</i>(<i>t</i>²) = 1 + 2<i>t</i> + <i>t</i>². Matrix"
+    },
+    {
+     "type": "matrix",
+     "rows": [
+      [
+       "1",
+       "1",
+       "1"
+      ],
+      [
+       "0",
+       "1",
+       "2"
+      ],
+      [
+       "0",
+       "0",
+       "1"
+      ]
+     ]
+    },
+    {
+     "type": "p",
+     "text": "Upper triangular, eigenvalue <b>1</b> (multiplicity 3)."
+    },
+    {
+     "type": "p",
+     "text": "[<i>T</i>] − <i>I</i> ="
+    },
+    {
+     "type": "matrix",
+     "rows": [
+      [
+       "0",
+       "1",
+       "1"
+      ],
+      [
+       "0",
+       "0",
+       "2"
+      ],
+      [
+       "0",
+       "0",
+       "0"
+      ]
+     ]
+    },
+    {
+     "type": "p",
+     "text": "has rank 2 ⇒ eigenspace dim 1: only the <b>constant polynomials</b>."
+    },
+    {
+     "type": "p",
+     "text": "One independent eigenvector in a 3-D space ⇒ <b>not diagonalizable</b>. (Makes sense: <i>p</i>(<i>t</i>+1) = λ<i>p</i>(<i>t</i>) forces <i>p</i> constant.)"
+    },
+    {
+     "type": "warn",
+     "text": "What it tests: Eigenvectors of a map on ℙ₂ are polynomials. Translate to coordinates, solve, and translate back."
+    }
+   ]
+  }
+ ],
+ "keyFacts": [
+  "Ax = λx, x ≠ 0. λ eigenvalue ⇔ det(A − λI) = 0; eigenspace = Nul(A − λI).",
+  "2×2: λ² − (tr A)λ + det A. Triangular: eigenvalues on the diagonal.",
+  "Σλ = trace, ∏λ = det; 0 is an eigenvalue ⇔ A singular.",
+  "1 ≤ geometric multiplicity (n − rank(A − λI)) ≤ algebraic multiplicity.",
+  "A = PDP⁻¹ ⇔ n independent eigenvectors (columns of P, same order as D).",
+  "n distinct eigenvalues ⇒ diagonalizable; repeated eigenvalue: check each eigenspace dimension.",
+  "Aᵏ = PDᵏP⁻¹; Aᵏx = Σcᵢλᵢᵏvᵢ.",
+  "Similar ⇒ same characteristic polynomial, det, trace, rank; not same eigenvectors."
+ ]
+}

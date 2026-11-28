@@ -1,0 +1,996 @@
+{
+ "id": "54-3",
+ "course": "54",
+ "title": "Matrix algebra, inverses, Invertible Matrix Theorem",
+ "source": "Lay 2.1–2.3",
+ "summary": "The algebra of matrices (with its non-commutative traps), how to compute and use inverses, elementary matrices, and the Invertible Matrix Theorem, which ties together everything from systems, independence and spanning for square matrices.",
+ "lesson": [
+  {
+   "title": "Matrix operations and their rules",
+   "blocks": [
+    {
+     "type": "def",
+     "term": "Sum, scalar multiple",
+     "text": "Entrywise, for matrices of the same size. The usual rules hold: A + B = B + A, (A + B) + C = A + (B + C), r(A + B) = rA + rB."
+    },
+    {
+     "type": "def",
+     "term": "Product AB",
+     "text": "If A is m×n and B = [<b>b</b>₁ ⋯ <b>b</b>ₚ] is n×p, then AB = [A<b>b</b>₁ ⋯ A<b>b</b>ₚ], an m×p matrix. Entry (i, j) = (row i of A)·(column j of B). Defined only when the inner sizes match."
+    },
+    {
+     "type": "tip",
+     "text": "Why this definition: AB is the matrix of the composition 'first B, then A', i.e. A(B<b>x</b>) = (AB)<b>x</b>. Composition is associative, so A(BC) = (AB)C, but order matters."
+    },
+    {
+     "type": "thm",
+     "name": "Rules that hold",
+     "text": "A(BC) = (AB)C; A(B + C) = AB + AC; (B + C)A = BA + CA; r(AB) = (rA)B = A(rB); IₘA = A = AIₙ."
+    },
+    {
+     "type": "warn",
+     "text": "Rules that FAIL: (1) AB ≠ BA in general. (2) AB = AC does not imply B = C. (3) AB = 0 does not imply A = 0 or B = 0. (4) (A + B)² ≠ A² + 2AB + B² unless AB = BA."
+    },
+    {
+     "type": "def",
+     "term": "Transpose",
+     "text": "Aᵀ has rows = columns of A. Rules: (Aᵀ)ᵀ = A, (A + B)ᵀ = Aᵀ + Bᵀ, (rA)ᵀ = rAᵀ, and <b>(AB)ᵀ = BᵀAᵀ</b> (reverse order)."
+    },
+    {
+     "type": "example",
+     "title": "Non-commutativity and failed cancellation",
+     "prompt": "Let A = [2 −3; −4 6], B = [8 4; 5 5], C = [5 −2; 3 1]. Compute AB, AC and BA.",
+     "steps": [
+      "AB: row 1 · columns: (16 − 15, 8 − 15) = (1, −7); row 2: (−32 + 30, −16 + 30) = (−2, 14). AB = [1 −7; −2 14].",
+      "AC: (10 − 9, −4 − 3) = (1, −7); (−20 + 18, 8 + 6) = (−2, 14). AC = [1 −7; −2 14].",
+      "BA: (16 − 16, −24 + 24) = (0, 0); (10 − 20, −15 + 30) = (−10, 15). BA = [0 0; −10 15].",
+      "So AB = AC with B ≠ C, and AB ≠ BA. Cancellation fails because A is not invertible (its columns are parallel)."
+     ],
+     "answer": "AB = AC = [1 −7; −2 14] but B ≠ C; BA = [0 0; −10 15] ≠ AB."
+    }
+   ]
+  },
+  {
+   "title": "The inverse of a matrix",
+   "blocks": [
+    {
+     "type": "def",
+     "term": "Invertible",
+     "text": "An n×n matrix A is invertible if there is C with CA = I and AC = I. Then C = A⁻¹ is unique. A non-invertible matrix is called singular."
+    },
+    {
+     "type": "thm",
+     "name": "2×2 inverse",
+     "text": "A = [a b; c d] is invertible iff ad − bc ≠ 0, and then A⁻¹ = (1/(ad − bc))·[d −b; −c a].",
+     "proof": [
+      {
+       "type": "p",
+       "text": "Multiply out: [a b; c d][d −b; −c a] = (ad − bc)I."
+      }
+     ]
+    },
+    {
+     "type": "thm",
+     "name": "Properties",
+     "text": "If A is invertible, A<b>x</b> = <b>b</b> has the unique solution <b>x</b> = A⁻¹<b>b</b>. (A⁻¹)⁻¹ = A. <b>(AB)⁻¹ = B⁻¹A⁻¹</b>. (Aᵀ)⁻¹ = (A⁻¹)ᵀ.",
+     "proof": [
+      {
+       "type": "p",
+       "text": "(AB)(B⁻¹A⁻¹) = A(BB⁻¹)A⁻¹ = AA⁻¹ = I: socks and shoes, undo in reverse order."
+      }
+     ]
+    },
+    {
+     "type": "thm",
+     "name": "Algorithm",
+     "text": "Row reduce [A | I]. If A reduces to I, the result is [I | A⁻¹]. If A does not reduce to I, A is not invertible.",
+     "proof": [
+      {
+       "type": "p",
+       "text": "Each row operation is left multiplication by an elementary matrix. If Eₖ⋯E₁A = I then Eₖ⋯E₁ = A⁻¹, and the same operations turn I into Eₖ⋯E₁I = A⁻¹."
+      }
+     ]
+    },
+    {
+     "type": "example",
+     "title": "2×2 formula",
+     "prompt": "Find the inverse of [3 4; 5 6].",
+     "steps": [
+      "ad − bc = 18 − 20 = −2 ≠ 0.",
+      "A⁻¹ = (1/−2)[6 −4; −5 3] = [−3 2; 5/2 −3/2].",
+      "Check row 1 of A times column 1: 3(−3) + 4(5/2) = 1. ✓"
+     ],
+     "answer": "[−3 2; 5/2 −3/2]"
+    },
+    {
+     "type": "example",
+     "title": "Inverse by row reducing [A | I]",
+     "prompt": "Find A⁻¹ for A = [0 1 2; 1 0 3; 4 −3 8].",
+     "steps": [
+      "[A | I]: swap R₁, R₂ → [1 0 3 | 0 1 0; 0 1 2 | 1 0 0; 4 −3 8 | 0 0 1].",
+      "R₃ − 4R₁ → [0 −3 −4 | 0 −4 1]; R₃ + 3R₂ → [0 0 2 | 3 −4 1]; R₃ ÷ 2 → [0 0 1 | 3/2 −2 1/2].",
+      "R₂ − 2R₃ → [0 1 0 | −2 4 −1]; R₁ − 3R₃ → [1 0 0 | −9/2 7 −3/2].",
+      "Left block is I, so the right block is A⁻¹."
+     ],
+     "answer": "A⁻¹ = [−9/2 7 −3/2; −2 4 −1; 3/2 −2 1/2]"
+    },
+    {
+     "type": "matrix",
+     "rows": [
+      [
+       "−9/2",
+       "7",
+       "−3/2"
+      ],
+      [
+       "−2",
+       "4",
+       "−1"
+      ],
+      [
+       "3/2",
+       "−2",
+       "1/2"
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "title": "Solving matrix equations",
+   "blocks": [
+    {
+     "type": "p",
+     "text": "Treat matrices like numbers except: you may only multiply both sides on the <b>same side</b>, and only invertible matrices can be 'divided out'."
+    },
+    {
+     "type": "steps",
+     "title": "Recipe for solving for X",
+     "items": [
+      "Undo outer inverses first using (PQ)⁻¹ = Q⁻¹P⁻¹.",
+      "Left-multiply by the inverse of the leftmost known factor; right-multiply by the inverse of the rightmost.",
+      "Simplify, then check by substituting back."
+     ]
+    },
+    {
+     "type": "example",
+     "title": "Solve AXB = C",
+     "prompt": "With A = [1 2; 1 3], B = [2 1; 1 1], C = [4 1; 5 2], solve AXB = C for X.",
+     "steps": [
+      "Left-multiply by A⁻¹ and right-multiply by B⁻¹: X = A⁻¹CB⁻¹ (not A⁻¹B⁻¹C!).",
+      "A⁻¹ = [3 −2; −1 1] (det 1), B⁻¹ = [1 −1; −1 2] (det 1).",
+      "A⁻¹C = [12 − 10, 3 − 4; −4 + 5, −1 + 2] = [2 −1; 1 1].",
+      "X = [2 −1; 1 1][1 −1; −1 2] = [3 −4; 0 1].",
+      "Check: AX = [3 −2; 3 −1], then (AX)B = [6 − 2, 3 − 2; 6 − 1, 3 − 1] = [4 1; 5 2] = C. ✓"
+     ],
+     "answer": "X = [3 −4; 0 1]"
+    },
+    {
+     "type": "example",
+     "title": "Symbolic matrix equation",
+     "prompt": "A, B, C, X are invertible n×n with (B⁻¹XA)⁻¹ = CB. Solve for X.",
+     "steps": [
+      "(B⁻¹XA)⁻¹ = A⁻¹X⁻¹B, so A⁻¹X⁻¹B = CB.",
+      "Right-multiply by B⁻¹: A⁻¹X⁻¹ = C. Left-multiply by A: X⁻¹ = AC.",
+      "Invert: X = (AC)⁻¹ = C⁻¹A⁻¹."
+     ],
+     "answer": "X = C⁻¹A⁻¹"
+    },
+    {
+     "type": "warn",
+     "text": "(PQ)⁻¹ = P⁻¹Q⁻¹ is wrong (order reverses), and you cannot 'cancel' a factor that is not at the very left or very right."
+    }
+   ]
+  },
+  {
+   "title": "Elementary matrices",
+   "blocks": [
+    {
+     "type": "def",
+     "term": "Elementary matrix",
+     "text": "A matrix obtained by performing ONE row operation on I. Multiplying EA performs that same row operation on A."
+    },
+    {
+     "type": "thm",
+     "name": "Inverses",
+     "text": "Every elementary matrix is invertible; its inverse is the elementary matrix of the reverse operation (subtract instead of add, swap again, scale by 1/c)."
+    },
+    {
+     "type": "thm",
+     "name": "Invertible = product of elementaries",
+     "text": "A is invertible ⇔ A is row equivalent to I ⇔ A is a product of elementary matrices."
+    },
+    {
+     "type": "example",
+     "title": "What an elementary matrix does",
+     "prompt": "E = [1 0 0; 0 1 0; −4 0 1]. What does EA do to a 3×n matrix A? What is E⁻¹?",
+     "steps": [
+      "E came from I by R₃ − 4R₁, so EA replaces row 3 of A by (row 3 − 4·row 1).",
+      "The reverse operation is R₃ + 4R₁.",
+      "So E⁻¹ = [1 0 0; 0 1 0; 4 0 1]. Check: E⁻¹E = I."
+     ],
+     "answer": "EA performs R₃ − 4R₁ on A; E⁻¹ = [1 0 0; 0 1 0; 4 0 1]."
+    },
+    {
+     "type": "tip",
+     "text": "To get the elementary matrix for a row operation, just do that operation to I. Swap matrices are their own inverses."
+    }
+   ]
+  },
+  {
+   "title": "The Invertible Matrix Theorem",
+   "blocks": [
+    {
+     "type": "thm",
+     "name": "Invertible Matrix Theorem (square A, n×n)",
+     "text": "The following are all true or all false: (a) A is invertible. (b) A is row equivalent to Iₙ. (c) A has n pivot positions. (d) A<b>x</b> = <b>0</b> has only the trivial solution. (e) The columns of A are linearly independent. (f) <b>x</b> ↦ A<b>x</b> is one-to-one. (g) A<b>x</b> = <b>b</b> has at least one solution for every <b>b</b>. (h) The columns span ℝⁿ. (i) <b>x</b> ↦ A<b>x</b> is onto. (j) There is C with CA = I. (k) There is D with AD = I. (l) Aᵀ is invertible. Later additions: det A ≠ 0; 0 is not an eigenvalue; Col A = ℝⁿ; rank A = n; Nul A = {0}.",
+     "proof": [
+      {
+       "type": "p",
+       "text": "The engine: for a SQUARE matrix, 'pivot in every column' (uniqueness side: d, e, f) and 'pivot in every row' (existence side: g, h, i) both say 'n pivots'. So one-to-one ⇔ onto."
+      }
+     ]
+    },
+    {
+     "type": "thm",
+     "name": "One-sided inverses suffice",
+     "text": "If A, B are square and AB = I, then BA = I and B = A⁻¹.",
+     "proof": [
+      {
+       "type": "p",
+       "text": "AB = I ⇒ A<b>x</b> = <b>b</b> is solvable for every <b>b</b> (take <b>x</b> = B<b>b</b>) ⇒ by the IMT A is invertible. Then B = A⁻¹(AB) = A⁻¹, so BA = A⁻¹A = I."
+      }
+     ]
+    },
+    {
+     "type": "warn",
+     "text": "The IMT is only for square matrices. A 3×2 A and a 2×3 B can have BA = I₂ while AB is singular."
+    },
+    {
+     "type": "example",
+     "title": "IMT chain",
+     "prompt": "A is 5×5 and A<b>x</b> = <b>0</b> has only the trivial solution. List five other facts that follow. Then: what if instead A<b>x</b> = <b>b</b> fails to be consistent for some <b>b</b>?",
+     "steps": [
+      "Only the trivial solution ⇒ pivot in every column ⇒ (square) 5 pivots.",
+      "Hence: A is invertible; A ~ I₅; columns are independent and span ℝ⁵; x ↦ Ax is one-to-one and onto; Ax = b has exactly one solution for every b; Aᵀ is invertible; det A ≠ 0.",
+      "If Ax = b is inconsistent for some b, the columns don't span ℝ⁵, so fewer than 5 pivots: A is singular, Ax = 0 has nontrivial solutions, the columns are dependent, the map is not one-to-one, det A = 0. All the IMT conditions fail together."
+     ],
+     "answer": "All IMT conditions hold together (invertible, independent columns, spanning columns, one-to-one, onto, det ≠ 0…), or all fail together."
+    },
+    {
+     "type": "def",
+     "term": "Invertible linear map",
+     "text": "T: ℝⁿ → ℝⁿ is invertible if there is S with S(T(<b>x</b>)) = <b>x</b> and T(S(<b>x</b>)) = <b>x</b>. T(<b>x</b>) = A<b>x</b> is invertible iff A is, and then S(<b>x</b>) = A⁻¹<b>x</b>."
+    }
+   ]
+  },
+  {
+   "title": "True/False with counterexamples",
+   "blocks": [
+    {
+     "type": "example",
+     "title": "Six True/False",
+     "prompt": "(a) If AB = I for square A, B, then BA = I. (b) If A² = 0 then A = 0. (c) (A + B)⁻¹ = A⁻¹ + B⁻¹. (d) If A is invertible, so is Aᵀ. (e) If the columns of a square A span ℝⁿ, then Ax = 0 has only the trivial solution. (f) If AB is invertible (A, B square), then B is invertible.",
+     "steps": [
+      "(a) True: one-sided inverse of a square matrix is two-sided (IMT).",
+      "(b) False: A = [0 1; 0 0] has A² = 0.",
+      "(c) False: A = B = I gives (2I)⁻¹ = ½I ≠ 2I.",
+      "(d) True: (Aᵀ)⁻¹ = (A⁻¹)ᵀ.",
+      "(e) True: spanning ⇔ n pivots ⇔ independent (square).",
+      "(f) True: ((AB)⁻¹A)B = I, so B has a left inverse, hence is invertible."
+     ],
+     "answer": "(a) T (b) F (c) F (d) T (e) T (f) T"
+    },
+    {
+     "type": "tip",
+     "text": "Standard counterexample stock: [0 1; 0 0] (nilpotent), [1 0; 0 0] (projection), −I, and two 2×2 matrices with AB = 0 like [1 0; 0 0] and [0 0; 1 0]."
+    }
+   ]
+  }
+ ],
+ "cards": [
+  {
+   "front": "Entry (i, j) of AB? Size condition?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Row i of A dotted with column j of B. A m×n, B n×p ⇒ AB is m×p."
+    }
+   ]
+  },
+  {
+   "front": "Column view of AB?",
+   "back": [
+    {
+     "type": "p",
+     "text": "AB = [Ab₁ ⋯ Abₚ]: each column of AB is A times a column of B, a combination of A's columns."
+    }
+   ]
+  },
+  {
+   "front": "Three things that fail in matrix algebra?",
+   "back": [
+    {
+     "type": "p",
+     "text": "AB = BA (fails in general); AB = AC ⇒ B = C (fails unless A invertible); AB = 0 ⇒ A = 0 or B = 0 (fails)."
+    }
+   ]
+  },
+  {
+   "front": "(AB)ᵀ = ? (AB)⁻¹ = ?",
+   "back": [
+    {
+     "type": "p",
+     "text": "BᵀAᵀ and B⁻¹A⁻¹: both reverse the order."
+    }
+   ]
+  },
+  {
+   "front": "2×2 inverse formula?",
+   "back": [
+    {
+     "type": "formula",
+     "text": "[a b; c d]⁻¹ = (1/(ad − bc))·[d −b; −c a]"
+    },
+    {
+     "type": "p",
+     "text": "Exists iff ad − bc ≠ 0."
+    }
+   ]
+  },
+  {
+   "front": "Algorithm for A⁻¹?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Row reduce [A | I]. If you reach [I | B], B = A⁻¹; if A does not reduce to I, A is singular."
+    }
+   ]
+  },
+  {
+   "front": "Why does row reducing [A | I] produce A⁻¹?",
+   "back": [
+    {
+     "type": "p",
+     "text": "The row operations are elementary matrices with Eₖ⋯E₁A = I, so Eₖ⋯E₁ = A⁻¹, and applying them to I gives A⁻¹."
+    }
+   ]
+  },
+  {
+   "front": "Solve AXB = C for X (A, B invertible).",
+   "back": [
+    {
+     "type": "p",
+     "text": "X = A⁻¹CB⁻¹: left inverse on the left, right inverse on the right."
+    }
+   ]
+  },
+  {
+   "front": "What is an elementary matrix and what is its inverse?",
+   "back": [
+    {
+     "type": "p",
+     "text": "I after one row operation; EA performs that operation on A. Its inverse is the elementary matrix of the reverse operation."
+    }
+   ]
+  },
+  {
+   "front": "A is invertible ⇔ … (in terms of elementary matrices)?",
+   "back": [
+    {
+     "type": "p",
+     "text": "A is row equivalent to I ⇔ A is a product of elementary matrices."
+    }
+   ]
+  },
+  {
+   "front": "Five IMT conditions that fail together for singular A?",
+   "back": [
+    {
+     "type": "p",
+     "text": "A not ~ I; fewer than n pivots; Ax = 0 has nontrivial solutions; columns dependent; columns don't span ℝⁿ; not one-to-one; not onto; det A = 0."
+    }
+   ]
+  },
+  {
+   "front": "Why does AB = I force BA = I for square matrices?",
+   "back": [
+    {
+     "type": "p",
+     "text": "AB = I ⇒ Ax = b solvable for every b (x = Bb) ⇒ A invertible by the IMT ⇒ B = A⁻¹(AB) = A⁻¹ ⇒ BA = I."
+    }
+   ]
+  },
+  {
+   "front": "Does the IMT apply to non-square matrices?",
+   "back": [
+    {
+     "type": "p",
+     "text": "No. E.g. A 3×2, B 2×3 can have BA = I₂ while AB (3×3) is always singular."
+    }
+   ]
+  },
+  {
+   "front": "If A² = A and A ≠ I, is A invertible?",
+   "back": [
+    {
+     "type": "p",
+     "text": "No: multiplying by A⁻¹ would give A = I."
+    }
+   ]
+  },
+  {
+   "front": "If A³ − 2A + I = 0, what is A⁻¹?",
+   "back": [
+    {
+     "type": "p",
+     "text": "A(2I − A²) = I, so A⁻¹ = 2I − A²."
+    }
+   ]
+  },
+  {
+   "front": "(A + B)⁻¹ = A⁻¹ + B⁻¹?",
+   "back": [
+    {
+     "type": "p",
+     "text": "False in general (A = B = I)."
+    }
+   ]
+  },
+  {
+   "front": "Invertible linear transformation T(x) = Ax: inverse map?",
+   "back": [
+    {
+     "type": "p",
+     "text": "S(x) = A⁻¹x, which exists iff A is invertible; then S(T(x)) = x and T(S(x)) = x."
+    }
+   ]
+  },
+  {
+   "front": "If AB is invertible (square), are A and B invertible?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Yes, both: det A · det B ≠ 0, or construct one-sided inverses."
+    }
+   ]
+  }
+ ],
+ "hard": [
+  {
+   "title": "Inverse with a parameter (Vandermonde)",
+   "level": "hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "Let <i>A</i> ="
+    },
+    {
+     "type": "matrix",
+     "rows": [
+      [
+       "1",
+       "1",
+       "1"
+      ],
+      [
+       "1",
+       "2",
+       "4"
+      ],
+      [
+       "1",
+       "<i>h</i>",
+       "<i>h</i>²"
+      ]
+     ]
+    },
+    {
+     "type": "p",
+     "text": ". (a) For which <i>h</i> is <i>A</i> invertible? (b) For <i>h</i> = 3 find <i>A</i>⁻¹ by row reducing [<i>A</i> | <i>I</i>], and use it to solve <i>A</i><b>x</b> = (1, 0, 0)."
+    }
+   ],
+   "answer": "(a) h ≠ 1, 2 (b) A⁻¹ = [3 −3 1; −5/2 4 −3/2; 1/2 −1 1/2], x = (3, −5/2, 1/2)",
+   "solution": [
+    {
+     "type": "p",
+     "text": "(a) R₂ − R₁, R₃ − R₁:"
+    },
+    {
+     "type": "matrix",
+     "rows": [
+      [
+       "1",
+       "1",
+       "1"
+      ],
+      [
+       "0",
+       "1",
+       "3"
+      ],
+      [
+       "0",
+       "<i>h</i>−1",
+       "<i>h</i>²−1"
+      ]
+     ]
+    },
+    {
+     "type": "p",
+     "text": "; then R₃ − (<i>h</i>−1)R₂ leaves (<i>h</i>²−1) − 3(<i>h</i>−1) = (<i>h</i>−1)(<i>h</i>−2) in the corner. det = (<i>h</i> − 1)(<i>h</i> − 2). Invertible ⇔ <b><i>h</i> ≠ 1, 2</b>."
+    },
+    {
+     "type": "p",
+     "text": "(b) [<i>A</i> | <i>I</i>] for <i>h</i> = 3 reduces to [<i>I</i> | <i>A</i>⁻¹] with <i>A</i>⁻¹ ="
+    },
+    {
+     "type": "matrix",
+     "rows": [
+      [
+       "3",
+       "−3",
+       "1"
+      ],
+      [
+       "−5/2",
+       "4",
+       "−3/2"
+      ],
+      [
+       "1/2",
+       "−1",
+       "1/2"
+      ]
+     ]
+    },
+    {
+     "type": "p",
+     "text": "Check one entry of <i>A</i><i>A</i>⁻¹: row 3 of <i>A</i> (1, 3, 9) · column 1 (3, −5/2, 1/2) = 3 − 15/2 + 9/2 = 0 ✓."
+    },
+    {
+     "type": "p",
+     "text": "<b>x</b> = <i>A</i>⁻¹(1, 0, 0) = first column = <b>(3, −5/2, 1/2)</b>."
+    },
+    {
+     "type": "warn",
+     "text": "What it tests: Rows 1, <i>h</i>, <i>h</i>² for nodes 1, 2, <i>h</i> form a Vandermonde matrix: singular exactly when two nodes coincide. Solving with <i>A</i>⁻¹<b>e</b>₁ is just reading a column."
+    }
+   ]
+  },
+  {
+   "title": "Solve a matrix equation",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "Assume <i>A</i>, <i>B</i>, <i>C</i>, <i>X</i> are <i>n</i>×<i>n</i> and invertible. Solve for <i>X</i>: (<i>B</i>⁻¹<i>X</i><i>A</i>)⁻¹ = <i>C</i><i>B</i>. Then explain why “<i>X</i> = <i>B</i><i>C</i>⁻¹<i>A</i>⁻¹ <i>B</i>⁻¹” type guesses fail."
+    }
+   ],
+   "answer": "X = C⁻¹A⁻¹",
+   "solution": [
+    {
+     "type": "steps",
+     "title": "Solution",
+     "items": [
+      "Invert a product in reverse order: (<i>B</i>⁻¹<i>X</i><i>A</i>)⁻¹ = <i>A</i>⁻¹<i>X</i>⁻¹<i>B</i>.",
+      "So <i>A</i>⁻¹<i>X</i>⁻¹<i>B</i> = <i>C</i><i>B</i>. Right-multiply by <i>B</i>⁻¹: <i>A</i>⁻¹<i>X</i>⁻¹ = <i>C</i>. Left-multiply by <i>A</i>: <i>X</i>⁻¹ = <i>A</i><i>C</i>.",
+      "<b><i>X</i> = (<i>A</i><i>C</i>)⁻¹ = <i>C</i>⁻¹<i>A</i>⁻¹</b>.",
+      "Check: <i>A</i>⁻¹<i>X</i>⁻¹<i>B</i> = <i>A</i>⁻¹(<i>A</i><i>C</i>)<i>B</i> = <i>C</i><i>B</i> ✓. Guesses fail because matrix multiplication isn’t commutative: you may only multiply both sides on the <i>same</i> side."
+     ]
+    },
+    {
+     "type": "warn",
+     "text": "What it tests: Two errors to avoid: (<i>PQ</i>)⁻¹ = <i>P</i>⁻¹<i>Q</i>⁻¹ (wrong order) and “cancelling” matrices that aren’t adjacent."
+    }
+   ]
+  },
+  {
+   "title": "True/False: inverses and products",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "list",
+     "items": [
+      "1. If <i>A</i> is <i>n</i>×<i>n</i> and <i>A</i><b>x</b> = <b>b</b> has at least one solution for every <b>b</b>, then the columns of <i>A</i> are independent.",
+      "2. If <i>A</i>² = 0, then <i>A</i> is not invertible.",
+      "3. If <i>A</i>, <i>B</i> are <i>n</i>×<i>n</i> and <i>AB</i> is invertible, then <i>A</i> is invertible.",
+      "4. If <i>A</i> is 3×2 and <i>B</i> is 2×3, then <i>AB</i> can be invertible.",
+      "5. If <i>A</i> is invertible, then <i>A</i> + <i>I</i> is invertible.",
+      "6. (<i>A</i> + <i>B</i>)⁻¹ = <i>A</i>⁻¹ + <i>B</i>⁻¹ whenever all three inverses exist."
+     ]
+    }
+   ],
+   "answer": "1 T, 2 T, 3 T, 4 F, 5 F, 6 F",
+   "solution": [
+    {
+     "type": "list",
+     "items": [
+      "1. <b>True.</b> Onto ⇒ pivot in every row ⇒ (square) pivot in every column ⇒ independent columns. IMT.",
+      "2. <b>True.</b> If <i>A</i>⁻¹ existed, <i>A</i> = <i>A</i>⁻¹<i>A</i>² = 0, which is not invertible. (Or det(<i>A</i>)² = 0.)",
+      "3. <b>True.</b> det <i>A</i> · det <i>B</i> = det(<i>AB</i>) ≠ 0. Or: <i>A</i>·(<i>B</i>(<i>AB</i>)⁻¹) = <i>I</i>, and a one-sided inverse of a square matrix is two-sided.",
+      "4. <b>False.</b> <i>AB</i><b>x</b> = <b>0</b> whenever <i>B</i><b>x</b> = <b>0</b>, and <i>B</i> (2×3) has a nontrivial kernel. So <i>AB</i> (3×3) is singular. (<i>BA</i>, 2×2, can be invertible.)",
+      "5. <b>False.</b> <i>A</i> = −<i>I</i>: invertible, but <i>A</i> + <i>I</i> = 0.",
+      "6. <b>False.</b> <i>A</i> = <i>B</i> = <i>I</i>: (2<i>I</i>)⁻¹ = ½<i>I</i> ≠ 2<i>I</i>."
+     ]
+    },
+    {
+     "type": "warn",
+     "text": "What it tests: The IMT applies only to <i>square</i> matrices. Non-square products like <i>AB</i> (3×3 from 3×2·2×3) are rank-limited."
+    }
+   ]
+  },
+  {
+   "title": "AB = 0 but BA ≠ 0",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "Find nonzero 2×2 matrices <i>A</i>, <i>B</i> with <i>AB</i> = 0 but <i>BA</i> ≠ 0. Explain why neither can be invertible."
+    }
+   ],
+   "answer": "e.g. A = [1 0; 0 0], B = [0 0; 1 0]; neither is invertible since that would force the other to be 0",
+   "solution": [
+    {
+     "type": "p",
+     "text": "<i>A</i> ="
+    },
+    {
+     "type": "matrix",
+     "rows": [
+      [
+       "1",
+       "0"
+      ],
+      [
+       "0",
+       "0"
+      ]
+     ]
+    },
+    {
+     "type": "p",
+     "text": ", <i>B</i> ="
+    },
+    {
+     "type": "matrix",
+     "rows": [
+      [
+       "0",
+       "0"
+      ],
+      [
+       "1",
+       "0"
+      ]
+     ]
+    },
+    {
+     "type": "p",
+     "text": ". <i>AB</i> ="
+    },
+    {
+     "type": "matrix",
+     "rows": [
+      [
+       "0",
+       "0"
+      ],
+      [
+       "0",
+       "0"
+      ]
+     ]
+    },
+    {
+     "type": "p",
+     "text": ", <i>BA</i> ="
+    },
+    {
+     "type": "matrix",
+     "rows": [
+      [
+       "0",
+       "0"
+      ],
+      [
+       "1",
+       "0"
+      ]
+     ]
+    },
+    {
+     "type": "p",
+     "text": "≠ 0."
+    },
+    {
+     "type": "p",
+     "text": "If <i>A</i> were invertible, <i>B</i> = <i>A</i>⁻¹(<i>AB</i>) = 0, contradiction. If <i>B</i> were invertible, <i>A</i> = (<i>AB</i>)<i>B</i>⁻¹ = 0, contradiction."
+    },
+    {
+     "type": "warn",
+     "text": "What it tests: Zero divisors exist among matrices; <i>AB</i> = 0 does <i>not</i> imply <i>A</i> = 0 or <i>B</i> = 0, and <i>AB</i> ≠ <i>BA</i> in general."
+    }
+   ]
+  },
+  {
+   "title": "Inverse from a polynomial identity",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "<i>A</i> is <i>n</i>×<i>n</i> with <i>A</i>³ − 2<i>A</i> + <i>I</i> = 0. Prove <i>A</i> is invertible and express <i>A</i>⁻¹ as a polynomial in <i>A</i>."
+    }
+   ],
+   "answer": "A⁻¹ = 2I − A²",
+   "solution": [
+    {
+     "type": "steps",
+     "title": "Solution",
+     "items": [
+      "Rearrange: <i>I</i> = 2<i>A</i> − <i>A</i>³ = <i>A</i>(2<i>I</i> − <i>A</i>²).",
+      "Also (2<i>I</i> − <i>A</i>²)<i>A</i> = 2<i>A</i> − <i>A</i>³ = <i>I</i>. So <i>A</i> is invertible with <b><i>A</i>⁻¹ = 2<i>I</i> − <i>A</i>²</b>. ∎",
+      "(Such matrices exist: the companion matrix of <i>t</i>³ − 2<i>t</i> + 1 satisfies the equation.)"
+     ]
+    },
+    {
+     "type": "warn",
+     "text": "What it tests: Isolate <i>I</i> and factor out <i>A</i>. For square matrices one side suffices, but showing both is cleaner."
+    }
+   ]
+  },
+  {
+   "title": "Idempotent matrices are singular",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "Let <i>A</i> be <i>n</i>×<i>n</i> with <i>A</i>² = <i>A</i> and <i>A</i> ≠ <i>I</i>. Prove <i>A</i> is singular, and deduce <i>A</i><b>x</b> = <b>0</b> has a nontrivial solution."
+    }
+   ],
+   "answer": "A invertible would give A = I; nontrivial null vector x = Ay − y for any y with Ay ≠ y",
+   "solution": [
+    {
+     "type": "steps",
+     "title": "Solution",
+     "items": [
+      "Suppose <i>A</i> invertible. Multiply <i>A</i>² = <i>A</i> by <i>A</i>⁻¹: <i>A</i> = <i>I</i>, contradiction. So <i>A</i> is singular.",
+      "IMT: singular ⇔ <i>A</i><b>x</b> = <b>0</b> has a nontrivial solution. Explicitly: pick <b>y</b> with <i>A</i><b>y</b> ≠ <b>y</b> (exists since <i>A</i> ≠ <i>I</i>); then <b>x</b> = <i>A</i><b>y</b> − <b>y</b> ≠ <b>0</b> and <i>A</i><b>x</b> = <i>A</i>²<b>y</b> − <i>A</i><b>y</b> = <b>0</b>. ∎"
+     ]
+    },
+    {
+     "type": "warn",
+     "text": "What it tests: Idempotent (projection) matrices other than <i>I</i> are never invertible — they collapse some direction."
+    }
+   ]
+  },
+  {
+   "title": "Matrices commuting with a shear",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "Find all 2×2 matrices <i>X</i> that commute with <i>N</i> ="
+    },
+    {
+     "type": "matrix",
+     "rows": [
+      [
+       "1",
+       "1"
+      ],
+      [
+       "0",
+       "1"
+      ]
+     ]
+    },
+    {
+     "type": "p",
+     "text": ". Which of them are invertible?"
+    }
+   ],
+   "answer": "X = [a b; 0 a]; invertible iff a ≠ 0",
+   "solution": [
+    {
+     "type": "p",
+     "text": "Let <i>X</i> ="
+    },
+    {
+     "type": "matrix",
+     "rows": [
+      [
+       "<i>a</i>",
+       "<i>b</i>"
+      ],
+      [
+       "<i>c</i>",
+       "<i>d</i>"
+      ]
+     ]
+    },
+    {
+     "type": "p",
+     "text": ". <i>XN</i> ="
+    },
+    {
+     "type": "matrix",
+     "rows": [
+      [
+       "<i>a</i>",
+       "<i>a</i>+<i>b</i>"
+      ],
+      [
+       "<i>c</i>",
+       "<i>c</i>+<i>d</i>"
+      ]
+     ]
+    },
+    {
+     "type": "p",
+     "text": ", <i>NX</i> ="
+    },
+    {
+     "type": "matrix",
+     "rows": [
+      [
+       "<i>a</i>+<i>c</i>",
+       "<i>b</i>+<i>d</i>"
+      ],
+      [
+       "<i>c</i>",
+       "<i>d</i>"
+      ]
+     ]
+    },
+    {
+     "type": "p",
+     "text": "Compare: <i>a</i> = <i>a</i> + <i>c</i> ⇒ <i>c</i> = 0; <i>a</i> + <i>b</i> = <i>b</i> + <i>d</i> ⇒ <i>a</i> = <i>d</i>."
+    },
+    {
+     "type": "p",
+     "text": "<i>X</i> ="
+    },
+    {
+     "type": "matrix",
+     "rows": [
+      [
+       "<i>a</i>",
+       "<i>b</i>"
+      ],
+      [
+       "0",
+       "<i>a</i>"
+      ]
+     ]
+    },
+    {
+     "type": "p",
+     "text": "= <i>a</i><i>I</i> + <i>b</i>(<i>N</i> − <i>I</i>): a 2-dimensional subspace."
+    },
+    {
+     "type": "p",
+     "text": "det <i>X</i> = <i>a</i>², invertible ⇔ <b><i>a</i> ≠ 0</b>."
+    },
+    {
+     "type": "warn",
+     "text": "What it tests: Setting up <i>XN</i> = <i>NX</i> entrywise gives a linear system in the entries. Don’t forget the commutant is a subspace (contains <i>I</i> and <i>N</i>)."
+    }
+   ]
+  },
+  {
+   "title": "Inverse of I − BA",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "<i>A</i> and <i>B</i> are <i>n</i>×<i>n</i> and <i>I</i> − <i>AB</i> is invertible. Show <i>I</i> − <i>BA</i> is invertible, with inverse <i>I</i> + <i>B</i>(<i>I</i> − <i>AB</i>)⁻¹<i>A</i>."
+    }
+   ],
+   "answer": "(I − BA)(I + B(I − AB)⁻¹A) = I",
+   "solution": [
+    {
+     "type": "steps",
+     "title": "Solution",
+     "items": [
+      "Let <i>C</i> = (<i>I</i> − <i>AB</i>)⁻¹, so (<i>I</i> − <i>AB</i>)<i>C</i> = <i>I</i>, i.e. <i>C</i> − <i>AB</i><i>C</i> = <i>I</i>.",
+      "(<i>I</i> − <i>BA</i>)(<i>I</i> + <i>BCA</i>) = <i>I</i> + <i>BCA</i> − <i>BA</i> − <i>BABCA</i> = <i>I</i> − <i>BA</i> + <i>B</i>(<i>C</i> − <i>ABC</i>)<i>A</i>.",
+      "<i>C</i> − <i>ABC</i> = <i>I</i>, so this is <i>I</i> − <i>BA</i> + <i>BA</i> = <i>I</i>.",
+      "Square matrices: a right inverse is an inverse. ∎ (Verified numerically on random integer matrices.)"
+     ]
+    },
+    {
+     "type": "warn",
+     "text": "What it tests: Group the middle terms as <i>B</i>(…)<i>A</i>. A consequence: <i>AB</i> and <i>BA</i> have the same nonzero eigenvalues (apply with <i>A</i>/λ)."
+    }
+   ]
+  },
+  {
+   "title": "IMT with a parameter",
+   "level": "hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "For which <i>c</i> is <i>A</i> ="
+    },
+    {
+     "type": "matrix",
+     "rows": [
+      [
+       "<i>c</i>",
+       "1",
+       "0"
+      ],
+      [
+       "1",
+       "<i>c</i>",
+       "1"
+      ],
+      [
+       "0",
+       "1",
+       "<i>c</i>"
+      ]
+     ]
+    },
+    {
+     "type": "p",
+     "text": "invertible? For <i>c</i> = 0, find a nonzero vector in Nul <i>A</i> and a vector not in Col <i>A</i>."
+    }
+   ],
+   "answer": "Invertible iff c ∉ {0, ±√2}; at c = 0: (1, 0, −1) ∈ Nul A, (1, 0, 0) ∉ Col A",
+   "solution": [
+    {
+     "type": "p",
+     "text": "Cofactor along row 1: det = <i>c</i>(<i>c</i>² − 1) − 1(<i>c</i> − 0) = <i>c</i>³ − 2<i>c</i> = <i>c</i>(<i>c</i>² − 2). Invertible ⇔ <b><i>c</i> ∉ {0, √2, −√2}</b>."
+    },
+    {
+     "type": "p",
+     "text": "<i>c</i> = 0: <i>A</i> ="
+    },
+    {
+     "type": "matrix",
+     "rows": [
+      [
+       "0",
+       "1",
+       "0"
+      ],
+      [
+       "1",
+       "0",
+       "1"
+      ],
+      [
+       "0",
+       "1",
+       "0"
+      ]
+     ]
+    },
+    {
+     "type": "p",
+     "text": ". <i>A</i><b>x</b> = 0 ⇒ <i>x</i>₂ = 0, <i>x</i>₁ + <i>x</i>₃ = 0: <b>(1, 0, −1)</b>."
+    },
+    {
+     "type": "p",
+     "text": "Col <i>A</i> = Span{(0,1,0), (1,0,1)} = {<i>b</i>₁ = <i>b</i>₃}. So <b>(1, 0, 0)</b> ∉ Col <i>A</i>."
+    },
+    {
+     "type": "warn",
+     "text": "What it tests: Don’t drop the √2 roots. Singular ⇒ both a nontrivial kernel <i>and</i> a non-full column space."
+    }
+   ]
+  }
+ ],
+ "keyFacts": [
+  "AB = [Ab₁ ⋯ Abₚ]; AB ≠ BA in general; AB = AC ⇏ B = C.",
+  "(AB)ᵀ = BᵀAᵀ, (AB)⁻¹ = B⁻¹A⁻¹ (reverse order).",
+  "[a b; c d]⁻¹ = (1/(ad − bc))[d −b; −c a].",
+  "Row reduce [A | I] → [I | A⁻¹]; if A does not reduce to I, A is singular.",
+  "Solve AXB = C: X = A⁻¹CB⁻¹.",
+  "Elementary matrix = I after one row op; EA does that op; inverse = reverse op.",
+  "IMT (square only): invertible ⇔ n pivots ⇔ Ax = 0 trivial ⇔ columns independent ⇔ columns span ⇔ one-to-one ⇔ onto ⇔ det ≠ 0.",
+  "Square AB = I ⇒ BA = I."
+ ]
+}

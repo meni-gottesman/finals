@@ -2407,5 +2407,107 @@
   "Partial order = reflexive + antisymmetric + transitive; Hasse diagram keeps only covers",
   "Maximal (nothing above) ≠ greatest (above everything); lub/glb in (ℤ⁺, |) are lcm/gcd",
   "Topological sort: repeatedly remove a minimal element"
+ ],
+ "parsons": [
+  {
+   "title": "Congruence mod m is an equivalence relation",
+   "goal": "Fix an integer m ≥ 1 and define a ~ b on ℤ iff m | a − b. Prove ~ is an equivalence relation.",
+   "lines": [
+    "Reflexive: for every a, a − a = 0 = 0·m, so m | a − a and a ~ a.",
+    "Symmetric: suppose a ~ b, so a − b = km for some integer k.",
+    "Then b − a = (−k)m, so m | b − a and b ~ a.",
+    "Transitive: suppose a ~ b and b ~ c, so a − b = km and b − c = lm for integers k, l.",
+    "Adding the two equations, a − c = (k + l)m, so m | a − c and a ~ c.",
+    "Reflexive, symmetric and transitive, so ~ is an equivalence relation. ∎"
+   ],
+   "distractors": [
+    "Symmetric: a ~ b implies b ~ a because a − b = b − a.",
+    "Adding the two equations, a − c = klm, so m | a − c and a ~ c.",
+    "Antisymmetric: if a ~ b and b ~ a then a = b."
+   ]
+  },
+  {
+   "title": "Transitivity of (a, b) ~ (c, d) iff ad = bc",
+   "goal": "On ℤ × (ℤ ∖ {0}) define (a, b) ~ (c, d) iff ad = bc. Prove ~ is transitive.",
+   "lines": [
+    "Suppose (a, b) ~ (c, d) and (c, d) ~ (e, f): ad = bc and cf = de, with b, d, f ≠ 0.",
+    "Case 1 (c = 0): ad = 0 with d ≠ 0 forces a = 0, and de = 0 forces e = 0, so af = 0 = be.",
+    "Case 2 (c ≠ 0): multiplying the two equations gives (ad)(cf) = (bc)(de).",
+    "Case 2, continued: cd ≠ 0, so cancel it from both sides to get af = be.",
+    "In both cases af = be, so (a, b) ~ (e, f) and ~ is transitive. ∎"
+   ],
+   "distractors": [
+    "Multiplying the two equations and cancelling cd always gives af = be, so no case split is needed.",
+    "Divide the first equation by c to get a = bc/d, which is an integer.",
+    "So af = be gives (e, f) ~ (a, b), which is symmetry, not transitivity, and we are done."
+   ]
+  },
+  {
+   "title": "Equivalence classes are equal or disjoint",
+   "goal": "Let R be an equivalence relation on A. Prove that if [a] ∩ [b] ≠ ∅ then [a] = [b].",
+   "lines": [
+    "Suppose c ∈ [a] ∩ [b], so aRc and bRc.",
+    "Symmetry turns bRc into cRb; transitivity on aRc and cRb gives aRb.",
+    "Now let x ∈ [a], so aRx.",
+    "Symmetry turns aRb into bRa; transitivity on bRa and aRx gives bRx, so x ∈ [b]. Hence [a] ⊆ [b].",
+    "Since bRa also holds, the same argument with a and b swapped gives [b] ⊆ [a].",
+    "Therefore [a] = [b]: two classes are either disjoint or equal, so the classes partition A. ∎"
+   ],
+   "distractors": [
+    "Transitivity on aRc and bRc gives aRb directly.",
+    "Since [a] ⊆ [b] and both are classes, [a] = [b].",
+    "By antisymmetry, aRb and bRa give a = b, so [a] = [b]."
+   ]
+  },
+  {
+   "title": "Divisibility is a partial order on ℤ⁺ (but not on ℤ)",
+   "goal": "Prove that | (divides) is a partial order on the positive integers, and show it is not one on ℤ.",
+   "lines": [
+    "Reflexive: a = 1·a, so a | a for every positive integer a.",
+    "Antisymmetric: suppose a | b and b | a, and write b = ka and a = lb with k, l positive integers.",
+    "Then a = lka, and since a > 0 we get lk = 1, so k = l = 1 and a = b.",
+    "Transitive: if a | b and b | c, write b = ka and c = lb; then c = (lk)a, so a | c.",
+    "So | is a partial order on ℤ⁺.",
+    "On ℤ antisymmetry fails: 2 | −2 and −2 | 2, but 2 ≠ −2. ∎"
+   ],
+   "distractors": [
+    "Symmetric: if a | b then b | a.",
+    "On ℤ the same argument works: lk = 1 forces k = l = 1, so | is a partial order on ℤ too.",
+    "Transitive: if a | b and b | c, then c = a + b, so a | c."
+   ]
+  },
+  {
+   "title": "R is transitive iff Rⁿ ⊆ R for all n ≥ 1",
+   "goal": "For a relation R on A (with Rⁿ⁺¹ = Rⁿ ∘ R), prove R is transitive iff Rⁿ ⊆ R for every n ≥ 1.",
+   "lines": [
+    "Part 1 (⇐): assume Rⁿ ⊆ R for all n; in particular R² ⊆ R.",
+    "Part 1, continued: if (a, b) ∈ R and (b, c) ∈ R then (a, c) ∈ R², hence (a, c) ∈ R, so R is transitive.",
+    "Part 2 (⇒): assume R is transitive and induct on n; base case n = 1: R¹ = R ⊆ R.",
+    "Inductive step: assume Rⁿ ⊆ R and let (a, c) ∈ Rⁿ⁺¹ = Rⁿ ∘ R.",
+    "Then there is b with (a, b) ∈ R and (b, c) ∈ Rⁿ ⊆ R.",
+    "Transitivity of R gives (a, c) ∈ R, so Rⁿ⁺¹ ⊆ R, completing the induction. ∎"
+   ],
+   "distractors": [
+    "Inductive step: assume Rⁿ⁺¹ ⊆ R and deduce Rⁿ ⊆ R.",
+    "Then (a, c) ∈ R, because every pair in Rⁿ⁺¹ is already a pair of Rⁿ.",
+    "Part 2 (⇒): base case n = 1: R¹ = R², which is contained in R by transitivity."
+   ]
+  },
+  {
+   "title": "The union of all powers is transitive",
+   "goal": "Let R* = R ∪ R² ∪ R³ ∪ ⋯ (pairs joined by a path of positive length). Prove R* is transitive and is contained in every transitive relation containing R.",
+   "lines": [
+    "Let (a, b) ∈ R* and (b, c) ∈ R*.",
+    "Then (a, b) ∈ Rᵐ and (b, c) ∈ Rⁿ for some m, n ≥ 1: there is a path of length m from a to b and one of length n from b to c.",
+    "Following the first path and then the second gives a path of length m + n from a to c.",
+    "So (a, c) ∈ Rᵐ⁺ⁿ ⊆ R*, and R* is transitive.",
+    "If S is transitive and R ⊆ S, then Rⁿ ⊆ Sⁿ ⊆ S for every n, so R* ⊆ S: R* is the transitive closure. ∎"
+   ],
+   "distractors": [
+    "Then (a, b) ∈ R and (b, c) ∈ R, since R* = R.",
+    "So (a, c) ∈ Rᵐⁿ ⊆ R*, and R* is transitive.",
+    "Following the two paths gives a path of length max(m, n) from a to c."
+   ]
+  }
  ]
 }

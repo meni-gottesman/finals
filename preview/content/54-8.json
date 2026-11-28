@@ -1,0 +1,1241 @@
+{
+ "id": "54-8",
+ "course": "54",
+ "title": "Eigenvectors & linear transformations, complex eigenvalues",
+ "source": "Lay 5.4–5.5",
+ "summary": "Every linear map has a matrix in any choice of bases, and diagonalization is just choosing an eigenvector basis. When a real 2×2 matrix has complex eigenvalues a ± bi, it is similar to a rotation–scaling matrix, which explains the spiralling behaviour of Aᵏx.",
+ "lesson": [
+  {
+   "title": "The matrix of a linear transformation relative to bases",
+   "blocks": [
+    {
+     "type": "p",
+     "text": "Let T: V → W be linear, ℬ = {<b>b</b>₁, …, <b>b</b>ₙ} a basis of V and 𝒞 a basis of W. Coordinates turn T into a matrix acting on coordinate vectors."
+    },
+    {
+     "type": "def",
+     "term": "Matrix of T relative to ℬ and 𝒞",
+     "text": "M = [[T(<b>b</b>₁)]<sub>𝒞</sub> ⋯ [T(<b>b</b>ₙ)]<sub>𝒞</sub>]. It satisfies [T(<b>x</b>)]<sub>𝒞</sub> = M[<b>x</b>]<sub>ℬ</sub> for all <b>x</b>."
+    },
+    {
+     "type": "tip",
+     "text": "Why: <b>x</b> = Σrⱼ<b>b</b>ⱼ ⇒ T(<b>x</b>) = ΣrⱼT(<b>b</b>ⱼ) ⇒ [T(<b>x</b>)]<sub>𝒞</sub> = Σrⱼ[T(<b>b</b>ⱼ)]<sub>𝒞</sub> = M[<b>x</b>]<sub>ℬ</sub>. Same idea as the standard matrix, with coordinates instead of entries."
+    },
+    {
+     "type": "steps",
+     "title": "Recipe",
+     "items": [
+      "Apply T to each input basis vector <b>b</b>ⱼ.",
+      "Write each image in the output basis 𝒞 (solve for its 𝒞-coordinates).",
+      "Put those coordinate vectors in as COLUMNS, in the order of ℬ."
+     ]
+    },
+    {
+     "type": "warn",
+     "text": "Columns, not rows: writing the images as rows gives the transpose. And the columns are 𝒞-coordinates of the images, not the images themselves (unless 𝒞 is the standard basis)."
+    },
+    {
+     "type": "example",
+     "title": "Matrix of differentiation on ℙ₃",
+     "prompt": "Find the matrix of D(p) = p′ on ℙ₃ relative to ℬ = {1, t, t², t³}, and use it to differentiate p = 2 − t + 4t² + t³.",
+     "steps": [
+      "D(1) = 0 → (0, 0, 0, 0). D(t) = 1 → (1, 0, 0, 0). D(t²) = 2t → (0, 2, 0, 0). D(t³) = 3t² → (0, 0, 3, 0).",
+      "Matrix [0 1 0 0; 0 0 2 0; 0 0 0 3; 0 0 0 0].",
+      "[p]<sub>ℬ</sub> = (2, −1, 4, 1); multiply: (−1, 8, 3, 0).",
+      "So p′ = −1 + 8t + 3t². Direct check: derivative of 2 − t + 4t² + t³ is −1 + 8t + 3t². ✓"
+     ],
+     "answer": "[D] = [0 1 0 0; 0 0 2 0; 0 0 0 3; 0 0 0 0]; p′ = −1 + 8t + 3t²."
+    },
+    {
+     "type": "matrix",
+     "rows": [
+      [
+       "0",
+       "1",
+       "0",
+       "0"
+      ],
+      [
+       "0",
+       "0",
+       "2",
+       "0"
+      ],
+      [
+       "0",
+       "0",
+       "0",
+       "3"
+      ],
+      [
+       "0",
+       "0",
+       "0",
+       "0"
+      ]
+     ]
+    },
+    {
+     "type": "tip",
+     "text": "The differentiation matrix is strictly upper triangular, so its only eigenvalue is 0 and it is not invertible (constants are killed), matching calculus."
+    },
+    {
+     "type": "example",
+     "title": "Matrix relative to two different bases",
+     "prompt": "T: ℙ₂ → ℝ², T(p) = (p(0), p(1)). Find the matrix relative to ℬ = {1, t, t²} and 𝒞 = {(1, 1), (1, −1)}.",
+     "steps": [
+      "Images: T(1) = (1, 1), T(t) = (0, 1), T(t²) = (0, 1).",
+      "𝒞-coordinates: (1, 1) = 1·(1, 1) + 0·(1, −1) → (1, 0).",
+      "(0, 1) = a(1, 1) + b(1, −1): a + b = 0, a − b = 1 ⇒ a = ½, b = −½ → (½, −½).",
+      "Matrix [1 1/2 1/2; 0 −1/2 −1/2]."
+     ],
+     "answer": "[1 ½ ½; 0 −½ −½]"
+    }
+   ]
+  },
+  {
+   "title": "The ℬ-matrix of x ↦ Ax and diagonalization",
+   "blocks": [
+    {
+     "type": "p",
+     "text": "When T: V → V uses the same basis ℬ on both sides, write [T]<sub>ℬ</sub> (the ℬ-matrix). Column j is [T(<b>b</b>ⱼ)]<sub>ℬ</sub>."
+    },
+    {
+     "type": "thm",
+     "name": "ℬ-matrix of a matrix transformation",
+     "text": "If T(<b>x</b>) = A<b>x</b> on ℝⁿ and P = [<b>b</b>₁ ⋯ <b>b</b>ₙ], then [T]<sub>ℬ</sub> = P⁻¹AP.",
+     "proof": [
+      {
+       "type": "p",
+       "text": "[<b>x</b>]<sub>ℬ</sub> = P⁻¹<b>x</b>. So [A<b>x</b>]<sub>ℬ</sub> = P⁻¹A<b>x</b> = P⁻¹AP[<b>x</b>]<sub>ℬ</sub>."
+      }
+     ]
+    },
+    {
+     "type": "thm",
+     "name": "Diagonal Matrix Representation",
+     "text": "If A = PDP⁻¹ with D diagonal, then D is the ℬ-matrix of <b>x</b> ↦ A<b>x</b> for the eigenvector basis ℬ formed by the columns of P. Conversely, [T]<sub>ℬ</sub> is diagonal iff ℬ consists of eigenvectors of T.",
+     "proof": [
+      {
+       "type": "p",
+       "text": "Column j of [T]<sub>ℬ</sub> is dⱼ<b>e</b>ⱼ ⇔ T(<b>b</b>ⱼ) = dⱼ<b>b</b>ⱼ."
+      }
+     ]
+    },
+    {
+     "type": "tip",
+     "text": "Diagonalization = choosing coordinates in which A acts by independent scalings along each axis. Similar matrices are the same linear map written in different bases, which is why they share eigenvalues, det, trace and rank."
+    },
+    {
+     "type": "example",
+     "title": "ℬ-matrix for an eigenvector basis",
+     "prompt": "A = [7 2; −4 1], ℬ = {(1, −1), (1, −2)}. Find [T]<sub>ℬ</sub> for T(x) = Ax.",
+     "steps": [
+      "A(1, −1) = (5, −5) = 5(1, −1); A(1, −2) = (3, −6) = 3(1, −2).",
+      "Both basis vectors are eigenvectors, so the columns are (5, 0) and (0, 3)."
+     ],
+     "answer": "[T]<sub>ℬ</sub> = [5 0; 0 3] = D"
+    },
+    {
+     "type": "example",
+     "title": "ℬ-matrix when A is not diagonalizable",
+     "prompt": "A = [4 −9; 4 −8], b₁ = (3, 2), b₂ = (2, 1). Find the ℬ-matrix of x ↦ Ax.",
+     "steps": [
+      "P = [3 2; 2 1], det = −1, P⁻¹ = [−1 2; 2 −3].",
+      "AP = [4·3 − 9·2, 4·2 − 9; 4·3 − 8·2, 8 − 8] = [−6 −1; −4 0].",
+      "P⁻¹AP = [−1 2; 2 −3][−6 −1; −4 0] = [6 − 8, 1; −12 + 12, −2] = [−2 1; 0 −2].",
+      "Meaning: Ab₁ = −2b₁ (an eigenvector) and Ab₂ = b₁ − 2b₂. A has only the eigenvalue −2 with a 1-dimensional eigenspace, so this triangular form is the best possible."
+     ],
+     "answer": "[T]<sub>ℬ</sub> = [−2 1; 0 −2]"
+    },
+    {
+     "type": "warn",
+     "text": "[T]<sub>ℬ</sub> = P⁻¹AP, with P⁻¹ on the LEFT. PAP⁻¹ is the matrix for a different basis."
+    }
+   ]
+  },
+  {
+   "title": "Complex eigenvalues of a real 2×2 matrix",
+   "blocks": [
+    {
+     "type": "p",
+     "text": "If the characteristic polynomial λ² − (tr A)λ + det A has negative discriminant (tr A)² − 4 det A, the eigenvalues are a complex conjugate pair a ± bi. We still find eigenvectors by solving (A − λI)<b>x</b> = <b>0</b>, now with complex arithmetic."
+    },
+    {
+     "type": "thm",
+     "name": "Conjugate pairs",
+     "text": "If A is real and A<b>v</b> = λ<b>v</b>, then A<b>v̄</b> = λ̄<b>v̄</b>: conjugate eigenvalues have conjugate eigenvectors. A real 2×2 matrix with non-real eigenvalues has no real eigenvector.",
+     "proof": [
+      {
+       "type": "p",
+       "text": "Conjugate both sides of A<b>v</b> = λ<b>v</b>; A has real entries so Ā = A."
+      }
+     ]
+    },
+    {
+     "type": "steps",
+     "title": "Eigenvector shortcut for 2×2",
+     "items": [
+      "A − λI is singular, so its two rows are (complex) multiples of each other: use just ONE row.",
+      "If row 1 is (p, q), then <b>v</b> = (−q, p) solves p x₁ + q x₂ = 0. Or use row 2.",
+      "The eigenvector for λ̄ is <b>v̄</b>; no extra work."
+     ]
+    },
+    {
+     "type": "example",
+     "title": "Complex eigenvalues and eigenvectors",
+     "prompt": "A = [3 −2; 4 −1]. Find the eigenvalues and an eigenvector for λ = 1 − 2i.",
+     "steps": [
+      "tr = 2, det = −3 + 8 = 5: λ² − 2λ + 5 = 0 ⇒ λ = (2 ± √(4 − 20))/2 = 1 ± 2i.",
+      "A − (1 − 2i)I = [2 + 2i, −2; 4, −2 + 2i].",
+      "Row 1: (2 + 2i)x₁ − 2x₂ = 0 ⇒ x₂ = (1 + i)x₁. Take v = (1, 1 + i).",
+      "Check with row 2: 4·1 + (−2 + 2i)(1 + i) = 4 + (−2 − 2i + 2i + 2i²) = 4 − 4 = 0. ✓"
+     ],
+     "answer": "λ = 1 ± 2i; v = (1, 1 + i) for 1 − 2i (and (1, 1 − i) for 1 + 2i)."
+    }
+   ]
+  },
+  {
+   "title": "Rotation–scaling form A = PCP⁻¹",
+   "blocks": [
+    {
+     "type": "thm",
+     "name": "Real canonical form",
+     "text": "Let A be real 2×2 with eigenvalue λ = a − bi (b ≠ 0) and eigenvector <b>v</b>. Then A = PCP⁻¹ where P = [Re <b>v</b>  Im <b>v</b>] and C = [a −b; b a].",
+     "proof": [
+      {
+       "type": "p",
+       "text": "Write <b>v</b> = <b>x</b> + i<b>y</b>. Then A<b>x</b> + iA<b>y</b> = A<b>v</b> = (a − bi)(<b>x</b> + i<b>y</b>) = (a<b>x</b> + b<b>y</b>) + i(−b<b>x</b> + a<b>y</b>). Matching real and imaginary parts: A<b>x</b> = a<b>x</b> + b<b>y</b> and A<b>y</b> = −b<b>x</b> + a<b>y</b>, which is exactly AP = PC with C's columns (a, b) and (−b, a). P is invertible because Re <b>v</b>, Im <b>v</b> are independent (a real multiple relation would make a real eigenvector for a non-real λ)."
+      }
+     ]
+    },
+    {
+     "type": "thm",
+     "name": "C is a rotation times a scaling",
+     "text": "C = [a −b; b a] = r·[cos φ −sin φ; sin φ cos φ] with r = |λ| = √(a² + b²) and φ the angle of the point (a, b) (cos φ = a/r, sin φ = b/r). Note det C = a² + b² = r².",
+     "proof": [
+      {
+       "type": "p",
+       "text": "Factor r out of each entry: a/r and b/r are the cosine and sine of the angle of (a, b)."
+      }
+     ]
+    },
+    {
+     "type": "warn",
+     "text": "Use λ = a − bi (the eigenvalue with negative imaginary part, in Lay's convention) together with P = [Re v Im v]. Using the eigenvector of a + bi with the same P flips the signs of b in C. Always verify AP = PC."
+    },
+    {
+     "type": "example",
+     "title": "Write A = PCP⁻¹; find r and the angle",
+     "prompt": "For A = [3 −2; 4 −1] (eigenvalues 1 ± 2i), find P and C with A = PCP⁻¹, the scale factor r and the rotation angle φ.",
+     "steps": [
+      "λ = 1 − 2i ⇒ a = 1, b = 2, with v = (1, 1 + i) = (1, 1) + i(0, 1).",
+      "P = [Re v  Im v] = [1 0; 1 1], C = [1 −2; 2 1].",
+      "Check: AP = [3 −2; 4 −1][1 0; 1 1] = [1 −2; 3 −1] and PC = [1 0; 1 1][1 −2; 2 1] = [1 −2; 3 −1]. ✓",
+      "r = |λ| = √(1 + 4) = √5; cos φ = 1/√5, sin φ = 2/√5, so φ = arctan 2 ≈ 63.4°."
+     ],
+     "answer": "P = [1 0; 1 1], C = [1 −2; 2 1]; r = √5, φ = arctan 2 ≈ 63.4°."
+    },
+    {
+     "type": "matrix",
+     "rows": [
+      [
+       "1",
+       "-2"
+      ],
+      [
+       "2",
+       "1"
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "title": "Long-run behaviour of Aᵏx",
+   "blocks": [
+    {
+     "type": "p",
+     "text": "Since A = PCP⁻¹, Aᵏ = PCᵏP⁻¹ and Cᵏ = rᵏ·(rotation by kφ). In the coordinates given by the columns of P, each multiplication by A rotates by φ and scales by r = |λ|."
+    },
+    {
+     "type": "table",
+     "head": [
+      "|λ| = r",
+      "Trajectory of x, Ax, A²x, …"
+     ],
+     "rows": [
+      [
+       "r &lt; 1",
+       "spirals inward to 0"
+      ],
+      [
+       "r = 1",
+       "stays on a closed ellipse (circle if P is orthogonal-like)"
+      ],
+      [
+       "r &gt; 1",
+       "spirals outward to infinity"
+      ]
+     ]
+    },
+    {
+     "type": "example",
+     "title": "Classify the long-run behaviour",
+     "prompt": "Describe the trajectories xₖ = Aᵏx₀ for (a) [1 −1; 1 1], (b) [0.8 −0.6; 0.6 0.8], (c) [0.5 −0.5; 0.5 0.5]. Also compute [1 −1; 1 1]⁸.",
+     "steps": [
+      "Each has the form [a −b; b a], so r = √(a² + b²) and the angle is that of (a, b).",
+      "(a) r = √2 &gt; 1, φ = π/4: spirals outward, rotating 45° each step.",
+      "(b) r = √(0.64 + 0.36) = 1: points move around a circle (angle arccos 0.8 ≈ 36.9° per step).",
+      "(c) r = √0.5 ≈ 0.707 &lt; 1, φ = π/4: spirals inward to 0.",
+      "[1 −1; 1 1]⁸ = (√2)⁸·(rotation by 8·π/4 = 2π) = 16I."
+     ],
+     "answer": "(a) spiral out (b) circle (c) spiral in; [1 −1; 1 1]⁸ = 16I."
+    },
+    {
+     "type": "tip",
+     "text": "For real eigenvalues the analogous rule: components along eigenvectors with |λ| &lt; 1 die out, those with |λ| &gt; 1 blow up, and the largest |λ| dominates in the long run."
+    }
+   ]
+  },
+  {
+   "title": "True/False on complex eigenvalues and ℬ-matrices",
+   "blocks": [
+    {
+     "type": "example",
+     "title": "Five True/False",
+     "prompt": "(a) Every real 3×3 matrix has a real eigenvalue. (b) A real 2×2 matrix with eigenvalues 2 ± 3i is diagonalizable over ℝ. (c) If λ = a + bi is an eigenvalue of real A with eigenvector v, then v̄ is an eigenvector for λ̄. (d) Matrices of the same T: V → V relative to two bases are similar. (e) [a −b; b a] has eigenvalues a ± bi and |λ| = √det.",
+     "steps": [
+      "(a) True: a real cubic has a real root (complex roots come in pairs).",
+      "(b) False: over ℝ there are no real eigenvectors at all.",
+      "(c) True: conjugate Av = λv.",
+      "(d) True: [T]_𝒞 = P⁻¹[T]_ℬP with P = P_{ℬ←𝒞}.",
+      "(e) True: λ² − 2aλ + (a² + b²) = 0 gives a ± bi, and det = a² + b² = |λ|²."
+     ],
+     "answer": "(a) T (b) F (c) T (d) T (e) T"
+    },
+    {
+     "type": "tip",
+     "text": "Fast check for a 2×2 with eigenvalues a ± bi: trace = 2a and det = a² + b²."
+    }
+   ]
+  }
+ ],
+ "cards": [
+  {
+   "front": "Matrix of T: V → W relative to ℬ and 𝒞?",
+   "back": [
+    {
+     "type": "p",
+     "text": "M = [[T(b₁)]_𝒞 ⋯ [T(bₙ)]_𝒞]; it satisfies [T(x)]_𝒞 = M[x]_ℬ."
+    }
+   ]
+  },
+  {
+   "front": "Matrix of differentiation on ℙ₃ (basis 1, t, t², t³)?",
+   "back": [
+    {
+     "type": "p",
+     "text": "[0 1 0 0; 0 0 2 0; 0 0 0 3; 0 0 0 0]. Strictly upper triangular: eigenvalue 0 only, not invertible."
+    }
+   ]
+  },
+  {
+   "front": "ℬ-matrix of x ↦ Ax with P = [b₁ ⋯ bₙ]?",
+   "back": [
+    {
+     "type": "p",
+     "text": "[T]_ℬ = P⁻¹AP."
+    }
+   ]
+  },
+  {
+   "front": "When is [T]_ℬ diagonal?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Exactly when every vector of ℬ is an eigenvector of T; the diagonal entries are the eigenvalues."
+    }
+   ]
+  },
+  {
+   "front": "Why do similar matrices share eigenvalues, from the transformation point of view?",
+   "back": [
+    {
+     "type": "p",
+     "text": "They are matrices of the same linear map in different bases."
+    }
+   ]
+  },
+  {
+   "front": "Why do non-real eigenvalues of a real matrix come in conjugate pairs?",
+   "back": [
+    {
+     "type": "p",
+     "text": "The characteristic polynomial has real coefficients; and conjugating Av = λv gives Av̄ = λ̄v̄."
+    }
+   ]
+  },
+  {
+   "front": "Can a real 2×2 matrix with non-real eigenvalues have a real eigenvector?",
+   "back": [
+    {
+     "type": "p",
+     "text": "No: Ax would be real while λx is not."
+    }
+   ]
+  },
+  {
+   "front": "Fast eigenvector for complex λ of a 2×2?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Use one row (p, q) of A − λI: v = (−q, p). The other eigenvector is v̄."
+    }
+   ]
+  },
+  {
+   "front": "If λ = a − bi with eigenvector v, what are P and C with A = PCP⁻¹?",
+   "back": [
+    {
+     "type": "p",
+     "text": "P = [Re v  Im v], C = [a −b; b a]."
+    }
+   ]
+  },
+  {
+   "front": "C = [a −b; b a] as rotation and scaling?",
+   "back": [
+    {
+     "type": "p",
+     "text": "C = r·(rotation by φ), r = |λ| = √(a² + b²), φ = angle of (a, b)."
+    }
+   ]
+  },
+  {
+   "front": "What do |λ| and the angle say about repeated multiplication by A?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Each step rotates (in P-coordinates) by φ and scales by r = |λ|: r &lt; 1 spiral in, r = 1 closed orbit, r &gt; 1 spiral out."
+    }
+   ]
+  },
+  {
+   "front": "Compute [1 −1; 1 1]⁸ quickly.",
+   "back": [
+    {
+     "type": "p",
+     "text": "r = √2, φ = π/4: (√2)⁸ × rotation by 2π = 16I."
+    }
+   ]
+  },
+  {
+   "front": "Quick check that a real 2×2 has eigenvalues a ± bi?",
+   "back": [
+    {
+     "type": "p",
+     "text": "trace = 2a and det = a² + b² (with b ≠ 0)."
+    }
+   ]
+  },
+  {
+   "front": "Why are Re v and Im v independent (so P is invertible)?",
+   "back": [
+    {
+     "type": "p",
+     "text": "If Im v = c·Re v with c real, then Re v would be a real eigenvector for the non-real λ, impossible."
+    }
+   ]
+  },
+  {
+   "front": "Every real 3×3 matrix has a real eigenvalue: why?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Its characteristic polynomial is a real cubic, which has a real root."
+    }
+   ]
+  },
+  {
+   "front": "Is [a −b; b a] (b ≠ 0) diagonalizable over ℝ? over ℂ?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Not over ℝ (no real eigenvalues); yes over ℂ (distinct eigenvalues a ± bi)."
+    }
+   ]
+  },
+  {
+   "front": "Matrix of T(p) = t·p(t), ℙ₂ → ℙ₃ (standard bases)?",
+   "back": [
+    {
+     "type": "p",
+     "text": "[0 0 0; 1 0 0; 0 1 0; 0 0 1]: columns are t, t², t³ in coordinates."
+    }
+   ]
+  },
+  {
+   "front": "Common error building a matrix relative to bases?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Writing the images as rows (gives the transpose) or using images themselves instead of their 𝒞-coordinates."
+    }
+   ]
+  }
+ ],
+ "hard": [
+  {
+   "title": "Matrix of p ↦ p′ + 2p",
+   "level": "hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "<i>T</i>: ℙ₂ → ℙ₂, <i>T</i>(<i>p</i>) = <i>p</i>′ + 2<i>p</i>. Find [<i>T</i>]<sub>ℬ</sub> for ℬ = {1, <i>t</i>, <i>t</i>²}, use it to compute <i>T</i>(3 − <i>t</i> + <i>t</i>²), and decide if <i>T</i> is invertible."
+    }
+   ],
+   "answer": "[T]_ℬ = [2 1 0; 0 2 2; 0 0 2]; T(3 − t + t²) = 5 + 2t²; invertible (det 8)",
+   "solution": [
+    {
+     "type": "p",
+     "text": "<i>T</i>(1) = 2, <i>T</i>(<i>t</i>) = 1 + 2<i>t</i>, <i>T</i>(<i>t</i>²) = 2<i>t</i> + 2<i>t</i>². Columns are their coordinates:"
+    },
+    {
+     "type": "matrix",
+     "rows": [
+      [
+       "2",
+       "1",
+       "0"
+      ],
+      [
+       "0",
+       "2",
+       "2"
+      ],
+      [
+       "0",
+       "0",
+       "2"
+      ]
+     ]
+    },
+    {
+     "type": "p",
+     "text": "[<i>p</i>]<sub>ℬ</sub> = (3, −1, 1); [<i>T</i>]<sub>ℬ</sub>(3,−1,1) = (5, 0, 2) ⇒ <b><i>T</i>(<i>p</i>) = 5 + 2<i>t</i>²</b>. Direct: (−1 + 2<i>t</i>) + (6 − 2<i>t</i> + 2<i>t</i>²) ✓."
+    },
+    {
+     "type": "p",
+     "text": "Triangular with det 8 ≠ 0 ⇒ <b>invertible</b>."
+    },
+    {
+     "type": "warn",
+     "text": "What it tests: Columns = coordinates of the images of the basis vectors, in order. Writing images as rows gives the transpose."
+    }
+   ]
+  },
+  {
+   "title": "ℬ-matrix of a non-diagonalizable A",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "<i>A</i> ="
+    },
+    {
+     "type": "matrix",
+     "rows": [
+      [
+       "3",
+       "1"
+      ],
+      [
+       "−1",
+       "1"
+      ]
+     ]
+    },
+    {
+     "type": "p",
+     "text": ", ℬ = {<b>b</b>₁ = (1, −1), <b>b</b>₂ = (1, 0)}. Find the ℬ-matrix of <b>x</b> ↦ <i>A</i><b>x</b>. Is <i>A</i> diagonalizable?"
+    }
+   ],
+   "answer": "[T]_ℬ = [2 1; 0 2]; not diagonalizable",
+   "solution": [
+    {
+     "type": "p",
+     "text": "<i>P</i> = [<b>b</b>₁ <b>b</b>₂] ="
+    },
+    {
+     "type": "matrix",
+     "rows": [
+      [
+       "1",
+       "1"
+      ],
+      [
+       "−1",
+       "0"
+      ]
+     ]
+    },
+    {
+     "type": "p",
+     "text": ", det 1, <i>P</i>⁻¹ ="
+    },
+    {
+     "type": "matrix",
+     "rows": [
+      [
+       "0",
+       "−1"
+      ],
+      [
+       "1",
+       "1"
+      ]
+     ]
+    },
+    {
+     "type": "p",
+     "text": "<i>AP</i> ="
+    },
+    {
+     "type": "matrix",
+     "rows": [
+      [
+       "2",
+       "3"
+      ],
+      [
+       "−2",
+       "−1"
+      ]
+     ]
+    },
+    {
+     "type": "p",
+     "text": "; <i>P</i>⁻¹<i>AP</i> ="
+    },
+    {
+     "type": "matrix",
+     "rows": [
+      [
+       "2",
+       "1"
+      ],
+      [
+       "0",
+       "2"
+      ]
+     ]
+    },
+    {
+     "type": "p",
+     "text": "Interpretation: <i>A</i><b>b</b>₁ = 2<b>b</b>₁ (eigenvector), <i>A</i><b>b</b>₂ = <b>b</b>₁ + 2<b>b</b>₂."
+    },
+    {
+     "type": "p",
+     "text": "Characteristic polynomial (λ − 2)², but <i>A</i> − 2<i>I</i> ="
+    },
+    {
+     "type": "matrix",
+     "rows": [
+      [
+       "1",
+       "1"
+      ],
+      [
+       "−1",
+       "−1"
+      ]
+     ]
+    },
+    {
+     "type": "p",
+     "text": "has rank 1 ⇒ one eigenvector ⇒ <b>not diagonalizable</b>. The ℬ-matrix is the next best thing."
+    },
+    {
+     "type": "warn",
+     "text": "What it tests: [<i>T</i>]<sub>ℬ</sub> = <i>P</i>⁻¹<i>AP</i>, with <i>P</i>⁻¹ on the left. Reversing gives the matrix for a different basis."
+    }
+   ]
+  },
+  {
+   "title": "Complex eigenvalues and A = PCP⁻¹",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "<i>A</i> ="
+    },
+    {
+     "type": "matrix",
+     "rows": [
+      [
+       "1",
+       "−2"
+      ],
+      [
+       "1",
+       "3"
+      ]
+     ]
+    },
+    {
+     "type": "p",
+     "text": ". Find the eigenvalues, an eigenvector for λ = 2 − <i>i</i>, and an invertible <i>P</i> and <i>C</i> ="
+    },
+    {
+     "type": "matrix",
+     "rows": [
+      [
+       "<i>a</i>",
+       "−<i>b</i>"
+      ],
+      [
+       "<i>b</i>",
+       "<i>a</i>"
+      ]
+     ]
+    },
+    {
+     "type": "p",
+     "text": "with <i>A</i> = <i>PCP</i>⁻¹. What are the scale factor and rotation angle of <i>C</i>?"
+    }
+   ],
+   "answer": "λ = 2 ± i; v = (−1 − i, 1); P = [−1 −1; 1 0], C = [2 −1; 1 2]; r = √5, φ = arctan(1/2) ≈ 26.6°",
+   "solution": [
+    {
+     "type": "p",
+     "text": "λ² − 4λ + 5 = 0 ⇒ <b>λ = 2 ± <i>i</i></b>."
+    },
+    {
+     "type": "p",
+     "text": "λ = 2 − <i>i</i>: <i>A</i> − λ<i>I</i> ="
+    },
+    {
+     "type": "matrix",
+     "rows": [
+      [
+       "−1+<i>i</i>",
+       "−2"
+      ],
+      [
+       "1",
+       "1+<i>i</i>"
+      ]
+     ]
+    },
+    {
+     "type": "p",
+     "text": ". Row 2: <i>x</i>₁ = −(1+<i>i</i>)<i>x</i>₂ ⇒ <b>v</b> = (−1 − <i>i</i>, 1)."
+    },
+    {
+     "type": "p",
+     "text": "Lay’s recipe for λ = <i>a</i> − <i>bi</i>: <i>P</i> = [Re <b>v</b> Im <b>v</b>] ="
+    },
+    {
+     "type": "matrix",
+     "rows": [
+      [
+       "−1",
+       "−1"
+      ],
+      [
+       "1",
+       "0"
+      ]
+     ]
+    },
+    {
+     "type": "p",
+     "text": ", <i>C</i> ="
+    },
+    {
+     "type": "matrix",
+     "rows": [
+      [
+       "2",
+       "−1"
+      ],
+      [
+       "1",
+       "2"
+      ]
+     ]
+    },
+    {
+     "type": "p",
+     "text": "(<i>a</i> = 2, <i>b</i> = 1)."
+    },
+    {
+     "type": "p",
+     "text": "Check <i>AP</i> ="
+    },
+    {
+     "type": "matrix",
+     "rows": [
+      [
+       "−3",
+       "−1"
+      ],
+      [
+       "2",
+       "−1"
+      ]
+     ]
+    },
+    {
+     "type": "p",
+     "text": "= <i>PC</i> ✓."
+    },
+    {
+     "type": "p",
+     "text": "<i>r</i> = |λ| = √5; angle φ with cos φ = 2/√5, sin φ = 1/√5, i.e. φ = arctan(1/2) ≈ 26.6°."
+    },
+    {
+     "type": "warn",
+     "text": "What it tests: Use λ = <i>a</i> − <i>bi</i> (not <i>a</i> + <i>bi</i>) with this <i>P</i>, or the signs in <i>C</i> flip. Always verify <i>AP</i> = <i>PC</i>."
+    }
+   ]
+  },
+  {
+   "title": "True/False: complex eigenvalues and bases",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "1. Every real 3×3 matrix has at least one real eigenvalue."
+    },
+    {
+     "type": "p",
+     "text": "2. If λ is a complex eigenvalue of a real matrix <i>A</i> with eigenvector <b>v</b>, then λ̄ is an eigenvalue with eigenvector <b>v̄</b>."
+    },
+    {
+     "type": "p",
+     "text": "3. A real 2×2 matrix with non-real eigenvalues has no real eigenvector."
+    },
+    {
+     "type": "p",
+     "text": "4."
+    },
+    {
+     "type": "matrix",
+     "rows": [
+      [
+       "<i>a</i>",
+       "−<i>b</i>"
+      ],
+      [
+       "<i>b</i>",
+       "<i>a</i>"
+      ]
+     ]
+    },
+    {
+     "type": "p",
+     "text": "with <i>b</i> ≠ 0 is diagonalizable over ℝ."
+    },
+    {
+     "type": "p",
+     "text": "5. Matrices of the same linear transformation <i>T</i>: <i>V</i> → <i>V</i> relative to two bases of <i>V</i> are similar."
+    },
+    {
+     "type": "p",
+     "text": "6. If [<i>T</i>]<sub>ℬ</sub> is diagonal, then ℬ consists of eigenvectors of <i>T</i>."
+    }
+   ],
+   "answer": "1 T, 2 T, 3 T, 4 F, 5 T, 6 T",
+   "solution": [
+    {
+     "type": "list",
+     "items": [
+      "1. <b>True.</b> The characteristic polynomial is a real cubic, and complex roots come in conjugate pairs, so at least one root is real.",
+      "2. <b>True.</b> Conjugate <i>A</i><b>v</b> = λ<b>v</b>; <i>A</i> is real, so <i>A</i><b>v̄</b> = λ̄<b>v̄</b>.",
+      "3. <b>True.</b> A real eigenvector <b>x</b> would give <i>A</i><b>x</b> = λ<b>x</b> with real left side, forcing λ real.",
+      "4. <b>False.</b> Its eigenvalues <i>a</i> ± <i>bi</i> are not real.",
+      "5. <b>True.</b> [<i>T</i>]<sub>𝒞</sub> = <i>P</i>⁻¹[<i>T</i>]<sub>ℬ</sub><i>P</i> with <i>P</i> = <i>P</i><sub>ℬ←𝒞</sub>.",
+      "6. <b>True.</b> Column <i>j</i> of [<i>T</i>]<sub>ℬ</sub> is [<i>T</i>(<b>b</b>ⱼ)]<sub>ℬ</sub> = <i>d</i>ⱼ<b>e</b>ⱼ, i.e. <i>T</i>(<b>b</b>ⱼ) = <i>d</i>ⱼ<b>b</b>ⱼ."
+     ]
+    },
+    {
+     "type": "warn",
+     "text": "What it tests: Complex eigenvalues of real matrices come in conjugate pairs with conjugate eigenvectors; their real 2×2 form is rotation-scaling."
+    }
+   ]
+  },
+  {
+   "title": "Construct a matrix with eigenvalues 3 ± 4i",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "Construct a real 2×2 matrix with eigenvalues 3 ± 4<i>i</i> that is <b>not</b> of the form"
+    },
+    {
+     "type": "matrix",
+     "rows": [
+      [
+       "<i>a</i>",
+       "−<i>b</i>"
+      ],
+      [
+       "<i>b</i>",
+       "<i>a</i>"
+      ]
+     ]
+    }
+   ],
+   "answer": "e.g. [7 −8; 4 −1] (trace 6, det 25)",
+   "solution": [
+    {
+     "type": "p",
+     "text": "Start from <i>C</i> ="
+    },
+    {
+     "type": "matrix",
+     "rows": [
+      [
+       "3",
+       "−4"
+      ],
+      [
+       "4",
+       "3"
+      ]
+     ]
+    },
+    {
+     "type": "p",
+     "text": "(eigenvalues 3 ± 4<i>i</i>) and conjugate by any non-orthogonal-ish <i>P</i>, e.g. <i>P</i> ="
+    },
+    {
+     "type": "matrix",
+     "rows": [
+      [
+       "1",
+       "1"
+      ],
+      [
+       "0",
+       "1"
+      ]
+     ]
+    },
+    {
+     "type": "p",
+     "text": "<i>PCP</i>⁻¹ ="
+    },
+    {
+     "type": "matrix",
+     "rows": [
+      [
+       "1",
+       "1"
+      ],
+      [
+       "0",
+       "1"
+      ]
+     ]
+    },
+    {
+     "type": "matrix",
+     "rows": [
+      [
+       "3",
+       "−4"
+      ],
+      [
+       "4",
+       "3"
+      ]
+     ]
+    },
+    {
+     "type": "matrix",
+     "rows": [
+      [
+       "1",
+       "−1"
+      ],
+      [
+       "0",
+       "1"
+      ]
+     ]
+    },
+    {
+     "type": "p",
+     "text": "="
+    },
+    {
+     "type": "matrix",
+     "rows": [
+      [
+       "7",
+       "−1"
+      ],
+      [
+       "4",
+       "3"
+      ]
+     ]
+    },
+    {
+     "type": "matrix",
+     "rows": [
+      [
+       "1",
+       "−1"
+      ],
+      [
+       "0",
+       "1"
+      ]
+     ]
+    },
+    {
+     "type": "p",
+     "text": "="
+    },
+    {
+     "type": "matrix",
+     "rows": [
+      [
+       "7",
+       "−8"
+      ],
+      [
+       "4",
+       "−1"
+      ]
+     ]
+    },
+    {
+     "type": "p",
+     "text": "Check: trace 6 = 2·3, det −7 + 32 = 25 = 3² + 4² ✓. Similar matrices share eigenvalues."
+    },
+    {
+     "type": "warn",
+     "text": "What it tests: Any real 2×2 with trace 2<i>a</i> and det <i>a</i>² + <i>b</i>² (and <i>b</i> ≠ 0) has eigenvalues <i>a</i> ± <i>bi</i>. Trace/det is the fastest check."
+    }
+   ]
+  },
+  {
+   "title": "Transpose map on M₂ₓ₂",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "<i>T</i>: <i>M</i>₂ₓ₂ → <i>M</i>₂ₓ₂, <i>T</i>(<i>X</i>) = <i>X</i>ᵀ. Find [<i>T</i>] relative to ℬ = {<i>E</i>₁₁, <i>E</i>₁₂, <i>E</i>₂₁, <i>E</i>₂₂}, the eigenvalues with eigenspace dimensions, and a basis 𝒞 for which [<i>T</i>]<sub>𝒞</sub> is diagonal."
+    }
+   ],
+   "answer": "[T]_ℬ = [1 0 0 0; 0 0 1 0; 0 1 0 0; 0 0 0 1]; λ = 1 (dim 3, symmetric), λ = −1 (dim 1, skew); 𝒞 = {E₁₁, E₂₂, E₁₂ + E₂₁, E₁₂ − E₂₁}",
+   "solution": [
+    {
+     "type": "p",
+     "text": "<i>T</i> fixes <i>E</i>₁₁, <i>E</i>₂₂ and swaps <i>E</i>₁₂ ↔ <i>E</i>₂₁: [<i>T</i>]<sub>ℬ</sub> ="
+    },
+    {
+     "type": "matrix",
+     "rows": [
+      [
+       "1",
+       "0",
+       "0",
+       "0"
+      ],
+      [
+       "0",
+       "0",
+       "1",
+       "0"
+      ],
+      [
+       "0",
+       "1",
+       "0",
+       "0"
+      ],
+      [
+       "0",
+       "0",
+       "0",
+       "1"
+      ]
+     ]
+    },
+    {
+     "type": "p",
+     "text": "<i>T</i>² = identity ⇒ eigenvalues ⊆ {1, −1}. λ = 1: <i>X</i>ᵀ = <i>X</i>, symmetric matrices, <b>dim 3</b>. λ = −1: skew-symmetric, <b>dim 1</b>."
+    },
+    {
+     "type": "p",
+     "text": "𝒞 = {<i>E</i>₁₁, <i>E</i>₂₂, <i>E</i>₁₂ + <i>E</i>₂₁, <i>E</i>₁₂ − <i>E</i>₂₁}: [<i>T</i>]<sub>𝒞</sub> = diag(1, 1, 1, −1)."
+    },
+    {
+     "type": "warn",
+     "text": "What it tests: Eigenvectors here are matrices. 3 + 1 = 4 independent eigenvectors ⇒ diagonalizable."
+    }
+   ]
+  },
+  {
+   "title": "B⁸ by rotation–scaling",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "Compute <i>B</i>⁸ for <i>B</i> ="
+    },
+    {
+     "type": "matrix",
+     "rows": [
+      [
+       "1",
+       "−1"
+      ],
+      [
+       "1",
+       "1"
+      ]
+     ]
+    },
+    {
+     "type": "p",
+     "text": "without multiplying matrices."
+    }
+   ],
+   "answer": "B⁸ = 16I",
+   "solution": [
+    {
+     "type": "p",
+     "text": "<i>B</i> is"
+    },
+    {
+     "type": "matrix",
+     "rows": [
+      [
+       "<i>a</i>",
+       "−<i>b</i>"
+      ],
+      [
+       "<i>b</i>",
+       "<i>a</i>"
+      ]
+     ]
+    },
+    {
+     "type": "p",
+     "text": "with <i>a</i> = <i>b</i> = 1: eigenvalues 1 ± <i>i</i>, <i>r</i> = √2, angle π/4."
+    },
+    {
+     "type": "p",
+     "text": "<i>B</i> = √2 · (rotation by π/4). <i>B</i>⁸ = (√2)⁸ · (rotation by 2π) = 16<i>I</i>."
+    },
+    {
+     "type": "p",
+     "text": "<i>B</i>⁸ ="
+    },
+    {
+     "type": "matrix",
+     "rows": [
+      [
+       "16",
+       "0"
+      ],
+      [
+       "0",
+       "16"
+      ]
+     ]
+    },
+    {
+     "type": "warn",
+     "text": "What it tests: Rotation-scaling matrices multiply like complex numbers: (1 + <i>i</i>)⁸ = ((1+<i>i</i>)²)⁴ = (2<i>i</i>)⁴ = 16."
+    }
+   ]
+  },
+  {
+   "title": "Matrix relative to two bases",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "<i>T</i>: ℙ₂ → ℝ², <i>T</i>(<i>p</i>) = (<i>p</i>(0), <i>p</i>(1)). Find the matrix of <i>T</i> relative to ℬ = {1, <i>t</i>, <i>t</i>²} and 𝒞 = {(1, 1), (1, −1)}."
+    }
+   ],
+   "answer": "[1 ½ ½; 0 −½ −½]",
+   "solution": [
+    {
+     "type": "p",
+     "text": "<i>T</i>(1) = (1, 1), <i>T</i>(<i>t</i>) = (0, 1), <i>T</i>(<i>t</i>²) = (0, 1)."
+    },
+    {
+     "type": "p",
+     "text": "𝒞-coordinates: (1,1) = 1·(1,1) + 0·(1,−1) → (1, 0). (0,1) = <i>a</i>(1,1) + <i>b</i>(1,−1) ⇒ <i>a</i> + <i>b</i> = 0, <i>a</i> − <i>b</i> = 1 ⇒ (½, −½)."
+    },
+    {
+     "type": "p",
+     "text": "[<i>T</i>]<sub>𝒞←ℬ</sub> ="
+    },
+    {
+     "type": "matrix",
+     "rows": [
+      [
+       "1",
+       "1/2",
+       "1/2"
+      ],
+      [
+       "0",
+       "−1/2",
+       "−1/2"
+      ]
+     ]
+    },
+    {
+     "type": "warn",
+     "text": "What it tests: Columns are 𝒞-coordinates of images, not the images themselves. Here [<i>T</i>]<sub>𝒞←ℬ</sub> = <i>C</i>⁻¹·(standard matrix)."
+    }
+   ]
+  },
+  {
+   "title": "Proof: Re v and Im v are independent",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "<i>A</i> is a real 2×2 matrix with eigenvalue λ = <i>a</i> − <i>bi</i> (<i>b</i> ≠ 0) and eigenvector <b>v</b>. Prove Re <b>v</b> and Im <b>v</b> are linearly independent (so <i>P</i> = [Re <b>v</b> Im <b>v</b>] is invertible)."
+    }
+   ],
+   "answer": "A real multiple relation would make Re v a real eigenvector for a non-real eigenvalue",
+   "solution": [
+    {
+     "type": "steps",
+     "title": "Solution",
+     "items": [
+      "Re <b>v</b> ≠ <b>0</b> and Im <b>v</b> ≠ <b>0</b>: if Im <b>v</b> = <b>0</b>, <b>v</b> would be a real eigenvector of a non-real eigenvalue (impossible). If Re <b>v</b> = <b>0</b>, then −<i>i</i><b>v</b> is a real eigenvector — same contradiction.",
+      "Suppose Im <b>v</b> = <i>c</i>·Re <b>v</b> with <i>c</i> real. Then <b>v</b> = (1 + <i>ci</i>)Re <b>v</b>, so Re <b>v</b> = <b>v</b>/(1 + <i>ci</i>) is also an eigenvector for λ (nonzero multiple).",
+      "But Re <b>v</b> is real, so <i>A</i> Re <b>v</b> is real, while λ Re <b>v</b> is not real (<i>b</i> ≠ 0). Contradiction. ∎"
+     ]
+    },
+    {
+     "type": "warn",
+     "text": "What it tests: Key fact used twice: a real nonzero vector can’t be an eigenvector for a non-real eigenvalue of a real matrix."
+    }
+   ]
+  }
+ ],
+ "keyFacts": [
+  "Matrix of T relative to ℬ, 𝒞: columns [T(bⱼ)]_𝒞; [T(x)]_𝒞 = M[x]_ℬ.",
+  "Differentiation on ℙₙ: superdiagonal 1, 2, …, n; only eigenvalue 0.",
+  "ℬ-matrix of x ↦ Ax: P⁻¹AP with P = [b₁ ⋯ bₙ]; diagonal ⇔ ℬ is an eigenvector basis.",
+  "Complex eigenvalues of real A come in pairs λ, λ̄ with eigenvectors v, v̄.",
+  "λ = a − bi, eigenvector v: A = PCP⁻¹, P = [Re v Im v], C = [a −b; b a].",
+  "C = r·rotation(φ), r = |λ| = √(a² + b²) = √det C, φ = angle of (a, b).",
+  "Aᵏx: spiral in if |λ| &lt; 1, closed orbit if |λ| = 1, spiral out if |λ| &gt; 1."
+ ]
+}

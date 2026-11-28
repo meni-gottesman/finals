@@ -1,0 +1,846 @@
+{
+ "id": "B-3",
+ "course": "B",
+ "title": "Inheritance: interfaces, extends, static vs dynamic type, casting, HOFs",
+ "source": "CS 61B Lec 9 · Ch 9–10",
+ "summary": "The rules that decide whether a line compiles, whether it crashes, and which method body actually runs. Once you know the two-step dispatch procedure (compiler picks the signature from static types, runtime picks the override from the dynamic type), “what would Java do” tables become mechanical points.",
+ "lesson": [
+  {
+   "title": "Interfaces and default methods",
+   "blocks": [
+    {
+     "type": "p",
+     "text": "An <b>interface</b> is a promise: anything of this type can do these methods. <code>interface List61B&lt;T> { void addLast(T x); T get(int i); int size(); }</code> lists signatures; <code>class AList&lt;T> implements List61B&lt;T></code> must supply public bodies for all of them (missing one is a compile error)."
+    },
+    {
+     "type": "def",
+     "term": "is-a (subtype polymorphism)",
+     "text": "An AList is a List61B, so <code>List61B&lt;String> L = new AList&lt;>();</code> is legal; a List61B variable can hold any implementing class."
+    },
+    {
+     "type": "def",
+     "term": "Default method",
+     "text": "An interface method with a body (keyword <code>default</code>), written using the other interface methods. Implementers inherit it and may override it."
+    },
+    {
+     "type": "def",
+     "term": "@Override",
+     "text": "Asks the compiler to verify you really override something; catches typos and accidental overloads."
+    },
+    {
+     "type": "list",
+     "items": [
+      "You cannot <code>new</code> an interface. Interfaces have no instance variables (only public static final constants).",
+      "Interface methods are implicitly public, so implementations must be declared public (weaker access is a compile error).",
+      "A class can implement many interfaces but extend only one class."
+     ]
+    },
+    {
+     "type": "code",
+     "lang": "java",
+     "text": "interface Lst {\n    int size(); int get(int i);\n    default void print() {\n        for (int i = 0; i < size(); i++) System.out.print(get(i) + \" \");\n        System.out.println();\n    }\n}\nclass Arr implements Lst {\n    public int size() { return 3; }\n    public int get(int i) { return i * i; }\n}\nnew Arr().print();     // 0 1 4  (default method calls Arr's size/get)"
+    },
+    {
+     "type": "tip",
+     "text": "Inside a default method, calls like <code>size()</code> or <code>describe()</code> are calls on <code>this</code>, so they dispatch dynamically to the object’s class."
+    }
+   ]
+  },
+  {
+   "title": "Implementation inheritance: extends, constructors, super",
+   "blocks": [
+    {
+     "type": "p",
+     "text": "<code>class B extends A</code> makes B a subclass: B inherits A’s fields and methods (not constructors), may override methods and add new ones. Every class implicitly extends Object (equals, hashCode, toString)."
+    },
+    {
+     "type": "thm",
+     "name": "Constructor chaining",
+     "text": "Every constructor first runs a superclass constructor. If you don’t write <code>super(…)</code> or <code>this(…)</code> as the first line, Java inserts <code>super()</code>. If the parent has no no-argument constructor, that is a compile error. The parent part of the object is built first."
+    },
+    {
+     "type": "thm",
+     "name": "super.m()",
+     "text": "Calls the parent’s version of m, chosen statically. But inside that parent body, calls to other methods on <code>this</code> still dispatch dynamically."
+    },
+    {
+     "type": "example",
+     "title": "Constructor chain with this(…) and super(…)",
+     "prompt": "<code>Animal2() prints \"Animal()\"; Animal2(int x) prints \"Animal(x)\". Dog2 extends Animal2: Dog2() prints \"Dog()\"; Dog2(int x) { super(x * 2); prints \"Dog(x)\" }. Puppy2 extends Dog2: Puppy2() { this(3); prints \"Puppy()\" }; Puppy2(int x) prints \"Puppy(x)\".</code> What do <code>new Puppy2()</code> and <code>new Dog2(5)</code> print?",
+     "steps": [
+      "Puppy2() starts with this(3): go to Puppy2(int 3).",
+      "Puppy2(3) has no explicit super, so Java inserts super() → Dog2() → implicit super() → Animal2() prints Animal(); then Dog() prints.",
+      "Back in Puppy2(3): prints Puppy(3). Back in Puppy2(): prints Puppy().",
+      "new Dog2(5): super(10) prints Animal(10), then Dog(5)."
+     ],
+     "answer": "Animal() Dog() Puppy(3) Puppy() and Animal(10) Dog(5) (verified)"
+    },
+    {
+     "type": "example",
+     "title": "super.x() still dispatches y() dynamically",
+     "prompt": "<code>class A1 { void x() { print \"A.x\"; y(); } void y() { print \"A.y\"; } }  class B1 extends A1 { void x() { print \"B.x\"; super.x(); } void y() { print \"B.y\"; } }</code> What does <code>new B1().x()</code> print?",
+     "steps": [
+      "Dynamic type B1 → B1.x runs: prints B.x.",
+      "super.x() runs A1’s x: prints A.x.",
+      "Inside A1.x, y() means this.y(); this is a B1 → B1.y: prints B.y."
+     ],
+     "answer": "B.x, A.x, B.y (verified)"
+    },
+    {
+     "type": "warn",
+     "text": "A method in B with the same name but different parameter types does not override A’s method; it adds an overload. Without @Override this silently changes nothing about dispatch on A-typed calls."
+    },
+    {
+     "type": "tip",
+     "text": "Is-a vs has-a: a Stack has a list (a field, composition); it is not a list. Inheriting when you mean has-a exposes methods (like get(i)) that break your invariants."
+    }
+   ]
+  },
+  {
+   "title": "Static type vs dynamic type",
+   "blocks": [
+    {
+     "type": "def",
+     "term": "Static type",
+     "text": "The declared type of a variable or expression. Fixed; it is all the compiler knows. A cast changes the static type of that one expression."
+    },
+    {
+     "type": "def",
+     "term": "Dynamic type",
+     "text": "The class of the object a reference currently points to, decided at runtime by the <code>new</code> that built it."
+    },
+    {
+     "type": "thm",
+     "name": "Rule 1 — compile time uses static types only",
+     "text": "<code>X v = expr;</code> compiles only if expr’s static type is X or a subtype. <code>v.m(args)</code> compiles only if the static type of v (or an ancestor) declares an m accepting the arguments’ static types."
+    },
+    {
+     "type": "thm",
+     "name": "Rule 2 — overridden instance methods use the dynamic type",
+     "text": "At runtime an instance method call runs the version from the object’s class (or the nearest ancestor that defines that exact signature)."
+    },
+    {
+     "type": "thm",
+     "name": "Exceptions to Rule 2",
+     "text": "Static methods and fields are chosen by static type (a same-named static method or field in the subclass hides, not overrides)."
+    },
+    {
+     "type": "example",
+     "title": "Static vs dynamic type table",
+     "prompt": "Given the hierarchy Animal ← Dog ← Puppy, Animal ← Cat, and <code>Animal a = new Dog(); Dog d = new Puppy(); Animal c = new Cat(); Object o = d;</code>, give the static and dynamic type of a, d, c, o, <code>(Animal) d</code>, <code>(Dog) o</code>.",
+     "steps": [
+      "a: static Animal (declaration), dynamic Dog (object).",
+      "d: static Dog, dynamic Puppy.",
+      "c: static Animal, dynamic Cat.",
+      "o: static Object, dynamic Puppy (same object as d).",
+      "(Animal) d: static Animal, dynamic still Puppy — casts never change the object.",
+      "(Dog) o: static Dog, dynamic Puppy (cast succeeds at runtime since Puppy is a Dog)."
+     ],
+     "answer": "Static types come from declarations/casts; dynamic types come from new — here Dog, Puppy, Cat, Puppy, Puppy, Puppy"
+    },
+    {
+     "type": "example",
+     "title": "Fields and static methods follow the static type",
+     "prompt": "With the hierarchy below (Animal.name = \"animal\", Dog.name = \"dog\", static kind() in both), print <code>a.name + \" \" + ((Dog) a).name + \" \" + d.kind() + \" \" + a.kind()</code>.",
+     "steps": [
+      "a.name: static type Animal → Animal’s field: animal.",
+      "((Dog) a).name: static type Dog → Dog’s field: dog.",
+      "d.kind(): static method, static type Dog → Dog kind.",
+      "a.kind(): static type Animal → Animal kind (even though a is a Dog)."
+     ],
+     "answer": "<code>animal dog Dog kind Animal kind</code> (verified)"
+    }
+   ]
+  },
+  {
+   "title": "Overloading vs overriding: the two-step rule",
+   "blocks": [
+    {
+     "type": "table",
+     "head": [
+      "",
+      "Overloading",
+      "Overriding"
+     ],
+     "rows": [
+      [
+       "Signature",
+       "same name, different parameter types",
+       "same name and parameter types"
+      ],
+      [
+       "Chosen by",
+       "compiler, using static types of receiver and arguments",
+       "runtime, using the dynamic type of the receiver"
+      ],
+      [
+       "Where",
+       "same class or subclass",
+       "subclass"
+      ]
+     ]
+    },
+    {
+     "type": "steps",
+     "title": "Procedure for x.m(arg)",
+     "items": [
+      "<b>Compile time:</b> look in the static type of x (and its ancestors) for methods named m. Among those whose parameter types accept the <b>static</b> type of arg, choose the most specific. None fits → compile error. Lock in that exact signature, e.g. m(Dog).",
+      "<b>Run time:</b> start at the dynamic type of x and walk up to the first class that defines that exact locked signature; run it. The dynamic type of arg is never consulted (single dispatch)."
+     ]
+    },
+    {
+     "type": "p",
+     "text": "All examples in this section use this hierarchy (verified by compiling and running every line):"
+    },
+    {
+     "type": "code",
+     "lang": "java",
+     "text": "interface Greeter {\n    default void hello() { System.out.println(\"Greeter hello\"); describe(); }\n    void describe();\n}\nclass Animal implements Greeter {\n    String name = \"animal\";\n    static String kind() { return \"Animal kind\"; }\n    public void describe() { System.out.println(\"Animal describe\"); }\n    void play(Animal a) { System.out.println(\"Animal plays with Animal\"); }\n    void play(Dog d)    { System.out.println(\"Animal plays with Dog\"); }\n    void meet(Animal a) { System.out.println(\"Animal meets\"); a.describe(); }\n}\nclass Dog extends Animal {\n    String name = \"dog\";\n    static String kind() { return \"Dog kind\"; }\n    public void describe() { System.out.println(\"Dog describe\"); }\n    void play(Animal a) { System.out.println(\"Dog plays with Animal\"); }\n    void play(Puppy p)  { System.out.println(\"Dog plays with Puppy\"); }\n    void fetch()        { System.out.println(\"fetch\"); }\n}\nclass Puppy extends Dog {\n    public void hello() { System.out.println(\"Puppy hello\"); super.hello(); }\n    void play(Dog d)    { System.out.println(\"Puppy plays with Dog\"); }\n}\nclass Cat extends Animal {\n    public void describe() { System.out.println(\"Cat describe\"); }\n}\n// Animal a = new Dog(); Dog d = new Puppy(); Animal c = new Cat(); Puppy p = new Puppy();"
+    },
+    {
+     "type": "example",
+     "title": "Overload picked statically, override picked dynamically",
+     "prompt": "Predict <code>a.play(d)</code>, <code>d.play(d)</code>, <code>d.play(p)</code>, <code>a.play(p)</code>, <code>p.play(a)</code>.",
+     "steps": [
+      "a.play(d): static Animal offers play(Animal), play(Dog); arg static Dog → lock play(Dog). Runtime Dog: Dog does not define play(Dog), inherit Animal’s → Animal plays with Dog.",
+      "d.play(d): static Dog offers play(Animal), play(Dog) (inherited), play(Puppy); arg static Dog → play(Dog). Runtime Puppy defines play(Dog) → Puppy plays with Dog.",
+      "d.play(p): arg static Puppy → most specific play(Puppy). Runtime Puppy doesn’t define it; nearest is Dog → Dog plays with Puppy.",
+      "a.play(p): static Animal only knows play(Animal), play(Dog); Puppy fits both, Dog is more specific → play(Dog). Runtime Dog doesn’t define play(Dog) → Animal plays with Dog. (Dog’s play(Puppy) is invisible through an Animal reference.)",
+      "p.play(a): arg static Animal → only play(Animal) fits. Puppy inherits Dog’s → Dog plays with Animal."
+     ],
+     "answer": "Animal plays with Dog / Puppy plays with Dog / Dog plays with Puppy / Animal plays with Dog / Dog plays with Animal"
+    },
+    {
+     "type": "example",
+     "title": "Casts change overload choice, not the override",
+     "prompt": "Predict <code>((Animal) p).play(p)</code>, <code>p.play((Dog) a)</code>, <code>c.play((Animal) d)</code>, <code>p.play(null)</code>.",
+     "steps": [
+      "((Animal) p).play(p): static receiver Animal, arg Puppy → play(Dog). Runtime Puppy defines play(Dog) → Puppy plays with Dog.",
+      "p.play((Dog) a): compiles (Dog and Animal related); at runtime a is a Dog so the cast succeeds. Static Puppy receiver, arg static Dog → play(Dog) → Puppy plays with Dog.",
+      "c.play((Animal) d): arg static Animal → play(Animal). Runtime Cat doesn’t override → Animal plays with Animal.",
+      "p.play(null): null fits every reference parameter; most specific of play(Animal), play(Dog), play(Puppy) is play(Puppy) → Dog plays with Puppy."
+     ],
+     "answer": "Puppy plays with Dog / Puppy plays with Dog / Animal plays with Animal / Dog plays with Puppy"
+    },
+    {
+     "type": "example",
+     "title": "Default methods, super calls and dynamic dispatch",
+     "prompt": "Predict <code>d.hello()</code>, <code>a.meet(d)</code>, and <code>Greeter g = c; g.hello();</code>.",
+     "steps": [
+      "d.hello(): Greeter declares hello, so it compiles. Runtime Puppy overrides hello → prints Puppy hello; super.hello() → Dog has no hello, so the default Greeter.hello runs → Greeter hello; then describe() dispatches on the Puppy → Dog describe.",
+      "a.meet(d): Animal.meet runs (not overridden) → Animal meets; then a.describe() inside it is on the argument (a Puppy) → Dog describe.",
+      "g.hello(): Cat doesn’t override hello → default prints Greeter hello; describe() on a Cat → Cat describe."
+     ],
+     "answer": "Puppy hello, Greeter hello, Dog describe / Animal meets, Dog describe / Greeter hello, Cat describe"
+    },
+    {
+     "type": "warn",
+     "text": "The classic wrong answer lets the argument’s dynamic type choose the overload. Java only looks up the receiver (the thing before the dot) at runtime."
+    }
+   ]
+  },
+  {
+   "title": "Casting: compile error vs ClassCastException",
+   "blocks": [
+    {
+     "type": "p",
+     "text": "A cast <code>(T) expr</code> changes the static type of that expression only; the object is unchanged."
+    },
+    {
+     "type": "steps",
+     "title": "Decision procedure for (T) expr",
+     "items": [
+      "Compile time: T and expr’s static type must be related (one a subtype of the other; interfaces are usually allowed unless the class is final). Unrelated classes (e.g. <code>(String) animal</code>, <code>(Cat) dog</code>) → compile error.",
+      "Run time: the object’s dynamic type must be T or a subtype; otherwise ClassCastException.",
+      "Assignment without a cast: allowed only upward (subtype into supertype variable)."
+     ]
+    },
+    {
+     "type": "example",
+     "title": "CE / RE / output table",
+     "prompt": "Using the hierarchy in the previous section, classify each line (separately): (1) <code>a.fetch();</code> (2) <code>((Dog) a).fetch();</code> (3) <code>((Dog) c).fetch();</code> (4) <code>Dog x = a;</code> (5) <code>Cat k = (Cat) d;</code> (6) <code>Cat k = (Cat) a;</code> (7) <code>Object o = a; String s = (String) o;</code> (8) <code>Object o = p; ((Animal) o).play(o);</code> (9) <code>Greeter g = c; g.play(a);</code>",
+     "steps": [
+      "(1) Animal has no fetch → CE (cannot find symbol).",
+      "(2) Compiles; a is a Dog → prints fetch.",
+      "(3) Compiles (Dog ⊂ Animal); c is a Cat → ClassCastException.",
+      "(4) Static Animal into a Dog variable without a cast → CE.",
+      "(5) Static Dog vs Cat: siblings, unrelated → CE (inconvertible types).",
+      "(6) Animal vs Cat related → compiles; object is a Dog → ClassCastException.",
+      "(7) Object vs String related → compiles; object is a Dog → ClassCastException.",
+      "(8) Static receiver Animal, arg static Object: neither play(Animal) nor play(Dog) accepts an Object → CE.",
+      "(9) Greeter declares no play → CE."
+     ],
+     "answer": "CE, fetch, RE, CE, CE, RE, RE, CE, CE (each line verified by compiling/running)"
+    },
+    {
+     "type": "warn",
+     "text": "Casting does not change which override runs: <code>((Animal) d).describe()</code> still runs the Puppy/Dog version. A cast only affects compile-time checks and overload selection."
+    }
+   ]
+  },
+  {
+   "title": "Higher-order functions in Java",
+   "blocks": [
+    {
+     "type": "p",
+     "text": "A <b>higher-order function</b> takes or returns a function. Java passes an object whose class implements a one-method (functional) interface; a <b>lambda</b> <code>x -> 10 * x</code> is shorthand that creates such an object."
+    },
+    {
+     "type": "code",
+     "lang": "java",
+     "text": "import java.util.function.IntUnaryOperator;\nclass TenX implements IntUnaryOperator {\n    public int applyAsInt(int x) { return 10 * x; }\n}\nstatic int doTwice(IntUnaryOperator f, int x) {\n    return f.applyAsInt(f.applyAsInt(x));\n}\nstatic IntUnaryOperator adder(int n) { return x -> x + n; }   // returns a function\n\ndoTwice(new TenX(), 3);     // 300\ndoTwice(x -> 10 * x, 2);    // 200\ndoTwice(adder(5), 0);       // 10"
+    },
+    {
+     "type": "def",
+     "term": "Functional interface",
+     "text": "An interface with exactly one abstract method: Comparator, Function, Predicate, IntUnaryOperator, Runnable, or your own <code>interface Func&lt;A, B> { B apply(A a); }</code>."
+    },
+    {
+     "type": "example",
+     "title": "Write compose for a generic functional interface",
+     "prompt": "Given <code>interface Func&lt;A, B> { B apply(A a); }</code>, write <code>compose(f, g)</code> returning x ↦ f(g(x)); evaluate with sq = x ↦ x·x and str = x ↦ \"&lt;\" + x + \">\" on 7.",
+     "steps": [
+      "Types: g : A → B, f : B → C, result A → C: <code>static &lt;A, B, C> Func&lt;A, C> compose(Func&lt;B, C> f, Func&lt;A, B> g)</code>.",
+      "Lambda body: <code>return x -> f.apply(g.apply(x));</code>",
+      "Equivalent anonymous class: <code>return new Func&lt;A, C>() { public C apply(A x) { return f.apply(g.apply(x)); } };</code>",
+      "compose(str, sq).apply(7) = str(sq(7)) = str(49)."
+     ],
+     "answer": "\"&lt;49>\" (verified)"
+    },
+    {
+     "type": "example",
+     "title": "andThen vs compose",
+     "prompt": "<code>Function&lt;Integer, Integer> plus1 = x -> x + 1;</code> What are <code>plus1.andThen(x -> x * 2).apply(5)</code> and <code>plus1.compose((Integer x) -> x * 2).apply(5)</code>?",
+     "steps": [
+      "andThen runs plus1 first: 5 → 6, then doubles: 12.",
+      "compose runs the argument first: 5 → 10, then plus1: 11."
+     ],
+     "answer": "12 and 11 (verified)"
+    },
+    {
+     "type": "warn",
+     "text": "Lambdas can only capture local variables that are effectively final. Inside a loop, copy the loop variable first: <code>int j = i; fs.add(() -> j * j);</code>."
+    }
+   ]
+  }
+ ],
+ "cards": [
+  {
+   "front": "Static type vs dynamic type?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Static: declared type (or cast type) of a variable/expression, known to the compiler. Dynamic: class of the object actually pointed to at runtime."
+    }
+   ]
+  },
+  {
+   "front": "Which type does the compiler use to decide if a call compiles?",
+   "back": [
+    {
+     "type": "p",
+     "text": "The static type of the receiver and of the arguments."
+    }
+   ]
+  },
+  {
+   "front": "Which type picks an overridden instance method at runtime?",
+   "back": [
+    {
+     "type": "p",
+     "text": "The dynamic type of the receiver."
+    }
+   ]
+  },
+  {
+   "front": "Which type picks among overloads?",
+   "back": [
+    {
+     "type": "p",
+     "text": "The static types of the arguments (at compile time). The argument’s dynamic type is never used."
+    }
+   ]
+  },
+  {
+   "front": "Do fields and static methods use dynamic dispatch?",
+   "back": [
+    {
+     "type": "p",
+     "text": "No. Both are chosen by static type; same-named ones in a subclass hide rather than override."
+    }
+   ]
+  },
+  {
+   "front": "Overloading vs overriding?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Overloading: same name, different parameter types, chosen at compile time. Overriding: same signature in a subclass, chosen at runtime."
+    }
+   ]
+  },
+  {
+   "front": "When does <code>(T) expr</code> fail to compile?",
+   "back": [
+    {
+     "type": "p",
+     "text": "When T and expr’s static type are unrelated classes (neither a subtype of the other), e.g. (String) dog or (Cat) dog."
+    }
+   ]
+  },
+  {
+   "front": "When does a cast throw ClassCastException?",
+   "back": [
+    {
+     "type": "p",
+     "text": "At runtime, when the object’s dynamic type is not T or a subtype of T."
+    }
+   ]
+  },
+  {
+   "front": "Does a cast change which override runs?",
+   "back": [
+    {
+     "type": "p",
+     "text": "No. It changes only the static type (compile checks and overload choice); the object stays the same."
+    }
+   ]
+  },
+  {
+   "front": "<code>Animal a = new Dog(); Dog d = a;</code> result?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Compile error: a’s static type Animal can’t be assigned to Dog without a cast."
+    }
+   ]
+  },
+  {
+   "front": "What does Java insert if a constructor has no super(...) call?",
+   "back": [
+    {
+     "type": "p",
+     "text": "<code>super();</code> as the first statement. Compile error if the parent has no no-arg constructor."
+    }
+   ]
+  },
+  {
+   "front": "Order of constructor output for new C() where C extends B extends A?",
+   "back": [
+    {
+     "type": "p",
+     "text": "A’s constructor body first, then B’s, then C’s."
+    }
+   ]
+  },
+  {
+   "front": "Inside A.x() called via super.x() from B, which y() does <code>y()</code> run?",
+   "back": [
+    {
+     "type": "p",
+     "text": "The dynamic one (B.y if B overrides y): super only fixes the method being called, not later calls on this."
+    }
+   ]
+  },
+  {
+   "front": "What is a default method?",
+   "back": [
+    {
+     "type": "p",
+     "text": "An interface method with a body (keyword default), usually written in terms of the interface’s abstract methods; implementers inherit or override it."
+    }
+   ]
+  },
+  {
+   "front": "Why must interface method implementations be public?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Interface methods are implicitly public; giving weaker access is a compile error."
+    }
+   ]
+  },
+  {
+   "front": "Can you instantiate an interface? Have instance variables?",
+   "back": [
+    {
+     "type": "p",
+     "text": "No and no (only public static final constants)."
+    }
+   ]
+  },
+  {
+   "front": "What does @Override do?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Makes the compiler check that the method actually overrides a superclass/interface method."
+    }
+   ]
+  },
+  {
+   "front": "Is-a vs has-a?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Use extends/implements for is-a. For has-a (a stack has a list), use a field (composition)."
+    }
+   ]
+  },
+  {
+   "front": "What is a functional interface?",
+   "back": [
+    {
+     "type": "p",
+     "text": "An interface with exactly one abstract method; a lambda can implement it."
+    }
+   ]
+  },
+  {
+   "front": "<code>f.andThen(g)</code> vs <code>f.compose(g)</code>?",
+   "back": [
+    {
+     "type": "p",
+     "text": "andThen: f first then g. compose: g first then f."
+    }
+   ]
+  },
+  {
+   "front": "Why does a lambda inside a loop need <code>int j = i;</code>?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Lambdas capture only effectively final locals; the loop variable changes."
+    }
+   ]
+  },
+  {
+   "front": "Subclass method <code>play(Puppy)</code> called through a reference of static type Animal (which has play(Animal), play(Dog))?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Invisible: the compiler only sees Animal’s overloads, so play(Dog) (or play(Animal)) is locked in."
+    }
+   ]
+  },
+  {
+   "front": "Most specific overload for a <code>null</code> argument?",
+   "back": [
+    {
+     "type": "p",
+     "text": "The one with the most specific (deepest subtype) parameter among applicable ones, e.g. play(Puppy) over play(Dog) over play(Animal). Ambiguous if unrelated."
+    }
+   ]
+  }
+ ],
+ "hard": [
+  {
+   "title": "Overridden method called from a superclass constructor",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "code",
+     "lang": "java",
+     "text": "class Base {\n    Base() { show(); }\n    void show() { System.out.println(\"Base\"); }\n}\nclass Derived extends Base {\n    int v = 5;\n    Derived() { super(); show(); }\n    void show() { System.out.println(\"Derived \" + v); }\n}\nnew Derived();"
+    },
+    {
+     "type": "p",
+     "text": "What prints?"
+    }
+   ],
+   "answer": "Derived 0, then Derived 5",
+   "solution": [
+    {
+     "type": "p",
+     "text": "new Derived() allocates the object with all fields at default values (v = 0), then runs Derived(), whose first line super() runs Base()."
+    },
+    {
+     "type": "p",
+     "text": "Base() calls show(); dispatch uses the dynamic type Derived → Derived.show → prints Derived 0, because Derived’s field initializer (v = 5) runs only after super() returns."
+    },
+    {
+     "type": "p",
+     "text": "Then v = 5 is initialized, and Derived()’s own show() prints Derived 5. Verified by running."
+    }
+   ]
+  },
+  {
+   "title": "Full WWJD table with overloads",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "Using the Greeter/Animal/Dog/Puppy/Cat hierarchy from the lesson with <code>Animal a = new Dog(); Dog d = new Puppy(); Animal c = new Cat(); Puppy p = new Puppy();</code>, give the output, CE or RE for each line separately: (1) <code>((Puppy) a).play(a);</code> (2) <code>Object o = p; ((Animal) o).play((Dog) o);</code> (3) <code>a.play(p);</code> (4) <code>((Animal) p).play(p);</code> (5) <code>p.play(null);</code> (6) <code>Cat k = (Cat) d;</code>"
+    }
+   ],
+   "answer": "(1) RE (2) Puppy plays with Dog (3) Animal plays with Dog (4) Puppy plays with Dog (5) Dog plays with Puppy (6) CE",
+   "solution": [
+    {
+     "type": "p",
+     "text": "(1) Puppy and Animal are related → compiles; at runtime a is a Dog, not a Puppy → ClassCastException (before play is even called)."
+    },
+    {
+     "type": "p",
+     "text": "(2) (Dog) o is legal and succeeds at runtime (o is a Puppy). Static receiver Animal, arg static Dog → play(Dog). Runtime Puppy defines play(Dog) → Puppy plays with Dog."
+    },
+    {
+     "type": "p",
+     "text": "(3) Static receiver Animal has only play(Animal), play(Dog); Dog is the more specific match for a Puppy argument. Runtime Dog doesn’t define play(Dog) → Animal’s version: Animal plays with Dog."
+    },
+    {
+     "type": "p",
+     "text": "(4) Same locked signature play(Dog); runtime Puppy overrides it → Puppy plays with Dog."
+    },
+    {
+     "type": "p",
+     "text": "(5) Static Puppy sees play(Animal), play(Dog), play(Puppy); null fits all, play(Puppy) is most specific; nearest definition is in Dog → Dog plays with Puppy."
+    },
+    {
+     "type": "p",
+     "text": "(6) Dog and Cat are sibling classes → inconvertible types, compile error. All six verified by compiling and running each line."
+    }
+   ]
+  },
+  {
+   "title": "Static methods, hiding and super",
+   "level": "hard",
+   "prompt": [
+    {
+     "type": "code",
+     "lang": "java",
+     "text": "class A1 {\n    void x() { System.out.println(\"A.x\"); y(); }\n    void y() { System.out.println(\"A.y\"); }\n    static void s() { System.out.println(\"A.s\"); }\n}\nclass B1 extends A1 {\n    void x() { System.out.println(\"B.x\"); super.x(); }\n    void y() { System.out.println(\"B.y\"); }\n    static void s() { System.out.println(\"B.s\"); }\n}\nA1 q = new B1();\nq.s(); q.y(); q.x();"
+    },
+    {
+     "type": "p",
+     "text": "What prints?"
+    }
+   ],
+   "answer": "A.s, B.y, B.x, A.x, B.y",
+   "solution": [
+    {
+     "type": "p",
+     "text": "q.s(): static method → chosen by static type A1 → A.s (B1.s hides, it does not override)."
+    },
+    {
+     "type": "p",
+     "text": "q.y(): instance method → dynamic type B1 → B.y."
+    },
+    {
+     "type": "p",
+     "text": "q.x(): B1.x prints B.x, super.x() runs A1.x printing A.x, whose y() is this.y() → B.y. Verified."
+    }
+   ]
+  },
+  {
+   "title": "Which signatures must exist?",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "Classes: <code>class Fruit {}</code>, <code>class Apple extends Fruit {}</code>, <code>class Juicer { ... }</code>, <code>class Press extends Juicer { ... }</code>. With <code>Juicer j = new Press(); Fruit f = new Apple(); Apple a = new Apple();</code>, the calls <code>j.squeeze(f)</code> and <code>j.squeeze(a)</code> must both compile; <code>j.squeeze(f)</code> must print \"P-fruit\" and <code>j.squeeze(a)</code> must print \"P-apple\". What is the minimum set of methods (class + signature) needed?"
+    }
+   ],
+   "answer": "Juicer.squeeze(Fruit), Juicer.squeeze(Apple), Press.squeeze(Fruit) printing P-fruit, Press.squeeze(Apple) printing P-apple",
+   "solution": [
+    {
+     "type": "p",
+     "text": "Compile time uses Juicer: j.squeeze(f) needs a Juicer method accepting static type Fruit → squeeze(Fruit). j.squeeze(a) with only squeeze(Fruit) would lock squeeze(Fruit) too, and the runtime could never distinguish the two calls (the argument’s dynamic type is ignored). So Juicer also needs squeeze(Apple), making the second call lock squeeze(Apple)."
+    },
+    {
+     "type": "p",
+     "text": "Runtime uses Press: to print P-…, Press must override both signatures."
+    },
+    {
+     "type": "p",
+     "text": "Four methods total. (Dynamic dispatch on the argument is impossible in Java; overloads must be visible in the static type.)"
+    }
+   ]
+  },
+  {
+   "title": "Write compose and repeat with functional interfaces",
+   "level": "hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "Using <code>java.util.function.IntUnaryOperator</code>, write <code>repeat(IntUnaryOperator f, int n)</code> returning the function that applies f n times (n = 0 gives the identity). Use only lambdas, no recursion. What are <code>repeat(x -> 2 * x, 5).applyAsInt(1)</code> and <code>repeat(adder(10), 0).applyAsInt(7)</code>?"
+    }
+   ],
+   "answer": "32 and 7",
+   "solution": [
+    {
+     "type": "code",
+     "lang": "java",
+     "text": "static IntUnaryOperator repeat(IntUnaryOperator f, int n) {\n    IntUnaryOperator r = x -> x;                 // identity\n    for (int i = 0; i < n; i++) {\n        IntUnaryOperator prev = r;               // effectively final copy\n        r = x -> f.applyAsInt(prev.applyAsInt(x));\n    }\n    return r;\n}"
+    },
+    {
+     "type": "p",
+     "text": "Each pass wraps the previous function. The copy <code>prev</code> is required: a lambda cannot capture <code>r</code> because r is reassigned."
+    },
+    {
+     "type": "p",
+     "text": "Doubling five times: 1 → 32. Zero repetitions: identity → 7. Verified."
+    }
+   ]
+  },
+  {
+   "title": "Anonymous class vs lambda and capture",
+   "level": "hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "Write <code>compose</code> for <code>interface Func&lt;A, B> { B apply(A a); }</code> using an anonymous class instead of a lambda. Then: <code>List&lt;IntSupplier> fs</code>; for i = 0, 1, 2 add a supplier returning i·i (write the loop correctly). What prints when all three are called, and why does <code>fs.add(() -> i * i)</code> not compile?"
+    }
+   ],
+   "answer": "0 1 4; i is not effectively final",
+   "solution": [
+    {
+     "type": "code",
+     "lang": "java",
+     "text": "static <A, B, C> Func<A, C> compose(Func<B, C> f, Func<A, B> g) {\n    return new Func<A, C>() {\n        public C apply(A x) { return f.apply(g.apply(x)); }\n    };\n}\nfor (int i = 0; i < 3; i++) {\n    int j = i;                  // fresh effectively-final variable per iteration\n    fs.add(() -> j * j);\n}"
+    },
+    {
+     "type": "p",
+     "text": "Each iteration captures its own j, so the suppliers return 0, 1, 4 (verified). The loop variable i is modified by i++, so it is not effectively final and cannot be captured by a lambda or anonymous class."
+    },
+    {
+     "type": "p",
+     "text": "Check: compose(sq, s -> s.length()).apply(\"hello\") = 25 (verified)."
+    }
+   ]
+  },
+  {
+   "title": "Default method diamond and dispatch",
+   "level": "hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "Using the lesson hierarchy: Greeter.hello() is a default method that prints \"Greeter hello\" then calls describe(); Puppy overrides hello() as <code>print(\"Puppy hello\"); super.hello();</code>. Explain why <code>super.hello()</code> inside Puppy compiles and what it runs, then give the output of <code>Greeter g = d; g.hello();</code> where <code>Dog d = new Puppy()</code>."
+    }
+   ],
+   "answer": "Puppy hello, Greeter hello, Dog describe",
+   "solution": [
+    {
+     "type": "p",
+     "text": "super.hello() refers to Dog’s hello; Dog doesn’t define one, nor does Animal, so it is the inherited default Greeter.hello. It compiles because Dog (via Animal implements Greeter) has a hello method."
+    },
+    {
+     "type": "p",
+     "text": "g.hello(): Greeter declares hello → compiles. Runtime Puppy → Puppy hello; super.hello() → Greeter hello; describe() dispatches on the Puppy, nearest definition Dog → Dog describe. Verified."
+    }
+   ]
+  },
+  {
+   "title": "Why Java needs casts for generic-free max",
+   "level": "hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "Before generics, a max function might be <code>static Object max(Object[] items)</code> that casts each item to <code>OurComparable</code> to call <code>compareTo</code>. Give an input where this compiles but crashes, name the exception, and rewrite max with a generic type parameter plus a Comparator so the mistake is caught at compile time. What do <code>max({\"pear\",\"fig\",\"banana\"}, by length)</code> and <code>max(…, natural order)</code> return?"
+    }
+   ],
+   "answer": "ClassCastException for a non-OurComparable item; banana and pear",
+   "solution": [
+    {
+     "type": "p",
+     "text": "Passing an Object[] containing, say, a String (which does not implement OurComparable) compiles, because the cast (OurComparable) items[i] is legal from Object; at runtime it throws ClassCastException."
+    },
+    {
+     "type": "code",
+     "lang": "java",
+     "text": "static <T> T max(T[] a, Comparator<T> c) {\n    T best = a[0];\n    for (T x : a) if (c.compare(x, best) > 0) best = x;\n    return best;\n}"
+    },
+    {
+     "type": "p",
+     "text": "Now the comparator’s type must match the array’s element type at compile time. By length: banana (6). Natural (alphabetical) order: pear. Verified."
+    }
+   ]
+  }
+ ],
+ "keyFacts": [
+  "Compile time: static types only. A call compiles iff the static type (or ancestor) declares a matching method.",
+  "Two-step dispatch: compiler locks the most specific overload by static types of receiver and args; runtime runs the dynamic type’s version of that exact signature.",
+  "Argument dynamic types never matter (single dispatch).",
+  "Fields and static methods are chosen by static type (hiding, not overriding).",
+  "Cast (T) e: unrelated classes → CE; object not a T at runtime → ClassCastException. Casts never change which override runs.",
+  "Constructors chain: implicit super() first; parent body runs before child body; overridden methods called from a parent constructor see child fields at default values.",
+  "super.m() fixes only that call; calls on this inside it dispatch dynamically.",
+  "Functional interface = one abstract method; lambdas capture only effectively final locals; f.andThen(g) = g∘f."
+ ],
+ "parsons": [
+  {
+   "title": "repeat: apply a function n times",
+   "goal": "Return the IntUnaryOperator that applies f n times (n = 0 gives the identity), using lambdas and a loop.",
+   "lines": [
+    "static IntUnaryOperator repeat(IntUnaryOperator f, int n) {",
+    "    IntUnaryOperator r = x -> x;",
+    "    for (int i = 0; i &lt; n; i++) {",
+    "        IntUnaryOperator prev = r;",
+    "        r = x -> f.applyAsInt(prev.applyAsInt(x));",
+    "    }",
+    "    return r;",
+    "}"
+   ],
+   "distractors": [
+    "        r = x -> f.applyAsInt(r.applyAsInt(x));",
+    "    for (int i = 0; i &lt;= n; i++) {",
+    "    IntUnaryOperator r = f;"
+   ]
+  },
+  {
+   "title": "A default method in an interface",
+   "goal": "Give interface Lst a default method max() returning its largest item (assume size() ≥ 1), written only with size() and get(i).",
+   "lines": [
+    "interface Lst {",
+    "    int size(); int get(int i);",
+    "    default int max() {",
+    "        int best = get(0);",
+    "        for (int i = 1; i &lt; size(); i++) best = Math.max(best, get(i));",
+    "        return best;",
+    "    }",
+    "}"
+   ],
+   "distractors": [
+    "    int max() {",
+    "        int best = 0;",
+    "        for (int i = 1; i &lt;= size(); i++) best = Math.max(best, get(i));"
+   ]
+  },
+  {
+   "title": "Filter with a Predicate",
+   "goal": "Return a new list of the items of L for which p.test is true, in order.",
+   "lines": [
+    "static List&lt;Integer> filter(List&lt;Integer> L, Predicate&lt;Integer> p) {",
+    "    List&lt;Integer> result = new ArrayList&lt;>();",
+    "    for (int x : L) {",
+    "        if (p.test(x)) result.add(x);",
+    "    }",
+    "    return result;",
+    "}"
+   ],
+   "distractors": [
+    "        if (p.test(x)) return result;",
+    "        if (!p.test(x)) result.add(x);",
+    "    List&lt;Integer> result = L;"
+   ]
+  },
+  {
+   "title": "compose with an anonymous class",
+   "goal": "For interface Func&lt;A, B> { B apply(A a); }, return the function x ↦ f(g(x)) using an anonymous class (no lambdas).",
+   "lines": [
+    "static &lt;A, B, C> Func&lt;A, C> compose(Func&lt;B, C> f, Func&lt;A, B> g) {",
+    "    return new Func&lt;A, C>() {",
+    "        public C apply(A x) {",
+    "            B mid = g.apply(x);",
+    "            return f.apply(mid);",
+    "        }",
+    "    };",
+    "}"
+   ],
+   "distractors": [
+    "            return g.apply(f.apply(x));",
+    "            A mid = f.apply(x);",
+    "        C apply(A x) {"
+   ]
+  }
+ ]
+}

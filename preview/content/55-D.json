@@ -979,5 +979,40 @@
   "Last digit = value mod 10; find aᵏ ≡ 1 and reduce the exponent mod k",
   "Base b: divide by b repeatedly, read remainders bottom-up; hex = groups of 4 bits",
   "Repeated squaring: a, a², a⁴, … mod m; multiply the rows for the 1-bits of n"
+ ],
+ "parsons": [
+  {
+   "title": "Divisibility: a | b and a | c ⇒ a | (mb + nc)",
+   "goal": "Prove: if a, b, c are integers with a ≠ 0, a | b and a | c, then a | (mb + nc) for all integers m and n.",
+   "lines": [
+    "Let m and n be arbitrary integers.",
+    "Since a | b, there is an integer s with b = as.",
+    "Likewise, since a | c, there is an integer t (possibly different from s) with c = at.",
+    "Then mb + nc = m(as) + n(at).",
+    "Factoring, mb + nc = a(ms + nt).",
+    "Since ms + nt is an integer, a | (mb + nc). ∎"
+   ],
+   "distractors": [
+    "Since a | b and a | c, b = as and c = as for one integer s.",
+    "Then mb + nc = a(m + n), so a | (mb + nc).",
+    "Since a | (mb + nc), a | b and a | c."
+   ]
+  },
+  {
+   "title": "Congruences can be multiplied",
+   "goal": "Prove: if a ≡ b (mod m) and c ≡ d (mod m), then ac ≡ bd (mod m).",
+   "lines": [
+    "Since a ≡ b (mod m), m | (a − b), so a = b + sm for some integer s.",
+    "Likewise, since c ≡ d (mod m), c = d + tm for some integer t (a second, possibly different, integer).",
+    "Multiplying, ac = (b + sm)(d + tm) = bd + btm + dsm + stm².",
+    "So ac − bd = m(bt + ds + stm).",
+    "Since bt + ds + stm is an integer, m | (ac − bd), i.e. ac ≡ bd (mod m). ∎"
+   ],
+   "distractors": [
+    "Multiplying, ac = (b + sm)(d + tm) = bd + stm².",
+    "Since a ≡ b (mod m), a = b·m for some integer.",
+    "Since a ≡ b and c ≡ d, dividing gives a/c ≡ b/d (mod m)."
+   ]
+  }
  ]
 }

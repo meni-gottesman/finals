@@ -1,0 +1,1005 @@
+{
+ "id": "54-2",
+ "course": "54",
+ "title": "Linear independence & linear transformations",
+ "source": "Lay 1.7–1.9",
+ "summary": "When a set of vectors has no redundancy, and how every linear map ℝⁿ → ℝᵐ is a matrix whose columns are the images of the standard basis. One-to-one and onto reduce to pivots in every column and every row.",
+ "lesson": [
+  {
+   "title": "Linear independence",
+   "blocks": [
+    {
+     "type": "def",
+     "term": "Linearly independent",
+     "text": "{<b>v</b>₁, …, <b>v</b>ₚ} is linearly independent if c₁<b>v</b>₁ + ⋯ + cₚ<b>v</b>ₚ = <b>0</b> forces c₁ = ⋯ = cₚ = 0. Otherwise it is <b>dependent</b>, and a nontrivial solution is a <b>dependence relation</b>."
+    },
+    {
+     "type": "thm",
+     "name": "Columns test",
+     "text": "The columns of A are linearly independent ⇔ A<b>x</b> = <b>0</b> has only the trivial solution ⇔ no free variables ⇔ a <b>pivot in every column</b>.",
+     "proof": [
+      {
+       "type": "p",
+       "text": "c₁<b>a</b>₁ + ⋯ + cₙ<b>a</b>ₙ = <b>0</b> is literally A<b>c</b> = <b>0</b>. A free variable would let us choose a nonzero c."
+      }
+     ]
+    },
+    {
+     "type": "tip",
+     "text": "Independence means no vector is redundant: removing any one shrinks the span. Dependence means some vector can be built from the others."
+    },
+    {
+     "type": "thm",
+     "name": "Characterization of dependent sets",
+     "text": "A set of two or more vectors is dependent ⇔ at least one vector is a linear combination of the others. In fact, if <b>v</b>₁ ≠ <b>0</b>, some <b>v</b>ⱼ (j > 1) is a combination of the <b>preceding</b> vectors <b>v</b>₁, …, <b>v</b>ⱼ₋₁.",
+     "proof": [
+      {
+       "type": "p",
+       "text": "Take a dependence relation and let j be the largest index with cⱼ ≠ 0. Solve for <b>v</b>ⱼ: <b>v</b>ⱼ = −(c₁/cⱼ)<b>v</b>₁ − ⋯ − (cⱼ₋₁/cⱼ)<b>v</b>ⱼ₋₁."
+      }
+     ]
+    },
+    {
+     "type": "example",
+     "title": "Test independence and find a relation",
+     "prompt": "Are v₁ = (1, 2, 3), v₂ = (4, 5, 6), v₃ = (2, 1, 0) independent? If not, find a dependence relation.",
+     "steps": [
+      "Row reduce [v₁ v₂ v₃]: R₂ − 2R₁ → [0 −3 −3], R₃ − 3R₁ → [0 −6 −6], R₃ − 2R₂ → [0 0 0].",
+      "Only 2 pivots for 3 columns ⇒ x₃ is free ⇒ dependent.",
+      "RREF [1 0 −2; 0 1 1; 0 0 0]: x₁ = 2x₃, x₂ = −x₃. Take x₃ = 1: (2, −1, 1).",
+      "Check: 2(1, 2, 3) − (4, 5, 6) + (2, 1, 0) = (0, 0, 0). ✓"
+     ],
+     "answer": "Dependent: 2v₁ − v₂ + v₃ = 0."
+    }
+   ]
+  },
+  {
+   "title": "Independence by inspection, and parameter questions",
+   "blocks": [
+    {
+     "type": "list",
+     "items": [
+      "<b>One vector</b>: independent iff it is nonzero.",
+      "<b>Two vectors</b>: dependent iff one is a multiple of the other.",
+      "<b>Contains 0</b>: always dependent (1·<b>0</b> = <b>0</b> is a nontrivial relation).",
+      "<b>More vectors than entries</b> (p > n in ℝⁿ): always dependent, since the n×p matrix has at most n pivots, fewer than p columns.",
+      "A subset of an independent set is independent; a superset of a dependent set is dependent."
+     ]
+    },
+    {
+     "type": "warn",
+     "text": "For three or more vectors, 'no vector is a multiple of another' does NOT give independence: (1, 0, 0), (0, 1, 0), (1, 1, 0) are pairwise non-parallel but dependent."
+    },
+    {
+     "type": "tip",
+     "text": "Why 4 vectors in ℝ³ are always dependent: [v₁ v₂ v₃ v₄] is 3×4, so at most 3 pivots and at least one free variable, i.e. a nontrivial solution of A<b>c</b> = <b>0</b>."
+    },
+    {
+     "type": "example",
+     "title": "Parameter for dependence",
+     "prompt": "For which h are (1, −1, 4), (3, −5, 7), (−1, 5, h) dependent? Give the relation.",
+     "steps": [
+      "Three vectors in ℝ³: dependent ⇔ det [v₁ v₂ v₃] = 0 (or: row reduction loses a pivot).",
+      "Put them as columns: [1 3 −1; −1 −5 5; 4 7 h]. R₂ + R₁ → [0 −2 4], R₃ − 4R₁ → [0 −5 h + 4], R₃ − (5/2)R₂ → [0 0 h − 6].",
+      "A pivot is lost exactly when h = 6.",
+      "At h = 6 solve: x₃ = 1, −2x₂ + 4 = 0 ⇒ x₂ = 2, x₁ + 6 − 1 = 0 ⇒ x₁ = −5.",
+      "Check: −5(1, −1, 4) + 2(3, −5, 7) + (−1, 5, 6) = (0, 0, 0). ✓"
+     ],
+     "answer": "Dependent iff h = 6, with −5v₁ + 2v₂ + v₃ = 0."
+    }
+   ]
+  },
+  {
+   "title": "Linear transformations",
+   "blocks": [
+    {
+     "type": "def",
+     "term": "Transformation",
+     "text": "T: ℝⁿ → ℝᵐ assigns to each <b>x</b> in ℝⁿ (domain) a vector T(<b>x</b>) in ℝᵐ (codomain). The range is the set of all outputs."
+    },
+    {
+     "type": "def",
+     "term": "Linear",
+     "text": "T(<b>u</b> + <b>v</b>) = T(<b>u</b>) + T(<b>v</b>) and T(c<b>u</b>) = cT(<b>u</b>) for all <b>u</b>, <b>v</b>, c. Consequences: T(<b>0</b>) = <b>0</b> and T(c<b>u</b> + d<b>v</b>) = cT(<b>u</b>) + dT(<b>v</b>)."
+    },
+    {
+     "type": "p",
+     "text": "Every matrix transformation <b>x</b> ↦ A<b>x</b> is linear, because A(<b>u</b> + <b>v</b>) = A<b>u</b> + A<b>v</b> and A(c<b>u</b>) = cA<b>u</b>."
+    },
+    {
+     "type": "warn",
+     "text": "A quick non-linearity test: if T(<b>0</b>) ≠ <b>0</b>, T is not linear. T(<b>x</b>) = A<b>x</b> + <b>b</b> with <b>b</b> ≠ <b>0</b> fails. But T(<b>0</b>) = <b>0</b> alone does not prove linearity (e.g. T(x, y) = (x², y))."
+    },
+    {
+     "type": "thm",
+     "name": "Standard matrix",
+     "text": "Every linear T: ℝⁿ → ℝᵐ is T(<b>x</b>) = A<b>x</b> for the unique matrix A = [T(<b>e</b>₁) ⋯ T(<b>e</b>ₙ)].",
+     "proof": [
+      {
+       "type": "p",
+       "text": "<b>x</b> = x₁<b>e</b>₁ + ⋯ + xₙ<b>e</b>ₙ, so by linearity T(<b>x</b>) = x₁T(<b>e</b>₁) + ⋯ + xₙT(<b>e</b>ₙ), which is A<b>x</b> with those columns."
+      }
+     ]
+    },
+    {
+     "type": "tip",
+     "text": "A linear map is completely determined by where it sends a basis. To find the standard matrix: find T(<b>e</b>ⱼ) and make them the columns. If you are given T on other vectors, use linearity to solve for T(<b>e</b>ⱼ) first."
+    }
+   ]
+  },
+  {
+   "title": "Geometric transformations of ℝ²",
+   "blocks": [
+    {
+     "type": "table",
+     "head": [
+      "Transformation",
+      "T(e₁)",
+      "T(e₂)",
+      "Matrix"
+     ],
+     "rows": [
+      [
+       "Rotation by θ (counterclockwise)",
+       "(cos θ, sin θ)",
+       "(−sin θ, cos θ)",
+       "[cos θ −sin θ; sin θ cos θ]"
+      ],
+      [
+       "Reflection across x-axis",
+       "(1, 0)",
+       "(0, −1)",
+       "[1 0; 0 −1]"
+      ],
+      [
+       "Reflection across y-axis",
+       "(−1, 0)",
+       "(0, 1)",
+       "[−1 0; 0 1]"
+      ],
+      [
+       "Reflection across y = x",
+       "(0, 1)",
+       "(1, 0)",
+       "[0 1; 1 0]"
+      ],
+      [
+       "Reflection across y = −x",
+       "(0, −1)",
+       "(−1, 0)",
+       "[0 −1; −1 0]"
+      ],
+      [
+       "Reflection through origin",
+       "(−1, 0)",
+       "(0, −1)",
+       "[−1 0; 0 −1]"
+      ],
+      [
+       "Horizontal shear by k",
+       "(1, 0)",
+       "(k, 1)",
+       "[1 k; 0 1]"
+      ],
+      [
+       "Vertical shear by k",
+       "(1, k)",
+       "(0, 1)",
+       "[1 0; k 1]"
+      ],
+      [
+       "Projection onto x-axis",
+       "(1, 0)",
+       "(0, 0)",
+       "[1 0; 0 0]"
+      ],
+      [
+       "Horizontal expansion/contraction by k",
+       "(k, 0)",
+       "(0, 1)",
+       "[k 0; 0 1]"
+      ]
+     ]
+    },
+    {
+     "type": "tip",
+     "text": "Don't memorize the table: draw where <b>e</b>₁ and <b>e</b>₂ go and write those images as the columns."
+    },
+    {
+     "type": "example",
+     "title": "Standard matrix of a composition",
+     "prompt": "T: ℝ² → ℝ² rotates by π/2 counterclockwise, then reflects across the x-axis. Find its standard matrix and identify T.",
+     "steps": [
+      "Track e₁: rotation sends it to (0, 1); reflection across the x-axis sends that to (0, −1). So T(e₁) = (0, −1).",
+      "Track e₂: rotation sends it to (−1, 0); reflection leaves it at (−1, 0). So T(e₂) = (−1, 0).",
+      "Matrix [0 −1; −1 0]. Equivalently F·R = [1 0; 0 −1][0 −1; 1 0] (the map applied first is on the right).",
+      "Comparing with the table, this is the reflection across y = −x."
+     ],
+     "answer": "[0 −1; −1 0], the reflection across the line y = −x."
+    },
+    {
+     "type": "example",
+     "title": "Matrix from values on other vectors",
+     "prompt": "T: ℝ² → ℝ³ is linear with T(e₁ + e₂) = (1, 2, 3) and T(e₁ − e₂) = (3, 0, −1). Find the standard matrix.",
+     "steps": [
+      "Add: T(2e₁) = (4, 2, 2) ⇒ T(e₁) = (2, 1, 1).",
+      "Subtract: T(2e₂) = (−2, 2, 4) ⇒ T(e₂) = (−1, 1, 2).",
+      "Columns are T(e₁), T(e₂)."
+     ],
+     "answer": "A = [2 −1; 1 1; 1 2]."
+    },
+    {
+     "type": "warn",
+     "text": "Putting (1, 2, 3) and (3, 0, −1) in directly as the columns is wrong: the columns must be images of e₁, e₂."
+    }
+   ]
+  },
+  {
+   "title": "One-to-one and onto",
+   "blocks": [
+    {
+     "type": "def",
+     "term": "Onto ℝᵐ",
+     "text": "Every <b>b</b> in ℝᵐ is the image of at least one <b>x</b> (range = codomain). Existence question."
+    },
+    {
+     "type": "def",
+     "term": "One-to-one",
+     "text": "Every <b>b</b> is the image of at most one <b>x</b>. Uniqueness question."
+    },
+    {
+     "type": "thm",
+     "name": "Kernel test",
+     "text": "Linear T is one-to-one ⇔ T(<b>x</b>) = <b>0</b> has only the trivial solution.",
+     "proof": [
+      {
+       "type": "p",
+       "text": "If T(<b>u</b>) = T(<b>v</b>) then T(<b>u</b> − <b>v</b>) = <b>0</b>, so <b>u</b> = <b>v</b> when only <b>0</b> maps to <b>0</b>. Conversely, one-to-one plus T(<b>0</b>) = <b>0</b> means nothing else maps to <b>0</b>."
+      }
+     ]
+    },
+    {
+     "type": "thm",
+     "name": "Pivot tests for T(x) = Ax (A is m×n)",
+     "text": "T is <b>onto</b> ⇔ columns of A span ℝᵐ ⇔ pivot in every <b>row</b>. T is <b>one-to-one</b> ⇔ columns of A are independent ⇔ pivot in every <b>column</b>."
+    },
+    {
+     "type": "table",
+     "head": [
+      "Shape of A",
+      "one-to-one possible?",
+      "onto possible?"
+     ],
+     "rows": [
+      [
+       "m > n (tall)",
+       "yes",
+       "never"
+      ],
+      [
+       "m &lt; n (wide)",
+       "never",
+       "yes"
+      ],
+      [
+       "m = n (square)",
+       "iff onto",
+       "iff one-to-one"
+      ]
+     ]
+    },
+    {
+     "type": "example",
+     "title": "Decide one-to-one and onto",
+     "prompt": "(a) T(x) = Ax with A = [1 −4 8 1; 0 2 −1 3; 0 0 0 5]. (b) T(x₁, x₂) = (3x₁ + x₂, 5x₁ + 7x₂, x₁ + 3x₂).",
+     "steps": [
+      "(a) A is already in echelon form with pivots in columns 1, 2, 4: a pivot in every one of the 3 rows ⇒ onto ℝ³.",
+      "(a) Column 3 has no pivot ⇒ free variable ⇒ nontrivial kernel ⇒ not one-to-one (4 columns in ℝ³ are dependent anyway).",
+      "(b) Standard matrix [3 1; 5 7; 1 3]. Its columns are not multiples of each other ⇒ independent ⇒ one-to-one.",
+      "(b) Only 2 pivots possible for 3 rows ⇒ not onto ℝ³."
+     ],
+     "answer": "(a) onto, not one-to-one. (b) one-to-one, not onto."
+    }
+   ]
+  },
+  {
+   "title": "True/False patterns",
+   "blocks": [
+    {
+     "type": "example",
+     "title": "Five classic True/False",
+     "prompt": "(a) If v₁, v₂, v₃ are in ℝ³ and v₃ is not a combination of v₁, v₂, the set is independent. (b) A linear T: ℝ⁵ → ℝ³ can be one-to-one. (c) If {T(u), T(v)} is independent, so is {u, v}. (d) Any set containing 0 is dependent. (e) If a set is dependent, every vector in it is a combination of the others.",
+     "steps": [
+      "(a) False: v₁ = (1, 0, 0), v₂ = (2, 0, 0), v₃ = (0, 1, 0); v₁, v₂ are already dependent.",
+      "(b) False: 3×5 matrix ⇒ at most 3 pivots ⇒ a free variable ⇒ nontrivial kernel.",
+      "(c) True: a nontrivial au + bv = 0 would give aT(u) + bT(v) = 0 nontrivially. Linear maps can destroy independence but never create it.",
+      "(d) True: 1·0 = 0 with the other weights 0.",
+      "(e) False: in {(1, 0), (2, 0), (0, 1)}, (0, 1) is not a combination of the others; only SOME vector must be."
+     ],
+     "answer": "(a) F (b) F (c) T (d) T (e) F"
+    },
+    {
+     "type": "tip",
+     "text": "For any T/F on independence, try the smallest counterexamples first: vectors with zeros, parallel pairs, or the standard basis vectors."
+    }
+   ]
+  }
+ ],
+ "cards": [
+  {
+   "front": "Definition of linearly independent?",
+   "back": [
+    {
+     "type": "p",
+     "text": "c₁v₁ + ⋯ + cₚvₚ = 0 only for c₁ = ⋯ = cₚ = 0. Otherwise dependent; a nontrivial solution is a dependence relation."
+    }
+   ]
+  },
+  {
+   "front": "Columns of A are independent ⇔ ?",
+   "back": [
+    {
+     "type": "p",
+     "text": "A x = 0 has only the trivial solution ⇔ no free variables ⇔ pivot in every column."
+    }
+   ]
+  },
+  {
+   "front": "Why are 4 vectors in ℝ³ always dependent?",
+   "back": [
+    {
+     "type": "p",
+     "text": "The 3×4 matrix has at most 3 pivots, so a column lacks a pivot ⇒ free variable ⇒ nontrivial solution of A c = 0."
+    }
+   ]
+  },
+  {
+   "front": "When is a set of two vectors dependent?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Exactly when one is a multiple of the other."
+    },
+    {
+     "type": "warn",
+     "text": "This shortcut fails for 3 or more vectors."
+    }
+   ]
+  },
+  {
+   "front": "Is a set containing 0 independent?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Never: 1·0 + 0·(others) = 0 is a nontrivial relation."
+    }
+   ]
+  },
+  {
+   "front": "Characterization of dependent sets (Lay Thm 7)?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Dependent ⇔ some vector is a combination of the others; if v₁ ≠ 0, some vⱼ is a combination of the preceding v₁, …, vⱼ₋₁. Not every vector need be."
+    }
+   ]
+  },
+  {
+   "front": "Subsets and supersets of (in)dependent sets?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Subset of independent is independent. Superset of dependent is dependent. Nothing follows the other way."
+    }
+   ]
+  },
+  {
+   "front": "Definition of a linear transformation, and two consequences?",
+   "back": [
+    {
+     "type": "p",
+     "text": "T(u + v) = T(u) + T(v), T(cu) = cT(u). So T(0) = 0 and T preserves linear combinations."
+    }
+   ]
+  },
+  {
+   "front": "Standard matrix of linear T: ℝⁿ → ℝᵐ?",
+   "back": [
+    {
+     "type": "p",
+     "text": "A = [T(e₁) ⋯ T(eₙ)], an m×n matrix; T(x) = A x."
+    }
+   ]
+  },
+  {
+   "front": "Is T(x) = A x + b linear when b ≠ 0?",
+   "back": [
+    {
+     "type": "p",
+     "text": "No: T(0) = b ≠ 0."
+    }
+   ]
+  },
+  {
+   "front": "Rotation by θ: matrix?",
+   "back": [
+    {
+     "type": "p",
+     "text": "[cos θ −sin θ; sin θ cos θ] (columns are the rotated e₁, e₂)."
+    }
+   ]
+  },
+  {
+   "front": "Reflection across y = x? across y = −x?",
+   "back": [
+    {
+     "type": "p",
+     "text": "[0 1; 1 0] (swap coordinates); [0 −1; −1 0]."
+    }
+   ]
+  },
+  {
+   "front": "Horizontal shear by k; projection onto the x-axis?",
+   "back": [
+    {
+     "type": "p",
+     "text": "[1 k; 0 1]; [1 0; 0 0]."
+    }
+   ]
+  },
+  {
+   "front": "Matrix of 'first S, then T'?",
+   "back": [
+    {
+     "type": "p",
+     "text": "T∘S has matrix (matrix of T)(matrix of S): the map applied first is on the right."
+    }
+   ]
+  },
+  {
+   "front": "T(x) = A x onto ℝᵐ ⇔ ?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Columns span ℝᵐ ⇔ pivot in every row. Impossible if A has fewer columns than rows."
+    }
+   ]
+  },
+  {
+   "front": "T(x) = A x one-to-one ⇔ ?",
+   "back": [
+    {
+     "type": "p",
+     "text": "T(x) = 0 only for x = 0 ⇔ columns independent ⇔ pivot in every column. Impossible if more columns than rows."
+    }
+   ]
+  },
+  {
+   "front": "Can a linear T: ℝ⁵ → ℝ³ be one-to-one? Can T: ℝ² → ℝ³ be onto?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Neither. 3×5 has a free variable; 3×2 has a row without a pivot."
+    }
+   ]
+  },
+  {
+   "front": "If T is one-to-one and {v₁, …, vₖ} independent, is {T(v₁), …, T(vₖ)} independent?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Yes: Σcᵢ T(vᵢ) = 0 ⇒ T(Σcᵢvᵢ) = 0 ⇒ Σcᵢvᵢ = 0 ⇒ all cᵢ = 0. Without one-to-one it fails (T(x, y) = (x, 0))."
+    }
+   ]
+  },
+  {
+   "front": "Find a dependence relation: method?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Row reduce [v₁ ⋯ vₚ] to RREF, solve A c = 0, set the free variable to 1. The solution's entries are the weights."
+    }
+   ]
+  },
+  {
+   "front": "Square A: how do one-to-one and onto relate?",
+   "back": [
+    {
+     "type": "p",
+     "text": "They are equivalent (n pivots in n rows ⇔ n pivots in n columns)."
+    }
+   ]
+  }
+ ],
+ "hard": [
+  {
+   "title": "Dependence with a parameter (two roots)",
+   "level": "hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "For which <i>h</i> are (1, 1, <i>h</i>), (1, <i>h</i>, 1), (<i>h</i>, 1, 1) linearly <b>dependent</b>? For each such <i>h</i>, give an explicit dependence relation."
+    }
+   ],
+   "answer": "h = 1 (v₁ − v₂ = 0) or h = −2 (v₁ + v₂ + v₃ = 0)",
+   "solution": [
+    {
+     "type": "p",
+     "text": "det"
+    },
+    {
+     "type": "matrix",
+     "rows": [
+      [
+       "1",
+       "1",
+       "<i>h</i>"
+      ],
+      [
+       "1",
+       "<i>h</i>",
+       "1"
+      ],
+      [
+       "<i>h</i>",
+       "1",
+       "1"
+      ]
+     ]
+    },
+    {
+     "type": "p",
+     "text": "= −(<i>h</i> − 1)²(<i>h</i> + 2). (Quick route: add all rows to row 1 to factor out <i>h</i> + 2, then subtract.)"
+    },
+    {
+     "type": "p",
+     "text": "Dependent ⇔ det = 0 ⇔ <b><i>h</i> = 1</b> or <b><i>h</i> = −2</b>."
+    },
+    {
+     "type": "p",
+     "text": "<i>h</i> = 1: all three vectors equal (1, 1, 1): e.g. <b>v</b>₁ − <b>v</b>₂ = <b>0</b>."
+    },
+    {
+     "type": "p",
+     "text": "<i>h</i> = −2: the sum of the three is (<i>h</i> + 2)(1, 1, 1) = <b>0</b>, so <b>v</b>₁ + <b>v</b>₂ + <b>v</b>₃ = <b>0</b>."
+    },
+    {
+     "type": "warn",
+     "text": "What it tests: Two roots — students often find only <i>h</i> = 1 (the obvious one). Always factor the full determinant."
+    }
+   ]
+  },
+  {
+   "title": "True/False: independence and linear maps",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "list",
+     "items": [
+      "1. If <b>v</b>₁, <b>v</b>₂, <b>v</b>₃ ∈ ℝ³ and none is a multiple of another, then {<b>v</b>₁, <b>v</b>₂, <b>v</b>₃} is linearly independent.",
+      "2. If {<b>v</b>₁, <b>v</b>₂, <b>v</b>₃} is linearly dependent, then <b>v</b>₃ is a linear combination of <b>v</b>₁ and <b>v</b>₂.",
+      "3. No linear transformation ℝ⁵ → ℝ³ is one-to-one.",
+      "4. If <i>T</i> is linear and {<i>T</i>(<b>u</b>), <i>T</i>(<b>v</b>)} is independent, then {<b>u</b>, <b>v</b>} is independent.",
+      "5. The map <i>T</i>(<b>x</b>) = <i>A</i><b>x</b> + <b>b</b> with <b>b</b> ≠ <b>0</b> is linear."
+     ]
+    }
+   ],
+   "answer": "1 F, 2 F, 3 T, 4 T, 5 F",
+   "solution": [
+    {
+     "type": "list",
+     "items": [
+      "1. <b>False.</b> (1, 0, 0), (0, 1, 0), (1, 1, 0): pairwise non-parallel, but the third is the sum of the first two. The “no multiples” test only works for two vectors.",
+      "2. <b>False.</b> <b>v</b>₁ = (1, 0), <b>v</b>₂ = (2, 0), <b>v</b>₃ = (0, 1). Dependent (2<b>v</b>₁ − <b>v</b>₂ = 0), but <b>v</b>₃ is not in Span{<b>v</b>₁, <b>v</b>₂}. The theorem only says <i>some</i> vector is a combination of the <i>preceding</i> ones.",
+      "3. <b>True.</b> Its 3×5 matrix has at most 3 pivots, so at least 2 free variables ⇒ nontrivial kernel.",
+      "4. <b>True.</b> Contrapositive: if <i>a</i><b>u</b> + <i>b</i><b>v</b> = <b>0</b> nontrivially, apply <i>T</i>: <i>a</i><i>T</i>(<b>u</b>) + <i>b</i><i>T</i>(<b>v</b>) = <b>0</b> nontrivially.",
+      "5. <b>False.</b> Linear maps send <b>0</b> to <b>0</b>; here <i>T</i>(<b>0</b>) = <b>b</b> ≠ <b>0</b>."
+     ]
+    },
+    {
+     "type": "warn",
+     "text": "What it tests: Independence is about the <i>whole</i> set. Linear maps can destroy independence (e.g. the zero map) but can never create it."
+    }
+   ]
+  },
+  {
+   "title": "Rotation then reflection",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "<i>T</i>: ℝ² → ℝ² first rotates counterclockwise by π/3, then reflects across the line <i>y</i> = <i>x</i>. Find the standard matrix of <i>T</i>. Then show <i>T</i> is itself a reflection and find its line."
+    }
+   ],
+   "answer": "FR = [√3/2 1/2; 1/2 −√3/2], the reflection across the line at angle π/12 (15°)",
+   "solution": [
+    {
+     "type": "p",
+     "text": "Rotation: <i>R</i> ="
+    },
+    {
+     "type": "matrix",
+     "rows": [
+      [
+       "1/2",
+       "−√3/2"
+      ],
+      [
+       "√3/2",
+       "1/2"
+      ]
+     ]
+    },
+    {
+     "type": "p",
+     "text": ". Reflection in <i>y</i> = <i>x</i>: <i>F</i> ="
+    },
+    {
+     "type": "matrix",
+     "rows": [
+      [
+       "0",
+       "1"
+      ],
+      [
+       "1",
+       "0"
+      ]
+     ]
+    },
+    {
+     "type": "p",
+     "text": "(swaps coordinates)."
+    },
+    {
+     "type": "p",
+     "text": "“First <i>R</i>, then <i>F</i>” means <i>T</i>(<b>x</b>) = <i>F</i>(<i>R</i><b>x</b>), matrix <i>F</i><i>R</i> ="
+    },
+    {
+     "type": "matrix",
+     "rows": [
+      [
+       "√3/2",
+       "1/2"
+      ],
+      [
+       "1/2",
+       "−√3/2"
+      ]
+     ]
+    },
+    {
+     "type": "p",
+     "text": "(rows of <i>R</i> swapped)."
+    },
+    {
+     "type": "p",
+     "text": "A reflection across the line at angle φ has matrix"
+    },
+    {
+     "type": "matrix",
+     "rows": [
+      [
+       "cos",
+       "2φ",
+       "sin",
+       "2φ"
+      ],
+      [
+       "sin",
+       "2φ",
+       "−cos",
+       "2φ"
+      ]
+     ]
+    },
+    {
+     "type": "p",
+     "text": ". Match: cos 2φ = √3/2, sin 2φ = 1/2 ⇒ 2φ = π/6 ⇒ <b>φ = π/12 (15°)</b>."
+    },
+    {
+     "type": "p",
+     "text": "Check: <i>T</i>(cos 15°, sin 15°) = (cos 15°, sin 15°), fixed, and det <i>T</i> = −1."
+    },
+    {
+     "type": "warn",
+     "text": "What it tests: Order of composition: “first <i>R</i> then <i>F</i>” is <i>F</i><i>R</i>, not <i>R</i><i>F</i> (which gives the reflection across the 75° line). Rotation∘reflection is always a reflection."
+    }
+   ]
+  },
+  {
+   "title": "Standard matrix from indirect data",
+   "level": "hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "<i>T</i>: ℝ² → ℝ³ is linear with <i>T</i>(<b>e</b>₁ + <b>e</b>₂) = (1, 2, 3) and <i>T</i>(<b>e</b>₁ − <b>e</b>₂) = (3, 0, −1). Find the standard matrix. Is <i>T</i> one-to-one? Onto?"
+    }
+   ],
+   "answer": "A = [2 −1; 1 1; 1 2]; one-to-one, not onto",
+   "solution": [
+    {
+     "type": "p",
+     "text": "Add and subtract: 2<i>T</i>(<b>e</b>₁) = (4, 2, 2) ⇒ <i>T</i>(<b>e</b>₁) = (2, 1, 1); 2<i>T</i>(<b>e</b>₂) = (−2, 2, 4) ⇒ <i>T</i>(<b>e</b>₂) = (−1, 1, 2)."
+    },
+    {
+     "type": "p",
+     "text": "<i>A</i> ="
+    },
+    {
+     "type": "matrix",
+     "rows": [
+      [
+       "2",
+       "−1"
+      ],
+      [
+       "1",
+       "1"
+      ],
+      [
+       "1",
+       "2"
+      ]
+     ]
+    },
+    {
+     "type": "p",
+     "text": "Columns not parallel ⇒ independent ⇒ <b>one-to-one</b>. Only 2 columns in ℝ³ ⇒ at most 2 pivots for 3 rows ⇒ <b>not onto</b>."
+    },
+    {
+     "type": "warn",
+     "text": "What it tests: The standard matrix needs <i>T</i>(<b>e</b>ⱼ), so use linearity to solve for them. Putting (1,2,3) and (3,0,−1) directly in as columns is the classic error."
+    }
+   ]
+  },
+  {
+   "title": "Construct T with given range and kernel",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "Construct a linear <i>T</i>: ℝ³ → ℝ³ whose range is the plane <i>x</i> + <i>y</i> + <i>z</i> = 0 and whose kernel is the line through (1, 2, 3)."
+    }
+   ],
+   "answer": "e.g. A = [−2 1 0; −1 −1 1; 3 0 −1]",
+   "solution": [
+    {
+     "type": "p",
+     "text": "Need columns <b>a</b>₁, <b>a</b>₂, <b>a</b>₃ in the plane, spanning it, with <b>a</b>₁ + 2<b>a</b>₂ + 3<b>a</b>₃ = <b>0</b> (that’s <i>A</i>(1,2,3) = <b>0</b>)."
+    },
+    {
+     "type": "p",
+     "text": "Choose <b>a</b>₂ = (1, −1, 0), <b>a</b>₃ = (0, 1, −1) (independent, both in the plane); force <b>a</b>₁ = −2<b>a</b>₂ − 3<b>a</b>₃ = (−2, −1, 3)."
+    },
+    {
+     "type": "p",
+     "text": "<i>A</i> ="
+    },
+    {
+     "type": "matrix",
+     "rows": [
+      [
+       "−2",
+       "1",
+       "0"
+      ],
+      [
+       "−1",
+       "−1",
+       "1"
+      ],
+      [
+       "3",
+       "0",
+       "−1"
+      ]
+     ]
+    },
+    {
+     "type": "p",
+     "text": ". Every column sums to 0 (range ⊆ plane); rank 2, so range = plane; nullity = 3 − 2 = 1 and (1,2,3) ∈ Nul, so kernel = that line. ✓"
+    },
+    {
+     "type": "warn",
+     "text": "What it tests: Rank–nullity (3 = 2 + 1) is what makes the requested data consistent. Choose the independent columns first, then define the remaining column to kill the kernel vector."
+    }
+   ]
+  },
+  {
+   "title": "Proof: one-to-one maps preserve independence",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "Prove: if <i>T</i> is linear and one-to-one and {<b>v</b>₁, …, <b>v</b>ₖ} is linearly independent, then {<i>T</i>(<b>v</b>₁), …, <i>T</i>(<b>v</b>ₖ)} is linearly independent. Show the hypothesis “one-to-one” cannot be dropped."
+    }
+   ],
+   "answer": "Σcᵢ T(vᵢ) = 0 ⇒ T(Σcᵢvᵢ) = 0 ⇒ Σcᵢvᵢ = 0 ⇒ cᵢ = 0; fails for T(x, y) = (x, 0)",
+   "solution": [
+    {
+     "type": "steps",
+     "title": "Solution",
+     "items": [
+      "Suppose <i>c</i>₁<i>T</i>(<b>v</b>₁) + ⋯ + <i>c</i>ₖ<i>T</i>(<b>v</b>ₖ) = <b>0</b>. By linearity <i>T</i>(<i>c</i>₁<b>v</b>₁ + ⋯ + <i>c</i>ₖ<b>v</b>ₖ) = <b>0</b> = <i>T</i>(<b>0</b>).",
+      "One-to-one ⇒ <i>c</i>₁<b>v</b>₁ + ⋯ + <i>c</i>ₖ<b>v</b>ₖ = <b>0</b> ⇒ all <i>c</i>ᵢ = 0 by independence. ∎",
+      "Counterexample without it: <i>T</i>(<i>x</i>, <i>y</i>) = (<i>x</i>, 0) sends the independent pair <b>e</b>₁, <b>e</b>₂ to (1,0), (0,0) — dependent."
+     ]
+    },
+    {
+     "type": "warn",
+     "text": "What it tests: One-to-one means <i>T</i>(<b>u</b>) = <b>0</b> ⇒ <b>u</b> = <b>0</b>. Don’t try to “divide by <i>T</i>”."
+    }
+   ]
+  },
+  {
+   "title": "Evaluation map on ℙ₂",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "Define <i>T</i>: ℙ₂ → ℝ² by <i>T</i>(<i>p</i>) = (<i>p</i>(1), <i>p</i>(−1)). Show <i>T</i> is linear, find its matrix relative to {1, <i>t</i>, <i>t</i>²} and the standard basis of ℝ², its kernel, and decide whether it is onto."
+    }
+   ],
+   "answer": "Matrix [1 1 1; 1 −1 1]; kernel Span{t² − 1}; onto",
+   "solution": [
+    {
+     "type": "p",
+     "text": "Linear: (<i>p</i> + <i>q</i>)(1) = <i>p</i>(1) + <i>q</i>(1) and (<i>cp</i>)(1) = <i>c</i><i>p</i>(1), same at −1."
+    },
+    {
+     "type": "p",
+     "text": "<i>T</i>(1) = (1, 1), <i>T</i>(<i>t</i>) = (1, −1), <i>T</i>(<i>t</i>²) = (1, 1): matrix"
+    },
+    {
+     "type": "matrix",
+     "rows": [
+      [
+       "1",
+       "1",
+       "1"
+      ],
+      [
+       "1",
+       "−1",
+       "1"
+      ]
+     ]
+    },
+    {
+     "type": "p",
+     "text": "Kernel: <i>a</i> + <i>b</i> + <i>c</i> = 0 and <i>a</i> − <i>b</i> + <i>c</i> = 0 ⇒ <i>b</i> = 0, <i>c</i> = −<i>a</i>: kernel = Span{<b><i>t</i>² − 1</b>} (polynomials with roots ±1)."
+    },
+    {
+     "type": "p",
+     "text": "Rank = 3 − 1 = 2 = dim ℝ² ⇒ <b>onto</b>. (Directly: <i>p</i>(<i>t</i>) = ((<i>u</i>+<i>v</i>)/2) + ((<i>u</i>−<i>v</i>)/2)<i>t</i> hits (<i>u</i>, <i>v</i>).)"
+    },
+    {
+     "type": "warn",
+     "text": "What it tests: Evaluation maps are linear in <i>p</i> (not in <i>t</i>). Kernel elements are polynomials, not vectors (1, 0, −1) — state both."
+    }
+   ]
+  },
+  {
+   "title": "Column relation gives the null space",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "<i>A</i> = [<b>a</b>₁ <b>a</b>₂ <b>a</b>₃] is 3×3, {<b>a</b>₁, <b>a</b>₂} is independent, and <b>a</b>₃ = 2<b>a</b>₁ − <b>a</b>₂."
+    },
+    {
+     "type": "p",
+     "text": "(a) Find a nontrivial solution of <i>A</i><b>x</b> = <b>0</b>. (b) Is <b>x</b> ↦ <i>A</i><b>x</b> onto ℝ³? (c) Find <i>all</i> solutions of <i>A</i><b>x</b> = <b>a</b>₁ + <b>a</b>₂ + <b>a</b>₃."
+    }
+   ],
+   "answer": "(a) (2, −1, −1) (b) not onto (c) x = (1, 1, 1) + s(2, −1, −1)",
+   "solution": [
+    {
+     "type": "steps",
+     "title": "Solution",
+     "items": [
+      "(a) 2<b>a</b>₁ − <b>a</b>₂ − <b>a</b>₃ = <b>0</b> ⇒ <b>x</b> = (2, −1, −1).",
+      "(b) rank = 2 (two independent columns, third dependent) &lt; 3 rows ⇒ <b>not onto</b>.",
+      "(c) <b>x</b> = (1, 1, 1) is a particular solution by inspection. Nullity = 1 so Nul <i>A</i> = Span{(2, −1, −1)}. All solutions: <b>x</b> = (1, 1, 1) + <i>s</i>(2, −1, −1).",
+      "(Another valid particular solution: (3, 0, 0), since <b>a</b>₁ + <b>a</b>₂ + <b>a</b>₃ = 3<b>a</b>₁. It is (1,1,1) + 1·(2,−1,−1).)"
+     ]
+    },
+    {
+     "type": "warn",
+     "text": "What it tests: The coefficients of a column relation <i>are</i> a null vector. Don’t forget to add the null space to the particular solution."
+    }
+   ]
+  },
+  {
+   "title": "Onto with a parameter; describe the range",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "For which <i>h</i> is <i>T</i>(<b>x</b>) ="
+    },
+    {
+     "type": "matrix",
+     "rows": [
+      [
+       "1",
+       "2",
+       "<i>h</i>"
+      ],
+      [
+       "0",
+       "1",
+       "1"
+      ],
+      [
+       "2",
+       "<i>h</i>",
+       "2"
+      ]
+     ]
+    },
+    {
+     "type": "p",
+     "text": "<b>x</b> onto ℝ³? For the bad value, describe the range by an equation and give a vector not in it."
+    }
+   ],
+   "answer": "Onto iff h ≠ 2; at h = 2 range is −2b₁ + 2b₂ + b₃ = 0, e.g. (0, 0, 1) not in it",
+   "solution": [
+    {
+     "type": "p",
+     "text": "Square matrix: onto ⇔ det ≠ 0. det = 1(2 − <i>h</i>) − 2(0 − 2) + <i>h</i>(0 − 2) = 6 − 3<i>h</i>. Onto ⇔ <b><i>h</i> ≠ 2</b>."
+    },
+    {
+     "type": "p",
+     "text": "<i>h</i> = 2: reduce"
+    },
+    {
+     "type": "matrix",
+     "rows": [
+      [
+       "1",
+       "2",
+       "2",
+       "<i>b</i>₁"
+      ],
+      [
+       "0",
+       "1",
+       "1",
+       "<i>b</i>₂"
+      ],
+      [
+       "2",
+       "2",
+       "2",
+       "<i>b</i>₃"
+      ]
+     ],
+     "aug": 3
+    },
+    {
+     "type": "p",
+     "text": ": R₃ − 2R₁ → [0 −2 −2 | <i>b</i>₃ − 2<i>b</i>₁], then + 2R₂ → [0 0 0 | <i>b</i>₃ − 2<i>b</i>₁ + 2<i>b</i>₂]."
+    },
+    {
+     "type": "p",
+     "text": "Range: <b>−2<i>b</i>₁ + 2<i>b</i>₂ + <i>b</i>₃ = 0</b>. (0, 0, 1) is not in it."
+    },
+    {
+     "type": "warn",
+     "text": "What it tests: For a square matrix onto ⇔ one-to-one ⇔ det ≠ 0. For the range, row-reduce with a general <b>b</b>; don’t just list the columns."
+    }
+   ]
+  }
+ ],
+ "keyFacts": [
+  "Columns independent ⇔ A x = 0 only trivial ⇔ pivot in every column.",
+  "p vectors in ℝⁿ with p > n are dependent; any set containing 0 is dependent.",
+  "Two vectors: dependent ⇔ parallel. Three or more: pairwise non-parallel is NOT enough.",
+  "Linear ⇒ T(0) = 0; standard matrix A = [T(e₁) ⋯ T(eₙ)].",
+  "Rotation by θ: [cos θ −sin θ; sin θ cos θ]. Composition 'S then T' = (T)(S).",
+  "T(x) = A x onto ⇔ pivot in every row; one-to-one ⇔ pivot in every column ⇔ kernel = {0}.",
+  "Wide matrices are never one-to-one; tall matrices are never onto; square: both or neither."
+ ]
+}

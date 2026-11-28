@@ -1942,5 +1942,94 @@
   "ℕ, ℤ, ℚ, ℤ × ℤ, finite strings are countable; ℝ, (0, 1), 𝒫(ℕ), infinite 0/1 sequences are not",
   "Diagonal argument: change digit n of the n-th entry (use 5/4 to avoid 0.4999… = 0.5)",
   "Cantor: |X| &lt; |𝒫(X)| via D = {x | x ∉ f(x)}"
+ ],
+ "parsons": [
+  {
+   "title": "Element-chasing: A − (B ∪ C) = (A − B) ∩ (A − C)",
+   "goal": "Prove A − (B ∪ C) = (A − B) ∩ (A − C) for all sets A, B, C by showing each side is a subset of the other.",
+   "lines": [
+    "(⊆) Let x ∈ A − (B ∪ C).",
+    "Then x ∈ A and x ∉ B ∪ C.",
+    "x ∉ B ∪ C means x ∉ B and x ∉ C (De Morgan).",
+    "So x ∈ A − B and x ∈ A − C, hence x ∈ (A − B) ∩ (A − C).",
+    "(⊇) Now let x ∈ (A − B) ∩ (A − C).",
+    "Then x ∈ A, x ∉ B and x ∉ C.",
+    "Since x ∉ B and x ∉ C, x ∉ B ∪ C, so x ∈ A − (B ∪ C).",
+    "Each side is a subset of the other, so the sets are equal. ∎"
+   ],
+   "distractors": [
+    "x ∉ B ∪ C means x ∉ B or x ∉ C.",
+    "Take A = {1, 2}, B = {1}, C = {2}: both sides are ∅, so the identity holds.",
+    "(⊇) The reverse inclusion is the same argument, so the sets are equal."
+   ]
+  },
+  {
+   "title": "Composition of injections is injective",
+   "goal": "Prove: if f : A → B and g : B → C are one-to-one, then g ∘ f : A → C is one-to-one.",
+   "lines": [
+    "Let a₁, a₂ ∈ A be arbitrary with (g ∘ f)(a₁) = (g ∘ f)(a₂).",
+    "By definition of composition, g(f(a₁)) = g(f(a₂)).",
+    "Since g is one-to-one, f(a₁) = f(a₂).",
+    "Since f is one-to-one, a₁ = a₂.",
+    "So (g ∘ f)(a₁) = (g ∘ f)(a₂) implies a₁ = a₂, and g ∘ f is one-to-one. ∎"
+   ],
+   "distractors": [
+    "Let a₁, a₂ ∈ A be arbitrary with a₁ = a₂; then (g ∘ f)(a₁) = (g ∘ f)(a₂).",
+    "Since f is one-to-one, g(f(a₁)) = g(f(a₂)) gives f(a₁) = f(a₂).",
+    "Let a₁ ≠ a₂; then f(a₁) ≠ f(a₂) because f is a function."
+   ]
+  },
+  {
+   "title": "Explicit bijection: |(0, 1)| = |(1, 3)|",
+   "goal": "Prove that f : (0, 1) → (1, 3), f(x) = 2x + 1, is a bijection, so (0, 1) and (1, 3) have the same cardinality.",
+   "lines": [
+    "Well-defined: if 0 &lt; x &lt; 1 then 0 &lt; 2x &lt; 2, so 1 &lt; 2x + 1 &lt; 3, and f(x) ∈ (1, 3).",
+    "One-to-one: suppose f(x₁) = f(x₂), i.e. 2x₁ + 1 = 2x₂ + 1.",
+    "Subtracting 1 and dividing by 2 gives x₁ = x₂.",
+    "Onto: let y ∈ (1, 3) be arbitrary and set x = (y − 1)/2.",
+    "Since 1 &lt; y &lt; 3, we get 0 &lt; x &lt; 1, so x ∈ (0, 1), and f(x) = 2·(y − 1)/2 + 1 = y.",
+    "f is one-to-one and onto, so it is a bijection and |(0, 1)| = |(1, 3)|. ∎"
+   ],
+   "distractors": [
+    "Onto: let x ∈ (0, 1); then f(x) = 2x + 1 lies in (1, 3), so f is onto.",
+    "One-to-one: f(0.25) = 1.5 and f(0.5) = 2 are different, so f is one-to-one.",
+    "Onto: set x = (y + 1)/2."
+   ]
+  },
+  {
+   "title": "Countability: ℤ is countable",
+   "goal": "Prove ℤ is countable by giving an explicit bijection f : ℕ → ℤ (ℕ = {0, 1, 2, …}).",
+   "lines": [
+    "Define f(n) = n/2 if n is even and f(n) = −(n + 1)/2 if n is odd, listing ℤ as 0, −1, 1, −2, 2, ….",
+    "Each value is an integer, so f maps ℕ into ℤ.",
+    "One-to-one: even n give the values 0, 1, 2, … (≥ 0) and odd n give −1, −2, … (&lt; 0), so an even and an odd input never collide.",
+    "Within the evens, n/2 = m/2 forces n = m; within the odds, −(n + 1)/2 = −(m + 1)/2 forces n = m.",
+    "Onto: for k ≥ 0, f(2k) = k; for k &lt; 0, f(−2k − 1) = k.",
+    "So f is a bijection ℕ → ℤ, and ℤ is countable. ∎"
+   ],
+   "distractors": [
+    "List ℤ as 0, 1, 2, 3, … and then −1, −2, −3, …; every integer appears, so ℤ is countable.",
+    "Onto: for k &lt; 0, f(−2k) = k.",
+    "ℤ ⊆ ℝ and ℝ is uncountable, so we must check ℤ is not uncountable."
+   ]
+  },
+  {
+   "title": "Cantor: 𝒫(ℕ) is uncountable",
+   "goal": "Prove that 𝒫(ℕ), the set of all subsets of ℕ, is uncountable.",
+   "lines": [
+    "Suppose, for contradiction, that 𝒫(ℕ) is countable.",
+    "𝒫(ℕ) is infinite, so its elements can be listed as S₀, S₁, S₂, … (every subset appears).",
+    "Define the diagonal set D = {n ∈ ℕ : n ∉ Sₙ}.",
+    "D ⊆ ℕ, so D = Sₖ for some k.",
+    "If k ∈ D, then by the definition of D, k ∉ Sₖ = D; if k ∉ D = Sₖ, then by the definition of D, k ∈ D.",
+    "Either way we get a contradiction, so no list contains every subset.",
+    "Hence 𝒫(ℕ) is uncountable. ∎"
+   ],
+   "distractors": [
+    "Define D = {n ∈ ℕ : n ∈ Sₙ}.",
+    "D is a new set, so add it to the front of the list; the new list still misses nothing.",
+    "Suppose, for contradiction, that 𝒫(ℕ) is finite."
+   ]
+  }
  ]
 }

@@ -1,0 +1,1034 @@
+{
+ "id": "B-5",
+ "course": "B",
+ "title": "Asymptotic analysis",
+ "source": "CS 61B Lec 13, 15, 16 · Ch 12–14",
+ "summary": "How to describe running time by its growth shape: Θ, O and Ω, the two sums everything reduces to, nested loops with irregular bounds, recursion trees, best vs worst case, and amortized cost. Runtime questions appear in almost every other unit, so this is the most reused skill on the final.",
+ "lesson": [
+  {
+   "title": "Θ, O and Ω",
+   "blocks": [
+    {
+     "type": "p",
+     "text": "We count basic steps as a function R(N) of input size N, then keep only the shape of its growth. Doubling N doubles a Θ(N) cost but quadruples a Θ(N²) cost, on every machine."
+    },
+    {
+     "type": "def",
+     "term": "Θ (tight bound)",
+     "text": "R(N) ∈ Θ(f(N)) iff there are constants k₁, k₂ > 0 with k₁·f(N) ≤ R(N) ≤ k₂·f(N) for all large N."
+    },
+    {
+     "type": "def",
+     "term": "O (upper bound)",
+     "text": "R(N) ∈ O(f(N)) iff R(N) ≤ k₂·f(N) for all large N. “Grows no faster than f.”"
+    },
+    {
+     "type": "def",
+     "term": "Ω (lower bound)",
+     "text": "R(N) ∈ Ω(f(N)) iff R(N) ≥ k₁·f(N) for all large N. Θ = O and Ω together."
+    },
+    {
+     "type": "steps",
+     "title": "Simplifying a cost",
+     "items": [
+      "Write or estimate the count, e.g. 3N² + 10N log N + 500.",
+      "Keep the fastest-growing term: 3N².",
+      "Drop the constant factor: Θ(N²)."
+     ]
+    },
+    {
+     "type": "formula",
+     "text": "1 ≺ log N ≺ √N ≺ N ≺ N log N ≺ N² ≺ N³ ≺ 2ᴺ ≺ 3ᴺ ≺ N! ≺ Nᴺ"
+    },
+    {
+     "type": "list",
+     "items": [
+      "Log base doesn’t matter: log₂ N = log₁₀ N · log₂ 10, a constant factor. Exponent bases do: 3ᴺ/2ᴺ = 1.5ᴺ → ∞, and 2²ᴺ = 4ᴺ ∉ Θ(2ᴺ), while 2ᴺ⁺¹ = 2·2ᴺ ∈ Θ(2ᴺ).",
+      "Any power of log is eventually smaller than any positive power of N: (log N)¹⁰⁰ ∈ O(N⁰·⁰¹).",
+      "Any polynomial is eventually smaller than any exponential with base > 1: N¹⁰⁰ ∈ O(1.01ᴺ).",
+      "log(N!) ∈ Θ(N log N) (N! has N factors, at least half of them ≥ N/2)."
+     ]
+    },
+    {
+     "type": "example",
+     "title": "O/Ω/Θ true or false",
+     "prompt": "Decide: (a) N² ∈ O(N³) (b) N² ∈ Θ(N³) (c) 2ᴺ⁺¹ ∈ Θ(2ᴺ) (d) 4ᴺ ∈ O(2ᴺ) (e) log₂ N ∈ Θ(log₁₀ N) (f) √N ∈ O(log² N) (g) log(N!) ∈ Θ(N log N) (h) if f ∈ O(g) then g ∈ Ω(f).",
+     "steps": [
+      "(a) True: O is only an upper bound.",
+      "(b) False: N² is not Ω(N³).",
+      "(c) True: 2ᴺ⁺¹ = 2·2ᴺ.",
+      "(d) False: 4ᴺ/2ᴺ = 2ᴺ is unbounded.",
+      "(e) True: they differ by the constant log₂ 10.",
+      "(f) False: √N eventually dominates any power of log N.",
+      "(g) True: N! ≤ Nᴺ gives O; N! ≥ (N/2)^(N/2) gives Ω.",
+      "(h) True: f ≤ k·g ⇔ g ≥ f/k."
+     ],
+     "answer": "T F T F T F T T"
+    },
+    {
+     "type": "warn",
+     "text": "O is not “worst case” and Ω is not “best case”. They are bounds on a function. You can state a Θ bound for the worst case, an O bound for the best case, etc. “Worst-case runtime is Θ(N²)” does not mean every input takes Θ(N²)."
+    }
+   ]
+  },
+  {
+   "title": "The two sums you need",
+   "blocks": [
+    {
+     "type": "thm",
+     "name": "Arithmetic sum",
+     "text": "1 + 2 + 3 + ⋯ + N = N(N + 1)/2 ∈ Θ(N²). Any sum of N terms where a constant fraction of them are about N is Θ(N²)."
+    },
+    {
+     "type": "thm",
+     "name": "Geometric sum",
+     "text": "1 + 2 + 4 + ⋯ + N = 2N − 1 ∈ Θ(N) (N a power of 2). In general a geometric series is Θ(its largest term); a decreasing one N + N/2 + N/4 + ⋯ ≤ 2N is Θ(its first term)."
+    },
+    {
+     "type": "thm",
+     "name": "Harmonic sum",
+     "text": "1 + 1/2 + 1/3 + ⋯ + 1/N ∈ Θ(log N). Shows up in loops like <code>j += i</code>."
+    },
+    {
+     "type": "thm",
+     "name": "Sum of logs",
+     "text": "log 1 + log 2 + ⋯ + log N = log(N!) ∈ Θ(N log N)."
+    },
+    {
+     "type": "example",
+     "title": "Recognise the sum",
+     "prompt": "Give Θ of: (a) N + (N−1) + ⋯ + 1 (b) N + N/2 + N/4 + ⋯ + 1 (c) 1 + 2 + 4 + ⋯ + 2ᴺ (d) 1² + 2² + ⋯ + N² (e) √1 + √2 + ⋯ + √N.",
+     "steps": [
+      "(a) Arithmetic: Θ(N²).",
+      "(b) Decreasing geometric: ≤ 2N, Θ(N).",
+      "(c) Geometric with largest term 2ᴺ: Θ(2ᴺ).",
+      "(d) The top half of the terms are each ≥ (N/2)², and there are N/2 of them: Θ(N³).",
+      "(e) Same trick: Θ(N·√N) = Θ(N¹·⁵)."
+     ],
+     "answer": "Θ(N²), Θ(N), Θ(2ᴺ), Θ(N³), Θ(N¹·⁵)"
+    }
+   ]
+  },
+  {
+   "title": "Nested loops with irregular bounds",
+   "blocks": [
+    {
+     "type": "steps",
+     "title": "Method",
+     "items": [
+      "Don’t multiply loop lengths blindly. Write the inner loop’s cost as a function of the outer variable.",
+      "Sum that over the values the outer variable actually takes (list them: 1, 2, 4, …? 1, 2, 3, …?).",
+      "Recognise the sum (arithmetic, geometric, harmonic, logs).",
+      "Sanity-check by counting for a small N."
+     ]
+    },
+    {
+     "type": "example",
+     "title": "Doubling outer loop, inner up to i",
+     "prompt": "<code>for (int i = 1; i &lt; N; i *= 2) for (int j = 0; j &lt; i; j++) count++;</code>",
+     "steps": [
+      "i takes the values 1, 2, 4, …, up to the largest power of 2 below N.",
+      "Inner loop does i steps, so total = 1 + 2 + 4 + ⋯ ≤ 2N.",
+      "Geometric sum ⇒ Θ(N). Counting for N = 1024 gives exactly 1023."
+     ],
+     "answer": "Θ(N) — not Θ(N log N)"
+    },
+    {
+     "type": "example",
+     "title": "Halving outer loop",
+     "prompt": "<code>for (int i = N; i > 0; i /= 2) for (int j = 0; j &lt; i; j++) count++;</code>",
+     "steps": [
+      "i = N, N/2, N/4, …, 1.",
+      "Total N + N/2 + N/4 + ⋯ ≤ 2N.",
+      "For N = 1000 the count is 1994; for N = 1024 it is 2047."
+     ],
+     "answer": "Θ(N)"
+    },
+    {
+     "type": "example",
+     "title": "Linear outer loop, logarithmic inner loop",
+     "prompt": "<code>for (int i = 0; i &lt; N; i++) for (int j = 1; j &lt; i; j *= 2) count++;</code>",
+     "steps": [
+      "For each i the inner loop runs about log₂ i times.",
+      "Total ≈ log 1 + log 2 + ⋯ + log N = log(N!) ∈ Θ(N log N).",
+      "Counts: N = 4096 → 45,045; N = 16384 → 212,979; ratio 4.73 ≈ 4·(14/12), the N log N signature."
+     ],
+     "answer": "Θ(N log N)"
+    },
+    {
+     "type": "example",
+     "title": "Harmonic loop",
+     "prompt": "<code>for (int i = 1; i &lt;= N; i++) for (int j = 1; j &lt;= N; j += i) count++;</code>",
+     "steps": [
+      "For fixed i the inner loop runs ⌈N/i⌉ times.",
+      "Total ≈ N(1 + 1/2 + ⋯ + 1/N) = Θ(N log N).",
+      "Count for N = 8: 8 + 4 + 3 + 2 + 2 + 2 + 2 + 1 = 24."
+     ],
+     "answer": "Θ(N log N)"
+    },
+    {
+     "type": "example",
+     "title": "Both loops multiply",
+     "prompt": "<code>for (int i = 1; i &lt; N; i *= 2) for (int j = 1; j &lt; i; j *= 2) count++;</code>",
+     "steps": [
+      "Let i = 2ᵏ for k = 0 … log N. The inner loop runs k times.",
+      "Total = 0 + 1 + ⋯ + (log N − 1) ≈ (log N)²/2.",
+      "For N = 65536 = 2¹⁶: 0 + 1 + ⋯ + 15 = 120."
+     ],
+     "answer": "Θ(log² N)"
+    },
+    {
+     "type": "example",
+     "title": "Square-root inner bound",
+     "prompt": "<code>for (int i = 0; i &lt; N; i++) for (int j = 0; j * j &lt; i; j++) count++;</code>",
+     "steps": [
+      "Inner runs about √i times.",
+      "Total ≈ √1 + ⋯ + √N = Θ(N^1.5) (top half of terms are each ≥ √(N/2)).",
+      "Count for N = 65536 is 11,217,280 ≈ (2/3)·65536^1.5."
+     ],
+     "answer": "Θ(N^1.5)"
+    },
+    {
+     "type": "warn",
+     "text": "“log N outer iterations × up to N inner = N log N” overcounts when most outer iterations are cheap. Always sum the actual inner costs."
+    }
+   ]
+  },
+  {
+   "title": "Recursion trees",
+   "blocks": [
+    {
+     "type": "steps",
+     "title": "Recursion-tree method",
+     "items": [
+      "Draw the call tree. Write the non-recursive work done at one node of size n.",
+      "For each level k: (number of nodes) × (work per node).",
+      "Find the number of levels (how fast does the size shrink to the base case?).",
+      "Sum over levels. Common shapes: every level equal (multiply by height); geometric increasing (bottom dominates); geometric decreasing (top dominates)."
+     ]
+    },
+    {
+     "type": "table",
+     "head": [
+      "Recurrence",
+      "Tree shape",
+      "Θ"
+     ],
+     "rows": [
+      [
+       "T(n) = T(n/2) + 1",
+       "1 node per level, log n levels",
+       "log n"
+      ],
+      [
+       "T(n) = T(n/2) + n",
+       "n, n/2, n/4, … (decreasing)",
+       "n"
+      ],
+      [
+       "T(n) = 2T(n/2) + 1",
+       "1, 2, 4, …, n nodes (increasing)",
+       "n"
+      ],
+      [
+       "T(n) = 2T(n/2) + n",
+       "n work on each of log n levels",
+       "n log n"
+      ],
+      [
+       "T(n) = 4T(n/2) + n",
+       "level k costs 2ᵏ·n (increasing)",
+       "n²"
+      ],
+      [
+       "T(n) = 3T(n/3) + 1",
+       "leaves dominate: n leaves",
+       "n"
+      ],
+      [
+       "T(n) = T(n − 1) + n",
+       "n + (n−1) + ⋯",
+       "n²"
+      ],
+      [
+       "T(n) = 2T(n − 1) + 1",
+       "1, 2, 4, …, 2ⁿ nodes",
+       "2ⁿ"
+      ],
+      [
+       "T(n) = T(√n) + 1",
+       "sizes n, n^½, n^¼, …",
+       "log log n"
+      ]
+     ]
+    },
+    {
+     "type": "example",
+     "title": "Two recursive calls on n/2 plus linear work",
+     "prompt": "<code>void f(int n) { if (n &lt;= 1) return; for (int i = 0; i &lt; n; i++) work(); f(n / 2); f(n / 2); }</code>",
+     "steps": [
+      "Level 0: 1 node doing n work. Level 1: 2 nodes doing n/2 each = n. Level k: 2ᵏ nodes × n/2ᵏ = n.",
+      "Height: n halves until 1 → log₂ n levels.",
+      "Total n · log n. Counted steps: 12,287 for n = 1024 and 57,343 for n = 4096 (ratio 4.67 ≈ 4·12/10)."
+     ],
+     "answer": "Θ(n log n)"
+    },
+    {
+     "type": "example",
+     "title": "Two calls on n − 1",
+     "prompt": "<code>void g(int n) { if (n &lt;= 0) return; g(n - 1); g(n - 1); }</code>",
+     "steps": [
+      "Each call makes two calls on a size only 1 smaller: level k has 2ᵏ nodes.",
+      "n levels, total 1 + 2 + ⋯ + 2ⁿ = 2ⁿ⁺¹ − 1 calls.",
+      "Counted calls: g(10) makes 2047 calls; g(20) makes 2,097,151."
+     ],
+     "answer": "Θ(2ⁿ)"
+    },
+    {
+     "type": "example",
+     "title": "Four calls on n/2",
+     "prompt": "<code>T(n) = 4T(n/2) + n</code> (four recursive calls, linear loop).",
+     "steps": [
+      "Level k: 4ᵏ nodes, each n/2ᵏ work → 2ᵏ·n per level: increasing geometric.",
+      "Bottom level k = log n: 2^(log n)·n = n². Sum is dominated by it.",
+      "Counts: 2,445,653 at n = 1024 and 39,142,741 at n = 4096: ratio ≈ 16 = 4²."
+     ],
+     "answer": "Θ(n²)"
+    },
+    {
+     "type": "example",
+     "title": "Recursion on √N plus a halving loop",
+     "prompt": "<code>void h(long n) { if (n &lt;= 2) return; for (long i = n; i > 1; i /= 2) work(); h((long) Math.sqrt(n)); h((long) Math.sqrt(n)); }</code>",
+     "steps": [
+      "Work at a node of size m is log m (the halving loop).",
+      "Level k: 2ᵏ nodes of size n^(1/2ᵏ), each doing log(n^(1/2ᵏ)) = (log n)/2ᵏ: every level costs log n.",
+      "Height: n^(1/2ᵏ) ≤ 2 ⇔ log n / 2ᵏ ≤ 1 ⇔ k = log log n.",
+      "Total log n · log log n. Counts: 80 for n = 2¹⁶ (16·4 = 64 predicted), 192 for 2³² (32·5 = 160), 384 for 2⁶² (62·6 = 372): ratio to the formula approaches 1."
+     ],
+     "answer": "Θ(log n · log log n)"
+    },
+    {
+     "type": "warn",
+     "text": "The tree must use the cost of a single node, not of the whole subtree. And count levels from how the size shrinks: halving → log n levels; minus one → n levels; square root → log log n levels."
+    }
+   ]
+  },
+  {
+   "title": "Best case vs worst case",
+   "blocks": [
+    {
+     "type": "p",
+     "text": "When runtime depends on more than N (on the values or order of the input), give separate Θ bounds for the best and worst case inputs of size N. If they differ, the overall runtime has no single Θ bound; you may say O(worst) and Ω(best)."
+    },
+    {
+     "type": "example",
+     "title": "Early return",
+     "prompt": "<code>boolean dup(int[] a) { for (i …) for (j = i + 1 …) if (a[i] == a[j]) return true; return false; }</code>",
+     "steps": [
+      "Best case: a[0] == a[1], return after 1 comparison: Θ(1).",
+      "Worst case: no duplicates, all pairs compared: N(N − 1)/2 = 499,500 comparisons for N = 1000.",
+      "Overall: O(N²) and Ω(1); no single Θ."
+     ],
+     "answer": "Best Θ(1), worst Θ(N²)"
+    },
+    {
+     "type": "example",
+     "title": "Recursion whose branch depends on parity",
+     "prompt": "<code>void pw(int n) { if (n &lt;= 1) return; if (n % 2 == 0) pw(n / 2); else { for (int i = 0; i &lt; n; i++) work(); pw(n - 1); } }</code>",
+     "steps": [
+      "Best case: n a power of 2 — always the even branch: Θ(log n) calls, constant work each.",
+      "Worst case: n = 2ᵏ − 1 (all ones in binary): odd → n work and n − 1, which halves to 2ᵏ⁻¹ − 1, odd again… total ≈ n + n/2 + n/4 + ⋯ ≈ 2n.",
+      "Counts: pw(1024) does 11 steps; pw(1023) does 2054; pw(65536) 17; pw(65535) 131,084."
+     ],
+     "answer": "Best Θ(log n), worst Θ(n)"
+    }
+   ]
+  },
+  {
+   "title": "Amortized analysis",
+   "blocks": [
+    {
+     "type": "def",
+     "term": "Amortized cost",
+     "text": "The total worst-case cost of any sequence of n operations divided by n. Individual operations may be expensive as long as they are rare enough."
+    },
+    {
+     "type": "example",
+     "title": "Binary counter",
+     "prompt": "A counter stored as an array of bits is incremented N times; each increment flips trailing 1s to 0 and one 0 to 1. Worst single increment and amortized cost?",
+     "steps": [
+      "Worst single increment (…0111…1 → …1000…0) flips Θ(log N) bits.",
+      "Bit i flips once every 2ⁱ increments, so total flips ≤ N(1 + 1/2 + 1/4 + ⋯) &lt; 2N.",
+      "Measured: 10⁶ increments cause 1,999,993 flips."
+     ],
+     "answer": "Worst single Θ(log N), amortized Θ(1)"
+    },
+    {
+     "type": "example",
+     "title": "Resizing array list",
+     "prompt": "N addLasts with doubling vs growing by +100.",
+     "steps": [
+      "Doubling: copies 1 + 2 + 4 + ⋯ &lt; 2N: Θ(N) total, Θ(1) amortized, though one add can cost Θ(N).",
+      "+100: about N/100 resizes costing 100, 200, 300, …: Θ(N²/100) = Θ(N²) total, Θ(N) amortized."
+     ],
+     "answer": "Θ(1) amortized vs Θ(N) amortized"
+    },
+    {
+     "type": "tip",
+     "text": "Potential/banker’s view: cheap operations pre-pay into a bank so the balance always covers the next expensive operation. If a constant charge per operation keeps the balance ≥ 0, the amortized cost is that constant."
+    }
+   ]
+  },
+  {
+   "title": "Runtime of code that uses data structures",
+   "blocks": [
+    {
+     "type": "p",
+     "text": "Look up the cost of every library call inside the loop, using the current size of the structure, then sum."
+    },
+    {
+     "type": "table",
+     "head": [
+      "Operation",
+      "Cost"
+     ],
+     "rows": [
+      [
+       "ArrayList get/set, add at end",
+       "Θ(1) (add amortized)"
+      ],
+      [
+       "ArrayList add/remove at index 0",
+       "Θ(size) (shift)"
+      ],
+      [
+       "LinkedList add/remove at either end",
+       "Θ(1)"
+      ],
+      [
+       "LinkedList get(i)",
+       "Θ(min(i, size − i))"
+      ],
+      [
+       "HashSet/HashMap add, contains, remove",
+       "Θ(1) expected (Θ(N) worst with bad hashing)"
+      ],
+      [
+       "TreeSet/TreeMap add, contains, remove",
+       "Θ(log N)"
+      ],
+      [
+       "PriorityQueue add, poll",
+       "Θ(log N); peek Θ(1)"
+      ],
+      [
+       "String s += t",
+       "Θ(length of s + t): strings are immutable, so the whole thing is copied"
+      ],
+      [
+       "StringBuilder append",
+       "Θ(1) amortized"
+      ]
+     ]
+    },
+    {
+     "type": "example",
+     "title": "Library calls inside loops",
+     "prompt": "Give Θ: (a) add 0..N−1 to an ArrayList, then <code>while (!L.isEmpty()) L.remove(0);</code> (b) <code>for (int i = 0; i &lt; L.size(); i++) sum += L.get(i);</code> on a LinkedList (c) add N items to a TreeSet then iterate it (d) <code>for (i &lt; N) s += \"x\";</code>",
+     "steps": [
+      "(a) The k-th removal shifts N − k items: Θ(N²). (Timing check: doubling N roughly quadrupled the time.)",
+      "(b) Each get walks from the nearer end, ~N/4 on average: Θ(N²).",
+      "(c) N inserts at Θ(log N) each: Θ(N log N); iteration Θ(N).",
+      "(d) The i-th concatenation copies i characters: Θ(N²). A StringBuilder makes it Θ(N)."
+     ],
+     "answer": "Θ(N²), Θ(N²), Θ(N log N), Θ(N²)"
+    },
+    {
+     "type": "warn",
+     "text": "Hash table operations are Θ(1) only on average with a good hash function and resizing; a constant hashCode makes every operation Θ(N)."
+    }
+   ]
+  }
+ ],
+ "cards": [
+  {
+   "front": "Definition of R(N) ∈ Θ(f(N))?",
+   "back": [
+    {
+     "type": "p",
+     "text": "There exist k₁, k₂ > 0 with k₁f(N) ≤ R(N) ≤ k₂f(N) for all sufficiently large N."
+    }
+   ]
+  },
+  {
+   "front": "O vs Ω vs Θ?",
+   "back": [
+    {
+     "type": "p",
+     "text": "O: upper bound. Ω: lower bound. Θ: both."
+    }
+   ]
+  },
+  {
+   "front": "Is “O = worst case, Ω = best case” correct?",
+   "back": [
+    {
+     "type": "p",
+     "text": "No. They are bounds on any function; you can give O, Ω or Θ for the best case, worst case or overall runtime."
+    }
+   ]
+  },
+  {
+   "front": "1 + 2 + ⋯ + N?",
+   "back": [
+    {
+     "type": "p",
+     "text": "N(N + 1)/2 ∈ Θ(N²)."
+    }
+   ]
+  },
+  {
+   "front": "1 + 2 + 4 + ⋯ + N?",
+   "back": [
+    {
+     "type": "p",
+     "text": "2N − 1 ∈ Θ(N): a geometric sum is Θ(its largest term)."
+    }
+   ]
+  },
+  {
+   "front": "1 + 1/2 + ⋯ + 1/N?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Θ(log N) (harmonic)."
+    }
+   ]
+  },
+  {
+   "front": "log(N!)?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Θ(N log N)."
+    }
+   ]
+  },
+  {
+   "front": "Does the log base matter in Θ?",
+   "back": [
+    {
+     "type": "p",
+     "text": "No (constant factor). But exponent bases matter: 3ᴺ ∉ O(2ᴺ)."
+    }
+   ]
+  },
+  {
+   "front": "2ᴺ⁺¹ vs 2ᴺ and 2²ᴺ vs 2ᴺ?",
+   "back": [
+    {
+     "type": "p",
+     "text": "2ᴺ⁺¹ ∈ Θ(2ᴺ); 2²ᴺ = 4ᴺ ∉ O(2ᴺ)."
+    }
+   ]
+  },
+  {
+   "front": "Growth order: N log N, N^1.5, log² N, √N, 2ᴺ, N!?",
+   "back": [
+    {
+     "type": "p",
+     "text": "log² N ≺ √N ≺ N log N ≺ N^1.5 ≺ 2ᴺ ≺ N!"
+    }
+   ]
+  },
+  {
+   "front": "<code>for (i = 1; i &lt; N; i *= 2) for (j = 0; j &lt; i; j++)</code>?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Θ(N) (geometric sum)."
+    }
+   ]
+  },
+  {
+   "front": "<code>for (i &lt; N) for (j = 1; j &lt; i; j *= 2)</code>?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Θ(N log N)."
+    }
+   ]
+  },
+  {
+   "front": "<code>for (i = 1..N) for (j = 1; j &lt;= N; j += i)</code>?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Θ(N log N) (harmonic)."
+    }
+   ]
+  },
+  {
+   "front": "<code>for (i = 1; i &lt; N; i *= 2) for (j = 1; j &lt; i; j *= 2)</code>?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Θ(log² N)."
+    }
+   ]
+  },
+  {
+   "front": "T(n) = 2T(n/2) + n?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Θ(n log n): n work per level, log n levels."
+    }
+   ]
+  },
+  {
+   "front": "T(n) = 2T(n/2) + 1?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Θ(n): leaves dominate (n leaves)."
+    }
+   ]
+  },
+  {
+   "front": "T(n) = T(n/2) + n?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Θ(n): top dominates (n + n/2 + ⋯ ≤ 2n)."
+    }
+   ]
+  },
+  {
+   "front": "T(n) = 2T(n − 1) + 1?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Θ(2ⁿ)."
+    }
+   ]
+  },
+  {
+   "front": "T(n) = T(n − 1) + n?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Θ(n²)."
+    }
+   ]
+  },
+  {
+   "front": "T(n) = 4T(n/2) + n?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Θ(n²): level k costs 2ᵏn, bottom dominates."
+    }
+   ]
+  },
+  {
+   "front": "Number of levels when n → √n each call?",
+   "back": [
+    {
+     "type": "p",
+     "text": "log log n (log n halves each level)."
+    }
+   ]
+  },
+  {
+   "front": "Recursion-tree recipe?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Work per node × nodes per level, summed over levels; find height from how size shrinks."
+    }
+   ]
+  },
+  {
+   "front": "When does a function have no single Θ runtime?",
+   "back": [
+    {
+     "type": "p",
+     "text": "When best and worst cases differ (e.g. early return): give best and worst separately."
+    }
+   ]
+  },
+  {
+   "front": "What is amortized cost?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Worst-case total for any sequence of n operations, divided by n."
+    }
+   ]
+  },
+  {
+   "front": "Amortized cost of a binary counter increment?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Θ(1): bit i flips every 2ⁱ increments, total &lt; 2N flips."
+    }
+   ]
+  },
+  {
+   "front": "Cost of <code>ArrayList.remove(0)</code> and <code>LinkedList.get(i)</code>?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Θ(N) shift; Θ(min(i, N − i)) walk."
+    }
+   ]
+  },
+  {
+   "front": "Cost of <code>s += \"x\"</code> in a loop of N iterations?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Θ(N²) total: each concatenation copies the whole string. Use StringBuilder."
+    }
+   ]
+  },
+  {
+   "front": "HashSet vs TreeSet contains?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Θ(1) expected vs Θ(log N)."
+    }
+   ]
+  }
+ ],
+ "hard": [
+  {
+   "title": "Factorial by repeated addition",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "code",
+     "lang": "java",
+     "text": "static long fact(int n) {\n    if (n == 0) return 1;\n    long f = fact(n - 1);\n    long r = 0;\n    for (long i = 0; i < f; i++) r += n;   // adds n, (n-1)! times\n    return r;\n}"
+    },
+    {
+     "type": "p",
+     "text": "Give the runtime of fact(n) in Θ. How would it change if the loop instead added f, n times?"
+    }
+   ],
+   "answer": "Θ((n − 1)!); Θ(n²) for the swapped loop",
+   "solution": [
+    {
+     "type": "p",
+     "text": "The loop in the call with argument k runs (k − 1)! times. Total = 0! + 1! + 2! + ⋯ + (n − 1)!."
+    },
+    {
+     "type": "p",
+     "text": "This is dominated by its last term: (n − 2)! + (n − 3)! + ⋯ ≤ (n − 2)!·(1 + 1/(n−2) + …) is a vanishing fraction of (n − 1)!, so total ∈ Θ((n − 1)!)."
+    },
+    {
+     "type": "p",
+     "text": "Measured: fact(12) does 43,954,714 additions vs 11! = 39,916,800 (ratio 1.10, approaching 1)."
+    },
+    {
+     "type": "p",
+     "text": "Swapped (add f, n times): the k-th call loops k times: 1 + 2 + ⋯ + n = Θ(n²) (fact2(10) does 55 additions, fact2(20) 210)."
+    },
+    {
+     "type": "p",
+     "text": "Lesson: when loop bounds depend on computed values, express the runtime in terms of those values."
+    }
+   ]
+  },
+  {
+   "title": "Recursion on √n with two calls",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "code",
+     "lang": "java",
+     "text": "void h(long n) {\n    if (n <= 2) return;\n    for (long i = n; i > 1; i /= 2) work();\n    h((long) Math.sqrt(n));\n    h((long) Math.sqrt(n));\n}"
+    },
+    {
+     "type": "p",
+     "text": "Find Θ of the total work, showing the tree height and work per level."
+    }
+   ],
+   "answer": "Θ(log n · log log n)",
+   "solution": [
+    {
+     "type": "p",
+     "text": "A node of size m does log₂ m work."
+    },
+    {
+     "type": "p",
+     "text": "Level k: 2ᵏ nodes of size n^(1/2ᵏ), each doing (log n)/2ᵏ: total log n per level."
+    },
+    {
+     "type": "p",
+     "text": "Height: stop when n^(1/2ᵏ) ≤ 2 ⇔ (log n)/2ᵏ ≤ 1 ⇔ k = log log n."
+    },
+    {
+     "type": "p",
+     "text": "Total (log n)(log log n). Measured counts 80, 192, 384 for n = 2¹⁶, 2³², 2⁶², against 64, 160, 372 from the formula — matching up to lower-order terms."
+    }
+   ]
+  },
+  {
+   "title": "Enigma loops",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "Give Θ for each (N ≥ 2): (a) <code>for (i = 2; i &lt; N; i = i * i) work();</code> (b) <code>for (i = 0; i &lt; N; i++) for (j = 0; j &lt; i * i; j += i) work();</code> (c) <code>for (i = 1; i &lt; N; i *= 2) for (j = 0; j &lt; N; j += i) work();</code>"
+    }
+   ],
+   "answer": "(a) Θ(log log N) (b) Θ(N²) (c) Θ(N)",
+   "solution": [
+    {
+     "type": "p",
+     "text": "(a) i = 2, 4, 16, 256, 65536, … = 2^(2ᵏ). Stop when 2^(2ᵏ) ≥ N ⇔ k ≥ log log N. Measured: 4 iterations for N = 65536, 5 for 65537 and for 2³⁰. (Careful: with int i, squaring 65536 overflows to 0 and the loop never ends; use long.)"
+    },
+    {
+     "type": "p",
+     "text": "(b) For i ≥ 1 the inner loop goes 0, i, 2i, … while below i², i.e. exactly i iterations: Σ_{i&lt;N} i = N(N − 1)/2 ∈ Θ(N²). Measured for N = 1024: 523,776 = 1023·1024/2. (With int arithmetic i * i overflows once i > 46340, so large N needs long.)"
+    },
+    {
+     "type": "p",
+     "text": "(c) For i = 2ᵏ the inner loop runs N/2ᵏ times: N + N/2 + N/4 + ⋯ ≤ 2N: Θ(N). Measured: 2046 for N = 1024, 131,070 for N = 65536."
+    }
+   ]
+  },
+  {
+   "title": "Best and worst case of a parity recursion",
+   "level": "hard",
+   "prompt": [
+    {
+     "type": "code",
+     "lang": "java",
+     "text": "void pw(int n) {\n    if (n <= 1) return;\n    if (n % 2 == 0) pw(n / 2);\n    else { for (int i = 0; i < n; i++) work(); pw(n - 1); }\n}"
+    },
+    {
+     "type": "p",
+     "text": "Give the best- and worst-case Θ in terms of n, and which inputs achieve them."
+    }
+   ],
+   "answer": "Best Θ(log n) for powers of 2; worst Θ(n) for n = 2ᵏ − 1",
+   "solution": [
+    {
+     "type": "p",
+     "text": "Each odd step is immediately followed by an even step (n − 1 is even), so the size at least halves every two calls: at most 2 log n calls."
+    },
+    {
+     "type": "p",
+     "text": "Best: n = 2ᵏ, only even steps: Θ(log n) total."
+    },
+    {
+     "type": "p",
+     "text": "Worst: every odd step costs the current n. The sizes at odd steps are at most n, n/2, n/4, … so total ≤ 2n: O(n). n = 2ᵏ − 1 makes every halved value odd again, achieving ≈ 2n: Θ(n)."
+    },
+    {
+     "type": "p",
+     "text": "Measured: pw(1024) = 11 steps, pw(1023) = 2054; pw(65535) = 131,084 ≈ 2n."
+    }
+   ]
+  },
+  {
+   "title": "Always / sometimes / never",
+   "level": "hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "Let f(N) be the worst-case and g(N) the best-case runtime of some algorithm. Decide whether each is always, sometimes or never true: (a) g ∈ O(f) (b) f ∈ Θ(g) (c) if f ∈ Θ(N²) then the algorithm is O(N²) on every input (d) if g ∈ Ω(N log N) then every input takes Ω(N log N) (e) an algorithm with f ∈ Θ(N log N) is faster than one with f ∈ Θ(N²) for every N."
+    }
+   ],
+   "answer": "(a) always (b) sometimes (c) always (d) always (e) sometimes",
+   "solution": [
+    {
+     "type": "p",
+     "text": "(a) Best case ≤ worst case for every N: always."
+    },
+    {
+     "type": "p",
+     "text": "(b) True exactly when best and worst grow alike (e.g. mergesort); false for insertion sort. Sometimes."
+    },
+    {
+     "type": "p",
+     "text": "(c) Every input costs at most the worst case: always."
+    },
+    {
+     "type": "p",
+     "text": "(d) Every input costs at least the best case: always."
+    },
+    {
+     "type": "p",
+     "text": "(e) Asymptotics hide constants: 1000·N log N exceeds N² for small N. Sometimes."
+    }
+   ]
+  },
+  {
+   "title": "Runtime with a hash set and a tree set",
+   "level": "hard",
+   "prompt": [
+    {
+     "type": "code",
+     "lang": "java",
+     "text": "static int f(int[] a) {                // a has length N\n    Set<Integer> seen = new HashSet<>();\n    TreeSet<Integer> big = new TreeSet<>();\n    int count = 0;\n    for (int x : a) {\n        if (seen.contains(x)) count++;\n        seen.add(x);\n        big.add(x);\n        if (big.size() > 10) big.pollFirst();\n    }\n    return count;\n}"
+    },
+    {
+     "type": "p",
+     "text": "Give the expected runtime in Θ, assuming a good hashCode. What changes if Integer.hashCode returned 0 for every value?"
+    }
+   ],
+   "answer": "Θ(N) expected; Θ(N²) with a constant hash",
+   "solution": [
+    {
+     "type": "p",
+     "text": "HashSet contains/add: Θ(1) expected each → Θ(N)."
+    },
+    {
+     "type": "p",
+     "text": "The TreeSet never holds more than 11 items, so each add/pollFirst is Θ(log 11) = Θ(1)."
+    },
+    {
+     "type": "p",
+     "text": "Total Θ(N). With a constant hashCode, every item lands in one bucket: the k-th contains/add scans up to k items → Θ(N²)."
+    }
+   ]
+  },
+  {
+   "title": "Amortized multipop stack",
+   "level": "hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "A stack supports push (Θ(1)) and multipop(k), which pops min(k, size) items one at a time. Starting empty, any sequence of N operations is performed. What is the worst-case cost of a single operation and the amortized cost?"
+    }
+   ],
+   "answer": "Single op Θ(N) worst; amortized Θ(1)",
+   "solution": [
+    {
+     "type": "p",
+     "text": "A multipop after N − 1 pushes pops N − 1 items: Θ(N) for that one call."
+    },
+    {
+     "type": "p",
+     "text": "Each item is pushed once and popped at most once, so total pops ≤ total pushes ≤ N. Total cost of the sequence ≤ 2N."
+    },
+    {
+     "type": "p",
+     "text": "Amortized Θ(1) per operation (banker’s view: each push pre-pays one coin for its eventual pop)."
+    }
+   ]
+  },
+  {
+   "title": "Recurrence from code with copying",
+   "level": "hard",
+   "prompt": [
+    {
+     "type": "code",
+     "lang": "java",
+     "text": "static int mulch(int[] a) {\n    int n = a.length;\n    if (n <= 1) return 1;\n    int[] left = Arrays.copyOfRange(a, 0, n / 2);\n    int[] right = Arrays.copyOfRange(a, n / 2, n);\n    return mulch(left) + mulch(right) + mulch(left);\n}"
+    },
+    {
+     "type": "p",
+     "text": "Write the recurrence and solve it."
+    }
+   ],
+   "answer": "T(n) = 3T(n/2) + n ⇒ Θ(n^(log₂ 3)) ≈ Θ(n^1.585)",
+   "solution": [
+    {
+     "type": "p",
+     "text": "Copying costs Θ(n); there are three recursive calls on half-size arrays: T(n) = 3T(n/2) + Θ(n)."
+    },
+    {
+     "type": "p",
+     "text": "Level k: 3ᵏ nodes, each n/2ᵏ work → n·(3/2)ᵏ: increasing geometric, so the bottom level dominates."
+    },
+    {
+     "type": "p",
+     "text": "Bottom k = log₂ n: n·(3/2)^(log₂ n) = n · n^(log₂ 3 − 1) = n^(log₂ 3)."
+    },
+    {
+     "type": "p",
+     "text": "Θ(n^(log₂ 3)) ≈ Θ(n^1.585): faster than n² but slower than n log n. Check: evaluating T(n) = 3T(n/2) + n numerically, T(n)/n^1.585 settles at 3.0 for n from 2¹⁰ to 2²⁰."
+    }
+   ]
+  }
+ ],
+ "keyFacts": [
+  "Θ = tight (O and Ω). O/Ω are bounds, not “worst/best case”.",
+  "1 + ⋯ + N = Θ(N²); 1 + 2 + 4 + ⋯ + N = Θ(N); harmonic = Θ(log N); log(N!) = Θ(N log N).",
+  "Hierarchy: 1 ≺ log N ≺ √N ≺ N ≺ N log N ≺ N² ≺ 2ᴺ ≺ N!. Log base irrelevant; exponent base matters.",
+  "Nested loops: sum the inner cost over the actual outer values (i *= 2 with j &lt; i is Θ(N)).",
+  "Recursion tree: nodes per level × work per node, summed over height (halve → log n, −1 → n, √ → log log n).",
+  "2T(n/2)+n → n log n; 2T(n/2)+1 → n; T(n/2)+n → n; 2T(n−1)+1 → 2ⁿ; T(n−1)+n → n².",
+  "Different best/worst cases ⇒ no single Θ; state each.",
+  "Amortized = total over a sequence / n (doubling array, binary counter, multipop are Θ(1)).",
+  "Library costs: ArrayList remove(0) Θ(N); LinkedList get Θ(N); HashSet Θ(1) expected; TreeSet/PQ Θ(log N); String += copies."
+ ],
+ "parsons": [
+  {
+   "title": "Binary search in Θ(log N)",
+   "goal": "Return an index of x in the sorted array a, or −1, halving the search range each step.",
+   "lines": [
+    "static int find(int[] a, int x) {",
+    "    int lo = 0, hi = a.length - 1;",
+    "    while (lo &lt;= hi) {",
+    "        int mid = (lo + hi) / 2;",
+    "        if (a[mid] == x) return mid;",
+    "        else if (a[mid] &lt; x) lo = mid + 1;",
+    "        else hi = mid - 1;",
+    "    }",
+    "    return -1;",
+    "}"
+   ],
+   "distractors": [
+    "    while (lo &lt; hi) {",
+    "        else if (a[mid] &lt; x) hi = mid - 1;",
+    "    int lo = 0, hi = a.length;"
+   ]
+  },
+  {
+   "title": "Fast power in Θ(log n)",
+   "goal": "Compute bⁿ (n ≥ 0) with one recursive call per level, so the recursion has Θ(log n) levels.",
+   "lines": [
+    "static long pow(long b, int n) {",
+    "    if (n == 0) return 1;",
+    "    long half = pow(b, n / 2);",
+    "    if (n % 2 == 0) return half * half;",
+    "    return half * half * b;",
+    "}"
+   ],
+   "distractors": [
+    "    long half = pow(b, n - 1);",
+    "    if (n % 2 == 1) return half * half;",
+    "    if (n == 0) return b;"
+   ]
+  },
+  {
+   "title": "Two-pointer pair count in Θ(N)",
+   "goal": "a is sorted with distinct values. Count pairs i &lt; j with a[i] + a[j] == 0 in linear time.",
+   "lines": [
+    "static int countPairs(int[] a) {",
+    "    int i = 0, j = a.length - 1, count = 0;",
+    "    while (i &lt; j) {",
+    "        int s = a[i] + a[j];",
+    "        if (s == 0) { count++; i++; j--; }",
+    "        else if (s &lt; 0) i++;",
+    "        else j--;",
+    "    }",
+    "    return count;",
+    "}"
+   ],
+   "distractors": [
+    "        else if (s &lt; 0) j--;",
+    "    while (i &lt;= j) {",
+    "        if (s == 0) count++;"
+   ]
+  }
+ ]
+}

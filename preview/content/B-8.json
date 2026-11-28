@@ -1,0 +1,781 @@
+{
+ "id": "B-8",
+ "course": "B",
+ "title": "Heaps & priority queues, tree traversals",
+ "source": "CS 61B Lec 20–21 · Ch 19–20",
+ "summary": "A binary min-heap stores a priority queue in an array so that add and removeSmallest are Θ(log N). Final questions trace swim/sink on arrays, check or build heaps (bottom-up heapify), use PQs for top-k and median problems, and test the four tree traversals, including rebuilding a tree from two traversals.",
+ "lesson": [
+  {
+   "title": "Priority queues and the heap shape",
+   "blocks": [
+    {
+     "type": "def",
+     "term": "Min priority queue",
+     "text": "Supports add(x), getSmallest(), removeSmallest(), size(). Only the minimum is ever requested, so a fully sorted structure is overkill."
+    },
+    {
+     "type": "def",
+     "term": "Binary min-heap",
+     "text": "A binary tree that is (1) complete — every level full except possibly the last, filled left to right — and (2) heap-ordered — every node ≤ each of its children. The minimum is the root. Siblings are unordered."
+    },
+    {
+     "type": "p",
+     "text": "Because the tree is complete, store it in an array level by level. With the root at index 1 (index 0 unused):"
+    },
+    {
+     "type": "formula",
+     "text": "parent(k) = k / 2   ·   leftChild(k) = 2k   ·   rightChild(k) = 2k + 1"
+    },
+    {
+     "type": "p",
+     "text": "With the root at index 0 instead: children 2k + 1 and 2k + 2, parent (k − 1) / 2."
+    },
+    {
+     "type": "example",
+     "title": "Check the heap property",
+     "prompt": "Which arrays (index 1 first) are valid min-heaps? (a) [1, 3, 2, 5, 4, 7, 8] (b) [2, 4, 3, 5, 1] (c) [1, 5, 2, 6, 7, 3, 4] (d) [1, 2, 3, 4, 5, 6].",
+     "steps": [
+      "Check every k ≥ 2: a[k/2] ≤ a[k].",
+      "(a) parents 1 ≤ 3, 2; 3 ≤ 5, 4; 2 ≤ 7, 8: valid.",
+      "(b) index 5 holds 1, parent index 2 holds 4 > 1: invalid.",
+      "(c) 5 ≤ 6, 7 and 2 ≤ 3, 4: valid.",
+      "(d) any sorted array is a heap: valid."
+     ],
+     "answer": "valid, invalid, valid, valid (verified)"
+    },
+    {
+     "type": "code",
+     "lang": "java",
+     "text": "static boolean isMinHeap(int[] a, int n) {   // a[1..n]\n    for (int k = 2; k <= n; k++)\n        if (a[k / 2] > a[k]) return false;\n    return true;\n}"
+    },
+    {
+     "type": "example",
+     "title": "Where can each rank live?",
+     "prompt": "In a min-heap of the 7 distinct keys 1…7, which array indices can hold key 2, key 3, and key 7?",
+     "steps": [
+      "Key 2 must be a child of the root: every ancestor must be smaller, and only 1 is smaller. Indices 2 or 3.",
+      "Key 3 has at most two smaller keys, so its depth is ≤ 2: indices 2–7 (any non-root position).",
+      "Key 7 (the maximum) can have no children (both would need to be larger): it must be a leaf, indices 4–7.",
+      "A brute force over all 5040 orderings finds 80 valid heaps and confirms these position sets."
+     ],
+     "answer": "key 2: {2, 3}; key 3: {2,…,7}; key 7: {4,…,7} (verified)"
+    }
+   ]
+  },
+  {
+   "title": "Insert (swim) and removeSmallest (sink)",
+   "blocks": [
+    {
+     "type": "code",
+     "lang": "java",
+     "text": "void add(int x) {                         // Θ(log N)\n    h[++n] = x;\n    swim(n);\n}\nvoid swim(int k) {\n    while (k > 1 && h[k / 2] > h[k]) { swap(k, k / 2); k = k / 2; }\n}\nint removeSmallest() {                    // Θ(log N)\n    int min = h[1];\n    h[1] = h[n--];                        // last item to the root\n    sink(1);\n    return min;\n}\nvoid sink(int k) {\n    while (2 * k <= n) {\n        int j = 2 * k;\n        if (j < n && h[j + 1] < h[j]) j++; // the SMALLER child\n        if (h[k] <= h[j]) break;\n        swap(k, j);\n        k = j;\n    }\n}"
+    },
+    {
+     "type": "example",
+     "title": "Insert trace",
+     "prompt": "Add 6, 2, 9, 1, 5, 3, 8, 0 to an empty min-heap. Give the array after each add.",
+     "steps": [
+      "6: [6]. 2: goes to index 2, parent 6 > 2 → swap: [2, 6]. 9: [2, 6, 9].",
+      "1: index 4, parent (index 2) 6 → swap → index 2, parent 2 → swap: [1, 2, 9, 6].",
+      "5: index 5, parent 2 &lt; 5: [1, 2, 9, 6, 5].",
+      "3: index 6, parent (index 3) 9 → swap; parent 1 stops: [1, 2, 3, 6, 5, 9].",
+      "8: index 7, parent 3: [1, 2, 3, 6, 5, 9, 8].",
+      "0: index 8, swaps with 6 (index 4), 2 (index 2), 1 (index 1): [0, 1, 3, 2, 5, 9, 8, 6]."
+     ],
+     "answer": "[0, 1, 3, 2, 5, 9, 8, 6] (verified)"
+    },
+    {
+     "type": "example",
+     "title": "removeSmallest trace",
+     "prompt": "From [0, 1, 3, 2, 5, 9, 8, 6], call removeSmallest three times.",
+     "steps": [
+      "Remove 0: last item 6 to the root: [6, 1, 3, 2, 5, 9, 8]. Sink: smaller child 1 → swap; at index 2 children 2, 5 → swap with 2: [1, 2, 3, 6, 5, 9, 8].",
+      "Remove 1: 8 to root: [8, 2, 3, 6, 5, 9]. Smaller child 2 → swap; at index 2 children 6, 5 → swap with 5: [2, 5, 3, 6, 8, 9].",
+      "Remove 2: 9 to root: [9, 5, 3, 6, 8]. Smaller child 3 → swap; index 3 has no children: [3, 5, 9, 6, 8]."
+     ],
+     "answer": "Returns 0, 1, 2; final [3, 5, 9, 6, 8] (verified)"
+    },
+    {
+     "type": "warn",
+     "text": "Sink swaps with the smaller child. Swapping with the left (or larger) child can put a larger key above a smaller one. And a heap is not sorted: the maximum is somewhere among the leaves (second half of the array), so finding it is Θ(N)."
+    }
+   ]
+  },
+  {
+   "title": "Building a heap: bottom-up heapify",
+   "blocks": [
+    {
+     "type": "p",
+     "text": "Given N items in an array, inserting them one by one costs O(N log N). Bottom-up heapify is faster: sink every non-leaf, from index N/2 down to 1. Each sink fixes a subtree whose children are already heaps."
+    },
+    {
+     "type": "thm",
+     "name": "Bottom-up heapify is Θ(N)",
+     "text": "A node at height h sinks at most h levels; there are about N/2^(h+1) nodes of height h, so total work ≤ Σ h·N/2^(h+1) = O(N).",
+     "proof": [
+      {
+       "type": "p",
+       "text": "Measured on reverse-sorted input: bottom-up heapify used 1015 swaps for N = 1024 and 262,127 for N = 262,144 (≈ N), while inserting one at a time used 8204 and 4,194,324 (≈ N log N / 2)."
+      }
+     ]
+    },
+    {
+     "type": "example",
+     "title": "Heapify trace",
+     "prompt": "Heapify [9, 4, 7, 1, 8, 2, 6, 3, 5] (index 1 first, N = 9). Show the array after each sink.",
+     "steps": [
+      "Non-leaves are indices 4, 3, 2, 1.",
+      "sink(4): key 1, children 3 and 5 are larger: no change.",
+      "sink(3): key 7, children 2 and 6 → swap with 2: [9, 4, 2, 1, 8, 7, 6, 3, 5].",
+      "sink(2): key 4, children 1 and 8 → swap with 1 (index 4); then children 3 and 5 → swap with 3: [9, 1, 2, 3, 8, 7, 6, 4, 5].",
+      "sink(1): key 9, children 1 and 2 → swap with 1; at index 2 children 3, 8 → swap with 3; at index 4 children 4, 5 → swap with 4: [1, 3, 2, 4, 8, 7, 6, 9, 5]."
+     ],
+     "answer": "[1, 3, 2, 4, 8, 7, 6, 9, 5], 6 swaps (verified)"
+    },
+    {
+     "type": "table",
+     "head": [
+      "Operation",
+      "Binary heap"
+     ],
+     "rows": [
+      [
+       "add",
+       "Θ(log N) (amortized if the array resizes)"
+      ],
+      [
+       "getSmallest",
+       "Θ(1)"
+      ],
+      [
+       "removeSmallest",
+       "Θ(log N)"
+      ],
+      [
+       "heapify N items (bottom-up)",
+       "Θ(N)"
+      ],
+      [
+       "find max / arbitrary search",
+       "Θ(N)"
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "title": "Priority-queue applications",
+   "blocks": [
+    {
+     "type": "example",
+     "title": "Top k largest of a stream",
+     "prompt": "Keep the k largest of N items using Θ(k) memory. Trace k = 3 on 5, 1, 9, 3, 7, 9, 2, 8.",
+     "steps": [
+      "Use a min-heap of size ≤ k: add each item; if size exceeds k, removeSmallest. The heap always holds the k largest seen so far and its min is the k-th largest.",
+      "5 → {5}; 1 → {1, 5}; 9 → {1, 5, 9}; 3 → add, remove 1 → {3, 5, 9}; 7 → remove 3 → {5, 7, 9}; 9 → remove 5 → {7, 9, 9}; 2 → remove 2 → same; 8 → remove 7 → {8, 9, 9}.",
+      "Cost: Θ(N log k) time, Θ(k) space — better than sorting (Θ(N log N), Θ(N) space)."
+     ],
+     "answer": "{9, 9, 8} (verified)"
+    },
+    {
+     "type": "example",
+     "title": "Running median with two heaps",
+     "prompt": "Maintain the median of a stream: max-heap lo (smaller half) and min-heap hi (larger half), with |lo| = |hi| or |lo| = |hi| + 1. Trace 5, 15, 1, 3, 8, 7, 9, 10, reporting lo’s max (the lower median) after each.",
+     "steps": [
+      "add x: if lo is empty or x ≤ lo.max, add to lo, else to hi. Rebalance: if |lo| > |hi| + 1 move lo.max to hi; if |hi| > |lo| move hi.min to lo.",
+      "5 → lo {5}: 5. 15 → hi {15}: 5. 1 → lo {1, 5}: 5. 3 → lo {1, 3, 5} too big → move 5 to hi: lo {1, 3}, hi {5, 15}: 3.",
+      "8 → hi {5, 8, 15} → move 5 to lo: 5. 7 → hi {7, 8, 15}: 5. 9 → hi grows → move 7 to lo: 7. 10 → hi {8, 9, 10, 15}: 7.",
+      "Each add is Θ(log N), median query Θ(1)."
+     ],
+     "answer": "Medians 5 5 5 3 5 5 7 7 (verified)"
+    },
+    {
+     "type": "tip",
+     "text": "Other PQ uses: Dijkstra/Prim (next closest vertex), merging k sorted lists (heap of k list heads, Θ(N log k)), event simulation, heapsort."
+    }
+   ]
+  },
+  {
+   "title": "Tree traversals",
+   "blocks": [
+    {
+     "type": "def",
+     "term": "Preorder",
+     "text": "Visit node, then left subtree, then right subtree."
+    },
+    {
+     "type": "def",
+     "term": "Inorder",
+     "text": "Left, node, right. On a BST this lists keys in sorted order."
+    },
+    {
+     "type": "def",
+     "term": "Postorder",
+     "text": "Left, right, node. Children are finished before their parent (e.g. computing sizes, deleting a tree)."
+    },
+    {
+     "type": "def",
+     "term": "Level order",
+     "text": "Depth 0, then depth 1, … left to right; use a queue (BFS)."
+    },
+    {
+     "type": "code",
+     "lang": "java",
+     "text": "void preorder(Node t)  { if (t == null) return; visit(t); preorder(t.left); preorder(t.right); }\nvoid inorder(Node t)   { if (t == null) return; inorder(t.left); visit(t); inorder(t.right); }\nvoid postorder(Node t) { if (t == null) return; postorder(t.left); postorder(t.right); visit(t); }\nvoid levelOrder(Node t) {\n    Queue<Node> q = new ArrayDeque<>();\n    if (t != null) q.add(t);\n    while (!q.isEmpty()) {\n        Node x = q.remove();\n        visit(x);\n        if (x.left != null) q.add(x.left);\n        if (x.right != null) q.add(x.right);\n    }\n}"
+    },
+    {
+     "type": "example",
+     "title": "All four traversals",
+     "prompt": "Tree: 8(3(1, 6(4, 7)), 10(·, 14(13, ·))). Give pre-, in-, post- and level-order.",
+     "steps": [
+      "Preorder: 8, then left subtree 3, 1, 6, 4, 7, then right 10, 14, 13.",
+      "Inorder: 1 3 4 6 7 8 10 13 14 (sorted: it is a BST).",
+      "Postorder: 1 4 7 6 3, then 13 14 10, then 8.",
+      "Level order: 8 | 3 10 | 1 6 14 | 4 7 13."
+     ],
+     "answer": "pre 8 3 1 6 4 7 10 14 13; in 1 3 4 6 7 8 10 13 14; post 1 4 7 6 3 13 14 10 8; level 8 3 10 1 6 14 4 7 13 (verified)"
+    },
+    {
+     "type": "tip",
+     "text": "Iterative preorder: a stack; pop and visit, then push right child before left child (so left is processed first). Replacing the stack with a queue gives level order."
+    },
+    {
+     "type": "example",
+     "title": "Rebuild a tree from preorder + inorder",
+     "prompt": "Preorder 5 2 1 4 3 8 6 9, inorder 1 2 3 4 5 6 8 9. Rebuild the tree and give its postorder.",
+     "steps": [
+      "The first preorder item, 5, is the root. In the inorder, 5 splits {1 2 3 4} (left) from {6 8 9} (right).",
+      "Left part: next preorder item 2 is its root; inorder splits {1} and {3 4}. 1 is a leaf. In {3 4}, the next preorder item 4 is the root, and 3 is its left child.",
+      "Right part: preorder continues 8: root; inorder {6} left, {9} right.",
+      "Tree 5(2(1, 4(3, ·)), 8(6, 9)); postorder 1 3 4 2 6 9 8 5."
+     ],
+     "answer": "5(2(1, 4(3, ·)), 8(6, 9)); postorder 1 3 4 2 6 9 8 5 (verified)"
+    },
+    {
+     "type": "example",
+     "title": "Rebuild from postorder + inorder",
+     "prompt": "Inorder 3 2 5 4 1 6 8 7 9, postorder 3 5 4 2 8 9 7 6 1.",
+     "steps": [
+      "The last postorder item, 1, is the root: inorder left {3 2 5 4}, right {6 8 7 9}.",
+      "Work backward through the postorder, building the right subtree first: 6 is the right part’s root; inorder: nothing left of 6, {8 7 9} right; 7 is that root with 8 left, 9 right.",
+      "Left part {3 2 5 4}: next (backward) is 2: left {3}, right {5 4}; 4 is root of {5 4} with 5 on its left."
+     ],
+     "answer": "1(2(3, 4(5, ·)), 6(·, 7(8, 9))) (verified)"
+    },
+    {
+     "type": "warn",
+     "text": "Preorder + postorder alone don’t determine a binary tree: 1 with only a left child 2 and 1 with only a right child 2 both have preorder 1 2 and postorder 2 1. You need inorder (or extra information such as “it is a BST” or “it is full”)."
+    }
+   ]
+  }
+ ],
+ "cards": [
+  {
+   "front": "Two properties of a binary min-heap?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Complete shape (levels full, last filled left to right) and heap order (each node ≤ its children)."
+    }
+   ]
+  },
+  {
+   "front": "Array index formulas (root at 1)?",
+   "back": [
+    {
+     "type": "p",
+     "text": "parent k/2, left 2k, right 2k + 1."
+    }
+   ]
+  },
+  {
+   "front": "Array index formulas (root at 0)?",
+   "back": [
+    {
+     "type": "p",
+     "text": "parent (k − 1)/2, children 2k + 1 and 2k + 2."
+    }
+   ]
+  },
+  {
+   "front": "add in a heap?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Put the item at the end (index n + 1) and swim: swap with parent while smaller. Θ(log N)."
+    }
+   ]
+  },
+  {
+   "front": "removeSmallest in a heap?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Save the root, move the last item to the root, shrink, sink: swap with the smaller child while larger. Θ(log N)."
+    }
+   ]
+  },
+  {
+   "front": "Why sink with the smaller child?",
+   "back": [
+    {
+     "type": "p",
+     "text": "The smaller child becomes the parent of the other, so heap order holds."
+    }
+   ]
+  },
+  {
+   "front": "Where is the maximum in a min-heap?",
+   "back": [
+    {
+     "type": "p",
+     "text": "At some leaf (indices n/2 + 1 … n). Finding it is Θ(N)."
+    }
+   ]
+  },
+  {
+   "front": "Is a sorted array a valid min-heap?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Yes."
+    }
+   ]
+  },
+  {
+   "front": "Bottom-up heapify and its cost?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Sink indices n/2 down to 1; Θ(N) total."
+    }
+   ]
+  },
+  {
+   "front": "Cost of building a heap by N inserts?",
+   "back": [
+    {
+     "type": "p",
+     "text": "O(N log N) (Θ(N log N) worst case, e.g. decreasing input)."
+    }
+   ]
+  },
+  {
+   "front": "Positions of the 2nd smallest key in a min-heap?",
+   "back": [
+    {
+     "type": "p",
+     "text": "A child of the root (index 2 or 3)."
+    }
+   ]
+  },
+  {
+   "front": "Can a tree with ≥ 2 nodes be both a min-heap and a BST?",
+   "back": [
+    {
+     "type": "p",
+     "text": "No: the root’s left child must be both larger (heap) and smaller (BST); completeness forces a left child."
+    }
+   ]
+  },
+  {
+   "front": "Convert a BST into a min-heap in Θ(N)?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Inorder traversal produces a sorted array, which is a min-heap."
+    }
+   ]
+  },
+  {
+   "front": "Top-k largest with a PQ?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Min-heap of size k: add, and remove the min when size exceeds k. Θ(N log k) time, Θ(k) space."
+    }
+   ]
+  },
+  {
+   "front": "Running median data structure?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Max-heap of the lower half + min-heap of the upper half, sizes within 1."
+    }
+   ]
+  },
+  {
+   "front": "Merge k sorted lists of total N items?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Min-heap of the k current heads: Θ(N log k)."
+    }
+   ]
+  },
+  {
+   "front": "Preorder / inorder / postorder definitions?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Node-L-R / L-node-R / L-R-node."
+    }
+   ]
+  },
+  {
+   "front": "What does inorder give on a BST?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Keys in sorted order."
+    }
+   ]
+  },
+  {
+   "front": "Level-order traversal uses which structure?",
+   "back": [
+    {
+     "type": "p",
+     "text": "A queue (it is BFS on the tree)."
+    }
+   ]
+  },
+  {
+   "front": "Which traversal pairs determine a binary tree with distinct keys?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Inorder plus preorder, or inorder plus postorder. Preorder + postorder does not (unless the tree is full)."
+    }
+   ]
+  },
+  {
+   "front": "Rebuild from preorder + inorder: the method?",
+   "back": [
+    {
+     "type": "p",
+     "text": "First preorder item is the root; split the inorder at it; recurse on the left part then the right part, consuming preorder items in order."
+    }
+   ]
+  },
+  {
+   "front": "Iterative preorder?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Stack: pop, visit, push right child, then left child."
+    }
+   ]
+  },
+  {
+   "front": "Θ of removing the k smallest items from a heap of N?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Θ(k log N)."
+    }
+   ]
+  }
+ ],
+ "hard": [
+  {
+   "title": "k-th smallest of a heap without destroying it",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "Given a min-heap array h[1..n] (do not modify it), find the k-th smallest key in O(k log k) time. Find the 1st, 4th and 7th smallest of h = [1, 3, 2, 6, 4, 5, 9, 7, 8, 10]."
+    }
+   ],
+   "answer": "Expand a frontier with an auxiliary min-PQ of indices; answers 1, 4, 7",
+   "solution": [
+    {
+     "type": "p",
+     "text": "Idea: the smallest key is h[1]; the next smallest is always a child of some already-extracted node. Keep an auxiliary min-PQ of candidate indices ordered by h[index]."
+    },
+    {
+     "type": "code",
+     "lang": "java",
+     "text": "static int kth(int[] h, int n, int k) {\n    PriorityQueue<Integer> pq = new PriorityQueue<>((x, y) -> Integer.compare(h[x], h[y]));\n    pq.add(1);\n    int r = -1;\n    for (int i = 0; i < k; i++) {\n        int idx = pq.poll();\n        r = h[idx];\n        if (2 * idx <= n) pq.add(2 * idx);\n        if (2 * idx + 1 <= n) pq.add(2 * idx + 1);\n    }\n    return r;\n}"
+    },
+    {
+     "type": "p",
+     "text": "Each step removes one candidate and adds at most two, so the auxiliary PQ holds ≤ k + 1 entries: O(k log k), independent of n."
+    },
+    {
+     "type": "p",
+     "text": "On the example: 1st = 1, 4th = 4, 7th = 7 (verified)."
+    }
+   ]
+  },
+  {
+   "title": "Median priority queue",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "Design a structure with add(x) in O(log N), getMedian() in Θ(1) (lower median when N is even), and removeMedian() in O(log N). State the invariants and write add."
+    }
+   ],
+   "answer": "Max-heap lo + min-heap hi, every lo ≤ every hi, |lo| − |hi| ∈ {0, 1}; median = lo.max",
+   "solution": [
+    {
+     "type": "p",
+     "text": "Invariants: (1) every key in lo ≤ every key in hi; (2) |lo| = |hi| or |lo| = |hi| + 1. Then lo.max is the lower median."
+    },
+    {
+     "type": "code",
+     "lang": "java",
+     "text": "void add(int x) {\n    if (lo.isEmpty() || x <= lo.peek()) lo.add(x); else hi.add(x);\n    if (lo.size() > hi.size() + 1) hi.add(lo.poll());\n    else if (hi.size() > lo.size()) lo.add(hi.poll());\n}\nint getMedian() { return lo.peek(); }\nint removeMedian() {\n    int m = lo.poll();\n    if (hi.size() > lo.size()) lo.add(hi.poll());\n    return m;\n}"
+    },
+    {
+     "type": "p",
+     "text": "Each operation does O(1) heap operations: O(log N). Trace on 5, 15, 1, 3, 8, 7, 9, 10 gives medians 5 5 5 3 5 5 7 7 and ends with lo = {1, 3, 5, 7}, hi = {8, 9, 10, 15} (verified)."
+    }
+   ]
+  },
+  {
+   "title": "Remove the k smallest into a balanced BST",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "Given a min-heap of N distinct keys and k ≤ N, build a perfectly balanced BST containing the k smallest keys. Give an algorithm and its runtime."
+    }
+   ],
+   "answer": "removeSmallest k times into an array (sorted), then build the BST from the middle recursively: Θ(k log N)",
+   "solution": [
+    {
+     "type": "p",
+     "text": "k calls to removeSmallest produce the k smallest in increasing order: Θ(k log N)."
+    },
+    {
+     "type": "p",
+     "text": "From a sorted array a[lo..hi], the balanced BST has root a[mid], left subtree from a[lo..mid−1], right from a[mid+1..hi]: Θ(k)."
+    },
+    {
+     "type": "code",
+     "lang": "java",
+     "text": "static Node build(int[] a, int lo, int hi) {\n    if (lo > hi) return null;\n    int mid = (lo + hi) / 2;\n    Node t = new Node(a[mid]);\n    t.left = build(a, lo, mid - 1);\n    t.right = build(a, mid + 1, hi);\n    return t;\n}"
+    },
+    {
+     "type": "p",
+     "text": "Total Θ(k log N). (If the heap must survive, use the k-th smallest frontier technique to read them in O(k log k) instead.)"
+    }
+   ]
+  },
+  {
+   "title": "Heapify vs repeated insertion",
+   "level": "hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "For reverse-sorted input of size N, compare the number of swaps for (a) bottom-up heapify and (b) inserting the items one at a time into an empty min-heap. Give Θ for each and explain (b)."
+    }
+   ],
+   "answer": "(a) Θ(N) (b) Θ(N log N)",
+   "solution": [
+    {
+     "type": "p",
+     "text": "(a) Heapify sinks each non-leaf at most its height; Σ heights = O(N). Measured: 1015 swaps for N = 1024, 16,371 for 16,384, 262,127 for 262,144."
+    },
+    {
+     "type": "p",
+     "text": "(b) Each new item is smaller than everything present, so it swims all the way to the root: ⌊log₂ i⌋ swaps for the i-th insert, and Σ log i = Θ(N log N). Measured: 8204, 196,624 and 4,194,324 swaps for N = 2¹⁰, 2¹⁴, 2¹⁸, which is almost exactly N(log₂ N − 2)."
+    }
+   ]
+  },
+  {
+   "title": "First-child / next-sibling trees",
+   "level": "hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "A general tree is stored with <code>class S { int v; S child, sib; }</code> (child = first child, sib = next sibling). Write recursive size(t), height(t) (edges; a lone node has height 0) and maxDegree(t). For the tree 1 → {2, 3, 4}, 2 → {5, 6}, 4 → {7}, 7 → {8}, give all three."
+    }
+   ],
+   "answer": "size 8, height 3, max degree 3",
+   "solution": [
+    {
+     "type": "code",
+     "lang": "java",
+     "text": "static int size(S t) {                      // t and all its later siblings\n    if (t == null) return 0;\n    return 1 + size(t.child) + size(t.sib);\n}\nstatic int height(S t) {                    // max height among t and its siblings\n    if (t == null) return -1;\n    return Math.max(1 + height(t.child), height(t.sib));\n}\nstatic int maxDeg(S t) {\n    if (t == null) return 0;\n    int d = 0;\n    for (S c = t.child; c != null; c = c.sib) d++;\n    return Math.max(d, Math.max(maxDeg(t.child), maxDeg(t.sib)));\n}"
+    },
+    {
+     "type": "p",
+     "text": "Key insight: in this representation the sib pointer leads to nodes at the same depth, so height adds 1 only along child. Call each on the root (whose sib is null)."
+    },
+    {
+     "type": "p",
+     "text": "Results: size 8, height 3 (1 → 4 → 7 → 8), max degree 3 (node 1). Verified."
+    }
+   ]
+  },
+  {
+   "title": "Heap positions and ranges",
+   "level": "hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "A min-heap holds the distinct keys 1 … 15 in a complete tree of height 3 (array indices 1 … 15). (a) Which indices can hold key 15? (b) What is the largest key that can be at index 2? (c) What is the smallest key that can be at index 15?"
+    }
+   ],
+   "answer": "(a) 8 … 15 (b) 9 (c) 4",
+   "solution": [
+    {
+     "type": "p",
+     "text": "(a) The maximum must be a leaf: indices 8 … 15."
+    },
+    {
+     "type": "p",
+     "text": "(b) Index 2’s subtree has 7 nodes (indices 2, 4, 5, 8, 9, 10, 11), all ≥ h[2]. So at least 6 keys exceed h[2]: h[2] ≤ 15 − 6 = 9. Achievable: put 1 at the root, 2 … 8 in the right subtree (index 3’s 7 positions), and 9 … 15 in the left subtree with 9 at index 2."
+    },
+    {
+     "type": "p",
+     "text": "(c) Index 15’s ancestors are indices 7, 3, 1, all smaller: h[15] ≥ 4. Achievable with h[1] = 1, h[3] = 2, h[7] = 3, h[15] = 4 and the rest filled validly."
+    }
+   ]
+  },
+  {
+   "title": "Iterate a MinPQ using only its interface",
+   "level": "hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "Given a MinPQ&lt;T> with only add, removeSmallest, getSmallest, size, write an Iterator&lt;T> that yields items in increasing order but leaves the original PQ unchanged when iteration finishes. Give the cost of a full iteration."
+    }
+   ],
+   "answer": "Copy into an auxiliary PQ at construction (or drain into a list and re-add); Θ(N log N)",
+   "solution": [
+    {
+     "type": "p",
+     "text": "Constructor: repeatedly removeSmallest from the PQ into a list (sorted, Θ(N log N)), then add each back to the PQ (Θ(N log N)). Keep an index into the list."
+    },
+    {
+     "type": "p",
+     "text": "hasNext: index &lt; list.size(). next: list.get(index++)."
+    },
+    {
+     "type": "p",
+     "text": "Total Θ(N log N); the PQ ends with the same items (its internal arrangement may differ, which the interface can’t observe)."
+    }
+   ]
+  },
+  {
+   "title": "Rebuild a BST from preorder alone",
+   "level": "hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "Show that the preorder of a BST with distinct keys determines the tree, and write an O(N) rebuild. Rebuild from 10 5 1 7 40 50."
+    }
+   ],
+   "answer": "10(5(1, 7), 40(·, 50))",
+   "solution": [
+    {
+     "type": "p",
+     "text": "The inorder of a BST is the sorted keys, so preorder + sorted order already determine it. Faster: pass bounds."
+    },
+    {
+     "type": "code",
+     "lang": "java",
+     "text": "static int i = 0;\nstatic Node rebuild(int[] pre, int lo, int hi) {   // keys allowed in [lo, hi]\n    if (i >= pre.length || pre[i] < lo || pre[i] > hi) return null;\n    int v = pre[i++];\n    Node t = new Node(v);\n    t.left = rebuild(pre, lo, v - 1);\n    t.right = rebuild(pre, v + 1, hi);\n    return t;\n}"
+    },
+    {
+     "type": "p",
+     "text": "Each key is consumed once and each failed bound check returns immediately: O(N). Result 10(5(1, 7), 40(·, 50)) (verified)."
+    }
+   ]
+  }
+ ],
+ "keyFacts": [
+  "Min-heap = complete tree + each node ≤ its children; array with root at 1: parent k/2, children 2k, 2k + 1.",
+  "add: append + swim; removeSmallest: last to root + sink with the smaller child; both Θ(log N); getSmallest Θ(1).",
+  "Bottom-up heapify (sink n/2 … 1) is Θ(N); N inserts is Θ(N log N) worst.",
+  "Max of a min-heap is a leaf; heaps are not sorted; search is Θ(N).",
+  "Top-k: size-k min-heap, Θ(N log k). Median: max-heap + min-heap, sizes within 1.",
+  "Pre = node L R; in = L node R (sorted for a BST); post = L R node; level order = queue.",
+  "Inorder + (pre or post) determines a binary tree; pre + post does not."
+ ],
+ "parsons": [
+  {
+   "title": "Heap swim",
+   "goal": "Min-heap in h[1..n]. Move the item at index k up until heap order holds.",
+   "lines": [
+    "void swim(int k) {",
+    "    while (k > 1 && h[k / 2] > h[k]) {",
+    "        swap(k, k / 2);",
+    "        k = k / 2;",
+    "    }",
+    "}"
+   ],
+   "distractors": [
+    "    while (k > 0 && h[k / 2] > h[k]) {",
+    "        k = 2 * k;",
+    "    while (k > 1 && h[k / 2] &lt; h[k]) {"
+   ]
+  },
+  {
+   "title": "Heap sink",
+   "goal": "Min-heap in h[1..n]. Move the item at index k down, always swapping with the smaller child, until heap order holds.",
+   "lines": [
+    "void sink(int k) {",
+    "    while (2 * k &lt;= n) {",
+    "        int j = 2 * k;",
+    "        if (j &lt; n && h[j + 1] &lt; h[j]) j++;",
+    "        if (h[k] &lt;= h[j]) break;",
+    "        swap(k, j);",
+    "        k = j;",
+    "    }",
+    "}"
+   ],
+   "distractors": [
+    "        if (j &lt;= n && h[j + 1] &lt; h[j]) j++;",
+    "        if (h[j + 1] > h[j]) j++;",
+    "    while (2 * k &lt; n) {"
+   ]
+  },
+  {
+   "title": "Level-order traversal",
+   "goal": "Return the keys of the binary tree rooted at t in level order.",
+   "lines": [
+    "List&lt;Integer> levelOrder(Node t) {",
+    "    List&lt;Integer> out = new ArrayList&lt;>();",
+    "    Queue&lt;Node> q = new ArrayDeque&lt;>();",
+    "    if (t != null) q.add(t);",
+    "    while (!q.isEmpty()) {",
+    "        Node x = q.remove(); out.add(x.key);",
+    "        if (x.left != null) q.add(x.left);",
+    "        if (x.right != null) q.add(x.right);",
+    "    }",
+    "    return out;",
+    "}"
+   ],
+   "distractors": [
+    "    Stack&lt;Node> q = new Stack&lt;>();",
+    "        if (x.right != null) q.add(x.left);",
+    "    if (t == null) q.add(t);"
+   ]
+  },
+  {
+   "title": "Rebuild from preorder + inorder",
+   "goal": "Arrays pre[] and in[] hold the traversals (distinct keys); pi is a field index into pre starting at 0. Build the subtree whose inorder is in[lo..hi].",
+   "lines": [
+    "Node build(int lo, int hi) {",
+    "    if (lo > hi) return null;",
+    "    int v = pre[pi++], m = lo;",
+    "    while (in[m] != v) m++;",
+    "    Node t = new Node(v, build(lo, m - 1), null);",
+    "    t.right = build(m + 1, hi);",
+    "    return t;",
+    "}"
+   ],
+   "distractors": [
+    "    int v = pre[pi], m = lo;",
+    "    t.right = build(m, hi);",
+    "    Node t = new Node(v, build(lo, m), null);"
+   ]
+  }
+ ]
+}

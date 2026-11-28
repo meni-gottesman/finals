@@ -828,6 +828,91 @@
      "answer": "2; 7; 6"
     }
    ]
+  },
+  {
+   "title": "Euler and Hamilton circuits (if covered in the last lectures)",
+   "blocks": [
+    {
+     "type": "tip",
+     "text": "This material (Rosen 10.5) belongs here if it was covered in the last lectures. Treat it as optional review otherwise."
+    },
+    {
+     "type": "def",
+     "term": "Euler circuit / Euler path",
+     "text": "An <b>Euler circuit</b> is a circuit that uses every <i>edge</i> exactly once. An <b>Euler path</b> uses every edge exactly once but may start and end at different vertices."
+    },
+    {
+     "type": "thm",
+     "name": "Euler’s theorem",
+     "text": "A connected multigraph with at least 2 vertices has an Euler circuit iff every vertex has even degree. It has an Euler path that is not a circuit iff it has exactly 2 vertices of odd degree, and such a path must start at one of them and end at the other.",
+     "proof": [
+      {
+       "type": "p",
+       "text": "(⇒) Each time the circuit passes through a vertex it uses one edge in and one edge out, and the first edge out of the start vertex is paired with the last edge back in. So every degree is even."
+      },
+      {
+       "type": "p",
+       "text": "(⇐) Start anywhere and keep walking along unused edges. With all degrees even, you can only get stuck back at the start, so you get a circuit. If some edges are unused, connectivity gives a vertex on the circuit with unused edges; walk a new circuit from there (it also closes up) and splice it in. Repeat until every edge is used."
+      },
+      {
+       "type": "p",
+       "text": "For a path: joining the 2 odd vertices by an extra edge makes every degree even, so take an Euler circuit and then delete the extra edge. ∎"
+      }
+     ]
+    },
+    {
+     "type": "example",
+     "title": "Euler path or circuit? (the “house”)",
+     "prompt": "Vertices 1–5, edges 12, 23, 34, 41, 35, 45 (a square 1-2-3-4 with a roof vertex 5 on top of 3 and 4). Does it have an Euler circuit? An Euler path?",
+     "steps": [
+      "Degrees: deg 1 = 2, deg 2 = 2, deg 3 = 3, deg 4 = 3, deg 5 = 2.",
+      "Two odd vertices (3 and 4), so there is no Euler circuit.",
+      "The graph is connected with exactly 2 odd vertices, so an Euler path exists, from 3 to 4.",
+      "Build one: 3, 5, 4, 3, 2, 1, 4. That uses 35, 54, 43, 32, 21, 14, which is all 6 edges, each once."
+     ],
+     "answer": "No Euler circuit; Euler path 3, 5, 4, 3, 2, 1, 4"
+    },
+    {
+     "type": "example",
+     "title": "An Euler circuit (two triangles sharing a vertex)",
+     "prompt": "Edges 12, 23, 31, 34, 45, 53. Find an Euler circuit. Does K₄ have an Euler path?",
+     "steps": [
+      "Degrees: 1, 2, 4, 5 have degree 2 and vertex 3 has degree 4. All are even and the graph is connected, so an Euler circuit exists.",
+      "Go around one triangle and then the other: 1, 2, 3, 4, 5, 3, 1.",
+      "K₄: every vertex has degree 3, so there are 4 odd vertices. That is more than 2, so there is no Euler path."
+     ],
+     "answer": "1, 2, 3, 4, 5, 3, 1; K₄ has no Euler path"
+    },
+    {
+     "type": "def",
+     "term": "Hamilton circuit / path",
+     "text": "A <b>Hamilton circuit</b> visits every <i>vertex</i> exactly once and returns to the start. A <b>Hamilton path</b> visits every vertex exactly once."
+    },
+    {
+     "type": "warn",
+     "text": "Don’t mix them up: Euler is about edges (easy test: degrees), Hamilton is about vertices (no simple test is known; deciding it is NP-complete)."
+    },
+    {
+     "type": "thm",
+     "name": "Sufficient conditions (not necessary)",
+     "text": "<b>Dirac:</b> a simple graph with n ≥ 3 vertices in which every degree is ≥ n/2 has a Hamilton circuit. <b>Ore:</b> if n ≥ 3 and deg u + deg v ≥ n for every pair of nonadjacent vertices u, v, then there is a Hamilton circuit."
+    },
+    {
+     "type": "p",
+     "text": "Ways to show there is <b>no</b> Hamilton circuit: a vertex of degree 1; a cut vertex (the circuit would have to pass through it twice); a bipartite graph with parts of different sizes (the circuit alternates sides, so the two parts must be the same size)."
+    },
+    {
+     "type": "example",
+     "title": "Hamilton circuit: yes or no?",
+     "prompt": "Decide for (a) the house graph above, (b) the two triangles sharing vertex 3, (c) K₂,₃.",
+     "steps": [
+      "(a) Try 1, 2, 3, 5, 4, 1: edges 12, 23, 35, 54, 41 all exist and every vertex is visited once. Yes. (Dirac does not apply, since deg 1 = 2 &lt; 5/2. The conditions are only sufficient.)",
+      "(b) Vertex 3 is a cut vertex: removing it separates {1, 2} from {4, 5}. A Hamilton circuit would have to pass through 3 twice. No.",
+      "(c) K₂,₃ is bipartite with parts of sizes 2 and 3. A circuit alternates between the parts, so it would need equal sizes. No."
+     ],
+     "answer": "(a) yes, 1-2-3-5-4-1; (b) no; (c) no"
+    }
+   ]
   }
  ],
  "cards": [
@@ -1353,6 +1438,40 @@
      "text": "K₄: (A³)ᵤᵥ = 7 for u ≠ v, 6 on the diagonal."
     }
    ]
+  },
+  {
+   "front": "When does a connected graph have an Euler circuit? An Euler path?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Euler circuit iff every vertex has even degree. Euler path (not a circuit) iff exactly 2 vertices have odd degree, and the path runs from one odd vertex to the other."
+    }
+   ]
+  },
+  {
+   "front": "Euler vs Hamilton: what does each visit exactly once, and which has an easy test?",
+   "back": [
+    {
+     "type": "list",
+     "items": [
+      "Euler: every edge once. Test: connected, and the number of odd-degree vertices is 0 (circuit) or 2 (path).",
+      "Hamilton: every vertex once. No simple criterion. Dirac (all degrees ≥ n/2) and Ore (deg u + deg v ≥ n for nonadjacent u, v) are sufficient only."
+     ]
+    }
+   ]
+  },
+  {
+   "front": "Three quick reasons a graph has no Hamilton circuit.",
+   "back": [
+    {
+     "type": "list",
+     "items": [
+      "a vertex of degree 1",
+      "a cut vertex",
+      "bipartite with parts of different sizes (e.g. K₂,₃)"
+     ]
+    }
+   ]
   }
  ],
  "hard": [
@@ -1686,5 +1805,89 @@
   "Invariants: |V|, |E|, degree sequence, cycle counts, bipartite, connected components",
   "Cut edge ⟺ lies on no cycle; κ(G) ≤ λ(G) ≤ minimum degree",
   "(Aʳ)ᵢⱼ = number of walks of length r from i to j; trace(A³) = 6 · #triangles"
+ ],
+ "parsons": [
+  {
+   "title": "The handshaking theorem",
+   "goal": "For every undirected graph G = (V, E), Σ<sub>v∈V</sub> deg(v) = 2|E|.",
+   "lines": [
+    "Let P be the set of pairs (v, e) with v an endpoint of edge e, counting a loop at v twice.",
+    "Count 1 (by vertices): each vertex v appears in exactly deg(v) pairs.",
+    "Count 1, summed: |P| = Σ<sub>v∈V</sub> deg(v).",
+    "Count 2 (by edges): each edge appears in exactly 2 pairs, one for each endpoint.",
+    "Count 2, summed: |P| = 2|E|.",
+    "Both counts give |P|, so Σ<sub>v∈V</sub> deg(v) = 2|E|. ∎"
+   ],
+   "distractors": [
+    "Count 2 (by edges): each edge appears in exactly 1 pair, so |P| = |E|.",
+    "Count 1 (by vertices): each vertex appears in exactly 2 pairs.",
+    "Both counts give |P|, so Σ<sub>v∈V</sub> deg(v) = |E|."
+   ]
+  },
+  {
+   "title": "An even number of odd-degree vertices",
+   "goal": "Every undirected graph has an even number of vertices of odd degree.",
+   "lines": [
+    "Split V into V₁, the vertices of even degree, and V₂, the vertices of odd degree.",
+    "By the handshaking theorem, 2|E| = Σ<sub>v∈V₁</sub> deg(v) + Σ<sub>v∈V₂</sub> deg(v).",
+    "Every term of the first sum is even, so the first sum is even.",
+    "Hence Σ<sub>v∈V₂</sub> deg(v) = 2|E| − (first sum) is even.",
+    "That sum has |V₂| odd terms, and a sum of odd numbers is even only when the number of terms is even, so |V₂| is even. ∎"
+   ],
+   "distractors": [
+    "Every term of the second sum is odd, so the second sum is odd.",
+    "Hence |V₂| = |E|, which is even.",
+    "By the handshaking theorem, |E| = Σ<sub>v∈V</sub> deg(v)."
+   ]
+  },
+  {
+   "title": "Bipartite graphs have no odd cycles",
+   "goal": "If G is bipartite, then every cycle in G has even length.",
+   "lines": [
+    "Let G be bipartite with parts V₁, V₂, and let v₀, v₁, …, v<sub>k</sub> = v₀ be a cycle of length k.",
+    "Every edge joins V₁ to V₂, so consecutive vertices of the cycle lie in opposite parts.",
+    "Without loss of generality v₀ ∈ V₁; by induction on i, vᵢ ∈ V₁ for even i and vᵢ ∈ V₂ for odd i.",
+    "Since v<sub>k</sub> = v₀ ∈ V₁, the index k is even.",
+    "So every cycle in G has even length, and G has no odd cycle. ∎"
+   ],
+   "distractors": [
+    "Every edge joins two vertices of the same part, so the whole cycle lies in V₁.",
+    "Since v<sub>k</sub> = v₀ ∈ V₁, the index k is odd.",
+    "So G has no cycles at all."
+   ]
+  },
+  {
+   "title": "Powers of the adjacency matrix count walks",
+   "goal": "If A is the adjacency matrix of G (vertices v₁, …, vₙ), then (Aʳ)<sub>ij</sub> is the number of walks of length r from vᵢ to vⱼ, for every r ≥ 1.",
+   "lines": [
+    "Induct on r. Base case r = 1: A<sub>ij</sub> is the number of edges from vᵢ to vⱼ, i.e. the number of walks of length 1.",
+    "Inductive step: assume the claim for r, and write Aʳ⁺¹ = Aʳ · A.",
+    "A walk of length r + 1 from vᵢ to vⱼ is a walk of length r from vᵢ to some v<sub>k</sub>, followed by an edge from v<sub>k</sub> to vⱼ.",
+    "By the inductive hypothesis, for each k there are (Aʳ)<sub>ik</sub> · A<sub>kj</sub> such walks.",
+    "Summing over the next-to-last vertex k: Σ<sub>k</sub> (Aʳ)<sub>ik</sub> A<sub>kj</sub> = (Aʳ⁺¹)<sub>ij</sub> walks, which proves the claim for r + 1. ∎"
+   ],
+   "distractors": [
+    "Base case r = 0: A⁰ = A.",
+    "By the inductive hypothesis, there are (Aʳ)<sub>ij</sub> · A<sub>ij</sub> such walks, one factor per step.",
+    "A walk of length r + 1 is a walk of length r followed by any edge of G."
+   ]
+  },
+  {
+   "title": "Large minimum degree forces connectivity",
+   "goal": "If G is a simple graph on n ≥ 2 vertices with deg(v) ≥ (n − 1)/2 for every v, then G is connected.",
+   "lines": [
+    "Let u and w be distinct vertices; we find a path between them.",
+    "If u and w are adjacent, the edge uw is a path.",
+    "Otherwise, the neighbourhoods N(u) and N(w) are both subsets of the n − 2 vertices other than u and w.",
+    "Their sizes add up to |N(u)| + |N(w)| ≥ (n − 1)/2 + (n − 1)/2 = n − 1 > n − 2.",
+    "By the pigeonhole principle N(u) ∩ N(w) ≠ ∅: some x is adjacent to both, giving the path u, x, w.",
+    "Every two vertices are joined by a path, so G is connected. ∎"
+   ],
+   "distractors": [
+    "Otherwise, N(u) and N(w) are both subsets of all n vertices.",
+    "Their sizes add up to at least (n − 1)/2, which is more than half the vertices.",
+    "Every two vertices are adjacent, so G is complete and hence connected."
+   ]
+  }
  ]
 }

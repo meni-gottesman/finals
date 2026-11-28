@@ -1528,5 +1528,55 @@
   "Nonhomogeneous: aₙ = particular + homogeneous; apply initial conditions last",
   "F(n) = p(n)sⁿ: try nᵐ·q(n)sⁿ, m = multiplicity of s as a root (resonance)",
   "Hanoi Hₙ = 2ⁿ − 1; no-00 bit strings and 2 × n domino tilings are Fibonacci"
+ ],
+ "parsons": [
+  {
+   "title": "Characteristic roots give solutions",
+   "goal": "If r₁, r₂ are roots of r² − c₁r − c₂ = 0, then aₙ = α₁r₁ⁿ + α₂r₂ⁿ satisfies aₙ = c₁aₙ₋₁ + c₂aₙ₋₂ for any constants α₁, α₂.",
+   "lines": [
+    "Let r be a root of r² − c₁r − c₂ = 0, so r² = c₁r + c₂.",
+    "Multiply both sides by rⁿ⁻²: rⁿ = c₁rⁿ⁻¹ + c₂rⁿ⁻², so aₙ = rⁿ is a solution; in particular r₁ⁿ and r₂ⁿ are solutions.",
+    "For aₙ = α₁r₁ⁿ + α₂r₂ⁿ, regroup: c₁aₙ₋₁ + c₂aₙ₋₂ = α₁(c₁r₁ⁿ⁻¹ + c₂r₁ⁿ⁻²) + α₂(c₁r₂ⁿ⁻¹ + c₂r₂ⁿ⁻²).",
+    "Each bracket equals rᵢⁿ by the previous step applied to r = rᵢ.",
+    "So c₁aₙ₋₁ + c₂aₙ₋₂ = α₁r₁ⁿ + α₂r₂ⁿ = aₙ for every n ≥ 2. ∎"
+   ],
+   "distractors": [
+    "Let r be a root of r² + c₁r + c₂ = 0, so r² = −c₁r − c₂.",
+    "Multiply both sides by rⁿ: rⁿ⁺² = c₁rⁿ⁻¹ + c₂rⁿ⁻².",
+    "The combination is a solution only when α₁ = α₂ = 1."
+   ]
+  },
+  {
+   "title": "Why a double root needs n·r₀ⁿ",
+   "goal": "If r₀ is a double root of r² − c₁r − c₂ = 0, then aₙ = n·r₀ⁿ satisfies aₙ = c₁aₙ₋₁ + c₂aₙ₋₂.",
+   "lines": [
+    "A double root means r² − c₁r − c₂ = (r − r₀)², so c₁ = 2r₀ and c₂ = −r₀².",
+    "Substitute aₙ = n·r₀ⁿ into the right side: c₁aₙ₋₁ + c₂aₙ₋₂ = 2r₀·(n − 1)r₀ⁿ⁻¹ − r₀²·(n − 2)r₀ⁿ⁻².",
+    "Collect the powers of r₀: this equals 2(n − 1)r₀ⁿ − (n − 2)r₀ⁿ.",
+    "Simplify the coefficient: 2n − 2 − n + 2 = n.",
+    "So c₁aₙ₋₁ + c₂aₙ₋₂ = n·r₀ⁿ = aₙ, and n·r₀ⁿ is a second, independent solution besides r₀ⁿ. ∎"
+   ],
+   "distractors": [
+    "A double root means c₁ = r₀² and c₂ = 2r₀.",
+    "Collect the powers of r₀: this equals 2(n − 1)r₀ⁿ − (n − 2)r₀ⁿ⁻¹.",
+    "Simplify the coefficient: 2n − 2 − n − 2 = n − 4."
+   ]
+  },
+  {
+   "title": "Setting up a recurrence: no two consecutive 0s",
+   "goal": "Let aₙ be the number of bit strings of length n with no two consecutive 0s. Show aₙ = aₙ₋₁ + aₙ₋₂ for n ≥ 3, with a₁ = 2, a₂ = 3.",
+   "lines": [
+    "Take a valid string of length n ≥ 3 and split into cases by its last bit.",
+    "If it ends in 1, the first n − 1 bits can be any valid string of length n − 1: aₙ₋₁ strings.",
+    "If it ends in 0, the bit before it must be 1 (else 00 appears), and the first n − 2 bits can be any valid string: aₙ₋₂ strings.",
+    "The two cases are disjoint and cover every valid string, so by the sum rule aₙ = aₙ₋₁ + aₙ₋₂.",
+    "Initial conditions by listing: a₁ = 2 (0, 1) and a₂ = 3 (01, 10, 11). ∎"
+   ],
+   "distractors": [
+    "If it ends in 0, the first n − 1 bits can be any valid string: aₙ₋₁ strings.",
+    "The cases overlap in strings ending in 10, so aₙ = aₙ₋₁ + aₙ₋₂ − aₙ₋₃.",
+    "Initial conditions by listing: a₁ = 2 and a₂ = 4."
+   ]
+  }
  ]
 }

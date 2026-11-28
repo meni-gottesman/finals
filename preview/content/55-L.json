@@ -1536,5 +1536,55 @@
   "Binomial(n, p): E = np, V = np(1 − p); one die: E = 7/2, V = 35/12",
   "Chebyshev: p(|X − E(X)| ≥ r) ≤ V(X)/r², an upper bound, often loose",
   "Geometric wait for success probability p: mean 1/p"
+ ],
+ "parsons": [
+  {
+   "title": "Linearity of expectation",
+   "goal": "For random variables X, Y on a sample space S (not necessarily independent), E(X + Y) = E(X) + E(Y).",
+   "lines": [
+    "By definition, E(X + Y) = Σ<sub>s∈S</sub> p(s)·(X + Y)(s).",
+    "(X + Y)(s) = X(s) + Y(s) for every outcome s, so E(X + Y) = Σ<sub>s∈S</sub> p(s)(X(s) + Y(s)).",
+    "Distribute and split the sum: E(X + Y) = Σ<sub>s∈S</sub> p(s)X(s) + Σ<sub>s∈S</sub> p(s)Y(s).",
+    "The first sum is E(X) and the second is E(Y), by the definition of expected value.",
+    "Hence E(X + Y) = E(X) + E(Y); independence was never used. ∎"
+   ],
+   "distractors": [
+    "Since X and Y are independent, p(X = r ∧ Y = t) = p(X = r)·p(Y = t).",
+    "Distribute and split the sum: E(X + Y) = (Σ<sub>s∈S</sub> p(s)X(s)) · (Σ<sub>s∈S</sub> p(s)Y(s)).",
+    "E(X + Y) = Σ<sub>r</sub> r·p(X = r) + Σ<sub>t</sub> t·p(X = r)p(Y = t)."
+   ]
+  },
+  {
+   "title": "E(XY) = E(X)E(Y) for independent X, Y",
+   "goal": "If X and Y are independent random variables on S, then E(XY) = E(X)E(Y).",
+   "lines": [
+    "Group outcomes by the values of X and Y: E(XY) = Σ<sub>r</sub> Σ<sub>t</sub> rt · p(X = r ∧ Y = t).",
+    "Independence of X and Y gives p(X = r ∧ Y = t) = p(X = r)·p(Y = t) for all values r, t.",
+    "So E(XY) = Σ<sub>r</sub> Σ<sub>t</sub> r·p(X = r) · t·p(Y = t).",
+    "Factor the double sum: E(XY) = (Σ<sub>r</sub> r·p(X = r)) · (Σ<sub>t</sub> t·p(Y = t)).",
+    "The two factors are E(X) and E(Y), so E(XY) = E(X)E(Y). ∎"
+   ],
+   "distractors": [
+    "By linearity of expectation, E(XY) = E(X)E(Y) for any X and Y.",
+    "Independence of X and Y gives p(X = r ∧ Y = t) = p(X = r) + p(Y = t).",
+    "So E(XY) = Σ<sub>r</sub> r·p(X = r) + Σ<sub>t</sub> t·p(Y = t)."
+   ]
+  },
+  {
+   "title": "Chebyshev’s inequality from the definition of variance",
+   "goal": "For a random variable X on S and any r > 0, p(|X − E(X)| ≥ r) ≤ V(X)/r².",
+   "lines": [
+    "Let A = {s ∈ S : |X(s) − E(X)| ≥ r}, and start from V(X) = Σ<sub>s∈S</sub> (X(s) − E(X))² p(s).",
+    "Every term is ≥ 0, so keeping only the outcomes in A can only decrease the sum: V(X) ≥ Σ<sub>s∈A</sub> (X(s) − E(X))² p(s).",
+    "For s ∈ A, (X(s) − E(X))² ≥ r², so V(X) ≥ Σ<sub>s∈A</sub> r² p(s).",
+    "Σ<sub>s∈A</sub> r² p(s) = r² · p(A), so V(X) ≥ r² · p(A).",
+    "Divide by r² > 0: p(|X − E(X)| ≥ r) = p(A) ≤ V(X)/r². ∎"
+   ],
+   "distractors": [
+    "For s ∈ A, (X(s) − E(X))² ≥ r, so V(X) ≥ Σ<sub>s∈A</sub> r·p(s).",
+    "Keeping only the outcomes in A can only increase the sum: V(X) ≤ Σ<sub>s∈A</sub> (X(s) − E(X))² p(s).",
+    "Since X is a sum of independent variables, V(X) = Σ V(Xᵢ)."
+   ]
+  }
  ]
 }

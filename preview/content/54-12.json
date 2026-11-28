@@ -1,0 +1,1229 @@
+{
+ "id": "54-12",
+ "course": "54",
+ "title": "Second-order linear ODEs (homogeneous, undetermined coefficients, superposition)",
+ "source": "Nagle 4.2–4.5",
+ "summary": "Constant-coefficient second-order equations are solved from the roots of the characteristic equation (distinct, repeated, complex), and forced equations by undetermined coefficients with the tˢ resonance rule plus superposition. Expect at least one full IVP and one \"write the form\" question.",
+ "lesson": [
+  {
+   "title": "Linear second-order equations and their solution space",
+   "blocks": [
+    {
+     "type": "def",
+     "term": "Linear second-order equation",
+     "text": "y″ + p(t)y′ + q(t)y = g(t). With constant coefficients: ay″ + by′ + cy = g(t), a ≠ 0. Homogeneous if g = 0. Write L[y] = ay″ + by′ + cy; L is a linear operator: L[c₁y₁ + c₂y₂] = c₁L[y₁] + c₂L[y₂]."
+    },
+    {
+     "type": "thm",
+     "name": "Existence and uniqueness",
+     "text": "If p, q, g are continuous on an interval I containing t₀, the initial value problem with y(t₀) = Y₀, y′(t₀) = Y₁ has exactly one solution on I."
+    },
+    {
+     "type": "thm",
+     "name": "The solution space is 2-dimensional",
+     "text": "The solutions of the homogeneous equation form a vector space (the kernel of L) of dimension 2. If y₁, y₂ are independent solutions, every solution is y = c₁y₁ + c₂y₂ (a fundamental set).",
+     "proof": [
+      {
+       "type": "p",
+       "text": "The map y ↦ (y(t₀), y′(t₀)) is linear, onto ℝ² (existence) and one-to-one (uniqueness), so it is an isomorphism from the solution space to ℝ²."
+      }
+     ]
+    },
+    {
+     "type": "def",
+     "term": "Wronskian",
+     "text": "W[y₁, y₂](t) = det [y₁ y₂; y₁′ y₂′] = y₁y₂′ − y₁′y₂."
+    },
+    {
+     "type": "thm",
+     "name": "Wronskian test",
+     "text": "For two solutions of the same homogeneous equation (p, q continuous on I), W is either never zero on I (independent, a fundamental set) or identically zero (dependent).",
+     "proof": [
+      {
+       "type": "p",
+       "text": "Matching initial conditions c₁y₁(t₀) + c₂y₂(t₀) = Y₀, c₁y₁′(t₀) + c₂y₂′(t₀) = Y₁ is a 2×2 linear system with determinant W(t₀). Abel's formula W(t) = W(t₀)·e^(−∫p) shows W cannot vanish at one point without vanishing everywhere."
+      }
+     ]
+    },
+    {
+     "type": "example",
+     "title": "Wronskian and independence",
+     "prompt": "Show e²ᵗ and e⁻ᵗ are independent solutions of y″ − y′ − 2y = 0.",
+     "steps": [
+      "Both satisfy it: r² − r − 2 = (r − 2)(r + 1) has roots 2 and −1.",
+      "W = e²ᵗ·(−e⁻ᵗ) − 2e²ᵗ·e⁻ᵗ = −eᵗ − 2eᵗ = −3eᵗ ≠ 0."
+     ],
+     "answer": "W = −3eᵗ ≠ 0, so they form a fundamental set: y = c₁e²ᵗ + c₂e⁻ᵗ."
+    },
+    {
+     "type": "warn",
+     "text": "For arbitrary functions (not solutions of one nice equation) W can vanish at some points without dependence: t and t² have W = t²."
+    }
+   ]
+  },
+  {
+   "title": "The characteristic equation: distinct real roots",
+   "blocks": [
+    {
+     "type": "thm",
+     "name": "Characteristic (auxiliary) equation",
+     "text": "L[eʳᵗ] = (ar² + br + c)eʳᵗ. So eʳᵗ solves ay″ + by′ + cy = 0 exactly when ar² + br + c = 0.",
+     "proof": [
+      {
+       "type": "p",
+       "text": "y = eʳᵗ gives y′ = reʳᵗ, y″ = r²eʳᵗ; factor out eʳᵗ ≠ 0."
+      }
+     ]
+    },
+    {
+     "type": "thm",
+     "name": "Distinct real roots",
+     "text": "If r₁ ≠ r₂ are real roots, y = c₁e^(r₁t) + c₂e^(r₂t)."
+    },
+    {
+     "type": "steps",
+     "title": "Solving an IVP",
+     "items": [
+      "Write the characteristic equation and find its roots.",
+      "Write the general solution (by the root case).",
+      "Differentiate the general solution.",
+      "Plug in t₀ to both y and y′ and solve the 2×2 system for c₁, c₂."
+     ]
+    },
+    {
+     "type": "example",
+     "title": "Distinct real roots IVP",
+     "prompt": "Solve y″ + 2y′ − 3y = 0, y(0) = 0, y′(0) = −4.",
+     "steps": [
+      "r² + 2r − 3 = (r + 3)(r − 1): r = 1, −3.",
+      "y = c₁eᵗ + c₂e⁻³ᵗ, y′ = c₁eᵗ − 3c₂e⁻³ᵗ.",
+      "c₁ + c₂ = 0 and c₁ − 3c₂ = −4 ⇒ −4c₂ = −4 ⇒ c₂ = 1, c₁ = −1."
+     ],
+     "answer": "y = −eᵗ + e⁻³ᵗ"
+    },
+    {
+     "type": "warn",
+     "text": "A missing y term (c = 0) means r = 0 is a root, giving the constant solution e⁰ᵗ = 1: y″ − 5y′ = 0 has y = c₁ + c₂e⁵ᵗ."
+    }
+   ]
+  },
+  {
+   "title": "Repeated roots",
+   "blocks": [
+    {
+     "type": "thm",
+     "name": "Repeated root",
+     "text": "If r is a double root (b² − 4ac = 0, r = −b/2a), y = (c₁ + c₂t)eʳᵗ.",
+     "proof": [
+      {
+       "type": "p",
+       "text": "Write p(r) = ar² + br + c. Differentiating L[eʳᵗ] = p(r)eʳᵗ with respect to r gives L[teʳᵗ] = (p′(r) + t·p(r))eʳᵗ. A double root has p(r) = 0 AND p′(r) = 0, so L[teʳᵗ] = 0. W[eʳᵗ, teʳᵗ] = e²ʳᵗ ≠ 0, so the two solutions are independent."
+      }
+     ]
+    },
+    {
+     "type": "tip",
+     "text": "Why an extra t is needed: c₁eʳᵗ + c₂eʳᵗ is really one function (c₁ + c₂)eʳᵗ, so it cannot fit two initial conditions. The double root 'merges' two exponentials, and teʳᵗ is what is left of their difference quotient."
+    },
+    {
+     "type": "example",
+     "title": "Repeated root IVP",
+     "prompt": "Solve y″ + 4y′ + 4y = 0, y(0) = 1, y′(0) = 3.",
+     "steps": [
+      "r² + 4r + 4 = (r + 2)²: double root −2.",
+      "y = (c₁ + c₂t)e⁻²ᵗ, y′ = c₂e⁻²ᵗ − 2(c₁ + c₂t)e⁻²ᵗ.",
+      "y(0) = c₁ = 1; y′(0) = c₂ − 2c₁ = 3 ⇒ c₂ = 5."
+     ],
+     "answer": "y = (1 + 5t)e⁻²ᵗ"
+    }
+   ]
+  },
+  {
+   "title": "Complex roots and damping",
+   "blocks": [
+    {
+     "type": "thm",
+     "name": "Complex roots",
+     "text": "If the roots are α ± iβ (β ≠ 0), y = e^(αt)(c₁ cos βt + c₂ sin βt).",
+     "proof": [
+      {
+       "type": "p",
+       "text": "Euler: e^((α+iβ)t) = e^(αt)(cos βt + i sin βt) is a complex solution. Since a, b, c are real, L[u + iv] = L[u] + iL[v] = 0 forces L[u] = 0 and L[v] = 0: real and imaginary parts are real solutions, and they are independent (W = βe^(2αt) ≠ 0)."
+      }
+     ]
+    },
+    {
+     "type": "example",
+     "title": "Complex roots IVP",
+     "prompt": "Solve y″ − 2y′ + 10y = 0, y(0) = 2, y′(0) = −1.",
+     "steps": [
+      "r² − 2r + 10 = 0 ⇒ r = (2 ± √(4 − 40))/2 = 1 ± 3i.",
+      "y = eᵗ(c₁ cos 3t + c₂ sin 3t).",
+      "y(0) = c₁ = 2. y′ = eᵗ(c₁ cos 3t + c₂ sin 3t) + eᵗ(−3c₁ sin 3t + 3c₂ cos 3t), so y′(0) = c₁ + 3c₂ = −1 ⇒ c₂ = −1."
+     ],
+     "answer": "y = eᵗ(2 cos 3t − sin 3t)"
+    },
+    {
+     "type": "warn",
+     "text": "Do not forget the α part when differentiating: y′(0) = αc₁ + βc₂, not just βc₂."
+    },
+    {
+     "type": "table",
+     "head": [
+      "Mass–spring my″ + by′ + ky = 0",
+      "Discriminant b² − 4mk",
+      "Behaviour"
+     ],
+     "rows": [
+      [
+       "Undamped (b = 0)",
+       "negative",
+       "pure oscillation, ω = √(k/m)"
+      ],
+      [
+       "Underdamped",
+       "&lt; 0",
+       "decaying oscillation e^(αt)cos(βt − φ)"
+      ],
+      [
+       "Critically damped",
+       "= 0",
+       "(c₁ + c₂t)eʳᵗ, fastest return, no oscillation"
+      ],
+      [
+       "Overdamped",
+       "&gt; 0",
+       "two negative real roots, slow return"
+      ]
+     ]
+    },
+    {
+     "type": "tip",
+     "text": "With m, k &gt; 0 and b &gt; 0 every root has negative real part, so every solution tends to 0."
+    }
+   ]
+  },
+  {
+   "title": "Finding the equation from its solutions",
+   "blocks": [
+    {
+     "type": "steps",
+     "title": "Reverse problem",
+     "items": [
+      "Each solution tells you a root: e^(rt) ↦ r; teʳᵗ ↦ r double; e^(αt)cos βt or sin βt ↦ α ± iβ.",
+      "Multiply the factors: (r − r₁)(r − r₂), or (r − α)² + β² for a complex pair.",
+      "Read off the equation from the polynomial."
+     ]
+    },
+    {
+     "type": "example",
+     "title": "Find the ODE",
+     "prompt": "(a) Find a constant-coefficient equation with general solution c₁e²ᵗ + c₂e⁻³ᵗ. (b) One with solution e³ᵗ sin 2t. (c) Can t² solve a second-order constant-coefficient homogeneous equation?",
+     "steps": [
+      "(a) Roots 2, −3: (r − 2)(r + 3) = r² + r − 6 ⇒ y″ + y′ − 6y = 0.",
+      "(b) Roots 3 ± 2i: (r − 3)² + 4 = r² − 6r + 13 ⇒ y″ − 6y′ + 13y = 0.",
+      "(c) Plug in: a·2 + b·2t + c·t² ≡ 0 forces a = b = c = 0. No (t² needs a triple root 0, i.e. y‴ = 0)."
+     ],
+     "answer": "(a) y″ + y′ − 6y = 0 (b) y″ − 6y′ + 13y = 0 (c) No"
+    }
+   ]
+  },
+  {
+   "title": "Nonhomogeneous equations: undetermined coefficients",
+   "blocks": [
+    {
+     "type": "thm",
+     "name": "Structure",
+     "text": "Every solution of L[y] = g is y = yₕ + yₚ, where yₚ is one particular solution and yₕ = c₁y₁ + c₂y₂ is the general homogeneous solution.",
+     "proof": [
+      {
+       "type": "p",
+       "text": "If L[y] = g and L[yₚ] = g, then L[y − yₚ] = 0. Exactly like p + Nul A for A<b>x</b> = <b>b</b>."
+      }
+     ]
+    },
+    {
+     "type": "p",
+     "text": "Undetermined coefficients works when the coefficients are constant and g(t) is a sum of terms tᵐe^(αt), tᵐe^(αt)cos βt, tᵐe^(αt)sin βt: derivatives of such functions stay in the same finite family, so we guess yₚ of that form with unknown coefficients."
+    },
+    {
+     "type": "table",
+     "head": [
+      "g(t)",
+      "Trial yₚ (before the tˢ factor)"
+     ],
+     "rows": [
+      [
+       "polynomial of degree m",
+       "Aₘtᵐ + ⋯ + A₁t + A₀ (all lower terms)"
+      ],
+      [
+       "Pₘ(t)e^(αt)",
+       "(Aₘtᵐ + ⋯ + A₀)e^(αt)"
+      ],
+      [
+       "Pₘ(t)e^(αt)cos βt or sin βt",
+       "e^(αt)[(Aₘtᵐ + ⋯ + A₀)cos βt + (Bₘtᵐ + ⋯ + B₀)sin βt]"
+      ]
+     ]
+    },
+    {
+     "type": "thm",
+     "name": "The tˢ rule",
+     "text": "Multiply the trial by tˢ, where s = multiplicity of α (or α + iβ) as a root of the characteristic equation: s = 0 if not a root, 1 if a simple root, 2 if a double root.",
+     "proof": [
+      {
+       "type": "p",
+       "text": "If the trial already solves the homogeneous equation, L[trial] = 0 ≠ g and no coefficients work. Since L[teʳᵗ] = p′(r)eʳᵗ when p(r) = 0, and L[t²eʳᵗ] = p″(r)eʳᵗ when r is double, multiplying by tˢ produces a nonzero output of the right type."
+      }
+     ]
+    },
+    {
+     "type": "warn",
+     "text": "Always include BOTH cos and sin, and the FULL polynomial of degree m, even if g has only one of them. Decide s separately for each piece of g."
+    },
+    {
+     "type": "example",
+     "title": "Product forcing, no resonance",
+     "prompt": "Find yₚ for y″ + y = eᵗ cos t.",
+     "steps": [
+      "Roots ±i; the forcing exponent is 1 ± i, not a root ⇒ s = 0.",
+      "Trial yₚ = eᵗ(A cos t + B sin t).",
+      "Substituting gives eᵗ[(A + 2B) cos t + (B − 2A) sin t] = eᵗ cos t.",
+      "A + 2B = 1, B − 2A = 0 ⇒ B = 2A, 5A = 1 ⇒ A = 1/5, B = 2/5."
+     ],
+     "answer": "yₚ = (1/5)eᵗ(cos t + 2 sin t)"
+    },
+    {
+     "type": "example",
+     "title": "Product forcing with resonance: t·eᵗcos t",
+     "prompt": "Find yₚ for y″ − 2y′ + 2y = t eᵗ cos t.",
+     "steps": [
+      "Characteristic roots 1 ± i. The forcing has α + iβ = 1 + i, a simple root ⇒ s = 1. Polynomial degree m = 1.",
+      "Trial: yₚ = t·eᵗ[(At + B) cos t + (Ct + D) sin t].",
+      "Substituting and matching the coefficients of cos t, t cos t, sin t, t sin t gives A = 0, B = 1/4, C = 1/4, D = 0.",
+      "Check by substitution: L[(1/4)eᵗ(t cos t + t² sin t)] = t eᵗ cos t."
+     ],
+     "answer": "yₚ = (1/4)eᵗ(t cos t + t² sin t)"
+    },
+    {
+     "type": "example",
+     "title": "Write the form only (do not solve)",
+     "prompt": "Give the form of yₚ for (a) y″ − 4y′ + 4y = t e²ᵗ + e²ᵗ cos t, (b) y″ + 9y = t² sin 3t + 4e⁻ᵗ, (c) y″ + 3y′ = 5 + cos t.",
+     "steps": [
+      "(a) Double root 2. t e²ᵗ: α = 2 double ⇒ s = 2: t²(At + B)e²ᵗ. e²ᵗ cos t: 2 + i not a root: e²ᵗ(C cos t + D sin t).",
+      "(b) Roots ±3i. t² sin 3t: 3i is a root, s = 1, degree 2: t[(At² + Bt + C) cos 3t + (Dt² + Et + F) sin 3t]. 4e⁻ᵗ: Ge⁻ᵗ.",
+      "(c) Roots 0, −3. Constant 5 = 5e⁰ᵗ and 0 is a root ⇒ s = 1: At. cos t: B cos t + C sin t."
+     ],
+     "answer": "(a) t²(At + B)e²ᵗ + e²ᵗ(C cos t + D sin t) (b) t[(At² + Bt + C)cos 3t + (Dt² + Et + F)sin 3t] + Ge⁻ᵗ (c) At + B cos t + C sin t"
+    }
+   ]
+  },
+  {
+   "title": "Superposition and full initial value problems",
+   "blocks": [
+    {
+     "type": "thm",
+     "name": "Superposition principle",
+     "text": "If L[y₁] = g₁ and L[y₂] = g₂, then L[k₁y₁ + k₂y₂] = k₁g₁ + k₂g₂. So for g = g₁ + g₂, find a particular solution for each piece and add."
+    },
+    {
+     "type": "steps",
+     "title": "Full IVP with forcing",
+     "items": [
+      "Solve the homogeneous equation: yₕ.",
+      "Split g into pieces; find yₚ for each (with its own tˢ).",
+      "Add: y = yₕ + yₚ₁ + yₚ₂.",
+      "ONLY NOW apply the initial conditions to the full y."
+     ]
+    },
+    {
+     "type": "example",
+     "title": "Superposition with one resonant piece",
+     "prompt": "Solve y″ + 4y = 8t + 4 sin 2t, y(0) = 0, y′(0) = 0.",
+     "steps": [
+      "yₕ = c₁ cos 2t + c₂ sin 2t (roots ±2i).",
+      "Piece 8t: trial At + B ⇒ 4At + 4B = 8t ⇒ A = 2, B = 0: yₚ₁ = 2t.",
+      "Piece 4 sin 2t: 2i is a root ⇒ s = 1, trial t(C cos 2t + D sin 2t). Substituting: −4C sin 2t + 4D cos 2t = 4 sin 2t ⇒ C = −1, D = 0: yₚ₂ = −t cos 2t.",
+      "y = c₁ cos 2t + c₂ sin 2t + 2t − t cos 2t. y(0) = c₁ = 0.",
+      "y′ = 2c₂ cos 2t + 2 − cos 2t + 2t sin 2t (with c₁ = 0); y′(0) = 2c₂ + 2 − 1 = 0 ⇒ c₂ = −1/2."
+     ],
+     "answer": "y = 2t − t cos 2t − ½ sin 2t (unbounded: resonance)"
+    },
+    {
+     "type": "warn",
+     "text": "Applying initial conditions to yₕ before adding yₚ is the most common way to lose points."
+    },
+    {
+     "type": "tip",
+     "text": "Resonance: when the forcing frequency equals a natural frequency (s = 1 with α = 0), yₚ has a factor t and the amplitude grows without bound."
+    }
+   ]
+  }
+ ],
+ "cards": [
+  {
+   "front": "What does it mean for ay″ + by′ + cy = 0 to be linear, homogeneous, constant-coefficient? Why does that matter?",
+   "back": [
+    {
+     "type": "p",
+     "text": "<b>Meaning:</b> <b>Linear:</b> y, y′, y″ appear to the first power only. <b>Homogeneous:</b> right side 0. <b>Constant coefficients:</b> a, b, c are numbers, a ≠ 0."
+    },
+    {
+     "type": "p",
+     "text": "<b>Why it matters:</b> L[y] = ay″ + by′ + cy is a linear operator, so solutions are closed under addition and scaling: they form a vector space (the null space of L)."
+    },
+    {
+     "type": "formula",
+     "text": "L[c₁y₁ + c₂y₂] = c₁L[y₁] + c₂L[y₂]"
+    }
+   ]
+  },
+  {
+   "front": "Why is the solution space of ay″ + by′ + cy = 0 exactly 2-dimensional?",
+   "back": [
+    {
+     "type": "p",
+     "text": "<b>Why:</b> Existence–uniqueness: for every (Y₀, Y₁) there is exactly one solution with y(0) = Y₀, y′(0) = Y₁."
+    },
+    {
+     "type": "p",
+     "text": "So the linear map y ↦ (y(0), y′(0)) is onto (existence) and one-to-one (uniqueness): an isomorphism onto ℝ²."
+    },
+    {
+     "type": "p",
+     "text": "<b>Consequence:</b> Two independent solutions y₁, y₂ give every solution: y = c₁y₁ + c₂y₂."
+    }
+   ]
+  },
+  {
+   "front": "What is the Wronskian of y₁, y₂ and what does it tell you about solutions?",
+   "back": [
+    {
+     "type": "formula",
+     "text": "W = y₁y₂′ − y₁′y₂"
+    },
+    {
+     "type": "p",
+     "text": "For two solutions of the same equation, W is either <b>never 0</b> (independent, a fundamental set) or <b>always 0</b> (dependent)."
+    },
+    {
+     "type": "p",
+     "text": "<b>Why:</b> Matching initial values means solving a 2×2 system whose determinant is W(t₀)."
+    },
+    {
+     "type": "p",
+     "text": "<i>Example:</i> e²ᵗ, e⁻³ᵗ: W = −3e⁻ᵗ − 2e⁻ᵗ = −5e⁻ᵗ ≠ 0."
+    },
+    {
+     "type": "warn",
+     "text": "For arbitrary functions W can vanish at isolated points: t and t² give W = t²."
+    }
+   ]
+  },
+  {
+   "front": "How do you get the auxiliary (characteristic) equation and why does it work?",
+   "back": [
+    {
+     "type": "p",
+     "text": "<b>How:</b> Replace y″ → r², y′ → r, y → 1: ar² + br + c = 0."
+    },
+    {
+     "type": "p",
+     "text": "<b>Why:</b> L[eʳᵗ] = (ar² + br + c)eʳᵗ = p(r)eʳᵗ, and eʳᵗ ≠ 0, so eʳᵗ solves the ODE exactly when p(r) = 0."
+    },
+    {
+     "type": "p",
+     "text": "<i>Example:</i> y″ + y′ − 6y = 0 → r² + r − 6 = (r + 3)(r − 2), r = 2, −3."
+    }
+   ]
+  },
+  {
+   "front": "Three cases for the roots of ar² + br + c = 0 and the general solution in each.",
+   "back": [
+    {
+     "type": "list",
+     "items": [
+      "<b>Distinct real r₁, r₂:</b> c₁e^(r₁t) + c₂e^(r₂t)",
+      "<b>Repeated r:</b> (c₁ + c₂t)eʳᵗ",
+      "<b>Complex α ± iβ:</b> e^(αt)(c₁cos βt + c₂sin βt)"
+     ]
+    },
+    {
+     "type": "p",
+     "text": "<b>Decide by:</b> The discriminant b² − 4ac: positive, zero, negative."
+    },
+    {
+     "type": "warn",
+     "text": "For y″ + 9y = 0, r = ±3i so α = 0: c₁cos 3t + c₂sin 3t, not e³ᵗ."
+    }
+   ]
+  },
+  {
+   "front": "General solution of y″ − 5y′ = 0 (no y term).",
+   "back": [
+    {
+     "type": "p",
+     "text": "r² − 5r = r(r − 5): roots 0 and 5. Since e⁰ᵗ = 1:"
+    },
+    {
+     "type": "p",
+     "text": "<i>Example:</i> y = <b>c₁ + c₂e⁵ᵗ</b>."
+    },
+    {
+     "type": "warn",
+     "text": "A missing y term means r = 0 is a root, so constants are solutions. Watch for this in the tˢ rule too."
+    }
+   ]
+  },
+  {
+   "front": "Why does a repeated root r give the second solution t·eʳᵗ?",
+   "back": [
+    {
+     "type": "p",
+     "text": "<b>Why:</b> Differentiate L[eʳᵗ] = p(r)eʳᵗ with respect to r:"
+    },
+    {
+     "type": "formula",
+     "text": "L[teʳᵗ] = (p′(r) + t·p(r))eʳᵗ"
+    },
+    {
+     "type": "p",
+     "text": "A double root has p(r) = 0 <b>and</b> p′(r) = 0, so L[teʳᵗ] = 0. W[eʳᵗ, teʳᵗ] = e²ʳᵗ ≠ 0, so independent."
+    },
+    {
+     "type": "p",
+     "text": "<i>Example:</i> y″ − 6y′ + 9y = 0: (r − 3)², y = (c₁ + c₂t)e³ᵗ."
+    }
+   ]
+  },
+  {
+   "front": "Why do complex roots α ± iβ give e^(αt)cos βt and e^(αt)sin βt?",
+   "back": [
+    {
+     "type": "p",
+     "text": "<b>Why:</b> Euler: e^((α+iβ)t) = e^(αt)(cos βt + i sin βt) is a complex solution. Since a, b, c are <b>real</b>, L[u + iv] = L[u] + iL[v] = 0 forces L[u] = 0 and L[v] = 0."
+    },
+    {
+     "type": "p",
+     "text": "So the real part and the imaginary part are both real solutions. The conjugate root gives nothing new."
+    },
+    {
+     "type": "p",
+     "text": "<i>Example:</i> y″ + 4y′ + 13y = 0: r = −2 ± 3i, y = e⁻²ᵗ(c₁cos 3t + c₂sin 3t)."
+    },
+    {
+     "type": "warn",
+     "text": "β is the imaginary part only; don’t forget the e^(αt)."
+    }
+   ]
+  },
+  {
+   "front": "Solve y″ + y′ − 2y = 0, y(0) = 0, y′(0) = 3.",
+   "back": [
+    {
+     "type": "steps",
+     "title": "Steps",
+     "items": [
+      "r² + r − 2 = (r + 2)(r − 1): y = c₁eᵗ + c₂e⁻²ᵗ.",
+      "y(0): c₁ + c₂ = 0. y′(0): c₁ − 2c₂ = 3.",
+      "c₂ = −1, c₁ = 1."
+     ]
+    },
+    {
+     "type": "p",
+     "text": "<i>Example:</i> y = <b>eᵗ − e⁻²ᵗ</b>."
+    },
+    {
+     "type": "warn",
+     "text": "Differentiate the general solution before plugging in t = 0."
+    }
+   ]
+  },
+  {
+   "front": "Solve y″ − 4y′ + 4y = 0, y(0) = 1, y′(0) = 0.",
+   "back": [
+    {
+     "type": "steps",
+     "title": "Steps",
+     "items": [
+      "(r − 2)²: y = (c₁ + c₂t)e²ᵗ.",
+      "y′ = c₂e²ᵗ + 2(c₁ + c₂t)e²ᵗ.",
+      "c₁ = 1; c₂ + 2c₁ = 0 → c₂ = −2."
+     ]
+    },
+    {
+     "type": "p",
+     "text": "<i>Example:</i> y = <b>(1 − 2t)e²ᵗ</b>."
+    },
+    {
+     "type": "warn",
+     "text": "Product rule on teʳᵗ: forgetting the c₂ term in y′ is the usual slip."
+    }
+   ]
+  },
+  {
+   "front": "Solve y″ + 16y = 0, y(0) = 3, y′(0) = 8.",
+   "back": [
+    {
+     "type": "steps",
+     "title": "Steps",
+     "items": [
+      "r = ±4i: y = c₁cos 4t + c₂sin 4t.",
+      "c₁ = 3; y′(0) = 4c₂ = 8 → c₂ = 2."
+     ]
+    },
+    {
+     "type": "p",
+     "text": "<i>Example:</i> y = <b>3cos 4t + 2sin 4t</b>."
+    },
+    {
+     "type": "warn",
+     "text": "The derivative of sin 4t is 4cos 4t: the factor 4 matters."
+    }
+   ]
+  },
+  {
+   "front": "Solve y″ + 2y′ + 5y = 0, y(0) = 0, y′(0) = 4.",
+   "back": [
+    {
+     "type": "steps",
+     "title": "Steps",
+     "items": [
+      "r = −1 ± 2i: y = e⁻ᵗ(c₁cos 2t + c₂sin 2t).",
+      "y(0) = c₁ = 0.",
+      "y′(0) = −c₁ + 2c₂ = 4 → c₂ = 2."
+     ]
+    },
+    {
+     "type": "p",
+     "text": "<i>Example:</i> y = <b>2e⁻ᵗsin 2t</b>: a decaying oscillation."
+    }
+   ]
+  },
+  {
+   "front": "Mass–spring my″ + by′ + ky = 0: what do under-, critically and overdamped mean?",
+   "back": [
+    {
+     "type": "formula",
+     "text": "discriminant b² − 4mk"
+    },
+    {
+     "type": "list",
+     "items": [
+      "<b>&lt; 0 underdamped:</b> complex roots, decaying oscillation.",
+      "<b>= 0 critical:</b> repeated root, fastest return without oscillating.",
+      "<b>&gt; 0 overdamped:</b> two negative real roots, slow return.",
+      "<b>b = 0:</b> pure oscillation, ω = √(k/m)."
+     ]
+    },
+    {
+     "type": "p",
+     "text": "<i>Example:</i> y″ + 6y′ + 5y = 0: roots −1, −5, overdamped."
+    },
+    {
+     "type": "p",
+     "text": "With b &gt; 0 all roots have negative real part, so every solution → 0."
+    }
+   ]
+  },
+  {
+   "front": "Find a constant-coefficient ODE with solution e⁻ᵗcos 4t. Can t² solve a 2nd-order one?",
+   "back": [
+    {
+     "type": "steps",
+     "title": "Steps",
+     "items": [
+      "Need roots −1 ± 4i: (r + 1)² + 16 = r² + 2r + 17.",
+      "So y″ + 2y′ + 17y = 0."
+     ]
+    },
+    {
+     "type": "p",
+     "text": "<b>t²?:</b> No: t² needs a triple root at 0, i.e. y‴ = 0, which is 3rd order."
+    },
+    {
+     "type": "warn",
+     "text": "Lowest order = total number of roots needed (counting multiplicity)."
+    }
+   ]
+  },
+  {
+   "front": "Structure of the solutions of ay″ + by′ + cy = g(t)?",
+   "back": [
+    {
+     "type": "formula",
+     "text": "y = yₕ + yₚ = c₁y₁ + c₂y₂ + yₚ"
+    },
+    {
+     "type": "p",
+     "text": "<b>Why:</b> If y and yₚ both solve L[y] = g, then L[y − yₚ] = 0, so y − yₚ is a homogeneous solution."
+    },
+    {
+     "type": "p",
+     "text": "Same as Ax = b: one particular solution + the null space."
+    },
+    {
+     "type": "warn",
+     "text": "Solutions of L[y] = g are not a subspace: the sum of two solves L[y] = 2g."
+    }
+   ]
+  },
+  {
+   "front": "State the superposition principle and how it’s used.",
+   "back": [
+    {
+     "type": "formula",
+     "text": "L[y₁] = g₁, L[y₂] = g₂ ⟹ L[k₁y₁ + k₂y₂] = k₁g₁ + k₂g₂"
+    },
+    {
+     "type": "p",
+     "text": "<b>Use:</b> For a forcing that’s a sum, find a particular solution for each piece separately, scale, and add."
+    },
+    {
+     "type": "p",
+     "text": "<i>Example:</i> If t solves L[y] = 3 and eᵗ solves L[y] = 2eᵗ, then 2t − ½eᵗ solves L[y] = 6 − eᵗ."
+    }
+   ]
+  },
+  {
+   "front": "What is the idea of undetermined coefficients, and when does it apply?",
+   "back": [
+    {
+     "type": "p",
+     "text": "<b>Idea:</b> Derivatives of polynomials, exponentials and sin/cos stay in the same family, so guess yₚ of the same type as g with unknown coefficients, substitute, match coefficients."
+    },
+    {
+     "type": "p",
+     "text": "<b>Applies when:</b> Constant coefficients and g is a sum of products of polynomials, e^(αt), cos βt, sin βt."
+    },
+    {
+     "type": "warn",
+     "text": "Not for g = tan t, 1/t, ln t."
+    }
+   ]
+  },
+  {
+   "front": "How do you choose the trial form? (The table is given on the exam; how do you use it?)",
+   "back": [
+    {
+     "type": "steps",
+     "title": "Steps",
+     "items": [
+      "Solve the homogeneous equation first (you need the roots).",
+      "Read off α (or α + iβ) and the polynomial degree n of g.",
+      "Write a <b>full</b> degree-n polynomial, and <b>both</b> cos and sin.",
+      "Multiply by tˢ, s = multiplicity of α (or α + iβ) as a root: 0, 1 or 2."
+     ]
+    },
+    {
+     "type": "p",
+     "text": "<i>Example:</i> g = t²: try At² + Bt + C (not just At²)."
+    },
+    {
+     "type": "warn",
+     "text": "A cos t alone fails when there’s a y′ term."
+    }
+   ]
+  },
+  {
+   "front": "Find yₚ for y″ − y′ − 2y = 4t².",
+   "back": [
+    {
+     "type": "steps",
+     "title": "Steps",
+     "items": [
+      "Roots 2, −1; 0 is not a root, s = 0.",
+      "Try At² + Bt + C: 2A − (2At + B) − 2(At² + Bt + C) = 4t².",
+      "t²: −2A = 4 → A = −2. t: −2A − 2B = 0 → B = 2. 1: 2A − B − 2C = 0 → C = −3."
+     ]
+    },
+    {
+     "type": "p",
+     "text": "<i>Example:</i> yₚ = <b>−2t² + 2t − 3</b>."
+    }
+   ]
+  },
+  {
+   "front": "Find yₚ for y″ + 2y′ + 5y = 10cos t.",
+   "back": [
+    {
+     "type": "steps",
+     "title": "Steps",
+     "items": [
+      "Roots −1 ± 2i; i is not a root, s = 0.",
+      "Try A cos t + B sin t. Substituting: (4A + 2B)cos t + (4B − 2A)sin t = 10cos t.",
+      "A = 2B, 10B = 10: B = 1, A = 2."
+     ]
+    },
+    {
+     "type": "p",
+     "text": "<i>Example:</i> yₚ = <b>2cos t + sin t</b>."
+    },
+    {
+     "type": "warn",
+     "text": "Include sin even though g has only cos."
+    }
+   ]
+  },
+  {
+   "front": "Why multiply the trial by t when it solves the homogeneous equation?",
+   "back": [
+    {
+     "type": "p",
+     "text": "<b>Why:</b> If the trial is a homogeneous solution, L[trial] = 0 ≠ g: no coefficients can work."
+    },
+    {
+     "type": "formula",
+     "text": "L[teʳᵗ] = (p′(r) + t·p(r))eʳᵗ"
+    },
+    {
+     "type": "p",
+     "text": "Simple root: p(r) = 0, p′(r) ≠ 0, so L[Ateʳᵗ] = A·p′(r)eʳᵗ: solvable. Double root needs t²: L[t²eʳᵗ] = p″(r)eʳᵗ."
+    },
+    {
+     "type": "p",
+     "text": "<i>Example:</i> y″ − y′ − 2y = 6e²ᵗ: p′(2) = 3, so 3A = 6, yₚ = <b>2te²ᵗ</b>."
+    }
+   ]
+  },
+  {
+   "front": "Find yₚ for y″ + 4y = 12cos 2t. What is this phenomenon?",
+   "back": [
+    {
+     "type": "steps",
+     "title": "Steps",
+     "items": [
+      "Roots ±2i, and 2i is a root: s = 1.",
+      "Try t(A cos 2t + B sin 2t). Substituting gives −4A sin 2t + 4B cos 2t = 12cos 2t.",
+      "A = 0, B = 3."
+     ]
+    },
+    {
+     "type": "p",
+     "text": "<i>Example:</i> yₚ = <b>3t sin 2t</b>: <b>resonance</b>, the amplitude grows without bound."
+    },
+    {
+     "type": "warn",
+     "text": "Plain A cos 2t + B sin 2t gives 0."
+    }
+   ]
+  },
+  {
+   "front": "Quick yₚ: (a) y″ − 3y′ + 2y = 4; (b) y″ − 3y′ + 2y = eᵗ; (c) y″ − 6y′ + 9y = e³ᵗ.",
+   "back": [
+    {
+     "type": "steps",
+     "title": "Steps",
+     "items": [
+      "(a) 0 not a root: A, 2A = 4, yₚ = <b>2</b>.",
+      "(b) roots 1, 2; 1 is simple: Ateᵗ, A·p′(1) = A(2 − 3) = 1 → yₚ = <b>−teᵗ</b>.",
+      "(c) 3 is double: At²e³ᵗ, A·p″ = 2A = 1 → yₚ = <b>½t²e³ᵗ</b>."
+     ]
+    }
+   ]
+  },
+  {
+   "front": "Trial form (don’t solve) for y″ − 4y′ + 4y = te²ᵗ + e²ᵗcos t.",
+   "back": [
+    {
+     "type": "steps",
+     "title": "Steps",
+     "items": [
+      "Homogeneous: (r − 2)², double root 2.",
+      "te²ᵗ: degree 1, α = 2 double root, s = 2 → t²(At + B)e²ᵗ.",
+      "e²ᵗcos t: 2 + i not a root, s = 0 → e²ᵗ(C cos t + D sin t)."
+     ]
+    },
+    {
+     "type": "p",
+     "text": "<i>Example:</i> yₚ = t²(At + B)e²ᵗ + e²ᵗ(C cos t + D sin t)."
+    },
+    {
+     "type": "warn",
+     "text": "Decide s for each piece separately; multiply the whole block: t²(At + B), not At³ + B."
+    }
+   ]
+  },
+  {
+   "front": "Trial form (don’t solve) for y″ + 9y = t²sin 3t + 4e⁻ᵗ.",
+   "back": [
+    {
+     "type": "steps",
+     "title": "Steps",
+     "items": [
+      "3i is a root (s = 1), polynomial degree 2: t[(At² + Bt + C)cos 3t + (Dt² + Et + F)sin 3t].",
+      "−1 is not a root: Ge⁻ᵗ."
+     ]
+    },
+    {
+     "type": "warn",
+     "text": "Full degree-2 polynomials on both cos and sin, even though g has only sin."
+    }
+   ]
+  },
+  {
+   "front": "Solve y″ + y = 2t, y(0) = 0, y′(0) = 0. In what order do you do things?",
+   "back": [
+    {
+     "type": "steps",
+     "title": "Steps",
+     "items": [
+      "yₕ = c₁cos t + c₂sin t.",
+      "yₚ = At + B → A = 2, B = 0.",
+      "y = c₁cos t + c₂sin t + 2t, <b>then</b> initial conditions: c₁ = 0, c₂ + 2 = 0."
+     ]
+    },
+    {
+     "type": "p",
+     "text": "<i>Example:</i> y = <b>2t − 2sin t</b>."
+    },
+    {
+     "type": "warn",
+     "text": "Apply initial conditions to yₕ + yₚ, never to yₕ alone."
+    }
+   ]
+  },
+  {
+   "front": "Why does a repeated root r give both eʳᵗ and teʳᵗ?",
+   "back": [
+    {
+     "type": "p",
+     "text": "L[teʳᵗ] = (p′(r) + t p(r))eʳᵗ, and a double root has p(r) = p′(r) = 0. One exponential alone can't meet two initial conditions."
+    }
+   ]
+  },
+  {
+   "front": "When does the undetermined-coefficients guess need an extra factor of t, and why?",
+   "back": [
+    {
+     "type": "p",
+     "text": "When the trial (its exponent α or α + iβ) is a root of the characteristic equation: then L[trial] = 0 and cannot equal g. Multiply by tˢ, s = multiplicity of the root."
+    }
+   ]
+  },
+  {
+   "front": "Undetermined coefficients for y″ + y′ = 3?",
+   "back": [
+    {
+     "type": "p",
+     "text": "0 is a root (no y term), so try At: A = 3, yₚ = 3t."
+    }
+   ]
+  }
+ ],
+ "hard": [
+  {
+   "title": "Complex roots IVP",
+   "level": "hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "Solve <i>y</i>″ + 4<i>y</i>′ + 13<i>y</i> = 0, <i>y</i>(0) = 1, <i>y</i>′(0) = 0. Describe the long-term behavior."
+    }
+   ],
+   "answer": "y = e⁻²ᵗ(cos 3t + (2/3) sin 3t); decaying oscillation → 0",
+   "solution": [
+    {
+     "type": "steps",
+     "title": "Solution",
+     "items": [
+      "<i>r</i>² + 4<i>r</i> + 13 = 0 ⇒ <i>r</i> = −2 ± 3<i>i</i>.",
+      "<i>y</i> = <i>e</i><sup>−2<i>t</i></sup>(<i>c</i>₁ cos 3<i>t</i> + <i>c</i>₂ sin 3<i>t</i>). <i>y</i>(0) = <i>c</i>₁ = 1.",
+      "<i>y</i>′(0) = −2<i>c</i>₁ + 3<i>c</i>₂ = 0 ⇒ <i>c</i>₂ = 2/3.",
+      "<b><i>y</i> = <i>e</i><sup>−2<i>t</i></sup>(cos 3<i>t</i> + (2/3) sin 3<i>t</i>)</b>: decaying oscillation (underdamped), → 0."
+     ]
+    },
+    {
+     "type": "warn",
+     "text": "What it tests: Differentiate the product correctly: <i>y</i>′(0) picks up −2<i>c</i>₁ from the exponential. Forgetting it gives <i>c</i>₂ = 0."
+    }
+   ]
+  },
+  {
+   "title": "Repeated root IVP: zero and maximum",
+   "level": "hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "Solve <i>y</i>″ − 6<i>y</i>′ + 9<i>y</i> = 0, <i>y</i>(0) = 2, <i>y</i>′(0) = 1. At what <i>t</i> &gt; 0 does <i>y</i> vanish, and where is its maximum?"
+    }
+   ],
+   "answer": "y = (2 − 5t)e³ᵗ; zero at t = 2/5; maximum at t = 1/15",
+   "solution": [
+    {
+     "type": "steps",
+     "title": "Solution",
+     "items": [
+      "<i>r</i>² − 6<i>r</i> + 9 = (<i>r</i> − 3)²: double root 3 ⇒ <i>y</i> = (<i>c</i>₁ + <i>c</i>₂<i>t</i>)<i>e</i><sup>3<i>t</i></sup>.",
+      "<i>c</i>₁ = 2; <i>y</i>′(0) = 3<i>c</i>₁ + <i>c</i>₂ = 1 ⇒ <i>c</i>₂ = −5.",
+      "<b><i>y</i> = (2 − 5<i>t</i>)<i>e</i><sup>3<i>t</i></sup></b>; zero at <i>t</i> = 2/5.",
+      "<i>y</i>′ = (1 − 15<i>t</i>)<i>e</i><sup>3<i>t</i></sup> = 0 at <i>t</i> = 1/15 (the maximum)."
+     ]
+    },
+    {
+     "type": "warn",
+     "text": "What it tests: Repeated root needs the extra <i>t</i>: <i>c</i>₁<i>e</i><sup>3<i>t</i></sup> + <i>c</i>₂<i>e</i><sup>3<i>t</i></sup> is only one function."
+    }
+   ]
+  },
+  {
+   "title": "Resonance IVP",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "Solve <i>y</i>″ + 9<i>y</i> = 6 cos 3<i>t</i>, <i>y</i>(0) = 0, <i>y</i>′(0) = 0. Is the solution bounded?"
+    }
+   ],
+   "answer": "y = t sin 3t; unbounded (resonance)",
+   "solution": [
+    {
+     "type": "steps",
+     "title": "Solution",
+     "items": [
+      "Homogeneous: <i>r</i> = ±3<i>i</i>: cos 3<i>t</i>, sin 3<i>t</i>. The forcing frequency matches ⇒ multiply the trial by <i>t</i>: <i>y</i>ₚ = <i>t</i>(<i>A</i> cos 3<i>t</i> + <i>B</i> sin 3<i>t</i>).",
+      "Compute: <i>y</i>ₚ″ + 9<i>y</i>ₚ = −6<i>A</i> sin 3<i>t</i> + 6<i>B</i> cos 3<i>t</i>. Match: <i>A</i> = 0, <i>B</i> = 1 ⇒ <i>y</i>ₚ = <i>t</i> sin 3<i>t</i>.",
+      "<i>y</i> = <i>c</i>₁ cos 3<i>t</i> + <i>c</i>₂ sin 3<i>t</i> + <i>t</i> sin 3<i>t</i>; <i>y</i>(0) = 0 ⇒ <i>c</i>₁ = 0; <i>y</i>′(0) = 3<i>c</i>₂ = 0 ⇒ <i>c</i>₂ = 0.",
+      "<b><i>y</i> = <i>t</i> sin 3<i>t</i></b> — <b>unbounded</b> (amplitude grows linearly): resonance."
+     ]
+    },
+    {
+     "type": "warn",
+     "text": "What it tests: Trial <i>A</i> cos 3<i>t</i> + <i>B</i> sin 3<i>t</i> without <i>t</i> gives 0 = 6 cos 3<i>t</i>. Shortcut for <i>y</i>″ + ω²<i>y</i>: <i>L</i>[<i>t</i> sin ω<i>t</i>] = 2ω cos ω<i>t</i>."
+    }
+   ]
+  },
+  {
+   "title": "Trial forms only",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "Write the <b>form</b> of a particular solution (do not solve for coefficients):"
+    },
+    {
+     "type": "p",
+     "text": "(a) <i>y</i>″ − 4<i>y</i>′ + 4<i>y</i> = <i>t</i><i>e</i><sup>2<i>t</i></sup> + <i>e</i><sup>2<i>t</i></sup> sin <i>t</i> + 3<i>t</i>² + cos 2<i>t</i>."
+    },
+    {
+     "type": "p",
+     "text": "(b) <i>y</i>″ + 2<i>y</i>′ + 5<i>y</i> = <i>e</i><sup>−<i>t</i></sup> sin 2<i>t</i> + <i>t</i><i>e</i><sup>−<i>t</i></sup>."
+    }
+   ],
+   "answer": "(a) t²(At + B)e²ᵗ + e²ᵗ(C cos t + D sin t) + Et² + Ft + G + H cos 2t + K sin 2t (b) te⁻ᵗ(A cos 2t + B sin 2t) + (Ct + D)e⁻ᵗ",
+   "solution": [
+    {
+     "type": "steps",
+     "title": "Solution",
+     "items": [
+      "(a) Roots: 2 (double). Split by superposition:",
+      "<i>te</i><sup>2<i>t</i></sup>: 2 is a double root ⇒ multiply by <i>t</i>²: <b><i>t</i>²(<i>A</i><i>t</i> + <i>B</i>)<i>e</i><sup>2<i>t</i></sup></b>.",
+      "<i>e</i><sup>2<i>t</i></sup> sin <i>t</i>: 2 ± <i>i</i> not roots: <b><i>e</i><sup>2<i>t</i></sup>(<i>C</i> cos <i>t</i> + <i>D</i> sin <i>t</i>)</b>. 3<i>t</i>²: <b><i>E</i><i>t</i>² + <i>F</i><i>t</i> + <i>G</i></b>. cos 2<i>t</i>: ±2<i>i</i> not roots: <b><i>H</i> cos 2<i>t</i> + <i>K</i> sin 2<i>t</i></b>.",
+      "(b) Roots −1 ± 2<i>i</i>. <i>e</i><sup>−<i>t</i></sup> sin 2<i>t</i> matches a root ⇒ <b><i>t</i><i>e</i><sup>−<i>t</i></sup>(<i>A</i> cos 2<i>t</i> + <i>B</i> sin 2<i>t</i>)</b>. <i>te</i><sup>−<i>t</i></sup>: −1 is not a root ⇒ <b>(<i>C</i><i>t</i> + <i>D</i>)<i>e</i><sup>−<i>t</i></sup></b>.",
+      "(For reference, solving gives (a) <i>y</i>ₚ = <i>t</i>³<i>e</i><sup>2<i>t</i></sup>/6 − <i>e</i><sup>2<i>t</i></sup> sin <i>t</i> + (3/4)<i>t</i>² + (3/2)<i>t</i> + 9/8 − (1/8) sin 2<i>t</i>; (b) <i>y</i>ₚ = −(1/4)<i>te</i><sup>−<i>t</i></sup> cos 2<i>t</i> + (1/4)<i>te</i><sup>−<i>t</i></sup>.)"
+     ]
+    },
+    {
+     "type": "warn",
+     "text": "What it tests: Multiplier = <i>t</i><sup>s</sup> where <i>s</i> = multiplicity of the exponent (α or α ± β<i>i</i>) as a root. A polynomial of degree <i>m</i> on the right needs a full degree-<i>m</i> polynomial (all lower terms) in the trial."
+    }
+   ]
+  },
+  {
+   "title": "Superposition with a resonant piece",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "Find the general solution of <i>y</i>″ − <i>y</i>′ − 2<i>y</i> = 4<i>t</i> − 2<i>e</i><sup>−<i>t</i></sup>."
+    }
+   ],
+   "answer": "y = c₁e²ᵗ + c₂e⁻ᵗ − 2t + 1 + (2/3)te⁻ᵗ",
+   "solution": [
+    {
+     "type": "steps",
+     "title": "Solution",
+     "items": [
+      "<i>r</i>² − <i>r</i> − 2 = (<i>r</i> − 2)(<i>r</i> + 1): <i>y</i>ₕ = <i>c</i>₁<i>e</i><sup>2<i>t</i></sup> + <i>c</i>₂<i>e</i><sup>−<i>t</i></sup>.",
+      "For 4<i>t</i>: <i>At</i> + <i>B</i> ⇒ −<i>A</i> − 2(<i>At</i> + <i>B</i>) = 4<i>t</i> ⇒ <i>A</i> = −2, <i>B</i> = 1.",
+      "For −2<i>e</i><sup>−<i>t</i></sup>: −1 is a simple root ⇒ <i>Cte</i><sup>−<i>t</i></sup>. With <i>p</i>(<i>r</i>) = <i>r</i>² − <i>r</i> − 2, <i>L</i>[<i>te</i><sup><i>rt</i></sup>] = <i>p</i>′(<i>r</i>)<i>e</i><sup><i>rt</i></sup> when <i>p</i>(<i>r</i>) = 0; <i>p</i>′(−1) = −3 ⇒ −3<i>C</i> = −2 ⇒ <i>C</i> = 2/3.",
+      "<b><i>y</i> = <i>c</i>₁<i>e</i><sup>2<i>t</i></sup> + <i>c</i>₂<i>e</i><sup>−<i>t</i></sup> − 2<i>t</i> + 1 + (2/3)<i>te</i><sup>−<i>t</i></sup></b>."
+     ]
+    },
+    {
+     "type": "warn",
+     "text": "What it tests: Handle each forcing term separately, then add. The −2<i>e</i><sup>−<i>t</i></sup> piece is resonant; the 4<i>t</i> piece is not."
+    }
+   ]
+  },
+  {
+   "title": "True/False: linear ODE theory",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "list",
+     "items": [
+      "1. If <i>y</i>₁, <i>y</i>₂ solve <i>y</i>″ + <i>p</i>(<i>t</i>)<i>y</i>′ + <i>q</i>(<i>t</i>)<i>y</i> = 0, so does 3<i>y</i>₁ − 5<i>y</i>₂.",
+      "2. If <i>y</i>₁, <i>y</i>₂ solve <i>y</i>″ + <i>y</i> = sin <i>t</i>, so does <i>y</i>₁ + <i>y</i>₂.",
+      "3. <i>y</i> = <i>t</i>² can solve some equation <i>ay</i>″ + <i>by</i>′ + <i>cy</i> = 0 with constants <i>a</i> ≠ 0, <i>b</i>, <i>c</i>.",
+      "4. The Wronskian of two solutions of <i>y</i>″ + <i>p</i>(<i>t</i>)<i>y</i>′ + <i>q</i>(<i>t</i>)<i>y</i> = 0 (<i>p</i>, <i>q</i> continuous on <i>I</i>) is either identically zero on <i>I</i> or never zero on <i>I</i>.",
+      "5. <i>e<sup>t</sup></i> cos <i>t</i> and <i>e<sup>t</sup></i> sin <i>t</i> are solutions of <i>y</i>″ − 2<i>y</i>′ + 2<i>y</i> = 0.",
+      "6. Undetermined coefficients can find a particular solution of <i>y</i>″ + 4<i>y</i> = sec 2<i>t</i>."
+     ]
+    }
+   ],
+   "answer": "1 T, 2 F, 3 F, 4 T, 5 T, 6 F",
+   "solution": [
+    {
+     "type": "list",
+     "items": [
+      "1. <b>True.</b> The operator is linear; its kernel is a subspace.",
+      "2. <b>False.</b> <i>L</i>[<i>y</i>₁ + <i>y</i>₂] = 2 sin <i>t</i>. (But <i>y</i>₁ − <i>y</i>₂ solves the homogeneous equation.)",
+      "3. <b>False.</b> Plugging in: 2<i>a</i> + 2<i>bt</i> + <i>ct</i>² ≡ 0 forces <i>a</i> = <i>b</i> = <i>c</i> = 0. (<i>t</i>² would need a triple root 0 — third order.)",
+      "4. <b>True.</b> Abel’s identity: <i>W</i>(<i>t</i>) = <i>W</i>(<i>t</i>₀)·exp(−∫<i>p</i>).",
+      "5. <b>True.</b> <i>r</i>² − 2<i>r</i> + 2 = 0 has roots 1 ± <i>i</i>.",
+      "6. <b>False.</b> sec 2<i>t</i> is not a polynomial × exponential × sine/cosine; its derivatives don’t close up. Use variation of parameters."
+     ]
+    },
+    {
+     "type": "warn",
+     "text": "What it tests: Homogeneous solutions form a subspace; nonhomogeneous ones form a translate. Undetermined coefficients only works for forcing in the table’s family."
+    }
+   ]
+  },
+  {
+   "title": "Reverse-engineer an ODE and its forcing",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "(a) Find a constant-coefficient homogeneous equation having <i>y</i> = <i>e</i><sup>2<i>t</i></sup>(3 cos <i>t</i> − sin <i>t</i>) as a solution. (b) Find <i>g</i>(<i>t</i>) so that <i>y</i> = <i>t</i> sin 2<i>t</i> solves <i>y</i>″ + 4<i>y</i> = <i>g</i>(<i>t</i>), and give the general solution of that equation."
+    }
+   ],
+   "answer": "(a) y″ − 4y′ + 5y = 0 (b) g = 4 cos 2t; y = c₁ cos 2t + c₂ sin 2t + t sin 2t",
+   "solution": [
+    {
+     "type": "steps",
+     "title": "Solution",
+     "items": [
+      "(a) Need roots 2 ± <i>i</i>: (<i>r</i> − 2)² + 1 = <i>r</i>² − 4<i>r</i> + 5. <b><i>y</i>″ − 4<i>y</i>′ + 5<i>y</i> = 0</b>.",
+      "(b) (<i>t</i> sin 2<i>t</i>)″ = 4 cos 2<i>t</i> − 4<i>t</i> sin 2<i>t</i>, so <i>g</i>(<i>t</i>) = <b>4 cos 2<i>t</i></b>.",
+      "General solution: <i>y</i> = <i>c</i>₁ cos 2<i>t</i> + <i>c</i>₂ sin 2<i>t</i> + <i>t</i> sin 2<i>t</i>."
+     ]
+    },
+    {
+     "type": "warn",
+     "text": "What it tests: Reverse engineering: from solution to roots to characteristic polynomial. Just plug <i>y</i> in to find <i>g</i>."
+    }
+   ]
+  },
+  {
+   "title": "Parameter analysis: decay, oscillation, boundedness",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "(a) For which <i>k</i> do all solutions of <i>y</i>″ + <i>k</i><i>y</i>′ + 4<i>y</i> = 0 tend to 0? For which do nonzero solutions oscillate (cross zero infinitely often)? (b) For which real <i>k</i> does <i>y</i>″ + <i>k</i><i>y</i> = cos 2<i>t</i> have at least one unbounded solution?"
+    }
+   ],
+   "answer": "(a) all → 0 iff k &gt; 0; oscillate iff |k| &lt; 4 (b) k = 4 or k ≤ 0",
+   "solution": [
+    {
+     "type": "steps",
+     "title": "Solution",
+     "items": [
+      "(a) Roots (−<i>k</i> ± √(<i>k</i>² − 16))/2. Real parts all negative ⇔ <b><i>k</i> &gt; 0</b> (product of roots is 4 &gt; 0, sum is −<i>k</i>). <i>k</i> = 0: pure oscillation, no decay. <i>k</i> &lt; 0: growth.",
+      "Oscillation ⇔ complex roots ⇔ <i>k</i>² &lt; 16 ⇔ <b>|<i>k</i>| &lt; 4</b>.",
+      "(b) <i>k</i> &gt; 0, <i>k</i> ≠ 4: <i>y</i> = <i>c</i>₁ cos √<i>k</i> <i>t</i> + <i>c</i>₂ sin √<i>k</i> <i>t</i> + cos 2<i>t</i>/(<i>k</i> − 4): all bounded.",
+      "<i>k</i> = 4: resonance, <i>y</i>ₚ = (<i>t</i> sin 2<i>t</i>)/4, unbounded.",
+      "<i>k</i> = 0: <i>y</i> = <i>c</i>₁ + <i>c</i>₂<i>t</i> − cos 2<i>t</i>/4 — unbounded when <i>c</i>₂ ≠ 0. <i>k</i> &lt; 0: <i>e</i><sup>√(−<i>k</i>)<i>t</i></sup> appears. Answer: <b><i>k</i> = 4 or <i>k</i> ≤ 0</b>."
+     ]
+    },
+    {
+     "type": "warn",
+     "text": "What it tests: Everyone finds <i>k</i> = 4. Exam-proof answers also check when the homogeneous part itself blows up."
+    }
+   ]
+  },
+  {
+   "title": "Wronskian and independence",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "(a) Show <i>y</i>₁ = <i>e</i><sup><i>t</i></sup>, <i>y</i>₂ = <i>te</i><sup><i>t</i></sup> are linearly independent on ℝ and find the constant-coefficient equation they solve. (b) Can <i>y</i>₁ = <i>t</i> and <i>y</i>₂ = |<i>t</i>| both be solutions on (−1, 1) of some <i>y</i>″ + <i>p</i>(<i>t</i>)<i>y</i>′ + <i>q</i>(<i>t</i>)<i>y</i> = 0 with continuous <i>p</i>, <i>q</i>?"
+    }
+   ],
+   "answer": "(a) W = e²ᵗ ≠ 0; y″ − 2y′ + y = 0 (b) No",
+   "solution": [
+    {
+     "type": "p",
+     "text": "(a) <i>W</i> = det"
+    },
+    {
+     "type": "matrix",
+     "rows": [
+      [
+       "<i>e</i>ᵗ",
+       "<i>te</i>ᵗ"
+      ],
+      [
+       "<i>e</i>ᵗ",
+       "(1+<i>t</i>)<i>e</i>ᵗ"
+      ]
+     ]
+    },
+    {
+     "type": "p",
+     "text": "= <i>e</i><sup>2<i>t</i></sup> ≠ 0 ⇒ independent. Double root 1 ⇒ <b><i>y</i>″ − 2<i>y</i>′ + <i>y</i> = 0</b>."
+    },
+    {
+     "type": "p",
+     "text": "(b) |<i>t</i>| is not differentiable at 0, so it can’t be a <i>C</i>² solution: <b>no</b>. (Even ignoring that: on (0,1) they coincide and their Wronskian is 0 there, but they’re independent on (−1,1) — impossible for genuine solutions by Abel’s theorem.)"
+    },
+    {
+     "type": "warn",
+     "text": "What it tests: Nonzero Wronskian at one point ⇒ independent. For solutions of a nice ODE, zero Wronskian anywhere ⇒ dependent; for arbitrary functions that implication fails."
+    }
+   ]
+  },
+  {
+   "title": "Full IVP with a double-root resonance",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "Solve <i>y</i>″ − 2<i>y</i>′ + <i>y</i> = <i>e</i><sup><i>t</i></sup> + <i>t</i>, <i>y</i>(0) = 1, <i>y</i>′(0) = 0."
+    }
+   ],
+   "answer": "y = −eᵗ + ½t²eᵗ + t + 2",
+   "solution": [
+    {
+     "type": "steps",
+     "title": "Solution",
+     "items": [
+      "<i>y</i>ₕ = (<i>c</i>₁ + <i>c</i>₂<i>t</i>)<i>e</i><sup><i>t</i></sup> (double root 1).",
+      "<i>e</i><sup><i>t</i></sup>: 1 is a <i>double</i> root ⇒ <i>At</i>²<i>e</i><sup><i>t</i></sup>. Plugging in, everything cancels except 2<i>Ae</i><sup><i>t</i></sup> ⇒ <i>A</i> = 1/2.",
+      "<i>t</i>: <i>Bt</i> + <i>C</i> ⇒ −2<i>B</i> + <i>Bt</i> + <i>C</i> = <i>t</i> ⇒ <i>B</i> = 1, <i>C</i> = 2.",
+      "<i>y</i> = (<i>c</i>₁ + <i>c</i>₂<i>t</i>)<i>e</i><sup><i>t</i></sup> + ½<i>t</i>²<i>e</i><sup><i>t</i></sup> + <i>t</i> + 2. <i>y</i>(0) = <i>c</i>₁ + 2 = 1 ⇒ <i>c</i>₁ = −1. <i>y</i>′(0) = <i>c</i>₁ + <i>c</i>₂ + 1 = 0 ⇒ <i>c</i>₂ = 0.",
+      "<b><i>y</i> = −<i>e</i><sup><i>t</i></sup> + ½<i>t</i>²<i>e</i><sup><i>t</i></sup> + <i>t</i> + 2</b>."
+     ]
+    },
+    {
+     "type": "warn",
+     "text": "What it tests: Apply initial conditions to the <i>full</i> solution (<i>y</i>ₕ + <i>y</i>ₚ), never to <i>y</i>ₕ alone. Double root ⇒ <i>t</i>² multiplier."
+    }
+   ]
+  }
+ ],
+ "keyFacts": [
+  "ar² + br + c = 0: distinct real → c₁e^(r₁t) + c₂e^(r₂t); double → (c₁ + c₂t)eʳᵗ; α ± iβ → e^(αt)(c₁cos βt + c₂sin βt).",
+  "Solution space of the homogeneous equation is 2-dimensional; W = y₁y₂′ − y₁′y₂ ≠ 0 ⇔ fundamental set.",
+  "General solution of L[y] = g: y = yₕ + yₚ; apply initial conditions to the full y.",
+  "Trial: full polynomial of degree m, both cos and sin, times tˢ (s = multiplicity of α or α + iβ as a root).",
+  "L[teʳᵗ] = p′(r)eʳᵗ when p(r) = 0; L[t²eʳᵗ] = p″(r)eʳᵗ for a double root.",
+  "Superposition: split g into pieces, solve each, add.",
+  "Damping b² − 4mk: &lt; 0 under, = 0 critical, &gt; 0 over; resonance when forcing matches ±iω."
+ ]
+}

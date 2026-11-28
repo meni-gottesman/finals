@@ -6,6 +6,147 @@
  "summary": "How to prove a statement for every integer: ordinary induction for sums, divisibility and inequalities, strong induction when a case depends on several earlier ones (postage, prime factorization, games, recurrences), and well-ordering (smallest counterexample) proofs. Induction proofs are near-certain on the final, and graders look for a labeled base case, a stated hypothesis and a correct step.",
  "lesson": [
   {
+   "title": "Summations and geometric series",
+   "blocks": [
+    {
+     "type": "tip",
+     "text": "Induction proves a sum formula you already have; this section is about manipulating sums to find or use such formulas."
+    },
+    {
+     "type": "def",
+     "term": "Sigma notation",
+     "text": "Σ<sub>k=m</sub><sup>n</sup> aₖ = aₘ + aₘ₊₁ + ⋯ + aₙ. k is the index (a dummy variable: any letter works), m the lower limit, n the upper limit. The sum has n − m + 1 terms."
+    },
+    {
+     "type": "thm",
+     "name": "Rules for manipulating sums",
+     "text": "Σ (aₖ + bₖ) = Σ aₖ + Σ bₖ and Σ c·aₖ = c·Σ aₖ. Splitting: Σ<sub>k=1</sub><sup>n</sup> aₖ = Σ<sub>k=1</sub><sup>m</sup> aₖ + Σ<sub>k=m+1</sub><sup>n</sup> aₖ. Index shift: Σ<sub>k=m</sub><sup>n</sup> aₖ = Σ<sub>j=m−s</sub><sup>n−s</sup> aⱼ₊ₛ (substitute j = k − s and move both limits)."
+    },
+    {
+     "type": "warn",
+     "text": "Σ aₖbₖ is <b>not</b> (Σ aₖ)(Σ bₖ), and Σ c = c·(number of terms), not c. Σ<sub>k=1</sub><sup>10</sup> 3 = 30."
+    },
+    {
+     "type": "thm",
+     "name": "Geometric series",
+     "text": "For r ≠ 1: Σ<sub>k=0</sub><sup>n</sup> a·rᵏ = a(rⁿ⁺¹ − 1)/(r − 1). For r = 1 the sum is (n + 1)a.",
+     "proof": [
+      {
+       "type": "p",
+       "text": "Let S = Σ<sub>k=0</sub><sup>n</sup> a·rᵏ = a + ar + ⋯ + arⁿ."
+      },
+      {
+       "type": "p",
+       "text": "Then rS = ar + ar² + ⋯ + arⁿ⁺¹ (the same sum shifted by one index)."
+      },
+      {
+       "type": "p",
+       "text": "Subtracting, every term except the ends cancels: rS − S = arⁿ⁺¹ − a."
+      },
+      {
+       "type": "p",
+       "text": "So (r − 1)S = a(rⁿ⁺¹ − 1), and dividing by r − 1 ≠ 0 gives S = a(rⁿ⁺¹ − 1)/(r − 1). ∎"
+      }
+     ]
+    },
+    {
+     "type": "thm",
+     "name": "Infinite geometric series",
+     "text": "For |x| &lt; 1: Σ<sub>k=0</sub><sup>∞</sup> xᵏ = 1/(1 − x).",
+     "proof": [
+      {
+       "type": "p",
+       "text": "The partial sums are (1 − xⁿ⁺¹)/(1 − x). Since |x| &lt; 1, xⁿ⁺¹ → 0 as n → ∞, so the partial sums tend to 1/(1 − x). ∎"
+      }
+     ]
+    },
+    {
+     "type": "formula",
+     "text": "Σ<sub>k=1</sub><sup>n</sup> k = n(n + 1)/2"
+    },
+    {
+     "type": "formula",
+     "text": "Σ<sub>k=1</sub><sup>n</sup> k² = n(n + 1)(2n + 1)/6"
+    },
+    {
+     "type": "formula",
+     "text": "Σ<sub>k=1</sub><sup>n</sup> k³ = (n(n + 1)/2)²"
+    },
+    {
+     "type": "p",
+     "text": "Each closed form is proved by induction exactly as in the next section; here you use them as tools."
+    },
+    {
+     "type": "example",
+     "title": "Change the lower limit",
+     "prompt": "Compute Σ<sub>k=4</sub><sup>20</sup> k².",
+     "steps": [
+      "Split: Σ<sub>k=1</sub><sup>20</sup> k² = Σ<sub>k=1</sub><sup>3</sup> k² + Σ<sub>k=4</sub><sup>20</sup> k².",
+      "Σ<sub>k=1</sub><sup>20</sup> k² = 20·21·41/6 = 2870.",
+      "Σ<sub>k=1</sub><sup>3</sup> k² = 1 + 4 + 9 = 14.",
+      "So Σ<sub>k=4</sub><sup>20</sup> k² = 2870 − 14 = 2856."
+     ],
+     "answer": "2856"
+    },
+    {
+     "type": "example",
+     "title": "Index shift",
+     "prompt": "Compute Σ<sub>k=3</sub><sup>12</sup> (k − 2)².",
+     "steps": [
+      "Substitute j = k − 2: when k = 3, j = 1; when k = 12, j = 10.",
+      "The sum becomes Σ<sub>j=1</sub><sup>10</sup> j² (still 10 terms).",
+      "= 10·11·21/6 = 385."
+     ],
+     "answer": "385"
+    },
+    {
+     "type": "example",
+     "title": "A geometric sum",
+     "prompt": "Compute Σ<sub>j=0</sub><sup>8</sup> 3·2ʲ.",
+     "steps": [
+      "This is geometric with a = 3, r = 2, n = 8 (9 terms).",
+      "Formula: a(rⁿ⁺¹ − 1)/(r − 1) = 3(2⁹ − 1)/(2 − 1).",
+      "= 3·511 = 1533."
+     ],
+     "answer": "1533"
+    },
+    {
+     "type": "example",
+     "title": "Telescoping sum",
+     "prompt": "Compute Σ<sub>k=1</sub><sup>99</sup> 1/(k(k + 1)).",
+     "steps": [
+      "Partial fractions: 1/(k(k + 1)) = 1/k − 1/(k + 1).",
+      "Write out the sum: (1 − 1/2) + (1/2 − 1/3) + ⋯ + (1/99 − 1/100).",
+      "Every middle term cancels with the next one; only the first and last survive.",
+      "Sum = 1 − 1/100 = 99/100. In general Σ<sub>k=1</sub><sup>n</sup> 1/(k(k + 1)) = 1 − 1/(n + 1)."
+     ],
+     "answer": "99/100"
+    },
+    {
+     "type": "example",
+     "title": "A double sum",
+     "prompt": "Compute Σ<sub>i=1</sub><sup>4</sup> Σ<sub>j=1</sub><sup>3</sup> (2i − j).",
+     "steps": [
+      "Do the inner sum first, with i fixed: Σ<sub>j=1</sub><sup>3</sup> (2i − j) = 3·2i − (1 + 2 + 3) = 6i − 6.",
+      "Now the outer sum: Σ<sub>i=1</sub><sup>4</sup> (6i − 6) = 6·(1 + 2 + 3 + 4) − 4·6.",
+      "= 60 − 24 = 36."
+     ],
+     "answer": "36"
+    },
+    {
+     "type": "example",
+     "title": "Infinite geometric series",
+     "prompt": "Compute (a) Σ<sub>k=0</sub><sup>∞</sup> (1/3)ᵏ and (b) Σ<sub>k=2</sub><sup>∞</sup> (1/2)ᵏ.",
+     "steps": [
+      "(a) |1/3| &lt; 1, so the sum is 1/(1 − 1/3) = 3/2.",
+      "(b) Factor out the first term: Σ<sub>k=2</sub><sup>∞</sup> (1/2)ᵏ = (1/2)² Σ<sub>j=0</sub><sup>∞</sup> (1/2)ʲ (shift j = k − 2).",
+      "= (1/4)·1/(1 − 1/2) = (1/4)·2 = 1/2."
+     ],
+     "answer": "(a) 3/2 (b) 1/2"
+    }
+   ]
+  },
+  {
    "title": "The principle of induction and sum formulas",
    "blocks": [
     {
@@ -637,6 +778,54 @@
    ]
   },
   {
+   "front": "Geometric series: finite sum formula and its proof idea?",
+   "back": [
+    {
+     "type": "formula",
+     "text": "Σ<sub>k=0</sub><sup>n</sup> a·rᵏ = a(rⁿ⁺¹ − 1)/(r − 1), r ≠ 1"
+    },
+    {
+     "type": "p",
+     "text": "Let S be the sum; rS − S telescopes to arⁿ⁺¹ − a. For |x| &lt; 1, Σ<sub>k≥0</sub> xᵏ = 1/(1 − x)."
+    }
+   ]
+  },
+  {
+   "front": "Closed forms for Σk, Σk², Σk³?",
+   "back": [
+    {
+     "type": "formula",
+     "text": "Σk = n(n + 1)/2"
+    },
+    {
+     "type": "formula",
+     "text": "Σk² = n(n + 1)(2n + 1)/6"
+    },
+    {
+     "type": "formula",
+     "text": "Σk³ = (n(n + 1)/2)²"
+    }
+   ]
+  },
+  {
+   "front": "How do you shift the index of a sum, and how do you handle a lower limit other than 1?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Substitute j = k − s and move both limits by s; the number of terms n − m + 1 stays the same. For Σ<sub>k=m</sub><sup>n</sup>, compute Σ<sub>k=1</sub><sup>n</sup> − Σ<sub>k=1</sub><sup>m−1</sup>, e.g. Σ<sub>k=4</sub><sup>20</sup> k² = 2870 − 14 = 2856."
+    }
+   ]
+  },
+  {
+   "front": "What is a telescoping sum?",
+   "back": [
+    {
+     "type": "p",
+     "text": "A sum of differences Σ (bₖ − bₖ₊₁) in which consecutive terms cancel, leaving b₁ − bₙ₊₁. Example: Σ<sub>k=1</sub><sup>n</sup> 1/(k(k + 1)) = 1 − 1/(n + 1)."
+    }
+   ]
+  },
+  {
    "front": "State the principle of mathematical induction.",
    "back": [
     {
@@ -1038,5 +1227,108 @@
   "Stuck? Strengthen the claim (Σ 1/i² ≤ 2 − 1/n)",
   "Bogus proofs usually fail at the base case or at the smallest k of the step",
   "1 + ⋯ + n = n(n + 1)/2; 1² + ⋯ + n² = n(n + 1)(2n + 1)/6; 1 + 2 + ⋯ + 2ⁿ = 2ⁿ⁺¹ − 1"
+ ],
+ "parsons": [
+  {
+   "title": "Sum of the first n odd numbers",
+   "goal": "Prove by induction that 1 + 3 + 5 + ⋯ + (2n − 1) = n² for every integer n ≥ 1.",
+   "lines": [
+    "Let P(n) be the statement 1 + 3 + ⋯ + (2n − 1) = n².",
+    "Base case: for n = 1 the left side is 1 and the right side is 1² = 1, so P(1) holds.",
+    "Inductive hypothesis: let k ≥ 1 and assume 1 + 3 + ⋯ + (2k − 1) = k².",
+    "Adding the next odd number, 1 + 3 + ⋯ + (2k − 1) + (2k + 1) = k² + (2k + 1) by the inductive hypothesis.",
+    "k² + 2k + 1 = (k + 1)², which is the right side of P(k + 1).",
+    "So P(k) → P(k + 1) for every k ≥ 1, and by induction P(n) holds for all n ≥ 1."
+   ],
+   "distractors": [
+    "Assume 1 + 3 + ⋯ + (2k + 1) = (k + 1)² and simplify both sides until they agree.",
+    "Adding the next odd number, 1 + 3 + ⋯ + (2k − 1) + (2k − 1) = k² + 2k − 1.",
+    "Base case: for n = 2 we get 1 + 3 = 4 = 2², so P(1) and P(2) both hold."
+   ]
+  },
+  {
+   "title": "2ⁿ > n² for n ≥ 5",
+   "goal": "Prove that 2ⁿ > n² for every integer n ≥ 5.",
+   "lines": [
+    "Base case: n = 5 gives 2⁵ = 32 > 25 = 5².",
+    "Inductive hypothesis: let k ≥ 5 and assume 2ᵏ > k².",
+    "Then 2ᵏ⁺¹ = 2 · 2ᵏ > 2k², by the inductive hypothesis.",
+    "It remains to compare 2k² with (k + 1)²: since k ≥ 5, k² − 2k − 1 = (k − 1)² − 2 ≥ 14 > 0, so 2k² = k² + k² > k² + 2k + 1 = (k + 1)².",
+    "So 2ᵏ⁺¹ > (k + 1)², which is P(k + 1); by induction 2ⁿ > n² for all n ≥ 5."
+   ],
+   "distractors": [
+    "Base case: n = 1 gives 2 > 1, so the inequality starts at n = 1.",
+    "Since 2ᵏ > k², doubling both sides gives 2ᵏ⁺¹ > (k + 1)² immediately.",
+    "Assume 2ᵏ⁺¹ > (k + 1)² and divide both sides by 2 to get the inductive hypothesis."
+   ]
+  },
+  {
+   "title": "3 divides n³ + 2n",
+   "goal": "Prove by induction that 3 | n³ + 2n for every integer n ≥ 0.",
+   "lines": [
+    "Base case: n = 0 gives 0³ + 2·0 = 0, and 3 | 0.",
+    "Inductive hypothesis: let k ≥ 0 and assume k³ + 2k = 3m for some integer m.",
+    "Expand: (k + 1)³ + 2(k + 1) = k³ + 3k² + 3k + 1 + 2k + 2.",
+    "Regroup: this equals (k³ + 2k) + 3(k² + k + 1).",
+    "By the inductive hypothesis it equals 3m + 3(k² + k + 1) = 3(m + k² + k + 1).",
+    "So 3 | (k + 1)³ + 2(k + 1), and by induction 3 | n³ + 2n for all n ≥ 0."
+   ],
+   "distractors": [
+    "Regroup: this equals (k³ + 2k) + 3k² + 3k + 1, and every term is a multiple of 3.",
+    "Since 3 | k³ + 2k, we get 3 | k³ and 3 | 2k separately.",
+    "Base case: n = 1 gives 1 + 2 = 3, and 3 | 3, which covers every n ≥ 0."
+   ]
+  },
+  {
+   "title": "Postage with 4¢ and 5¢ stamps (strong induction)",
+   "goal": "Prove that every integer n ≥ 12 can be written as n = 4a + 5b with integers a, b ≥ 0.",
+   "lines": [
+    "Let P(n) say n = 4a + 5b for some integers a, b ≥ 0; we use strong induction on n ≥ 12.",
+    "Base cases: 12 = 4·3, 13 = 4·2 + 5, 14 = 4 + 5·2 and 15 = 5·3.",
+    "Inductive hypothesis: let k ≥ 15 and assume P(j) for every j with 12 ≤ j ≤ k.",
+    "Since k ≥ 15, the number k + 1 − 4 = k − 3 satisfies 12 ≤ k − 3 ≤ k.",
+    "By the inductive hypothesis, k − 3 = 4a + 5b with a, b ≥ 0.",
+    "Then k + 1 = 4(a + 1) + 5b, so P(k + 1) holds; by strong induction P(n) for all n ≥ 12."
+   ],
+   "distractors": [
+    "Base case: 12 = 4·3 is enough, since every later value is reached by adding 4.",
+    "Inductive hypothesis: let k ≥ 12 and assume P(j) for every j with 12 ≤ j ≤ k.",
+    "By the inductive hypothesis applied to k, k = 4a + 5b, so k + 1 = 4a + 5b + 1."
+   ]
+  },
+  {
+   "title": "Every n ≥ 2 is a product of primes",
+   "goal": "Prove by strong induction that every integer n ≥ 2 is a product of one or more primes.",
+   "lines": [
+    "Base case: n = 2 is prime, so it is a product of one prime.",
+    "Inductive hypothesis: let k ≥ 2 and assume every integer j with 2 ≤ j ≤ k is a product of primes.",
+    "Case 1: if k + 1 is prime, it is a product of one prime.",
+    "Case 2: otherwise k + 1 is composite, so k + 1 = ab with 2 ≤ a ≤ b ≤ k.",
+    "By the inductive hypothesis, a and b are each products of primes.",
+    "Multiplying the two products writes k + 1 = ab as a product of primes; by strong induction the claim holds for all n ≥ 2."
+   ],
+   "distractors": [
+    "Inductive hypothesis: let k ≥ 2 and assume only that k is a product of primes.",
+    "Case 2: otherwise k + 1 is composite, so k + 1 = ab with 1 ≤ a ≤ b ≤ k + 1.",
+    "By the inductive hypothesis applied to k, k + 1 = k · 1 is a product of primes."
+   ]
+  },
+  {
+   "title": "Every n ≥ 2 has a prime divisor (well-ordering)",
+   "goal": "Use the well-ordering principle to prove that every integer n ≥ 2 has a prime divisor.",
+   "lines": [
+    "Suppose not; then the set S of integers n ≥ 2 with no prime divisor is nonempty.",
+    "By the well-ordering principle, S has a least element m.",
+    "m is not prime, since a prime would be a prime divisor of itself.",
+    "So m = ab with integers 1 &lt; a &lt; m and 1 &lt; b &lt; m.",
+    "Since 2 ≤ a &lt; m and m is the least element of S, a ∉ S, so a has a prime divisor p.",
+    "Then p | a and a | m give p | m, contradicting m ∈ S; hence S is empty."
+   ],
+   "distractors": [
+    "By the well-ordering principle, S has a largest element m.",
+    "Since a &lt; m, a is prime, so a itself is a prime divisor of m.",
+    "So m = 1 · m, and 1 has no prime divisor, so 1 ∈ S, contradicting minimality."
+   ]
+  }
  ]
 }

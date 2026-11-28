@@ -1,0 +1,1003 @@
+{
+ "id": "B-1",
+ "course": "B",
+ "title": "Java basics, classes, references, recursion, IntLists",
+ "source": "CS 61B Lec 1–4 · Ch 1–4",
+ "summary": "What a Java variable actually holds, what = really does, how static differs from instance, and how a list can be built from small objects pointing at each other. Almost every “what would Java print”, box-and-pointer and linked-list coding question on the final rests on this unit.",
+ "lesson": [
+  {
+   "title": "How a Java program is put together",
+   "blocks": [
+    {
+     "type": "p",
+     "text": "Java is <b>statically typed</b>: every variable and expression has a type that the compiler knows before the program runs. All code lives inside classes. Execution starts at <code>public static void main(String[] args)</code>."
+    },
+    {
+     "type": "def",
+     "term": "Class",
+     "text": "A blueprint. It declares instance variables (one copy per object), static variables (one copy total), constructors and methods."
+    },
+    {
+     "type": "def",
+     "term": "Object (instance)",
+     "text": "A thing built from a class with <code>new</code>. Each object has its own copy of every instance variable."
+    },
+    {
+     "type": "def",
+     "term": "Constructor",
+     "text": "The method with the class’s name and no return type; it runs when <code>new Dog(5)</code> is evaluated."
+    },
+    {
+     "type": "def",
+     "term": "Compile error vs runtime error",
+     "text": "A compile error is found by <code>javac</code> from types alone; nothing runs at all. A runtime error (exception) happens while the program runs, e.g. NullPointerException, ArrayIndexOutOfBoundsException, ClassCastException, StackOverflowError."
+    },
+    {
+     "type": "code",
+     "lang": "java",
+     "text": "public class Dog {\n    public int weight;                 // instance variable\n    public Dog(int w) { weight = w; }  // constructor\n    public void bark() {               // instance method\n        if (weight < 10) System.out.println(\"yip\");\n        else System.out.println(\"woof\");\n    }\n    public static void main(String[] args) {\n        Dog d = new Dog(51);\n        d.bark();                      // woof\n    }\n}"
+    },
+    {
+     "type": "p",
+     "text": "Small facts that decide many print questions:"
+    },
+    {
+     "type": "list",
+     "items": [
+      "Integer division truncates toward zero: <code>7 / 2</code> is 3, <code>-7 / 2</code> is −3. The remainder takes the sign of the left operand: <code>-7 % 3</code> is −1, <code>5 % -3</code> is 2.",
+      "Casting a double to int truncates toward zero: <code>(int) -3.99</code> is −3.",
+      "<code>char</code> is a number: <code>'a' + 1</code> is the int 98, <code>(char) ('a' + 1)</code> is <code>b</code>, <code>'b' - 'a'</code> is 1.",
+      "<code>+</code> is evaluated left to right; once a String is involved, the rest is concatenation: <code>1 + 2 + \"3\" + 4 + 5</code> is <code>\"3345\"</code>, <code>\"x\" + 'a' + 1</code> is <code>\"xa1\"</code>, but <code>'a' + 1 + \"x\"</code> is <code>\"98x\"</code>."
+     ]
+    },
+    {
+     "type": "example",
+     "title": "Arithmetic and concatenation",
+     "prompt": "What does <code>System.out.println(7 / 2 + \" \" + (-7 % 3) + \" \" + ('a' + 1) + \" \" + (1 + 2 + \"3\" + 4 + 5));</code> print?",
+     "steps": [
+      "<code>7 / 2</code>: both ints, truncate 3.5 → 3. This happens before any String appears, so it is real arithmetic.",
+      "<code>-7 % 3</code>: −7 = 3·(−2) + (−1), remainder keeps the sign of −7 → −1.",
+      "<code>'a' + 1</code> inside parentheses: char + int = int, 97 + 1 = 98.",
+      "<code>1 + 2 + \"3\" + 4 + 5</code>: 1 + 2 = 3 (ints), then \"3\" + \"3\" = \"33\", then \"334\", then \"3345\"."
+     ],
+     "answer": "<code>3 -1 98 3345</code> (verified by running)."
+    },
+    {
+     "type": "warn",
+     "text": "Type errors are compile errors even on lines that would never execute. <code>int x = \"hi\";</code> anywhere in the file means the program never runs."
+    }
+   ]
+  },
+  {
+   "title": "Static vs instance",
+   "blocks": [
+    {
+     "type": "p",
+     "text": "Instance members belong to one object; static members belong to the class, so there is exactly one copy shared by everything."
+    },
+    {
+     "type": "table",
+     "head": [
+      "",
+      "Instance",
+      "Static"
+     ],
+     "rows": [
+      [
+       "Variable",
+       "one per object (<code>d.weight</code>)",
+       "one total (<code>Dog.count</code>)"
+      ],
+      [
+       "Method",
+       "needs an object, can use <code>this</code>",
+       "no <code>this</code>; cannot touch instance variables without an object"
+      ],
+      [
+       "Call as",
+       "<code>d.bark()</code>",
+       "<code>Dog.maxDog(a, b)</code> (also legal but misleading: <code>d.maxDog(a, b)</code>)"
+      ]
+     ]
+    },
+    {
+     "type": "thm",
+     "name": "Static access through an instance",
+     "text": "Writing <code>d2.binomen = \"Lupus\"</code> is legal, but it writes the single static variable <code>Dog.binomen</code>. Every object (and the class) then reads <code>\"Lupus\"</code>."
+    },
+    {
+     "type": "thm",
+     "name": "Default values",
+     "text": "Fields (instance and static) start as 0, 0.0, false, <code>'\\u0000'</code>, or null. Local variables have no default: reading one before assigning is a compile error."
+    },
+    {
+     "type": "example",
+     "title": "Static counter and a shared name",
+     "prompt": "<code>Dog</code> has <code>int weight, id; String name; static int count = 0; static String binomen;</code> and the constructor does <code>weight = w; count += 1; id = count;</code>. Run <code>Dog d1 = new Dog(5), d2 = new Dog(30); d1.name = \"Fido\"; Dog.binomen = \"Canis\"; d2.binomen = \"Lupus\";</code> then print <code>d1.binomen, Dog.binomen, d1.name, d2.name, d1.count, d1.id, d2.id</code>.",
+     "steps": [
+      "Constructing d1: count becomes 1, d1.id = 1. Constructing d2: count becomes 2, d2.id = 2.",
+      "<code>Dog.binomen = \"Canis\"</code> then <code>d2.binomen = \"Lupus\"</code>: both write the same single static box, which now holds \"Lupus\".",
+      "<code>d1.binomen</code> and <code>Dog.binomen</code> both read that box: Lupus Lupus.",
+      "d1.name is \"Fido\"; d2.name was never assigned so it is null.",
+      "<code>d1.count</code> is just another spelling of Dog.count = 2. The ids were copied at construction time: 1 and 2."
+     ],
+     "answer": "<code>Lupus Lupus Fido null 2 1 2</code>"
+    },
+    {
+     "type": "warn",
+     "text": "Inside a static method, using an instance variable (<code>weight</code>) or <code>this</code> is a compile error: “non-static variable cannot be referenced from a static context”."
+    }
+   ]
+  },
+  {
+   "title": "Primitives, references and the Golden Rule of Equals",
+   "blocks": [
+    {
+     "type": "p",
+     "text": "A variable is a box of bits. Java has 8 <b>primitive</b> types (byte, short, int, long, float, double, boolean, char): the box holds the value. Everything else (arrays, Strings, all classes) is a <b>reference type</b>: the box holds an address (an arrow) or null."
+    },
+    {
+     "type": "thm",
+     "name": "Golden Rule of Equals (GRoE)",
+     "text": "<code>y = x</code> copies the bits in box x into box y. For a primitive that is an independent copy of the value; for a reference it is a copy of the arrow, so both names now lead to the same object."
+    },
+    {
+     "type": "thm",
+     "name": "Parameter passing is GRoE (pass by value)",
+     "text": "Calling <code>f(x)</code> copies x’s bits into the parameter. A method can mutate the object a reference points to, but it can never make the caller’s variable point somewhere else."
+    },
+    {
+     "type": "code",
+     "lang": "java",
+     "text": "static void bump(int k, int[] arr) {\n    k = k + 1;               // changes the local copy only\n    arr[0] = arr[0] + 1;     // follows the copied arrow\n}\nstatic void reassign(Walrus w) {\n    w = new Walrus(99);      // re-aims the LOCAL arrow\n    w.weight = 100;\n}\nint n = 3; int[] arr = {3};\nbump(n, arr);\nWalrus w = new Walrus(7);\nreassign(w);\nSystem.out.println(n + \" \" + arr[0] + \" \" + w.weight);  // 3 4 7"
+    },
+    {
+     "type": "example",
+     "title": "What would Java print: aliasing vs copying",
+     "prompt": "<code>int x = 5; int y = x; y = 10; Walrus a = new Walrus(1000); Walrus b = a; b.weight = 5;</code> Print x, y, a.weight, b.weight.",
+     "steps": [
+      "<code>y = x</code> copies the value 5; then y is overwritten with 10. x is unaffected: 5 10.",
+      "<code>b = a</code> copies the address: one walrus, two arrows.",
+      "<code>b.weight = 5</code> means “follow b’s arrow and change that object”. a follows the same arrow."
+     ],
+     "answer": "<code>5 10 5 5</code>"
+    },
+    {
+     "type": "example",
+     "title": "Mutation through a parameter, then re-aiming",
+     "prompt": "<code>static int[] fiddle(int[] a, int[] b) { a[0] = b[1]; b = a; b[1] = 42; a = new int[]{9, 9}; return b; }</code> With <code>int[] fa = {1, 2}, fb = {3, 4}; int[] fr = fiddle(fa, fb);</code> print fa, fb, fr and <code>fr == fa</code>.",
+     "steps": [
+      "Inside, a → fa’s array, b → fb’s array (copied arrows).",
+      "<code>a[0] = b[1]</code>: fa’s array becomes {4, 2}.",
+      "<code>b = a</code>: the local b now also points at fa’s array (fb in main is untouched).",
+      "<code>b[1] = 42</code>: fa’s array becomes {4, 42}.",
+      "<code>a = new int[]{9, 9}</code>: re-aims the local a only; nobody returns it, so it becomes garbage.",
+      "Return b, i.e. fa’s array."
+     ],
+     "answer": "fa = [4, 42], fb = [3, 4], fr = [4, 42], <code>fr == fa</code> is true."
+    },
+    {
+     "type": "warn",
+     "text": "“Java passes objects by reference” is the wrong model. Java passes everything by value; for objects the value is an arrow. Assigning to a parameter never affects the caller."
+    },
+    {
+     "type": "warn",
+     "text": "<code>==</code> on references asks “same address?”. Two separate arrays with equal contents are not <code>==</code>. Use <code>Arrays.equals</code> or <code>.equals</code> for contents."
+    }
+   ]
+  },
+  {
+   "title": "Box-and-pointer diagrams and arrays of references",
+   "blocks": [
+    {
+     "type": "steps",
+     "title": "Drawing a box-and-pointer diagram",
+     "items": [
+      "For every variable draw a labeled box. Primitive: write the value inside. Reference: draw an arrow (or a slash for null).",
+      "For every <code>new</code>, draw the object with its own field boxes, and an arrow from wherever the address is stored.",
+      "For every assignment, copy exactly what is in the right-hand box: a number, or an arrow to the <b>same</b> place.",
+      "An object no arrow reaches is garbage: cross it out; it can never be reached again."
+     ]
+    },
+    {
+     "type": "p",
+     "text": "An array is an object: a fixed number of numbered boxes of one type plus a <code>length</code> field (no parentheses). <code>new int[3]</code> gives zeros; <code>new Dog[3]</code> gives three null arrows and builds <b>no</b> dogs. A 2D array is an array of arrows to arrays: rows can have different lengths and can even be the same array."
+    },
+    {
+     "type": "example",
+     "title": "Box-and-pointer: a 2D array with a shared row",
+     "prompt": "<code>int[][] m = new int[3][]; m[0] = new int[]{1}; m[1] = new int[]{2, 3}; m[2] = m[1]; m[2][0] = 9;</code> Draw the diagram and print <code>m[1][0], m[1] == m[2], m.length</code>.",
+     "steps": [
+      "<code>new int[3][]</code>: one outer array with three slots, all null (rows not built yet).",
+      "m[0] → a new array [1]; m[1] → a new array [2, 3].",
+      "<code>m[2] = m[1]</code> copies the arrow: slots 1 and 2 point at the same row.",
+      "<code>m[2][0] = 9</code> follows that arrow: the shared row becomes [9, 3].",
+      "Diagram: m → [ • | • | • ]; slot 0 → [1]; slots 1 and 2 → the same [9 | 3]."
+     ],
+     "answer": "<code>9 true 3</code>"
+    },
+    {
+     "type": "code",
+     "lang": "text",
+     "text": "m ──► [ • | • | • ]\n        │   │   └─────┐\n        ▼   ▼         │\n       [1] [ 9 | 3 ] ◄┘"
+    },
+    {
+     "type": "example",
+     "title": "Arrays of references and clone",
+     "prompt": "<code>Dog[] dogs = new Dog[3]; dogs[0] = new Dog(10); dogs[1] = dogs[0]; dogs[2] = new Dog(20); dogs[1].weight = 99; Dog[] copy = dogs.clone(); copy[2] = dogs[1]; copy[0].weight++;</code> Print <code>dogs[0].weight, dogs[2].weight, copy[2].weight, copy == dogs, copy[0] == dogs[0]</code>.",
+     "steps": [
+      "dogs: slot 0 → Dog A(10), slot 1 → the same Dog A, slot 2 → Dog B(20).",
+      "<code>dogs[1].weight = 99</code> changes Dog A: A.weight = 99.",
+      "<code>clone()</code> makes a new array whose slots are copies of the arrows (a shallow copy): copy → [A, A, B].",
+      "<code>copy[2] = dogs[1]</code> re-aims only copy’s slot 2 to A; dogs[2] still → B.",
+      "<code>copy[0].weight++</code> follows to A: 100.",
+      "copy and dogs are different arrays (false) whose slot 0 holds the same arrow (true)."
+     ],
+     "answer": "<code>100 20 100 false true</code>"
+    },
+    {
+     "type": "warn",
+     "text": "<code>String[] s = new String[2]; s[0].length()</code> compiles but throws NullPointerException: the slot holds null, there is no object to follow."
+    }
+   ]
+  },
+  {
+   "title": "Recursion",
+   "blocks": [
+    {
+     "type": "p",
+     "text": "A recursive method solves a problem by trusting itself on a smaller instance. It needs a <b>base case</b> answered directly and a <b>recursive case</b> that makes progress toward it."
+    },
+    {
+     "type": "thm",
+     "name": "Leap of faith",
+     "text": "Assume the recursive call returns the correct answer for the smaller input; check only that (1) the base case is right, (2) you build the full answer correctly from the smaller answer, (3) every call moves toward a base case. Correctness then follows by induction."
+    },
+    {
+     "type": "p",
+     "text": "Each call gets its own stack frame with its own parameters and locals. Missing or skippable base cases cause StackOverflowError."
+    },
+    {
+     "type": "example",
+     "title": "Trace a recursion tree",
+     "prompt": "<code>static int f(int n) { if (n &lt;= 1) return 1; return f(n - 1) + f(n - 2); }</code> What are f(4) and f(5)?",
+     "steps": [
+      "f(0) = f(1) = 1 (base cases).",
+      "f(2) = f(1) + f(0) = 2.",
+      "f(3) = f(2) + f(1) = 3.",
+      "f(4) = f(3) + f(2) = 5.",
+      "f(5) = f(4) + f(3) = 8. Note f(2) is recomputed many times: this recursion makes exponentially many calls."
+     ],
+     "answer": "f(4) = 5, f(5) = 8"
+    },
+    {
+     "type": "example",
+     "title": "Recursing over an array with a helper index",
+     "prompt": "Write <code>static int sum(int[] a, int i)</code> returning a[i] + … + a[a.length − 1]; evaluate <code>sum(new int[]{4, 1, 5}, 0)</code>.",
+     "steps": [
+      "Base case: if <code>i >= a.length</code> the suffix is empty, return 0.",
+      "Recursive case: <code>return a[i] + sum(a, i + 1);</code>",
+      "sum(·,0) = 4 + sum(·,1) = 4 + (1 + sum(·,2)) = 4 + 1 + (5 + sum(·,3)) = 4 + 1 + 5 + 0."
+     ],
+     "answer": "10"
+    },
+    {
+     "type": "warn",
+     "text": "A base case the input can skip over is as bad as none: <code>if (n == 0) return 0; return n + g(n - 2);</code> recurses forever on odd n. Use <code>n &lt;= 0</code>. With that fix, g(7) = 7 + 5 + 3 + 1 + 0 = 16 using 5 calls."
+    }
+   ]
+  },
+  {
+   "title": "IntLists: lists made of arrows",
+   "blocks": [
+    {
+     "type": "code",
+     "lang": "java",
+     "text": "public class IntList {\n    public int first;\n    public IntList rest;\n    public IntList(int f, IntList r) { first = f; rest = r; }\n\n    public int size() {                 // recursive\n        if (rest == null) return 1;\n        return 1 + rest.size();\n    }\n    public int iterativeSize() {        // walk a pointer\n        IntList p = this; int total = 0;\n        while (p != null) { total += 1; p = p.rest; }\n        return total;\n    }\n    public int get(int i) {             // Θ(i)\n        if (i == 0) return first;\n        return rest.get(i - 1);\n    }\n}"
+    },
+    {
+     "type": "p",
+     "text": "<code>L = new IntList(5, null); L = new IntList(10, L); L = new IntList(15, L);</code> builds 15 → 10 → 5: each new node goes in front, its rest pointing at the old list."
+    },
+    {
+     "type": "def",
+     "term": "Non-destructive",
+     "text": "Builds new nodes and leaves the input unchanged (calls <code>new</code> once per output node)."
+    },
+    {
+     "type": "def",
+     "term": "Destructive",
+     "text": "Changes the existing nodes (their <code>first</code> or <code>rest</code>) and calls <code>new</code> zero times."
+    },
+    {
+     "type": "code",
+     "lang": "java",
+     "text": "static IntList incrList(IntList L, int x) {      // non-destructive\n    if (L == null) return null;\n    return new IntList(L.first + x, incrList(L.rest, x));\n}\nstatic IntList dincrList(IntList L, int x) {     // destructive\n    if (L == null) return null;\n    L.first += x;\n    dincrList(L.rest, x);\n    return L;\n}"
+    },
+    {
+     "type": "example",
+     "title": "Destructive vs non-destructive",
+     "prompt": "L = [15 10 5]. Run <code>IntList M = incrList(L, 2);</code> then <code>IntList N = dincrList(L, 1);</code>. What are L, M, N and is <code>N == L</code>?",
+     "steps": [
+      "incrList makes 3 new nodes holding 17, 12, 7; L is untouched. After line 1: L = [15 10 5], M = [17 12 7].",
+      "dincrList walks L’s own nodes adding 1 to each and returns the same arrow it was given.",
+      "So L = [16 11 6], N points to L’s first node; M is a separate chain and stays [17 12 7]."
+     ],
+     "answer": "L = N = [16 11 6], M = [17 12 7], N == L is true"
+    },
+    {
+     "type": "example",
+     "title": "Aliasing puzzle (draw it)",
+     "prompt": "<code>IntList A = new IntList(1, new IntList(2, new IntList(3, null))); IntList B = A.rest; B.first = 20; A.rest.rest = A;</code> Print <code>A.first, A.rest.first, A.rest.rest.first, B.rest.first</code>.",
+     "steps": [
+      "B → the second node. <code>B.first = 20</code>: A is 1 → 20 → 3.",
+      "<code>A.rest.rest = A</code>: the second node’s rest now points back to the first node. The 3 node is garbage; the list is the cycle 1 → 20 → 1 → 20 …",
+      "A.first = 1; A.rest.first = 20; A.rest.rest is the first node: 1; B.rest is also the first node: 1."
+     ],
+     "answer": "<code>1 20 1 1</code>"
+    },
+    {
+     "type": "tip",
+     "text": "get(i) on an IntList is Θ(i) because the only way to reach node i is to follow i arrows; an array computes the address start + i·size directly, so array access is Θ(1)."
+    }
+   ]
+  },
+  {
+   "title": "Writing recursive (and destructive) IntList methods",
+   "blocks": [
+    {
+     "type": "steps",
+     "title": "Recipe for list recursion",
+     "items": [
+      "Base case: <code>L == null</code> (empty list), sometimes also <code>L.rest == null</code>.",
+      "Trust the call on <code>L.rest</code>: it returns the correct answer for the rest of the list.",
+      "Non-destructive: return <code>new IntList(something, recursiveResult)</code>.",
+      "Destructive: set <code>L.rest = recursiveResult</code> and return L (or return the recursive result to drop L).",
+      "Always return the (possibly new) head, and remind callers to write <code>L = method(L)</code>."
+     ]
+    },
+    {
+     "type": "example",
+     "title": "Destructively remove every occurrence of x",
+     "prompt": "Write <code>static IntList dremoveAll(IntList L, int x)</code> without <code>new</code>. Trace it on L = [3 1 3 3 2 3], x = 3; also say what the variable L prints afterward.",
+     "steps": [
+      "Code: <code>if (L == null) return null; if (L.first == x) return dremoveAll(L.rest, x); L.rest = dremoveAll(L.rest, x); return L;</code>",
+      "Node 3 (head) matches: skip it, return the answer for [1 3 3 2 3].",
+      "Node 1 does not match: its rest becomes dremoveAll([3 3 2 3]) which skips both 3s and returns the 2 node whose rest becomes dremoveAll([3]) = null.",
+      "Result: 1 → 2. The returned head is the 1 node.",
+      "The caller’s variable L still points at the old head node 3, whose rest still points at the 1 node, so L prints [3 1 2]."
+     ],
+     "answer": "returns [1 2]; L (not reassigned) prints [3 1 2] — always write <code>L = dremoveAll(L, 3);</code>"
+    },
+    {
+     "type": "example",
+     "title": "Iterative in-place reverse",
+     "prompt": "<code>static IntList reverse(IntList p) { IntList prev = null; while (p != null) { IntList next = p.rest; p.rest = prev; prev = p; p = next; } return prev; }</code> Trace on R = [1 2 3]; what do <code>reverse(R)</code> and then R print?",
+     "steps": [
+      "Start: prev = null, p = 1.",
+      "Iteration 1: next = 2, 1.rest = null, prev = 1, p = 2.",
+      "Iteration 2: next = 3, 2.rest = 1, prev = 2, p = 3.",
+      "Iteration 3: next = null, 3.rest = 2, prev = 3, p = null. Return 3.",
+      "R still points at node 1, which is now the last node (rest = null)."
+     ],
+     "answer": "reverse(R) is [3 2 1]; R then prints [1]"
+    },
+    {
+     "type": "example",
+     "title": "Recursive reverse",
+     "prompt": "Write a recursive destructive reverse and trace the key step on [1 2 3 4].",
+     "steps": [
+      "<code>if (L == null || L.rest == null) return L; IntList r = reverse(L.rest); L.rest.rest = L; L.rest = null; return r;</code>",
+      "Trust: reverse([2 3 4]) returns 4 → 3 → 2 and node 2 is now its last node; L.rest still points at node 2.",
+      "<code>L.rest.rest = L</code> hangs node 1 after node 2; <code>L.rest = null</code> ends the list."
+     ],
+     "answer": "[4 3 2 1]"
+    },
+    {
+     "type": "example",
+     "title": "Swap adjacent pairs, recursively and destructively",
+     "prompt": "Write <code>swapPairs</code> so that [1 2 3 4 5] becomes [2 1 4 3 5] with no <code>new</code>.",
+     "steps": [
+      "Base: if <code>L == null || L.rest == null</code> return L.",
+      "<code>IntList second = L.rest;</code> — the node that will become the head.",
+      "<code>L.rest = swapPairs(second.rest);</code> — node 1 now leads to the swapped rest [4 3 5].",
+      "<code>second.rest = L; return second;</code>"
+     ],
+     "answer": "[2 1 4 3 5]"
+    },
+    {
+     "type": "warn",
+     "text": "In destructive code, save <code>p.rest</code> before overwriting it, or the rest of the list is lost forever."
+    }
+   ]
+  }
+ ],
+ "cards": [
+  {
+   "front": "What does <code>y = x</code> do in Java?",
+   "back": [
+    {
+     "type": "p",
+     "text": "It copies the bits in box x into box y (the Golden Rule of Equals). Primitive: independent copy of the value. Reference: copy of the arrow, so both names reach the same object."
+    }
+   ]
+  },
+  {
+   "front": "What are the 8 primitive types?",
+   "back": [
+    {
+     "type": "p",
+     "text": "byte, short, int, long, float, double, boolean, char. Everything else is a reference type."
+    }
+   ]
+  },
+  {
+   "front": "Is Java pass by value or by reference?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Always by value. For objects the value copied is an arrow, so a method can mutate the caller’s object but can never re-aim the caller’s variable."
+    }
+   ]
+  },
+  {
+   "front": "What does <code>d2.binomen = \"Lupus\"</code> do if binomen is static?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Writes the one static variable Dog.binomen. Every Dog (and the class) now sees \"Lupus\"."
+    }
+   ]
+  },
+  {
+   "front": "Why can’t a static method use an instance variable?",
+   "back": [
+    {
+     "type": "p",
+     "text": "There is no <code>this</code>: a static method is not called on any object. Compile error."
+    }
+   ]
+  },
+  {
+   "front": "Default value of an unassigned field vs local variable?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Fields: 0 / 0.0 / false / null. Locals have none; using one before assignment is a compile error."
+    }
+   ]
+  },
+  {
+   "front": "<code>7 / 2</code>, <code>-7 / 2</code>, <code>-7 % 3</code>, <code>(int) -3.99</code>?",
+   "back": [
+    {
+     "type": "p",
+     "text": "3, −3, −1, −3. Integer division and casts truncate toward zero; % takes the sign of the left operand."
+    }
+   ]
+  },
+  {
+   "front": "<code>1 + 2 + \"3\" + 4 + 5</code> and <code>'a' + 1 + \"x\"</code>?",
+   "back": [
+    {
+     "type": "p",
+     "text": "\"3345\" and \"98x\". + is left to right; ints/chars add until a String appears."
+    }
+   ]
+  },
+  {
+   "front": "What does <code>==</code> compare for objects/arrays?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Addresses (same object?), never contents."
+    }
+   ]
+  },
+  {
+   "front": "What is in <code>new Dog[3]</code>?",
+   "back": [
+    {
+     "type": "p",
+     "text": "An array object with three null arrows. No Dog is constructed."
+    }
+   ]
+  },
+  {
+   "front": "What does <code>arr.clone()</code> copy for an array of objects?",
+   "back": [
+    {
+     "type": "p",
+     "text": "A shallow copy: a new array whose slots hold the same arrows. Mutating <code>copy[i].field</code> is visible through the original."
+    }
+   ]
+  },
+  {
+   "front": "What is a 2D array in Java?",
+   "back": [
+    {
+     "type": "p",
+     "text": "An array of arrows to row arrays. Rows may have different lengths, may be null, and may be shared (<code>m[2] = m[1]</code>)."
+    }
+   ]
+  },
+  {
+   "front": "Three parts of a correct recursion?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Base case answered directly; recursive case on a smaller input; every path reaches a base case."
+    }
+   ]
+  },
+  {
+   "front": "What causes StackOverflowError?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Recursion too deep — usually a missing base case or one the input can skip (e.g. n == 0 with n decreasing by 2)."
+    }
+   ]
+  },
+  {
+   "front": "IntList: what is the empty list?",
+   "back": [
+    {
+     "type": "p",
+     "text": "<code>null</code>. A non-empty list is a node with <code>first</code> and <code>rest</code> (another IntList or null)."
+    }
+   ]
+  },
+  {
+   "front": "Runtime of IntList get(i) vs array a[i]?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Θ(i) (follow i arrows) vs Θ(1) (address arithmetic)."
+    }
+   ]
+  },
+  {
+   "front": "Destructive vs non-destructive list method?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Destructive edits existing nodes and uses no <code>new</code>; non-destructive builds new nodes and leaves the input untouched."
+    }
+   ]
+  },
+  {
+   "front": "Template for a non-destructive recursive list method?",
+   "back": [
+    {
+     "type": "p",
+     "text": "<code>if (L == null) return null; return new IntList(f(L.first), method(L.rest));</code>"
+    }
+   ]
+  },
+  {
+   "front": "Template for destructively deleting nodes recursively?",
+   "back": [
+    {
+     "type": "p",
+     "text": "<code>if (L == null) return null; if (bad(L)) return method(L.rest); L.rest = method(L.rest); return L;</code>"
+    }
+   ]
+  },
+  {
+   "front": "After <code>dremoveAll(L, x)</code> removes the head, what does L show?",
+   "back": [
+    {
+     "type": "p",
+     "text": "The old head node, still pointing into the list. Always write <code>L = dremoveAll(L, x);</code>."
+    }
+   ]
+  },
+  {
+   "front": "Three pointers for in-place reverse?",
+   "back": [
+    {
+     "type": "p",
+     "text": "prev, p, next: save next = p.rest, set p.rest = prev, advance prev = p, p = next."
+    }
+   ]
+  },
+  {
+   "front": "After <code>R2 = reverse(R)</code> on [1 2 3], what is R?",
+   "back": [
+    {
+     "type": "p",
+     "text": "[1]: R still points at the old head, which is now the tail."
+    }
+   ]
+  },
+  {
+   "front": "Non-destructive catenate(A, B): which nodes are shared?",
+   "back": [
+    {
+     "type": "p",
+     "text": "A’s nodes are copied; B’s nodes are shared by the result (the copy’s last node points at B). Changing the result’s B-part changes B."
+    },
+    {
+     "type": "code",
+     "lang": "java",
+     "text": "static IntList catenate(IntList A, IntList B) {\n    if (A == null) return B;\n    return new IntList(A.first, catenate(A.rest, B));\n}"
+    }
+   ]
+  },
+  {
+   "front": "Inside a method, <code>L = L.rest; L.first = 100;</code> — does the caller see it?",
+   "back": [
+    {
+     "type": "p",
+     "text": "The reassignment no; the mutation yes. L = L.rest only re-aims the local copy, but L.first = 100 changes a real node in the caller’s list."
+    }
+   ]
+  },
+  {
+   "front": "What does <code>'b' - 'a'</code> evaluate to?",
+   "back": [
+    {
+     "type": "p",
+     "text": "The int 1 (chars are numbers)."
+    }
+   ]
+  }
+ ],
+ "hard": [
+  {
+   "title": "Destructive removal, iteratively",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "Write <code>static IntList removeAll(IntList L, int x)</code> that destructively removes every node whose first is x and returns the new head. Constraints: no recursion, no <code>new</code>, Θ(n) time. It must work when the list is empty, when all nodes match, and when matches are adjacent. What does it return for [3 3 1 3 2 3 3] and for [3 3] with x = 3?"
+    }
+   ],
+   "answer": "[1 2] and null (empty list)",
+   "solution": [
+    {
+     "type": "code",
+     "lang": "java",
+     "text": "static IntList removeAll(IntList L, int x) {\n    while (L != null && L.first == x) L = L.rest;  // skip matching head(s)\n    if (L == null) return null;\n    IntList p = L;                                // p.first != x always\n    while (p.rest != null) {\n        if (p.rest.first == x) p.rest = p.rest.rest;  // unlink, do NOT advance\n        else p = p.rest;\n    }\n    return L;\n}"
+    },
+    {
+     "type": "p",
+     "text": "Invariant: p always holds a value ≠ x, so we only ever look one ahead and splice. The key detail is not advancing p after a splice, so that adjacent matches (3 3) are both removed."
+    },
+    {
+     "type": "p",
+     "text": "On [3 3 1 3 2 3 3]: the head loop skips two 3s, L = 1. p = 1: next is 3 → splice (1 → 2); next is 2 → advance p = 2; next 3 → splice; next 3 → splice; p.rest = null, stop. Returns [1 2]. On [3 3] the first loop empties the list and returns null. Both verified by running."
+    }
+   ]
+  },
+  {
+   "title": "2048-style squash",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "Write a destructive <code>static IntList squash(IntList L)</code>: scanning left to right, whenever two adjacent nodes have equal values, replace them by one node holding the sum; a node produced by merging is never merged again. No <code>new</code>. Give the output for [2 2 2 4 4 8 8 8], [2 2 4] and [1 1 1 1]."
+    }
+   ],
+   "answer": "[4 2 8 16 8], [4 4], [2 2]",
+   "solution": [
+    {
+     "type": "code",
+     "lang": "java",
+     "text": "static IntList squash(IntList L) {\n    if (L == null || L.rest == null) return L;\n    if (L.first == L.rest.first) {\n        L.first *= 2;                  // keep L, drop its neighbour\n        L.rest = squash(L.rest.rest);  // merged node is not revisited\n        return L;\n    }\n    L.rest = squash(L.rest);\n    return L;\n}"
+    },
+    {
+     "type": "p",
+     "text": "Recursing on <code>L.rest.rest</code> after a merge is what guarantees the merged node is final: [2 2 4] gives 4 then [4] → [4 4], not [8]."
+    },
+    {
+     "type": "p",
+     "text": "[2 2 2 4 4 8 8 8]: 2+2 → 4; then [2 4 4 8 8 8]: 2 stays; [4 4 …] → 8; [8 8 8] → 16 then 8. Result [4 2 8 16 8]. [1 1 1 1] → [2 2]. All verified by running."
+    }
+   ]
+  },
+  {
+   "title": "Split into alternating positions",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "Write <code>static IntList[] split(IntList L)</code> that destructively rearranges L’s nodes into two lists — positions 0, 2, 4, … and positions 1, 3, 5, … — and returns them as a length-2 array. Use recursion, no <code>new IntList</code>. Output for [1 2 3 4 5]?"
+    }
+   ],
+   "answer": "[1 3 5] and [2 4]",
+   "solution": [
+    {
+     "type": "code",
+     "lang": "java",
+     "text": "static IntList[] split(IntList L) {\n    if (L == null) return new IntList[]{null, null};\n    IntList[] r = split(L.rest);   // r[0] = even positions of rest\n    L.rest = r[1];                  // = odd positions of L after L itself\n    return new IntList[]{L, r[0]};\n}"
+    },
+    {
+     "type": "p",
+     "text": "Key idea: relative to L.rest, every position shifts by one. So the even positions of L are L followed by the odd positions of the rest, and the odd positions of L are the even positions of the rest."
+    },
+    {
+     "type": "p",
+     "text": "split([5]) = {[5], []}; split([4 5]) = {[4], [5]}; split([3 4 5]) = {[3 5], [4]}; split([2 3 4 5]) = {[2 4], [3 5]}; split([1 …]) = {[1 3 5], [2 4]}. Verified."
+    }
+   ]
+  },
+  {
+   "title": "Swap pairs and a dangling variable",
+   "level": "hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "With the recursive <code>swapPairs</code> (base case: fewer than 2 nodes; <code>second = L.rest; L.rest = swapPairs(second.rest); second.rest = L; return second;</code>), run <code>IntList SP = [1 2 3 4 5]; IntList SP2 = swapPairs(SP);</code>. What do SP2 and SP print?"
+    }
+   ],
+   "answer": "SP2 = [2 1 4 3 5]; SP = [1 4 3 5]",
+   "solution": [
+    {
+     "type": "p",
+     "text": "SP2 is the swapped list 2 → 1 → 4 → 3 → 5."
+    },
+    {
+     "type": "p",
+     "text": "SP was never reassigned, so it still points at the node holding 1. In the new list that node sits second, and following it gives 1 → 4 → 3 → 5."
+    },
+    {
+     "type": "p",
+     "text": "Lesson: a destructive method that changes the head forces the caller to reassign. Verified by running."
+    }
+   ]
+  },
+  {
+   "title": "Rotate right by k in place",
+   "level": "hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "Write <code>static IntList rotateRight(IntList L, int k)</code> (k ≥ 0, possibly larger than the length) that moves the last k nodes to the front, destructively, in Θ(n), no <code>new</code>. Outputs for ([1 2 3 4 5], 2), ([1 2 3], 3), ([1 2 3], 4)?"
+    }
+   ],
+   "answer": "[4 5 1 2 3], [1 2 3], [3 1 2]",
+   "solution": [
+    {
+     "type": "code",
+     "lang": "java",
+     "text": "static IntList rotateRight(IntList L, int k) {\n    if (L == null) return null;\n    int n = 1; IntList last = L;\n    while (last.rest != null) { last = last.rest; n++; }\n    k %= n;\n    if (k == 0) return L;\n    IntList p = L;\n    for (int i = 0; i < n - k - 1; i++) p = p.rest;  // new tail\n    IntList newHead = p.rest;\n    p.rest = null;\n    last.rest = L;\n    return newHead;\n}"
+    },
+    {
+     "type": "p",
+     "text": "One pass finds n and the last node; reduce k mod n; the new tail is node n − k − 1. Cut after it and hang the old list after the old last node. k = 3 on length 3 reduces to 0 (no change); k = 4 reduces to 1. Verified by running."
+    }
+   ]
+  },
+  {
+   "title": "What would Java print: mutation vs re-aiming in a method",
+   "level": "hard",
+   "prompt": [
+    {
+     "type": "code",
+     "lang": "java",
+     "text": "static void mystery(IntList L) {\n    L = L.rest;\n    L.first = 100;\n    L = new IntList(7, L);\n    L.rest.rest = null;\n}\nIntList ML = [1 2 3 4];   // built with new IntList(...)\nmystery(ML);\nSystem.out.println(ML);"
+    }
+   ],
+   "answer": "[1 100]",
+   "solution": [
+    {
+     "type": "p",
+     "text": "Local L starts at node 1 (copy of the arrow). <code>L = L.rest</code>: local L → node 2 (caller unaffected)."
+    },
+    {
+     "type": "p",
+     "text": "<code>L.first = 100</code>: mutates node 2, which is in the caller’s list: 1 → 100 → 3 → 4."
+    },
+    {
+     "type": "p",
+     "text": "<code>L = new IntList(7, L)</code>: a new node 7 whose rest is node 2; local L → 7. Caller unaffected."
+    },
+    {
+     "type": "p",
+     "text": "<code>L.rest.rest = null</code>: L.rest is node 2; its rest becomes null — a real mutation. Caller’s list is now 1 → 100."
+    },
+    {
+     "type": "p",
+     "text": "Output [1 100] (verified)."
+    }
+   ]
+  },
+  {
+   "title": "Static arrays shared by instances",
+   "level": "hard",
+   "prompt": [
+    {
+     "type": "code",
+     "lang": "java",
+     "text": "class Pt {\n    static int[] shared = new int[2];\n    int[] mine = new int[2];\n    int x;\n    static int y;\n}\nPt p1 = new Pt(), p2 = new Pt();\np1.shared[0] = 5;\np2.mine = p1.mine;\np2.mine[1] = 7;\np1.x = 3;\np2.y = 4;\nPt.shared = new int[]{8, 8};\np1.y++;\nSystem.out.println(p2.shared[0] + \" \" + p1.mine[1] + \" \"\n    + p2.x + \" \" + p1.y + \" \" + Pt.y);"
+    }
+   ],
+   "answer": "8 7 0 5 5",
+   "solution": [
+    {
+     "type": "p",
+     "text": "p1.shared[0] = 5 writes the single static array; later <code>Pt.shared = new int[]{8, 8}</code> re-aims the single static variable, so every instance now reads 8."
+    },
+    {
+     "type": "p",
+     "text": "p2.mine = p1.mine aliases p1’s instance array; p2.mine[1] = 7 is visible as p1.mine[1] = 7."
+    },
+    {
+     "type": "p",
+     "text": "p1.x = 3 sets only p1’s field; p2.x is still 0."
+    },
+    {
+     "type": "p",
+     "text": "p2.y = 4 sets static y; p1.y++ makes it 5; Pt.y is the same box. Output 8 7 0 5 5 (verified)."
+    }
+   ]
+  },
+  {
+   "title": "Non-destructive catenate shares structure",
+   "level": "hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "With the non-destructive <code>catenate(A, B)</code> (copies A’s nodes, returns B when A is null) and the destructive <code>dcatenate(A, B)</code> (sets the last rest of A to B), run: <code>X = [1 2]; Y = [3 4]; Z = catenate(X, Y); Z.rest.rest.first = 30; X2 = [1 2]; Z2 = dcatenate(X2, Y);</code>. Give X, Y, Z, whether <code>Z.rest.rest == Y</code>, then X2 and whether <code>Z2 == X2</code>."
+    }
+   ],
+   "answer": "X=[1 2], Y=[30 4], Z=[1 2 30 4], true; X2=[1 2 30 4], true",
+   "solution": [
+    {
+     "type": "p",
+     "text": "catenate copies 1 and 2 but its base case returns B itself, so the copy of 2 points at Y’s first node. Z.rest.rest is Y’s head, so setting its first to 30 changes Y to [30 4]. X is untouched."
+    },
+    {
+     "type": "p",
+     "text": "dcatenate walks X2’s own nodes and sets the 2-node’s rest to Y: X2 becomes [1 2 30 4] and the function returns X2 itself."
+    },
+    {
+     "type": "p",
+     "text": "All four lines verified by running. “Non-destructive” only promises not to change A; it may still share B."
+    }
+   ]
+  },
+  {
+   "title": "Write a non-destructive reverse in Θ(n)",
+   "level": "hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "Write <code>static IntList reverseND(IntList L)</code> that returns a reversed copy without changing L, in Θ(n) time. Why is the obvious “reverse the rest then catenate the first at the end” version slower?"
+    }
+   ],
+   "answer": "Prepend each item to an accumulator; the catenate version is Θ(n²)",
+   "solution": [
+    {
+     "type": "code",
+     "lang": "java",
+     "text": "static IntList reverseND(IntList L) {\n    IntList r = null;\n    for (IntList p = L; p != null; p = p.rest)\n        r = new IntList(p.first, r);   // prepend: Θ(1)\n    return r;\n}"
+    },
+    {
+     "type": "p",
+     "text": "Walking L front to back and prepending builds the reversal: [1 2 3] gives 1, then 2 → 1, then 3 → 2 → 1. L is untouched (verified: L = [1 2 3], result [3 2 1])."
+    },
+    {
+     "type": "p",
+     "text": "reverse(rest) + [first] copies a list of length n−1, n−2, …: total Θ(n²)."
+    }
+   ]
+  },
+  {
+   "title": "A skippable base case",
+   "level": "hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "Consider <code>static int g(int n) { calls++; if (n &lt;= 0) return 0; return n + g(n - 2); }</code> with a static counter. What are g(7) and the number of calls? What goes wrong if the base case is written <code>n == 0</code>, and what is the runtime of g in terms of n?"
+    }
+   ],
+   "answer": "g(7) = 16 with 5 calls; n == 0 overflows the stack for odd n; Θ(n)",
+   "solution": [
+    {
+     "type": "p",
+     "text": "g(7) = 7 + g(5) = 7 + 5 + g(3) = 7 + 5 + 3 + g(1) = 7 + 5 + 3 + 1 + g(−1) = 16; calls for 7, 5, 3, 1, −1: 5 (verified)."
+    },
+    {
+     "type": "p",
+     "text": "With n == 0, odd inputs go 1 → −1 → −3 … never reaching 0: StackOverflowError."
+    },
+    {
+     "type": "p",
+     "text": "About n/2 + 1 calls, each Θ(1): Θ(n)."
+    }
+   ]
+  }
+ ],
+ "keyFacts": [
+  "GRoE: <code>y = x</code> copies bits; references copy the arrow, so both names reach one object.",
+  "Java is pass-by-value: a method can mutate the caller’s object but never re-aim the caller’s variable.",
+  "Static = one copy per class (writing through any instance changes it for all); instance = one per object.",
+  "<code>==</code> compares addresses for objects and arrays; use equals / Arrays.equals for contents.",
+  "Integer / and casts truncate toward 0; % takes the sign of the left side; + is left to right (string once a String appears).",
+  "<code>new Dog[3]</code> is three null arrows; clone() of an object array is shallow.",
+  "Destructive = no new, edits nodes; caller must write <code>L = f(L)</code> if the head can change.",
+  "List recursion: base case null; trust f(L.rest); non-destructive returns new IntList(…, f(L.rest)); destructive sets L.rest = f(L.rest).",
+  "IntList get(i) is Θ(i); array access Θ(1)."
+ ],
+ "parsons": [
+  {
+   "title": "Non-destructive square (recursive)",
+   "goal": "Return a new IntList whose items are the squares of L’s items; L must not change.",
+   "lines": [
+    "static IntList square(IntList L) {",
+    "    if (L == null) return null;",
+    "    IntList rest = square(L.rest);",
+    "    return new IntList(L.first * L.first, rest);",
+    "}"
+   ],
+   "distractors": [
+    "    if (L.rest == null) return null;",
+    "    L.first = L.first * L.first;",
+    "    return new IntList(L.first * L.first, L.rest);"
+   ]
+  },
+  {
+   "title": "Destructively remove every x (iterative)",
+   "goal": "Remove all nodes whose first is x, without new and without recursion; return the new head.",
+   "lines": [
+    "static IntList removeAll(IntList L, int x) {",
+    "    while (L != null && L.first == x) L = L.rest;",
+    "    if (L == null) return null;",
+    "    IntList p = L;",
+    "    while (p.rest != null) {",
+    "        if (p.rest.first == x) p.rest = p.rest.rest;",
+    "        else p = p.rest;",
+    "    }",
+    "    return L;",
+    "}"
+   ],
+   "distractors": [
+    "    if (L.first == x) L = L.rest;",
+    "        if (p.rest.first == x) { p.rest = p.rest.rest; p = p.rest; }",
+    "    while (p != null) {"
+   ]
+  },
+  {
+   "title": "In-place reverse (iterative)",
+   "goal": "Destructively reverse the list starting at p and return the new head.",
+   "lines": [
+    "static IntList reverse(IntList p) {",
+    "    IntList prev = null;",
+    "    while (p != null) {",
+    "        IntList next = p.rest;",
+    "        p.rest = prev;",
+    "        prev = p;",
+    "        p = next;",
+    "    }",
+    "    return prev;",
+    "}"
+   ],
+   "distractors": [
+    "    return p;",
+    "        p.rest = next;",
+    "        prev = p.rest;"
+   ]
+  },
+  {
+   "title": "Swap adjacent pairs (recursive, destructive)",
+   "goal": "[1 2 3 4 5] becomes [2 1 4 3 5] using no new nodes; return the new head.",
+   "lines": [
+    "static IntList swapPairs(IntList L) {",
+    "    if (L == null || L.rest == null) return L;",
+    "    IntList second = L.rest;",
+    "    L.rest = swapPairs(second.rest);",
+    "    second.rest = L;",
+    "    return second;",
+    "}"
+   ],
+   "distractors": [
+    "    if (L == null) return L;",
+    "    L.rest = swapPairs(L.rest);",
+    "    return L;"
+   ]
+  }
+ ]
+}

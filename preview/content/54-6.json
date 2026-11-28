@@ -1,0 +1,1083 @@
+{
+ "id": "54-6",
+ "course": "54",
+ "title": "Bases, coordinates, dimension, rank, change of basis",
+ "source": "Lay 4.3–4.6",
+ "summary": "Bases give coordinates, which turn any finite-dimensional space into ℝⁿ. Dimension counting, and above all the Rank Theorem rank A + dim Nul A = n, settles most existence/uniqueness and True/False questions; change-of-basis matrices convert coordinates between bases.",
+ "lesson": [
+  {
+   "title": "Bases and the Spanning Set Theorem",
+   "blocks": [
+    {
+     "type": "def",
+     "term": "Linear independence in V",
+     "text": "Same as in ℝⁿ: c₁<b>v</b>₁ + ⋯ + cₚ<b>v</b>ₚ = <b>0</b> only for all cᵢ = 0. For functions or polynomials, '= 0' means the zero function (equal for every t)."
+    },
+    {
+     "type": "def",
+     "term": "Basis",
+     "text": "A set ℬ in a subspace H that (1) is linearly independent and (2) spans H. It is a spanning set with no redundancy: the smallest spanning set and the largest independent set."
+    },
+    {
+     "type": "thm",
+     "name": "Spanning Set Theorem",
+     "text": "If S = {<b>v</b>₁, …, <b>v</b>ₚ} spans H and some <b>v</b>ₖ is a combination of the others, removing <b>v</b>ₖ still leaves a spanning set. If H ≠ {<b>0</b>}, some subset of S is a basis of H.",
+     "proof": [
+      {
+       "type": "p",
+       "text": "Any combination using <b>v</b>ₖ can be rewritten by substituting <b>v</b>ₖ = (combination of the others). Keep removing redundant vectors until the set is independent."
+      }
+     ]
+    },
+    {
+     "type": "example",
+     "title": "Prune a spanning set to a basis",
+     "prompt": "v₁ = (0, 2, −1), v₂ = (2, 2, 0), v₃ = (6, 16, −5). Find a basis for H = Span{v₁, v₂, v₃}.",
+     "steps": [
+      "Look for a relation: 5v₁ + 3v₂ = (6, 10 + 6, −5) = (6, 16, −5) = v₃.",
+      "So v₃ is redundant and H = Span{v₁, v₂}.",
+      "v₁, v₂ are not multiples of each other ⇒ independent."
+     ],
+     "answer": "{v₁, v₂} is a basis (H is a plane, dim 2)."
+    },
+    {
+     "type": "thm",
+     "name": "Basis Theorem",
+     "text": "If dim H = p, any p linearly independent vectors in H form a basis, and any p vectors that span H form a basis. (One check suffices when the count is right.)"
+    },
+    {
+     "type": "example",
+     "title": "Is it a basis of ℝ³ / ℙ₂?",
+     "prompt": "Is {1 + t, t + t², 1 + t²} a basis of ℙ₂?",
+     "steps": [
+      "Coordinates in {1, t, t²}: (1, 1, 0), (0, 1, 1), (1, 0, 1).",
+      "det [1 0 1; 1 1 0; 0 1 1] = 1(1 − 0) − 0 + 1(1 − 0) = 2 ≠ 0.",
+      "3 independent vectors in the 3-dimensional ℙ₂ ⇒ basis."
+     ],
+     "answer": "Yes, it is a basis."
+    }
+   ]
+  },
+  {
+   "title": "Coordinates and isomorphism",
+   "blocks": [
+    {
+     "type": "thm",
+     "name": "Unique Representation Theorem",
+     "text": "If ℬ = {<b>b</b>₁, …, <b>b</b>ₙ} is a basis of V, every <b>x</b> in V can be written <b>x</b> = c₁<b>b</b>₁ + ⋯ + cₙ<b>b</b>ₙ in exactly one way. The weights form the coordinate vector [<b>x</b>]<sub>ℬ</sub> = (c₁, …, cₙ).",
+     "proof": [
+      {
+       "type": "p",
+       "text": "Existence: ℬ spans. Uniqueness: two representations subtract to a relation with coefficients cᵢ − dᵢ, which must all be 0 by independence."
+      }
+     ]
+    },
+    {
+     "type": "p",
+     "text": "In ℝⁿ with P<sub>ℬ</sub> = [<b>b</b>₁ ⋯ <b>b</b>ₙ] (the change-of-coordinates matrix from ℬ to standard): <b>x</b> = P<sub>ℬ</sub>[<b>x</b>]<sub>ℬ</sub> and [<b>x</b>]<sub>ℬ</sub> = P<sub>ℬ</sub>⁻¹<b>x</b>."
+    },
+    {
+     "type": "example",
+     "title": "Coordinates in ℝ²",
+     "prompt": "ℬ = {(2, 1), (−1, 1)}, x = (4, 5). Find [x]<sub>ℬ</sub>.",
+     "steps": [
+      "Solve c₁(2, 1) + c₂(−1, 1) = (4, 5): 2c₁ − c₂ = 4, c₁ + c₂ = 5.",
+      "Add: 3c₁ = 9 ⇒ c₁ = 3, c₂ = 2.",
+      "Check: 3(2, 1) + 2(−1, 1) = (4, 5). ✓"
+     ],
+     "answer": "[x]<sub>ℬ</sub> = (3, 2)"
+    },
+    {
+     "type": "thm",
+     "name": "Coordinate mapping is an isomorphism",
+     "text": "<b>x</b> ↦ [<b>x</b>]<sub>ℬ</sub> is a one-to-one linear map of V onto ℝⁿ. So any question about spans, independence or bases in V (polynomials, matrices) can be answered by doing the same question on coordinate vectors in ℝⁿ."
+    },
+    {
+     "type": "example",
+     "title": "Polynomial independence via coordinates",
+     "prompt": "Are 1 + 2t², 4 + t + 5t², 3 + 2t independent in ℙ₂?",
+     "steps": [
+      "Coordinate vectors in {1, t, t²}: (1, 0, 2), (4, 1, 5), (3, 2, 0).",
+      "Row reduce [1 4 3; 0 1 2; 2 5 0] → RREF [1 0 −5; 0 1 2; 0 0 0]: only 2 pivots.",
+      "Null vector (5, −2, 1): 5(1 + 2t²) − 2(4 + t + 5t²) + (3 + 2t) = 0. ✓"
+     ],
+     "answer": "Dependent: 5(1 + 2t²) − 2(4 + t + 5t²) + (3 + 2t) = 0."
+    },
+    {
+     "type": "example",
+     "title": "Coordinates in ℙ₂",
+     "prompt": "ℬ = {1, 1 + t, 1 + t + t²}. Find [3 − 2t + 5t²]<sub>ℬ</sub>.",
+     "steps": [
+      "a + b(1 + t) + c(1 + t + t²) = (a + b + c) + (b + c)t + ct².",
+      "Match t²: c = 5. Match t: b + c = −2 ⇒ b = −7. Match 1: a + b + c = 3 ⇒ a = 5."
+     ],
+     "answer": "(5, −7, 5)"
+    }
+   ]
+  },
+  {
+   "title": "Dimension",
+   "blocks": [
+    {
+     "type": "thm",
+     "name": "All bases have the same size",
+     "text": "If V has a basis of n vectors, every set of more than n vectors in V is dependent, and every basis has exactly n vectors. This n is dim V.",
+     "proof": [
+      {
+       "type": "p",
+       "text": "Map to coordinates: more than n vectors in ℝⁿ are dependent (more columns than rows)."
+      }
+     ]
+    },
+    {
+     "type": "list",
+     "items": [
+      "dim ℝⁿ = n; dim ℙₙ = n + 1; dim Mₘₓₙ = mn; dim {<b>0</b>} = 0.",
+      "Subspaces of ℝ³: dimension 0 (origin), 1 (lines through 0), 2 (planes through 0), 3 (ℝ³).",
+      "If H ⊆ V, dim H ≤ dim V; any independent set in H extends to a basis of H."
+     ]
+    },
+    {
+     "type": "thm",
+     "name": "Dimensions of Nul, Col, Row",
+     "text": "dim Nul A = number of free variables; dim Col A = number of pivot columns = rank A; dim Row A = number of pivots = rank A."
+    },
+    {
+     "type": "thm",
+     "name": "Rank Theorem",
+     "text": "For an m×n matrix A: rank A + dim Nul A = n (number of columns). Also rank A = rank Aᵀ.",
+     "proof": [
+      {
+       "type": "p",
+       "text": "Every column of A either has a pivot (counted by rank A = dim Col A) or corresponds to a free variable (counted by dim Nul A). The two counts partition the n columns."
+      }
+     ]
+    },
+    {
+     "type": "tip",
+     "text": "Rank is at most min(m, n). Combined with the rank theorem this answers almost every dimension question: e.g. a 6×9 matrix has rank ≤ 6, so dim Nul A ≥ 3."
+    },
+    {
+     "type": "example",
+     "title": "Rank theorem consequences",
+     "prompt": "A is 5×7 with rank 5. Find dim Nul A, dim Col A, dim Row A, dim Nul Aᵀ. Is Ax = b always consistent?",
+     "steps": [
+      "dim Col A = dim Row A = rank = 5.",
+      "dim Nul A = 7 − 5 = 2.",
+      "Aᵀ is 7×5 with rank 5: dim Nul Aᵀ = 5 − 5 = 0.",
+      "Col A is a 5-dimensional subspace of ℝ⁵, so Col A = ℝ⁵: a pivot in every row ⇒ consistent for every b (infinitely many solutions, 2 free variables)."
+     ],
+     "answer": "dim Nul A = 2, dim Col A = dim Row A = 5, dim Nul Aᵀ = 0; yes, always consistent."
+    },
+    {
+     "type": "example",
+     "title": "Bases for Row, Col, Nul at once",
+     "prompt": "A = [1 2 0 4 1; 2 4 1 9 3; 3 6 1 13 4]. Find rank A, dim Nul A, and bases for Row A and Col A.",
+     "steps": [
+      "RREF = [1 2 0 4 1; 0 0 1 1 1; 0 0 0 0 0]: pivots in columns 1, 3.",
+      "rank A = 2; dim Nul A = 5 − 2 = 3.",
+      "Row A basis: nonzero rows of the RREF, (1, 2, 0, 4, 1) and (0, 0, 1, 1, 1).",
+      "Col A basis: columns 1 and 3 of A: (1, 2, 3), (0, 1, 1)."
+     ],
+     "answer": "rank 2, nullity 3; Row: {(1, 2, 0, 4, 1), (0, 0, 1, 1, 1)}; Col: {(1, 2, 3), (0, 1, 1)}."
+    }
+   ]
+  },
+  {
+   "title": "Change of basis",
+   "blocks": [
+    {
+     "type": "def",
+     "term": "Change-of-coordinates matrix",
+     "text": "For bases ℬ = {<b>b</b>₁, …, <b>b</b>ₙ} and 𝒞 of V, P<sub>𝒞←ℬ</sub> = [[<b>b</b>₁]<sub>𝒞</sub> ⋯ [<b>b</b>ₙ]<sub>𝒞</sub>] is the unique matrix with [<b>x</b>]<sub>𝒞</sub> = P<sub>𝒞←ℬ</sub>[<b>x</b>]<sub>ℬ</sub>."
+    },
+    {
+     "type": "thm",
+     "name": "Properties",
+     "text": "P<sub>𝒞←ℬ</sub> is invertible and (P<sub>𝒞←ℬ</sub>)⁻¹ = P<sub>ℬ←𝒞</sub>. In ℝⁿ, with B and C the matrices of basis vectors, P<sub>𝒞←ℬ</sub> = C⁻¹B, obtained by row reducing [C | B] → [I | P<sub>𝒞←ℬ</sub>].",
+     "proof": [
+      {
+       "type": "p",
+       "text": "[<b>x</b>]<sub>𝒞</sub> = c₁[<b>b</b>₁]<sub>𝒞</sub> + ⋯ + cₙ[<b>b</b>ₙ]<sub>𝒞</sub> by linearity of the coordinate map, where cᵢ are the ℬ-coordinates. In ℝⁿ: <b>x</b> = B[<b>x</b>]<sub>ℬ</sub> = C[<b>x</b>]<sub>𝒞</sub>."
+      }
+     ]
+    },
+    {
+     "type": "tip",
+     "text": "Read the subscript right to left: P<sub>𝒞←ℬ</sub> eats ℬ-coordinates and outputs 𝒞-coordinates. Its columns are the OLD basis (ℬ) written in the NEW basis (𝒞). The easy one is P<sub>ℰ←ℬ</sub> = B (basis vectors in standard coordinates)."
+    },
+    {
+     "type": "example",
+     "title": "Change of basis in ℝ²",
+     "prompt": "b₁ = (−9, 1), b₂ = (−5, −1), c₁ = (1, −4), c₂ = (3, −5). Find P<sub>𝒞←ℬ</sub> and P<sub>ℬ←𝒞</sub>. If [x]<sub>ℬ</sub> = (3, 1), find [x]<sub>𝒞</sub>.",
+     "steps": [
+      "Row reduce [c₁ c₂ | b₁ b₂] = [1 3 | −9 −5; −4 −5 | 1 −1].",
+      "R₂ + 4R₁ → [0 7 | −35 −21]; R₂ ÷ 7 → [0 1 | −5 −3]; R₁ − 3R₂ → [1 0 | 6 4].",
+      "P<sub>𝒞←ℬ</sub> = [6 4; −5 −3]. Check: 6c₁ − 5c₂ = (6 − 15, −24 + 25) = (−9, 1) = b₁. ✓",
+      "P<sub>ℬ←𝒞</sub> = inverse: det = −18 + 20 = 2, so (1/2)[−3 −4; 5 6] = [−3/2 −2; 5/2 3].",
+      "[x]<sub>𝒞</sub> = [6 4; −5 −3](3, 1) = (22, −18). Check: x = 3b₁ + b₂ = (−32, 2) and 22c₁ − 18c₂ = (22 − 54, −88 + 90) = (−32, 2). ✓"
+     ],
+     "answer": "P<sub>𝒞←ℬ</sub> = [6 4; −5 −3], P<sub>ℬ←𝒞</sub> = [−3/2 −2; 5/2 3], [x]<sub>𝒞</sub> = (22, −18)."
+    },
+    {
+     "type": "warn",
+     "text": "Reducing [B | C] gives P<sub>ℬ←𝒞</sub>, the wrong direction. The matrix you reduce on the left is the basis you are converting INTO."
+    }
+   ]
+  },
+  {
+   "title": "True/False on bases, dimension and rank",
+   "blocks": [
+    {
+     "type": "example",
+     "title": "Lay 4.5-style True/False",
+     "prompt": "(a) The number of pivot columns of A is dim Col A. (b) A plane in ℝ³ is a 2-dimensional subspace. (c) dim ℙ₄ = 4. (d) If dim V = n and S spans V, then S has at least n vectors. (e) If a set of p vectors spans a p-dimensional V, it is a basis. (f) If H is a subspace of a finite-dimensional V with dim H = dim V, then H = V. (g) A 7×5 matrix of rank 5 is onto ℝ⁷.",
+     "steps": [
+      "(a) True: pivot columns of A are a basis of Col A.",
+      "(b) False: only planes through the origin are subspaces.",
+      "(c) False: {1, t, t², t³, t⁴} has 5 elements.",
+      "(d) True: a spanning set contains a basis, which has n vectors.",
+      "(e) True: Basis Theorem.",
+      "(f) True: a basis of H is n independent vectors in V, hence a basis of V.",
+      "(g) False: Col A is 5-dimensional inside ℝ⁷ (it is one-to-one, not onto)."
+     ],
+     "answer": "(a) T (b) F (c) F (d) T (e) T (f) T (g) F"
+    },
+    {
+     "type": "tip",
+     "text": "Dimension counting rules: independent sets have ≤ dim V vectors; spanning sets have ≥ dim V; a basis has exactly dim V; with exactly dim V vectors, independent ⇔ spanning."
+    }
+   ]
+  }
+ ],
+ "cards": [
+  {
+   "front": "What is a basis of H?",
+   "back": [
+    {
+     "type": "p",
+     "text": "A linearly independent set that spans H."
+    }
+   ]
+  },
+  {
+   "front": "Spanning Set Theorem?",
+   "back": [
+    {
+     "type": "p",
+     "text": "If a vector in a spanning set is a combination of the others, removing it keeps the span. Some subset of a spanning set (of H ≠ {0}) is a basis."
+    }
+   ]
+  },
+  {
+   "front": "Basis Theorem?",
+   "back": [
+    {
+     "type": "p",
+     "text": "If dim H = p: any p independent vectors in H are a basis; any p vectors spanning H are a basis."
+    }
+   ]
+  },
+  {
+   "front": "Unique Representation Theorem?",
+   "back": [
+    {
+     "type": "p",
+     "text": "With a basis ℬ, each x is c₁b₁ + ⋯ + cₙbₙ in exactly one way; (c₁, …, cₙ) = [x]_ℬ."
+    }
+   ]
+  },
+  {
+   "front": "How do you find [x]_ℬ in ℝⁿ?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Solve P_ℬ c = x, i.e. row reduce [b₁ ⋯ bₙ | x]; [x]_ℬ = P_ℬ⁻¹x."
+    }
+   ]
+  },
+  {
+   "front": "Why can we test polynomials with ℝⁿ methods?",
+   "back": [
+    {
+     "type": "p",
+     "text": "The coordinate map p ↦ [p]_ℬ is an isomorphism ℙₙ → ℝⁿ⁺¹: it preserves sums, scalar multiples, independence and spans."
+    }
+   ]
+  },
+  {
+   "front": "dim ℝⁿ, ℙₙ, Mₘₓₙ?",
+   "back": [
+    {
+     "type": "p",
+     "text": "n, n + 1, mn."
+    }
+   ]
+  },
+  {
+   "front": "Rank Theorem?",
+   "back": [
+    {
+     "type": "p",
+     "text": "rank A + dim Nul A = n (number of columns); rank A = dim Col A = dim Row A = rank Aᵀ."
+    }
+   ]
+  },
+  {
+   "front": "Why does rank A + dim Nul A = n?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Each of the n columns is either a pivot column (counted by rank) or a free-variable column (counted by dim Nul A)."
+    }
+   ]
+  },
+  {
+   "front": "A is 5×7 with rank 5: dim Nul A, dim Col A; is Ax = b always consistent?",
+   "back": [
+    {
+     "type": "p",
+     "text": "dim Nul A = 2, dim Col A = 5 = dim ℝ⁵ ⇒ Col A = ℝ⁵ ⇒ always consistent (infinitely many solutions)."
+    }
+   ]
+  },
+  {
+   "front": "A is 6×9: lower bound for dim Nul A?",
+   "back": [
+    {
+     "type": "p",
+     "text": "rank ≤ 6 ⇒ dim Nul A ≥ 3."
+    }
+   ]
+  },
+  {
+   "front": "Can a 4×7 matrix have a 2-dimensional null space?",
+   "back": [
+    {
+     "type": "p",
+     "text": "No: nullity = 7 − rank ≥ 7 − 4 = 3."
+    }
+   ]
+  },
+  {
+   "front": "P_{𝒞←ℬ}: columns and how to compute in ℝⁿ?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Columns are [bᵢ]_𝒞. Row reduce [C | B] → [I | P_{𝒞←ℬ}]; equals C⁻¹B."
+    }
+   ]
+  },
+  {
+   "front": "Inverse of P_{𝒞←ℬ}?",
+   "back": [
+    {
+     "type": "p",
+     "text": "P_{ℬ←𝒞}."
+    }
+   ]
+  },
+  {
+   "front": "Which change-of-basis matrix is 'free'?",
+   "back": [
+    {
+     "type": "p",
+     "text": "P_{ℰ←ℬ} = [b₁ ⋯ bₙ] (basis vectors in standard coordinates). The other direction needs an inverse."
+    }
+   ]
+  },
+  {
+   "front": "dim of {p ∈ ℙ₃ : p(1) = 0, p′(1) = 0}?",
+   "back": [
+    {
+     "type": "p",
+     "text": "4 − 2 = 2; basis (t − 1)², t(t − 1)²."
+    }
+   ]
+  },
+  {
+   "front": "Max size of an independent set in V with dim V = n? Min size of a spanning set?",
+   "back": [
+    {
+     "type": "p",
+     "text": "n and n."
+    }
+   ]
+  },
+  {
+   "front": "If H ⊆ V and dim H = dim V (finite), then?",
+   "back": [
+    {
+     "type": "p",
+     "text": "H = V."
+    }
+   ]
+  },
+  {
+   "front": "Is a plane in ℝ³ a 2-dimensional subspace?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Only if it passes through the origin."
+    }
+   ]
+  },
+  {
+   "front": "A² = 0 (n×n) implies what about rank?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Col A ⊆ Nul A ⇒ rank ≤ n − rank ⇒ rank ≤ n/2."
+    }
+   ]
+  },
+  {
+   "front": "rank(AB) compared to rank A and rank B?",
+   "back": [
+    {
+     "type": "p",
+     "text": "rank(AB) ≤ min(rank A, rank B), since Col(AB) ⊆ Col A and Nul B ⊆ Nul(AB)."
+    }
+   ]
+  }
+ ],
+ "hard": [
+  {
+   "title": "Change of basis in ℝ²",
+   "level": "hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "In ℝ², ℬ = {(1, 2), (3, 5)} and 𝒞 = {(1, 1), (1, 2)}. (a) Find the change-of-coordinates matrix <i>P</i><sub>𝒞←ℬ</sub>. (b) If [<b>x</b>]<sub>ℬ</sub> = (2, −1), find [<b>x</b>]<sub>𝒞</sub> and <b>x</b>."
+    }
+   ],
+   "answer": "(a) P = [0 1; 1 2] (b) [x]_𝒞 = (−1, 0), x = (−1, −1)",
+   "solution": [
+    {
+     "type": "p",
+     "text": "<i>P</i><sub>𝒞←ℬ</sub> has columns [<b>b</b>ᵢ]<sub>𝒞</sub>; equivalently it is <i>C</i>⁻¹<i>B</i> where <i>B</i>, <i>C</i> hold the basis vectors as columns. Row reduce [<i>C</i> | <i>B</i>] → [<i>I</i> | <i>P</i>]."
+    },
+    {
+     "type": "p",
+     "text": "<i>C</i>⁻¹ ="
+    },
+    {
+     "type": "matrix",
+     "rows": [
+      [
+       "2",
+       "−1"
+      ],
+      [
+       "−1",
+       "1"
+      ]
+     ]
+    },
+    {
+     "type": "p",
+     "text": ", so <i>P</i> ="
+    },
+    {
+     "type": "matrix",
+     "rows": [
+      [
+       "2",
+       "−1"
+      ],
+      [
+       "−1",
+       "1"
+      ]
+     ]
+    },
+    {
+     "type": "matrix",
+     "rows": [
+      [
+       "1",
+       "3"
+      ],
+      [
+       "2",
+       "5"
+      ]
+     ]
+    },
+    {
+     "type": "p",
+     "text": "="
+    },
+    {
+     "type": "matrix",
+     "rows": [
+      [
+       "0",
+       "1"
+      ],
+      [
+       "1",
+       "2"
+      ]
+     ]
+    },
+    {
+     "type": "p",
+     "text": "Check column 1: (1,2) = 0·(1,1) + 1·(1,2) ✓. Column 2: (3,5) = 1·(1,1) + 2·(1,2) ✓."
+    },
+    {
+     "type": "p",
+     "text": "[<b>x</b>]<sub>𝒞</sub> = <i>P</i>(2, −1) = <b>(−1, 0)</b>. <b>x</b> = 2(1,2) − (3,5) = <b>(−1, −1)</b> = −1·(1,1) ✓."
+    },
+    {
+     "type": "warn",
+     "text": "What it tests: Direction: <i>P</i><sub>𝒞←ℬ</sub> eats ℬ-coordinates and returns 𝒞-coordinates, so it is [<i>C</i> | <i>B</i>] reduced, not [<i>B</i> | <i>C</i>]."
+    }
+   ]
+  },
+  {
+   "title": "Coordinates and change of basis in ℙ₂",
+   "level": "hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "ℬ = {1, 1 + <i>t</i>, 1 + <i>t</i> + <i>t</i>²}. (a) Find [<i>p</i>]<sub>ℬ</sub> for <i>p</i> = 3 − 2<i>t</i> + 5<i>t</i>². (b) Find <i>P</i><sub>ℰ←ℬ</sub> and <i>P</i><sub>ℬ←ℰ</sub>, where ℰ = {1, <i>t</i>, <i>t</i>²}."
+    }
+   ],
+   "answer": "(a) (5, −7, 5) (b) P_{ℰ←ℬ} = [1 1 1; 0 1 1; 0 0 1], P_{ℬ←ℰ} = [1 −1 0; 0 1 −1; 0 0 1]",
+   "solution": [
+    {
+     "type": "p",
+     "text": "<i>a</i> + <i>b</i>(1+<i>t</i>) + <i>c</i>(1+<i>t</i>+<i>t</i>²) = (<i>a</i>+<i>b</i>+<i>c</i>) + (<i>b</i>+<i>c</i>)<i>t</i> + <i>c</i><i>t</i>². Match: <i>c</i> = 5, <i>b</i> = −7, <i>a</i> = 5. [<i>p</i>]<sub>ℬ</sub> = <b>(5, −7, 5)</b>."
+    },
+    {
+     "type": "p",
+     "text": "<i>P</i><sub>ℰ←ℬ</sub> = columns are ℬ in standard coordinates:"
+    },
+    {
+     "type": "matrix",
+     "rows": [
+      [
+       "1",
+       "1",
+       "1"
+      ],
+      [
+       "0",
+       "1",
+       "1"
+      ],
+      [
+       "0",
+       "0",
+       "1"
+      ]
+     ]
+    },
+    {
+     "type": "p",
+     "text": "<i>P</i><sub>ℬ←ℰ</sub> = its inverse ="
+    },
+    {
+     "type": "matrix",
+     "rows": [
+      [
+       "1",
+       "−1",
+       "0"
+      ],
+      [
+       "0",
+       "1",
+       "−1"
+      ],
+      [
+       "0",
+       "0",
+       "1"
+      ]
+     ]
+    },
+    {
+     "type": "p",
+     "text": "(so 1 = 1, <i>t</i> = (1+<i>t</i>) − 1, <i>t</i>² = (1+<i>t</i>+<i>t</i>²) − (1+<i>t</i>))."
+    },
+    {
+     "type": "warn",
+     "text": "What it tests: The easy matrix is always “new basis written in the standard basis” = <i>P</i><sub>ℰ←ℬ</sub>. Going the other way needs an inverse."
+    }
+   ]
+  },
+  {
+   "title": "True/False: rank and dimension",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "list",
+     "items": [
+      "1. A 7×5 matrix with rank 5 has <i>A</i><b>x</b> = <b>b</b> consistent for every <b>b</b> ∈ ℝ⁷.",
+      "2. If <i>A</i> is 6×9, then dim Nul <i>A</i> ≥ 3.",
+      "3. rank <i>A</i> = rank <i>A</i>ᵀ.",
+      "4. If <i>A</i> is 5×5 and dim Nul <i>A</i> = 2, then dim Row <i>A</i> = 3.",
+      "5. A 4×7 matrix can have a 2-dimensional null space.",
+      "6. Row operations do not change Col <i>A</i>."
+     ]
+    }
+   ],
+   "answer": "1 F, 2 T, 3 T, 4 T, 5 F, 6 F",
+   "solution": [
+    {
+     "type": "p",
+     "text": "1. <b>False.</b> Col <i>A</i> is 5-dimensional inside ℝ⁷. It is one-to-one, not onto."
+    },
+    {
+     "type": "p",
+     "text": "2. <b>True.</b> rank ≤ 6 ⇒ nullity = 9 − rank ≥ 3."
+    },
+    {
+     "type": "p",
+     "text": "3. <b>True.</b> dim Col <i>A</i> = dim Row <i>A</i>, and Row <i>A</i> = Col <i>A</i>ᵀ."
+    },
+    {
+     "type": "p",
+     "text": "4. <b>True.</b> rank = 5 − 2 = 3 = dim Row <i>A</i>."
+    },
+    {
+     "type": "p",
+     "text": "5. <b>False.</b> nullity = 7 − rank ≥ 7 − 4 = 3."
+    },
+    {
+     "type": "p",
+     "text": "6. <b>False.</b>"
+    },
+    {
+     "type": "matrix",
+     "rows": [
+      [
+       "1"
+      ],
+      [
+       "1"
+      ]
+     ]
+    },
+    {
+     "type": "p",
+     "text": "→"
+    },
+    {
+     "type": "matrix",
+     "rows": [
+      [
+       "1"
+      ],
+      [
+       "0"
+      ]
+     ]
+    },
+    {
+     "type": "p",
+     "text": ": column space changes from Span{(1,1)} to Span{(1,0)}. Row ops preserve Row <i>A</i>, Nul <i>A</i> and rank."
+    },
+    {
+     "type": "warn",
+     "text": "What it tests: rank + nullity = number of columns. Rank ≤ min(<i>m</i>, <i>n</i>). These two facts decide most dimension T/F questions."
+    }
+   ]
+  },
+  {
+   "title": "Dimension of a polynomial subspace",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "Let <i>W</i> = {<i>p</i> ∈ ℙ₃ : <i>p</i>(1) = 0 and <i>p</i>′(1) = 0}. Find dim <i>W</i> and a basis."
+    }
+   ],
+   "answer": "dim W = 2; basis (t − 1)², t(t − 1)²",
+   "solution": [
+    {
+     "type": "p",
+     "text": "<i>W</i> is the kernel of <i>T</i>(<i>p</i>) = (<i>p</i>(1), <i>p</i>′(1)), <i>T</i>: ℙ₃ → ℝ². Matrix relative to {1, <i>t</i>, <i>t</i>², <i>t</i>³}:"
+    },
+    {
+     "type": "matrix",
+     "rows": [
+      [
+       "1",
+       "1",
+       "1",
+       "1"
+      ],
+      [
+       "0",
+       "1",
+       "2",
+       "3"
+      ]
+     ]
+    },
+    {
+     "type": "p",
+     "text": ", rank 2."
+    },
+    {
+     "type": "p",
+     "text": "dim <i>W</i> = 4 − 2 = <b>2</b>."
+    },
+    {
+     "type": "p",
+     "text": "<i>p</i>(1) = <i>p</i>′(1) = 0 means (<i>t</i> − 1)² divides <i>p</i>. Basis: <b>(<i>t</i> − 1)², <i>t</i>(<i>t</i> − 1)²</b> (independent: different degrees)."
+    },
+    {
+     "type": "warn",
+     "text": "What it tests: Count conditions via a rank, then find that many independent elements. A double root at 1 is the structural reason."
+    }
+   ]
+  },
+  {
+   "title": "Commutant of the all-ones matrix",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "Let <i>J</i> ="
+    },
+    {
+     "type": "matrix",
+     "rows": [
+      [
+       "1",
+       "1"
+      ],
+      [
+       "1",
+       "1"
+      ]
+     ]
+    },
+    {
+     "type": "p",
+     "text": ". Find a basis and the dimension of <i>W</i> = {<i>X</i> ∈ <i>M</i>₂ₓ₂ : <i>XJ</i> = <i>JX</i>}."
+    }
+   ],
+   "answer": "W = {aI + b[0 1; 1 0]}, dim 2",
+   "solution": [
+    {
+     "type": "p",
+     "text": "<i>X</i> ="
+    },
+    {
+     "type": "matrix",
+     "rows": [
+      [
+       "<i>a</i>",
+       "<i>b</i>"
+      ],
+      [
+       "<i>c</i>",
+       "<i>d</i>"
+      ]
+     ]
+    },
+    {
+     "type": "p",
+     "text": ": <i>XJ</i> ="
+    },
+    {
+     "type": "matrix",
+     "rows": [
+      [
+       "<i>a</i>+<i>b</i>",
+       "<i>a</i>+<i>b</i>"
+      ],
+      [
+       "<i>c</i>+<i>d</i>",
+       "<i>c</i>+<i>d</i>"
+      ]
+     ]
+    },
+    {
+     "type": "p",
+     "text": ", <i>JX</i> ="
+    },
+    {
+     "type": "matrix",
+     "rows": [
+      [
+       "<i>a</i>+<i>c</i>",
+       "<i>b</i>+<i>d</i>"
+      ],
+      [
+       "<i>a</i>+<i>c</i>",
+       "<i>b</i>+<i>d</i>"
+      ]
+     ]
+    },
+    {
+     "type": "p",
+     "text": "Entry (1,1): <i>b</i> = <i>c</i>. Entry (1,2): <i>a</i> = <i>d</i>. The other two entries repeat these."
+    },
+    {
+     "type": "p",
+     "text": "<i>X</i> ="
+    },
+    {
+     "type": "matrix",
+     "rows": [
+      [
+       "<i>a</i>",
+       "<i>b</i>"
+      ],
+      [
+       "<i>b</i>",
+       "<i>a</i>"
+      ]
+     ]
+    },
+    {
+     "type": "p",
+     "text": "= <i>a</i><i>I</i> + <i>b</i>"
+    },
+    {
+     "type": "matrix",
+     "rows": [
+      [
+       "0",
+       "1"
+      ],
+      [
+       "1",
+       "0"
+      ]
+     ]
+    },
+    {
+     "type": "p",
+     "text": ". Basis {<i>I</i>,"
+    },
+    {
+     "type": "matrix",
+     "rows": [
+      [
+       "0",
+       "1"
+      ],
+      [
+       "1",
+       "0"
+      ]
+     ]
+    },
+    {
+     "type": "p",
+     "text": "}, <b>dim 2</b>."
+    },
+    {
+     "type": "warn",
+     "text": "What it tests: Four equations but only two independent ones. Count dimension by free parameters, not by equations."
+    }
+   ]
+  },
+  {
+   "title": "Rank with a parameter",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "Find rank <i>A</i> and dim Nul <i>A</i> as functions of <i>h</i>, where <i>A</i> ="
+    },
+    {
+     "type": "matrix",
+     "rows": [
+      [
+       "1",
+       "2",
+       "1",
+       "<i>h</i>"
+      ],
+      [
+       "2",
+       "4",
+       "<i>h</i>",
+       "2"
+      ],
+      [
+       "1",
+       "2",
+       "1",
+       "1"
+      ]
+     ]
+    }
+   ],
+   "answer": "h ∉ {1, 2}: rank 3, nullity 1; h = 1 or 2: rank 2, nullity 2",
+   "solution": [
+    {
+     "type": "steps",
+     "title": "Solution",
+     "items": [
+      "R₂ − 2R₁: (0, 0, <i>h</i>−2, 2−2<i>h</i>). R₃ − R₁: (0, 0, 0, 1−<i>h</i>).",
+      "<i>h</i> ∉ {1, 2}: pivots in columns 1, 3, 4 ⇒ <b>rank 3</b>, nullity 1.",
+      "<i>h</i> = 2: R₂ = (0,0,0,−2), R₃ = (0,0,0,−1) are proportional ⇒ <b>rank 2</b>, nullity 2.",
+      "<i>h</i> = 1: R₂ = (0,0,−1,0), R₃ = 0 ⇒ <b>rank 2</b>, nullity 2."
+     ]
+    },
+    {
+     "type": "warn",
+     "text": "What it tests: Column 2 = 2·column 1 always, so rank ≤ 3. Two separate bad values, for two different reasons."
+    }
+   ]
+  },
+  {
+   "title": "Proof: rank(AB) ≤ min(rank A, rank B)",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "Prove rank(<i>AB</i>) ≤ min(rank <i>A</i>, rank <i>B</i>) for <i>A</i> (<i>m</i>×<i>n</i>), <i>B</i> (<i>n</i>×<i>p</i>)."
+    }
+   ],
+   "answer": "Col(AB) ⊆ Col A gives ≤ rank A; Nul B ⊆ Nul(AB) + rank theorem gives ≤ rank B",
+   "solution": [
+    {
+     "type": "steps",
+     "title": "Solution",
+     "items": [
+      "Col(<i>AB</i>) ⊆ Col <i>A</i> ⇒ rank(<i>AB</i>) ≤ rank <i>A</i>.",
+      "Nul <i>B</i> ⊆ Nul(<i>AB</i>) ⇒ dim Nul(<i>AB</i>) ≥ dim Nul <i>B</i>. Both have <i>p</i> columns, so by the rank theorem rank(<i>AB</i>) = <i>p</i> − dim Nul(<i>AB</i>) ≤ <i>p</i> − dim Nul <i>B</i> = rank <i>B</i>. ∎"
+     ]
+    },
+    {
+     "type": "warn",
+     "text": "What it tests: The second inequality needs the rank theorem applied to two <i>p</i>-column matrices. (Alternative: rank(<i>AB</i>) = rank((<i>AB</i>)ᵀ) = rank(<i>B</i>ᵀ<i>A</i>ᵀ) ≤ rank <i>B</i>ᵀ.)"
+    }
+   ]
+  },
+  {
+   "title": "Dimensions and A² = 0",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "(a) <i>A</i> is 5×7 with rank 4. Find dim Nul <i>A</i>, dim Row <i>A</i>, dim Nul <i>A</i>ᵀ. Is <i>A</i><b>x</b> = <b>b</b> always consistent? (b) Prove: if <i>A</i> is <i>n</i>×<i>n</i> with <i>A</i>² = 0, then rank <i>A</i> ≤ <i>n</i>/2. Give a 4×4 example with equality."
+    }
+   ],
+   "answer": "(a) 3, 4, 1; not always consistent (b) Col A ⊆ Nul A ⇒ 2 rank ≤ n; example rank 2 with A e₃ = e₁, A e₄ = e₂",
+   "solution": [
+    {
+     "type": "p",
+     "text": "(a) Nul: 7 − 4 = <b>3</b>. Row: <b>4</b>. Nul <i>A</i>ᵀ: <i>A</i>ᵀ is 7×5 with rank 4, so 5 − 4 = <b>1</b>. Rank 4 &lt; 5 rows ⇒ <b>not</b> always consistent."
+    },
+    {
+     "type": "p",
+     "text": "(b) <i>A</i>² = 0 means <i>A</i>(<i>A</i><b>x</b>) = 0 for all <b>x</b>, i.e. Col <i>A</i> ⊆ Nul <i>A</i>. So rank ≤ nullity = <i>n</i> − rank ⇒ 2·rank ≤ <i>n</i>. ∎"
+    },
+    {
+     "type": "p",
+     "text": "Example: <i>A</i> ="
+    },
+    {
+     "type": "matrix",
+     "rows": [
+      [
+       "0",
+       "0",
+       "1",
+       "0"
+      ],
+      [
+       "0",
+       "0",
+       "0",
+       "1"
+      ],
+      [
+       "0",
+       "0",
+       "0",
+       "0"
+      ],
+      [
+       "0",
+       "0",
+       "0",
+       "0"
+      ]
+     ]
+    },
+    {
+     "type": "p",
+     "text": "(sends <b>e</b>₃ → <b>e</b>₁, <b>e</b>₄ → <b>e</b>₂, kills <b>e</b>₁, <b>e</b>₂): <i>A</i>² = 0, rank 2."
+    },
+    {
+     "type": "warn",
+     "text": "What it tests: <i>A</i>² = 0 ⇔ Col <i>A</i> ⊆ Nul <i>A</i>. Translating matrix equations into subspace inclusions is a standard exam move."
+    }
+   ]
+  },
+  {
+   "title": "Basis check and coordinates in ℙ₂",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "Is ℬ = {1 + <i>t</i>², <i>t</i> + <i>t</i>², 1 + 2<i>t</i> + <i>t</i>²} a basis of ℙ₂? If so, find [<i>t</i>²]<sub>ℬ</sub>."
+    }
+   ],
+   "answer": "Yes (det = −2); [t²]_ℬ = (½, 1, −½)",
+   "solution": [
+    {
+     "type": "p",
+     "text": "Coordinate vectors (1,0,1), (0,1,1), (1,2,1). det"
+    },
+    {
+     "type": "matrix",
+     "rows": [
+      [
+       "1",
+       "0",
+       "1"
+      ],
+      [
+       "0",
+       "1",
+       "2"
+      ],
+      [
+       "1",
+       "1",
+       "1"
+      ]
+     ]
+    },
+    {
+     "type": "p",
+     "text": "= 1(1−2) − 0 + 1(0−1) = −2 ≠ 0 ⇒ <b>basis</b>."
+    },
+    {
+     "type": "p",
+     "text": "Solve <i>a</i>(1,0,1) + <i>b</i>(0,1,1) + <i>c</i>(1,2,1) = (0,0,1): <i>a</i> = −<i>c</i>, <i>b</i> = −2<i>c</i>, −<i>c</i> − 2<i>c</i> + <i>c</i> = 1 ⇒ <i>c</i> = −½."
+    },
+    {
+     "type": "p",
+     "text": "[<i>t</i>²]<sub>ℬ</sub> = <b>(½, 1, −½)</b>. Check: ½(1+<i>t</i>²) + (<i>t</i>+<i>t</i>²) − ½(1+2<i>t</i>+<i>t</i>²) = <i>t</i>² ✓."
+    },
+    {
+     "type": "warn",
+     "text": "What it tests: <i>n</i> vectors in an <i>n</i>-dimensional space: independent ⇔ spanning ⇔ basis (one check suffices)."
+    }
+   ]
+  }
+ ],
+ "keyFacts": [
+  "Basis = independent + spanning. With exactly dim V vectors, independent ⇔ spanning.",
+  "[x]_ℬ: unique weights with x = c₁b₁ + ⋯ + cₙbₙ; in ℝⁿ, x = P_ℬ[x]_ℬ.",
+  "Coordinate map V → ℝⁿ is an isomorphism: test polynomials/matrices via coordinate vectors.",
+  "dim ℝⁿ = n, dim ℙₙ = n + 1, dim Mₘₓₙ = mn.",
+  "Rank Theorem: rank A + dim Nul A = n; rank A = dim Col A = dim Row A = rank Aᵀ ≤ min(m, n).",
+  "P_{𝒞←ℬ} = [[b₁]_𝒞 ⋯ [bₙ]_𝒞] = C⁻¹B: row reduce [C | B] → [I | P].",
+  "(P_{𝒞←ℬ})⁻¹ = P_{ℬ←𝒞}."
+ ]
+}

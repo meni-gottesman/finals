@@ -1,0 +1,1281 @@
+{
+ "id": "54-13",
+ "course": "54",
+ "title": "Systems of linear ODEs: x′ = Ax (real & complex eigenvalues)",
+ "source": "Nagle 9.1, 9.4–9.6",
+ "summary": "Systems x′ = Ax are solved by eigenvectors: each eigenpair gives a solution e^(λt)v, complex pairs give two real spiralling solutions, and the signs of the real parts decide long-term behaviour. This unit ties linear algebra (Ch 5) directly to differential equations.",
+ "lesson": [
+  {
+   "title": "Linear systems in normal form; converting higher-order equations",
+   "blocks": [
+    {
+     "type": "def",
+     "term": "Normal form",
+     "text": "<b>x</b>′(t) = A(t)<b>x</b>(t) + <b>f</b>(t), where <b>x</b> = (x₁, …, xₙ). Homogeneous if <b>f</b> = <b>0</b>. Here we focus on constant A."
+    },
+    {
+     "type": "steps",
+     "title": "Convert an n-th order equation to a system",
+     "items": [
+      "Solve for the highest derivative.",
+      "Set x₁ = y, x₂ = y′, …, xₙ = y⁽ⁿ⁻¹⁾.",
+      "Then x₁′ = x₂, …, xₙ₋₁′ = xₙ, and xₙ′ = (the expression from step 1)."
+     ]
+    },
+    {
+     "type": "example",
+     "title": "Convert to x′ = Ax + f",
+     "prompt": "(a) Write y‴ − 4y′ + y = cos t as a first-order system. (b) Write the coupled system x′ = 2x + y, y′ = −x + 4y in matrix form.",
+     "steps": [
+      "(a) y‴ = −y + 4y′ + cos t. With x₁ = y, x₂ = y′, x₃ = y″: x₁′ = x₂, x₂′ = x₃, x₃′ = −x₁ + 4x₂ + cos t.",
+      "So <b>x</b>′ = [0 1 0; 0 0 1; −1 4 0]<b>x</b> + (0, 0, cos t).",
+      "(b) <b>x</b> = (x, y): <b>x</b>′ = [2 1; −1 4]<b>x</b>."
+     ],
+     "answer": "(a) A = [0 1 0; 0 0 1; −1 4 0], f = (0, 0, cos t). (b) A = [2 1; −1 4]."
+    },
+    {
+     "type": "matrix",
+     "rows": [
+      [
+       "0",
+       "1",
+       "0"
+      ],
+      [
+       "0",
+       "0",
+       "1"
+      ],
+      [
+       "-1",
+       "4",
+       "0"
+      ]
+     ]
+    },
+    {
+     "type": "tip",
+     "text": "The characteristic polynomial of the companion matrix equals the characteristic polynomial of the original ODE, so its eigenvalues are the characteristic roots. Systems contain everything from second-order equations."
+    },
+    {
+     "type": "warn",
+     "text": "The bottom row holds the NEGATED lower coefficients (you moved them to the right side): y″ + 3y′ + 2y = 0 gives bottom row (−2, −3)."
+    }
+   ]
+  },
+  {
+   "title": "Theory: solution space, Wronskian, fundamental matrix",
+   "blocks": [
+    {
+     "type": "thm",
+     "name": "Existence, uniqueness, dimension",
+     "text": "If A(t), <b>f</b>(t) are continuous on I ∋ t₀, the IVP <b>x</b>(t₀) = <b>x</b>₀ has exactly one solution on all of I. The solutions of <b>x</b>′ = A<b>x</b> form an n-dimensional vector space.",
+     "proof": [
+      {
+       "type": "p",
+       "text": "Superposition: (c₁<b>x</b>₁ + c₂<b>x</b>₂)′ = A(c₁<b>x</b>₁ + c₂<b>x</b>₂). The map <b>x</b> ↦ <b>x</b>(t₀) is a linear bijection onto ℝⁿ (existence + uniqueness)."
+      }
+     ]
+    },
+    {
+     "type": "def",
+     "term": "Wronskian, fundamental set, fundamental matrix",
+     "text": "For solutions <b>x</b>₁, …, <b>x</b>ₙ: W(t) = det[<b>x</b>₁(t) ⋯ <b>x</b>ₙ(t)]. If W ≠ 0 they form a fundamental set; X(t) = [<b>x</b>₁ ⋯ <b>x</b>ₙ] is a fundamental matrix, with X′ = AX. General solution <b>x</b> = X(t)<b>c</b>; for an IVP, <b>c</b> = X(t₀)⁻¹<b>x</b>₀."
+    },
+    {
+     "type": "thm",
+     "name": "All-or-nothing",
+     "text": "For solutions of one system <b>x</b>′ = A(t)<b>x</b>, W(t) is either never zero or identically zero on I.",
+     "proof": [
+      {
+       "type": "p",
+       "text": "If W(t₀) = 0, some nontrivial combination Σcᵢ<b>x</b>ᵢ vanishes at t₀. It is a solution with zero initial value, so by uniqueness it is the zero solution for all t: the set is dependent."
+      }
+     ]
+    },
+    {
+     "type": "example",
+     "title": "Verify solutions and compute the Wronskian",
+     "prompt": "Show x₁ = e⁴ᵗ(3, 2) and x₂ = e⁻ᵗ(1, −1) form a fundamental set for x′ = [2 3; 2 1]x.",
+     "steps": [
+      "x₁′ = 4e⁴ᵗ(3, 2) = e⁴ᵗ(12, 8), and A(3, 2) = (6 + 6, 6 + 2) = (12, 8). ✓",
+      "x₂′ = −e⁻ᵗ(1, −1), and A(1, −1) = (2 − 3, 2 − 1) = (−1, 1) = −(1, −1). ✓",
+      "W = det [3e⁴ᵗ e⁻ᵗ; 2e⁴ᵗ −e⁻ᵗ] = −3e³ᵗ − 2e³ᵗ = −5e³ᵗ ≠ 0."
+     ],
+     "answer": "Both are solutions and W = −5e³ᵗ ≠ 0: fundamental matrix X(t) = [3e⁴ᵗ e⁻ᵗ; 2e⁴ᵗ −e⁻ᵗ]."
+    }
+   ]
+  },
+  {
+   "title": "The eigenvalue method: distinct real eigenvalues",
+   "blocks": [
+    {
+     "type": "thm",
+     "name": "Eigen-solutions",
+     "text": "<b>x</b>(t) = e^(λt)<b>v</b> (with <b>v</b> ≠ <b>0</b> constant) solves <b>x</b>′ = A<b>x</b> exactly when A<b>v</b> = λ<b>v</b>.",
+     "proof": [
+      {
+       "type": "p",
+       "text": "<b>x</b>′ = λe^(λt)<b>v</b> and A<b>x</b> = e^(λt)A<b>v</b>. These agree for all t iff A<b>v</b> = λ<b>v</b>. The guess e^(λt)<b>v</b> comes from the scalar case y′ = ay ⇒ y = ce^(at): along an eigenvector, A acts like the number λ."
+      }
+     ]
+    },
+    {
+     "type": "thm",
+     "name": "General solution",
+     "text": "If A has n linearly independent eigenvectors <b>v</b>₁, …, <b>v</b>ₙ (e.g. n distinct eigenvalues), the general solution is <b>x</b>(t) = c₁e^(λ₁t)<b>v</b>₁ + ⋯ + cₙe^(λₙt)<b>v</b>ₙ.",
+     "proof": [
+      {
+       "type": "p",
+       "text": "At t = 0 the Wronskian is det[<b>v</b>₁ ⋯ <b>v</b>ₙ] ≠ 0, so these n solutions are a fundamental set."
+      }
+     ]
+    },
+    {
+     "type": "steps",
+     "title": "Recipe",
+     "items": [
+      "Eigenvalues: det(A − λI) = 0 (2×2: λ² − (tr A)λ + det A = 0).",
+      "An eigenvector for each eigenvalue.",
+      "<b>x</b> = Σcᵢe^(λᵢt)<b>v</b>ᵢ.",
+      "IVP: solve [<b>v</b>₁ ⋯ <b>v</b>ₙ]<b>c</b> = <b>x</b>(0)."
+     ]
+    },
+    {
+     "type": "example",
+     "title": "Distinct real eigenvalues IVP",
+     "prompt": "Solve x′ = [2 3; 2 1]x, x(0) = (1, 4).",
+     "steps": [
+      "tr 3, det 2 − 6 = −4: λ² − 3λ − 4 = (λ − 4)(λ + 1).",
+      "λ = 4: A − 4I = [−2 3; 2 −3] ⇒ v₁ = (3, 2). λ = −1: A + I = [3 3; 2 2] ⇒ v₂ = (1, −1).",
+      "x = c₁e⁴ᵗ(3, 2) + c₂e⁻ᵗ(1, −1).",
+      "t = 0: 3c₁ + c₂ = 1, 2c₁ − c₂ = 4 ⇒ 5c₁ = 5, c₁ = 1, c₂ = −2."
+     ],
+     "answer": "x(t) = e⁴ᵗ(3, 2) − 2e⁻ᵗ(1, −1) = (3e⁴ᵗ − 2e⁻ᵗ, 2e⁴ᵗ + 2e⁻ᵗ)"
+    }
+   ]
+  },
+  {
+   "title": "Repeated eigenvalues with a full eigenspace",
+   "blocks": [
+    {
+     "type": "p",
+     "text": "A repeated eigenvalue is harmless when its eigenspace has dimension equal to its multiplicity: you still get n independent eigenvectors, and the same formula works with no t·e^(λt) terms. (Symmetric matrices are always like this.)"
+    },
+    {
+     "type": "example",
+     "title": "Repeated eigenvalue, full eigenspace",
+     "prompt": "Solve x′ = Ax, x(0) = (1, 2, 3), for A = [3 −1 −1; −1 3 −1; −1 −1 3].",
+     "steps": [
+      "Row sums are 1, so A(1, 1, 1) = (1, 1, 1): λ = 1 with v = (1, 1, 1).",
+      "A − 4I = [−1 −1 −1; −1 −1 −1; −1 −1 −1] has rank 1 ⇒ λ = 4 with a 2-dimensional eigenspace x₁ + x₂ + x₃ = 0, basis (−1, 1, 0), (−1, 0, 1). (Trace 9 = 1 + 4 + 4. ✓)",
+      "x = c₁eᵗ(1, 1, 1) + c₂e⁴ᵗ(−1, 1, 0) + c₃e⁴ᵗ(−1, 0, 1).",
+      "t = 0: c₁ − c₂ − c₃ = 1, c₁ + c₂ = 2, c₁ + c₃ = 3. Adding all three: 3c₁ = 6 ⇒ c₁ = 2, c₂ = 0, c₃ = 1."
+     ],
+     "answer": "x(t) = 2eᵗ(1, 1, 1) + e⁴ᵗ(−1, 0, 1)"
+    },
+    {
+     "type": "warn",
+     "text": "Unlike second-order scalar equations, a repeated eigenvalue does NOT automatically produce t·e^(λt). Only a defective eigenvalue (eigenspace too small, e.g. companion matrices with a double root) needs a generalized eigenvector. Check rank(A − λI)."
+    },
+    {
+     "type": "tip",
+     "text": "x′ = λI·x: every vector is an eigenvector, so x(t) = e^(λt)x(0) (straight rays)."
+    }
+   ]
+  },
+  {
+   "title": "Complex eigenvalues: two real solutions",
+   "blocks": [
+    {
+     "type": "thm",
+     "name": "Real solutions from a complex pair",
+     "text": "If λ = α + iβ (β ≠ 0) with eigenvector <b>v</b> = <b>a</b> + i<b>b</b>, then <b>x</b>₁ = e^(αt)(<b>a</b> cos βt − <b>b</b> sin βt) and <b>x</b>₂ = e^(αt)(<b>a</b> sin βt + <b>b</b> cos βt) are two independent real solutions.",
+     "proof": [
+      {
+       "type": "p",
+       "text": "e^(λt)<b>v</b> = e^(αt)(cos βt + i sin βt)(<b>a</b> + i<b>b</b>) is a complex solution; its real part is <b>x</b>₁ and imaginary part <b>x</b>₂. Since A is real, A(<b>u</b> + i<b>w</b>) = (<b>u</b> + i<b>w</b>)′ forces A<b>u</b> = <b>u</b>′ and A<b>w</b> = <b>w</b>′. They are independent because at t = 0 they equal <b>a</b> and <b>b</b>, which are independent (a real dependence would give a real eigenvector for a non-real eigenvalue)."
+      }
+     ]
+    },
+    {
+     "type": "warn",
+     "text": "Use ONE eigenvalue of the pair. Taking real parts of the solutions for λ and λ̄ gives the same function twice. Keep the minus sign from i·i = −1."
+    },
+    {
+     "type": "example",
+     "title": "Complex eigenvalues IVP",
+     "prompt": "Solve x′ = [−1 −2; 1 −3]x, x(0) = (2, 3). Describe the trajectories.",
+     "steps": [
+      "tr −4, det 3 + 2 = 5: λ² + 4λ + 5 = 0 ⇒ λ = −2 ± i.",
+      "λ = −2 + i: row 1 of A − λI is (1 − i, −2) ⇒ v = (2, 1 − i) = (2, 1) + i(0, −1), so a = (2, 1), b = (0, −1).",
+      "x₁ = e⁻²ᵗ(a cos t − b sin t) = e⁻²ᵗ(2 cos t, cos t + sin t); x₂ = e⁻²ᵗ(a sin t + b cos t) = e⁻²ᵗ(2 sin t, sin t − cos t).",
+      "x(0) = c₁a + c₂b = (2c₁, c₁ − c₂) = (2, 3) ⇒ c₁ = 1, c₂ = −2.",
+      "x = e⁻²ᵗ(2 cos t − 4 sin t, 3 cos t − sin t). α = −2 &lt; 0: spirals into 0. A(1, 0) = (−1, 1) has positive second entry: counterclockwise."
+     ],
+     "answer": "x(t) = e⁻²ᵗ(2 cos t − 4 sin t, 3 cos t − sin t); stable spiral, counterclockwise"
+    }
+   ]
+  },
+  {
+   "title": "Long-term behaviour and which initial vectors decay",
+   "blocks": [
+    {
+     "type": "table",
+     "head": [
+      "Eigenvalues of a 2×2 A",
+      "Picture",
+      "Behaviour"
+     ],
+     "rows": [
+      [
+       "both real, negative",
+       "stable node",
+       "every solution → 0"
+      ],
+      [
+       "both real, positive",
+       "unstable node",
+       "every nonzero solution → ∞"
+      ],
+      [
+       "real, opposite signs",
+       "saddle",
+       "→ 0 only if x(0) lies on the line of the negative eigenvalue's eigenvector"
+      ],
+      [
+       "α ± iβ, α &lt; 0",
+       "stable spiral",
+       "→ 0, rotating"
+      ],
+      [
+       "α ± iβ, α = 0",
+       "center",
+       "closed orbits, periodic"
+      ],
+      [
+       "α ± iβ, α &gt; 0",
+       "unstable spiral",
+       "spirals out"
+      ]
+     ]
+    },
+    {
+     "type": "tip",
+     "text": "In general: the solution decays iff it has no component along eigenvectors whose eigenvalues have real part ≥ 0. As t → ∞ the term with the largest real part dominates. For 2×2: all solutions → 0 ⇔ tr A &lt; 0 and det A &gt; 0."
+    },
+    {
+     "type": "example",
+     "title": "Saddle: which initial vectors decay?",
+     "prompt": "For x′ = [1 4; 2 −1]x, find the general solution and the initial vectors x(0) for which x(t) → 0.",
+     "steps": [
+      "tr 0, det −1 − 8 = −9: λ² − 9 = 0 ⇒ λ = ±3.",
+      "λ = 3: A − 3I = [−2 4; 2 −4] ⇒ (2, 1). λ = −3: A + 3I = [4 4; 2 2] ⇒ (1, −1).",
+      "x = c₁e³ᵗ(2, 1) + c₂e⁻³ᵗ(1, −1).",
+      "x → 0 iff c₁ = 0, i.e. x(0) is a multiple of (1, −1)."
+     ],
+     "answer": "x(t) → 0 exactly when x(0) ∈ Span{(1, −1)} (a saddle)"
+    },
+    {
+     "type": "example",
+     "title": "True/False on systems",
+     "prompt": "(a) If x₁, x₂ solve x′ = Ax, so does 3x₁ − x₂. (b) If a 3×3 A has a repeated eigenvalue, x′ = Ax cannot have 3 independent eigen-solutions. (c) If all eigenvalues of A have negative real part, every solution → 0. (d) A real 3×3 A can have eigenvalues i, −i, 2i. (e) e^(λt)v solves x′ = Ax whenever Av = λv.",
+     "steps": [
+      "(a) True: superposition.",
+      "(b) False: [3 −1 −1; −1 3 −1; −1 −1 3] has λ = 4 twice with a 2-dimensional eigenspace.",
+      "(c) True: every term has a factor e^(αt) with α &lt; 0.",
+      "(d) False: complex eigenvalues come in conjugate pairs; 2i would need −2i.",
+      "(e) True."
+     ],
+     "answer": "(a) T (b) F (c) T (d) F (e) T"
+    }
+   ]
+  }
+ ],
+ "cards": [
+  {
+   "front": "What is a linear system in normal form?",
+   "back": [
+    {
+     "type": "formula",
+     "text": "x′(t) = A(t)x(t) + f(t)"
+    },
+    {
+     "type": "p",
+     "text": "x = (x₁, …, xₙ) is the unknown vector, A(t) an n×n coefficient matrix, f(t) the forcing. Homogeneous if f = 0."
+    },
+    {
+     "type": "p",
+     "text": "<b>Why:</b> Many coupled quantities (tanks, masses, circuits) change together; matrices let us treat them as one equation."
+    }
+   ]
+  },
+  {
+   "front": "How do you convert an n-th order linear ODE to a first-order system?",
+   "back": [
+    {
+     "type": "steps",
+     "title": "Steps",
+     "items": [
+      "Solve for the highest derivative.",
+      "Set x₁ = y, x₂ = y′, …, xₙ = y⁽ⁿ⁻¹⁾.",
+      "x₁′ = x₂, …, xₙ₋₁′ = xₙ, and xₙ′ = the expression from step 1."
+     ]
+    },
+    {
+     "type": "p",
+     "text": "<i>Example:</i> y‴ − 2y″ + y′ − 5y = sin t → x′ = [0 1 0; 0 0 1; 5 −1 2]x + (0, 0, sin t)."
+    },
+    {
+     "type": "warn",
+     "text": "Move terms to the right side first: y″ + 3y′ + 2y = 0 has bottom row (−2, −3)."
+    }
+   ]
+  },
+  {
+   "front": "Write y″ + 3y′ + 2y = e⁻ᵗ as a first-order system.",
+   "back": [
+    {
+     "type": "steps",
+     "title": "Steps",
+     "items": [
+      "y″ = −2y − 3y′ + e⁻ᵗ.",
+      "x₁ = y, x₂ = y′."
+     ]
+    },
+    {
+     "type": "formula",
+     "text": "x′ = [0 1; −2 −3]x + (0, e⁻ᵗ)"
+    }
+   ]
+  },
+  {
+   "front": "How are the eigenvalues of the companion matrix related to the auxiliary equation?",
+   "back": [
+    {
+     "type": "p",
+     "text": "They are <b>the same</b>: the characteristic polynomial of the companion matrix is the auxiliary polynomial."
+    },
+    {
+     "type": "p",
+     "text": "<i>Example:</i> y″ − y′ − 6y = 0 → [0 1; 6 1]; det(A − λI) = λ² − λ − 6, roots 3, −2: same as r² − r − 6."
+    },
+    {
+     "type": "p",
+     "text": "So systems really do include everything from Chapter 4."
+    }
+   ]
+  },
+  {
+   "front": "How do you differentiate and integrate a matrix function? What’s the product rule?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Entry by entry."
+    },
+    {
+     "type": "formula",
+     "text": "(AB)′ = A′B + AB′   (keep the order)"
+    },
+    {
+     "type": "p",
+     "text": "<i>Example:</i> M = [t² e²ᵗ; sin t 1] → M′ = [2t 2e²ᵗ; cos t 0]; ∫₀¹ M has (1,2) entry (e² − 1)/2."
+    },
+    {
+     "type": "warn",
+     "text": "(A²)′ = A′A + AA′, not 2AA′ in general."
+    }
+   ]
+  },
+  {
+   "front": "Existence–uniqueness and dimension for x′ = A(t)x + f(t)?",
+   "back": [
+    {
+     "type": "p",
+     "text": "If A(t) and f(t) are continuous on an interval I ∋ t₀, then x(t₀) = x₀ gives exactly one solution, valid on <b>all</b> of I."
+    },
+    {
+     "type": "p",
+     "text": "The homogeneous solutions form an <b>n-dimensional</b> space: x ↦ x(t₀) is a linear bijection onto ℝⁿ."
+    }
+   ]
+  },
+  {
+   "front": "What are a fundamental solution set and a fundamental matrix? How do you use X(t)?",
+   "back": [
+    {
+     "type": "p",
+     "text": "<b>Fundamental set:</b> n linearly independent solutions x₁, …, xₙ of x′ = Ax."
+    },
+    {
+     "type": "p",
+     "text": "<b>Fundamental matrix:</b> X(t) = [x₁ ⋯ xₙ], with X′ = AX."
+    },
+    {
+     "type": "formula",
+     "text": "x = X(t)c,   c = X(t₀)⁻¹x₀"
+    },
+    {
+     "type": "p",
+     "text": "Forced system: x = X(t)c + xₚ."
+    }
+   ]
+  },
+  {
+   "front": "Wronskian for systems: definition and the all-or-nothing property. Why?",
+   "back": [
+    {
+     "type": "formula",
+     "text": "W(t) = det[x₁(t) ⋯ xₙ(t)] = W(t₀)·e^(∫tr A)"
+    },
+    {
+     "type": "p",
+     "text": "For solutions: never 0 (fundamental) or identically 0 (dependent)."
+    },
+    {
+     "type": "p",
+     "text": "<b>Why:</b> If W(t₀) = 0, some nonzero combination vanishes at t₀; by uniqueness it equals the zero solution for all t."
+    },
+    {
+     "type": "warn",
+     "text": "(t, 1) and (t², 2t) have W = t²; they can’t both solve one x′ = A(t)x with A continuous near 0."
+    }
+   ]
+  },
+  {
+   "front": "Check that e³ᵗ(1, 1) and e⁻ᵗ(1, −1) form a fundamental set for x′ = [1 2; 2 1]x, and solve x(0) = (3, 1).",
+   "back": [
+    {
+     "type": "steps",
+     "title": "Steps",
+     "items": [
+      "A(1, 1) = 3(1, 1) and A(1, −1) = −(1, −1): both are solutions.",
+      "W = −e²ᵗ − e²ᵗ = −2e²ᵗ ≠ 0.",
+      "c₁ + c₂ = 3, c₁ − c₂ = 1 → c = (2, 1)."
+     ]
+    },
+    {
+     "type": "p",
+     "text": "<i>Example:</i> x = <b>2e³ᵗ(1, 1) + e⁻ᵗ(1, −1)</b>."
+    }
+   ]
+  },
+  {
+   "front": "Why does x = e^(λt)v solve x′ = Ax exactly when Av = λv?",
+   "back": [
+    {
+     "type": "p",
+     "text": "<b>Why:</b> x′ = λe^(λt)v and Ax = e^(λt)Av. Equal for all t ⟺ Av = λv."
+    },
+    {
+     "type": "formula",
+     "text": "x = c₁e^(λ₁t)v₁ + ⋯ + cₙe^(λₙt)vₙ"
+    },
+    {
+     "type": "p",
+     "text": "Valid when v₁, …, vₙ are linearly independent (W(0) = det[v₁ ⋯ vₙ] ≠ 0). Distinct eigenvalues guarantee that."
+    }
+   ]
+  },
+  {
+   "front": "Recipe for x′ = Ax (constant A, real eigenvalues) with x(0) given.",
+   "back": [
+    {
+     "type": "steps",
+     "title": "Steps",
+     "items": [
+      "det(A − λI) = 0; 2×2: λ² − (tr A)λ + det A = 0.",
+      "Null space of A − λI for each λ.",
+      "x = Σ cᵢe^(λᵢt)vᵢ.",
+      "Solve [v₁ ⋯ vₙ]c = x(0)."
+     ]
+    },
+    {
+     "type": "warn",
+     "text": "Keep each eigenvector with its own eigenvalue; check Av = λv."
+    }
+   ]
+  },
+  {
+   "front": "Solve x′ = [4 −2; 1 1]x, x(0) = (1, 0).",
+   "back": [
+    {
+     "type": "steps",
+     "title": "Steps",
+     "items": [
+      "tr 5, det 6: λ = 2, 3.",
+      "λ = 2: v = (1, 1). λ = 3: v = (2, 1).",
+      "c₁ + 2c₂ = 1, c₁ + c₂ = 0 → c₂ = 1, c₁ = −1."
+     ]
+    },
+    {
+     "type": "p",
+     "text": "<i>Example:</i> x = <b>−e²ᵗ(1, 1) + e³ᵗ(2, 1)</b>."
+    }
+   ]
+  },
+  {
+   "front": "General solution of x′ = [5 −1; 3 1]x, and its long-term behavior.",
+   "back": [
+    {
+     "type": "steps",
+     "title": "Steps",
+     "items": [
+      "tr 6, det 8: λ = 2, 4.",
+      "λ = 2: A − 2I = [3 −1; 3 −1], v = (1, 3). λ = 4: [1 −1; 3 −3], v = (1, 1).",
+      "x = c₁e²ᵗ(1, 3) + c₂e⁴ᵗ(1, 1)."
+     ]
+    },
+    {
+     "type": "p",
+     "text": "<i>Example:</i> For large t (c₂ ≠ 0), x ≈ c₂e⁴ᵗ(1, 1): the largest eigenvalue dominates."
+    }
+   ]
+  },
+  {
+   "front": "Repeated eigenvalue: when is it harmless, and when is it a problem?",
+   "back": [
+    {
+     "type": "p",
+     "text": "<b>Harmless</b> if the eigenspace dimension (n − rank(A − λI)) equals the multiplicity: still n independent eigenvectors, same formula."
+    },
+    {
+     "type": "p",
+     "text": "<b>Defective</b> if the eigenspace is too small: you need a generalized eigenvector u with (A − λI)u = v, giving e^(λt)(tv + u) (Nagle 9.8)."
+    },
+    {
+     "type": "p",
+     "text": "<i>Example:</i> Real symmetric matrices are never defective."
+    },
+    {
+     "type": "warn",
+     "text": "Unlike scalar ODEs, a repeated eigenvalue does not automatically produce t·e^(λt)."
+    }
+   ]
+  },
+  {
+   "front": "Solve x′ = [2 1 1; 1 2 1; 1 1 2]x, x(0) = (2, 1, 3).",
+   "back": [
+    {
+     "type": "steps",
+     "title": "Steps",
+     "items": [
+      "A = I + J (J all ones): eigenvalues 4, 1, 1.",
+      "λ = 4: (1, 1, 1). λ = 1: x₁ + x₂ + x₃ = 0, basis (1, −1, 0), (1, 0, −1).",
+      "c₁ + c₂ + c₃ = 2, c₁ − c₂ = 1, c₁ − c₃ = 3 → c = (2, 1, −1)."
+     ]
+    },
+    {
+     "type": "p",
+     "text": "<i>Example:</i> x = <b>2e⁴ᵗ(1, 1, 1) + eᵗ(1, −1, 0) − eᵗ(1, 0, −1)</b>."
+    }
+   ]
+  },
+  {
+   "front": "Real eigenvalues λ₁, λ₂ of a 2×2 system: what do the trajectories look like?",
+   "back": [
+    {
+     "type": "list",
+     "items": [
+      "<b>Both negative:</b> stable node; everything → 0.",
+      "<b>Both positive:</b> unstable node; everything nonzero blows up.",
+      "<b>Opposite signs:</b> saddle; → 0 only along the negative eigenvector’s line."
+     ]
+    },
+    {
+     "type": "warn",
+     "text": "Eigenvalues −3 and 2: not every solution → 0."
+    }
+   ]
+  },
+  {
+   "front": "What are all solutions of x′ = 5I·x (2×2)?",
+   "back": [
+    {
+     "type": "p",
+     "text": "λ = 5 twice, and <b>every</b> nonzero vector is an eigenvector (the eigenspace is all of ℝ², dimension 2 = multiplicity)."
+    },
+    {
+     "type": "p",
+     "text": "<i>Example:</i> x = e⁵ᵗx(0): straight rays out of the origin."
+    }
+   ]
+  },
+  {
+   "front": "For λ = α + iβ with eigenvector v = a + ib, what are the two real solutions? Why do they work?",
+   "back": [
+    {
+     "type": "formula",
+     "text": "x₁ = e^(αt)(a cos βt − b sin βt)<br>x₂ = e^(αt)(a sin βt + b cos βt)"
+    },
+    {
+     "type": "p",
+     "text": "<b>Why:</b> e^(λt)v is a complex solution; A is real, so its real and imaginary parts are each solutions."
+    },
+    {
+     "type": "warn",
+     "text": "Don’t also use λ̄ (it gives the same two); keep the minus sign from i·i = −1."
+    }
+   ]
+  },
+  {
+   "front": "Fast way to get an eigenvector for a complex λ of a 2×2 matrix?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Rows of A − λI are complex multiples of each other, so use <b>one</b> row (p, q) and take v = (q, −p) or (−q, p)."
+    },
+    {
+     "type": "p",
+     "text": "<i>Example:</i> A = [1 −5; 1 −3], λ = −1 + i: row 2 is (1, −2 − i) → v = (2 + i, 1). Check row 1: (2 − i)(2 + i) − 5 = 0 ✓."
+    }
+   ]
+  },
+  {
+   "front": "Solve x′ = [1 −5; 1 −3]x, x(0) = (3, 1).",
+   "back": [
+    {
+     "type": "steps",
+     "title": "Steps",
+     "items": [
+      "λ = −1 ± i; v = (2 + i, 1), so a = (2, 1), b = (1, 0).",
+      "x₁ = e⁻ᵗ(2cos t − sin t, cos t), x₂ = e⁻ᵗ(2sin t + cos t, sin t).",
+      "x₁(0) = a, x₂(0) = b: c₁(2, 1) + c₂(1, 0) = (3, 1) → c₁ = c₂ = 1."
+     ]
+    },
+    {
+     "type": "p",
+     "text": "<i>Example:</i> x = <b>e⁻ᵗ(3cos t + sin t, cos t + sin t)</b>."
+    }
+   ]
+  },
+  {
+   "front": "Real solutions of x′ = [0 4; −1 0]x. What do orbits look like?",
+   "back": [
+    {
+     "type": "steps",
+     "title": "Steps",
+     "items": [
+      "λ = ±2i; for 2i, v = (2, i): a = (2, 0), b = (0, 1).",
+      "x₁ = (2cos 2t, −sin 2t), x₂ = (2sin 2t, cos 2t)."
+     ]
+    },
+    {
+     "type": "p",
+     "text": "<i>Example:</i> α = 0: a <b>center</b>; orbits are ellipses x₁²/4 + x₂² = const, period π."
+    }
+   ]
+  },
+  {
+   "front": "How do α and β (λ = α ± iβ) shape the phase portrait? Direction of rotation?",
+   "back": [
+    {
+     "type": "list",
+     "items": [
+      "<b>α &lt; 0:</b> stable spiral (→ 0).",
+      "<b>α = 0:</b> center (closed orbits).",
+      "<b>α &gt; 0:</b> unstable spiral (→ ∞)."
+     ]
+    },
+    {
+     "type": "p",
+     "text": "β sets the rotation speed."
+    },
+    {
+     "type": "p",
+     "text": "<b>Direction:</b> Compute A(1, 0). Second entry &gt; 0 means counterclockwise."
+    },
+    {
+     "type": "p",
+     "text": "<i>Example:</i> [1 −5; 1 −3]: A(1, 0) = (1, 1), counterclockwise."
+    }
+   ]
+  },
+  {
+   "front": "Two real solutions of x′ = [3 −2; 4 −1]x; in or out?",
+   "back": [
+    {
+     "type": "steps",
+     "title": "Steps",
+     "items": [
+      "tr 2, det 5: λ = 1 ± 2i.",
+      "Row 1 of A − (1 + 2i)I is (2 − 2i, −2) → v = (1, 1 − i): a = (1, 1), b = (0, −1).",
+      "x₁ = eᵗ(cos 2t, cos 2t + sin 2t), x₂ = eᵗ(sin 2t, sin 2t − cos 2t)."
+     ]
+    },
+    {
+     "type": "p",
+     "text": "<i>Example:</i> α = 1 &gt; 0: spirals <b>out</b>."
+    }
+   ]
+  },
+  {
+   "front": "True or false: a real 3×3 matrix can have eigenvalues i, −i, 2i.",
+   "back": [
+    {
+     "type": "p",
+     "text": "<b>False.</b> Conjugating Av = λv shows Av̄ = λ̄v̄: complex eigenvalues of real matrices come in conjugate pairs. 2i would need −2i, making four."
+    },
+    {
+     "type": "p",
+     "text": "<i>Example:</i> Every real 3×3 matrix has at least one real eigenvalue, e.g. [−1 0 0; 0 0 −3; 0 3 0] has −1, ±3i."
+    }
+   ]
+  },
+  {
+   "front": "Why does each eigenpair (λ, v) give a solution e^(λt)v of x′ = Ax?",
+   "back": [
+    {
+     "type": "p",
+     "text": "x′ = λe^(λt)v and Ax = e^(λt)Av = λe^(λt)v: equal for all t."
+    }
+   ]
+  },
+  {
+   "front": "For complex λ, how do you get two real solutions, and why are they independent?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Take real and imaginary parts of e^(λt)v (A real ⇒ each is a solution). At t = 0 they are Re v and Im v, which are independent, so W(0) ≠ 0."
+    }
+   ]
+  },
+  {
+   "front": "All solutions of a 2×2 system → 0 iff?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Both eigenvalues have negative real part ⇔ tr A &lt; 0 and det A &gt; 0."
+    }
+   ]
+  }
+ ],
+ "hard": [
+  {
+   "title": "Repeated eigenvalue with full eigenspace (3×3)",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "Solve <b>x</b>′ = <i>A</i><b>x</b>, <b>x</b>(0) = (1, 0, 3), with <i>A</i> ="
+    },
+    {
+     "type": "matrix",
+     "rows": [
+      [
+       "4",
+       "0",
+       "1"
+      ],
+      [
+       "2",
+       "3",
+       "2"
+      ],
+      [
+       "1",
+       "0",
+       "4"
+      ]
+     ]
+    },
+    {
+     "type": "p",
+     "text": "(Its characteristic polynomial is −(λ − 3)²(λ − 5).)"
+    }
+   ],
+   "answer": "x(t) = −4e³ᵗ(0,1,0) + e³ᵗ(−1,0,1) + 2e⁵ᵗ(1,2,1) = (2e⁵ᵗ − e³ᵗ, 4e⁵ᵗ − 4e³ᵗ, 2e⁵ᵗ + e³ᵗ)",
+   "solution": [
+    {
+     "type": "steps",
+     "title": "Solution",
+     "items": [
+      "λ = 3: A − 3I = [1 0 1; 2 0 2; 1 0 1] has rank 1, giving eigenvectors (0,1,0), (−1,0,1); λ = 5 with (1,2,1). Two eigenvectors for the double eigenvalue ⇒ enough for a fundamental set.",
+      "<b>x</b>(<i>t</i>) = <i>c</i>₁<i>e</i><sup>3<i>t</i></sup>(0,1,0) + <i>c</i>₂<i>e</i><sup>3<i>t</i></sup>(−1,0,1) + <i>c</i>₃<i>e</i><sup>5<i>t</i></sup>(1,2,1).",
+      "<i>t</i> = 0: <i>c</i>₁(0,1,0) + <i>c</i>₂(−1,0,1) + <i>c</i>₃(1,2,1) = (1,0,3) ⇒ <i>c</i>₃ = 2, <i>c</i>₂ = 1, <i>c</i>₁ = −4.",
+      "<b><b>x</b>(<i>t</i>) = −4<i>e</i><sup>3<i>t</i></sup>(0,1,0) + <i>e</i><sup>3<i>t</i></sup>(−1,0,1) + 2<i>e</i><sup>5<i>t</i></sup>(1,2,1)</b> = (2<i>e</i><sup>5<i>t</i></sup> − <i>e</i><sup>3<i>t</i></sup>, 4<i>e</i><sup>5<i>t</i></sup> − 4<i>e</i><sup>3<i>t</i></sup>, 2<i>e</i><sup>5<i>t</i></sup> + <i>e</i><sup>3<i>t</i></sup>)."
+     ]
+    },
+    {
+     "type": "warn",
+     "text": "What it tests: Repeated eigenvalue with a full eigenspace needs no generalized eigenvectors (and no <i>te</i><sup>λ<i>t</i></sup> terms)."
+    }
+   ]
+  },
+  {
+   "title": "Complex eigenvalues IVP",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "Find the real general solution of <b>x</b>′ ="
+    },
+    {
+     "type": "matrix",
+     "rows": [
+      [
+       "1",
+       "−2"
+      ],
+      [
+       "1",
+       "3"
+      ]
+     ]
+    },
+    {
+     "type": "p",
+     "text": "<b>x</b>, then solve with <b>x</b>(0) = (1, 1). Describe the trajectories."
+    }
+   ],
+   "answer": "x(t) = e²ᵗ(cos t − 3 sin t, cos t + 2 sin t); spirals outward",
+   "solution": [
+    {
+     "type": "steps",
+     "title": "Solution",
+     "items": [
+      "Eigenvalues 2 ± <i>i</i>. For λ = 2 + <i>i</i>: row 2 of <i>A</i> − λ<i>I</i> gives <i>x</i>₁ + (1 − <i>i</i>)<i>x</i>₂ = 0 ⇒ <b>v</b> = (−1 + <i>i</i>, 1) = <b>a</b> + <i>i</i><b>b</b>, <b>a</b> = (−1, 1), <b>b</b> = (1, 0).",
+      "<i>e</i><sup>(2+<i>i</i>)<i>t</i></sup><b>v</b> = <i>e</i><sup>2<i>t</i></sup>(cos <i>t</i> + <i>i</i> sin <i>t</i>)(<b>a</b> + <i>i</i><b>b</b>). Real and imaginary parts:",
+      "<b>x</b>₁ = <i>e</i><sup>2<i>t</i></sup>(<b>a</b> cos <i>t</i> − <b>b</b> sin <i>t</i>) = <i>e</i><sup>2<i>t</i></sup>(−cos <i>t</i> − sin <i>t</i>, cos <i>t</i>); <b>x</b>₂ = <i>e</i><sup>2<i>t</i></sup>(<b>a</b> sin <i>t</i> + <b>b</b> cos <i>t</i>) = <i>e</i><sup>2<i>t</i></sup>(−sin <i>t</i> + cos <i>t</i>, sin <i>t</i>).",
+      "<b>x</b>(0) = <i>c</i>₁(−1, 1) + <i>c</i>₂(1, 0) = (1, 1) ⇒ <i>c</i>₁ = 1, <i>c</i>₂ = 2.",
+      "<b><b>x</b>(<i>t</i>) = <i>e</i><sup>2<i>t</i></sup>(cos <i>t</i> − 3 sin <i>t</i>, cos <i>t</i> + 2 sin <i>t</i>)</b>. Real part 2 &gt; 0: trajectories spiral <b>outward</b> (unstable spiral)."
+     ]
+    },
+    {
+     "type": "warn",
+     "text": "What it tests: Use one eigenvalue; its real and imaginary parts give both real solutions. Taking real parts of both conjugate solutions gives the same function twice."
+    }
+   ]
+  },
+  {
+   "title": "Companion matrices",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "(a) Write <i>y</i>‴ − 2<i>y</i>″ − <i>y</i>′ + 2<i>y</i> = 0 as a first-order system <b>x</b>′ = <i>A</i><b>x</b>, find the eigenvalues of <i>A</i>, and the general solution <i>y</i>. (b) Write <i>y</i>″ + 3<i>y</i>′ + 2<i>y</i> = sin <i>t</i> as <b>x</b>′ = <i>B</i><b>x</b> + <b>f</b>(<i>t</i>)."
+    }
+   ],
+   "answer": "(a) A = [0 1 0; 0 0 1; −2 1 2], eigenvalues 1, −1, 2, y = c₁eᵗ + c₂e⁻ᵗ + c₃e²ᵗ (b) x′ = [0 1; −2 −3]x + (0, sin t)",
+   "solution": [
+    {
+     "type": "p",
+     "text": "(a) <i>x</i>₁ = <i>y</i>, <i>x</i>₂ = <i>y</i>′, <i>x</i>₃ = <i>y</i>″: <i>x</i>₁′ = <i>x</i>₂, <i>x</i>₂′ = <i>x</i>₃, <i>x</i>₃′ = −2<i>x</i>₁ + <i>x</i>₂ + 2<i>x</i>₃. <i>A</i> ="
+    },
+    {
+     "type": "matrix",
+     "rows": [
+      [
+       "0",
+       "1",
+       "0"
+      ],
+      [
+       "0",
+       "0",
+       "1"
+      ],
+      [
+       "−2",
+       "1",
+       "2"
+      ]
+     ]
+    },
+    {
+     "type": "p",
+     "text": "det(λ<i>I</i> − <i>A</i>) = λ³ − 2λ² − λ + 2 = (λ − 1)(λ + 1)(λ − 2) — exactly the characteristic polynomial of the ODE. Eigenvalues <b>1, −1, 2</b>."
+    },
+    {
+     "type": "p",
+     "text": "<i>y</i> = <i>c</i>₁<i>e</i>ᵗ + <i>c</i>₂<i>e</i>⁻ᵗ + <i>c</i>₃<i>e</i><sup>2<i>t</i></sup> (first component of the system’s solution)."
+    },
+    {
+     "type": "p",
+     "text": "(b) <i>x</i>₁ = <i>y</i>, <i>x</i>₂ = <i>y</i>′: <b>x</b>′ ="
+    },
+    {
+     "type": "matrix",
+     "rows": [
+      [
+       "0",
+       "1"
+      ],
+      [
+       "−2",
+       "−3"
+      ]
+     ]
+    },
+    {
+     "type": "p",
+     "text": "<b>x</b> + (0, sin <i>t</i>)."
+    },
+    {
+     "type": "warn",
+     "text": "What it tests: The last row of the companion matrix holds the <i>negated</i> lower coefficients (solve for the top derivative first). Its eigenvalues are the characteristic roots."
+    }
+   ]
+  },
+  {
+   "title": "True/False: systems",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "list",
+     "items": [
+      "1. If <b>x</b>₁(<i>t</i>), <b>x</b>₂(<i>t</i>) solve <b>x</b>′ = <i>A</i><b>x</b>, so does <i>c</i>₁<b>x</b>₁ + <i>c</i>₂<b>x</b>₂.",
+      "2. If <i>A</i><b>v</b> = λ<b>v</b>, then <b>x</b>(<i>t</i>) = <i>e</i><sup>λ<i>t</i></sup><b>v</b> solves <b>x</b>′ = <i>A</i><b>x</b>.",
+      "3. If 3×3 <i>A</i> has a repeated eigenvalue, <b>x</b>′ = <i>A</i><b>x</b> cannot have three independent solutions of the form <i>e</i><sup>λ<i>t</i></sup><b>v</b>.",
+      "4. If every eigenvalue of <i>A</i> has negative real part, every solution of <b>x</b>′ = <i>A</i><b>x</b> tends to <b>0</b>.",
+      "5. Two vector functions whose Wronskian is identically zero on an interval must be linearly dependent there."
+     ]
+    }
+   ],
+   "answer": "1 T, 2 T, 3 F, 4 T, 5 F",
+   "solution": [
+    {
+     "type": "list",
+     "items": [
+      "1. <b>True.</b> Differentiation and multiplication by <i>A</i> are linear.",
+      "2. <b>True.</b> <b>x</b>′ = λ<i>e</i><sup>λ<i>t</i></sup><b>v</b> = <i>e</i><sup>λ<i>t</i></sup><i>A</i><b>v</b> = <i>A</i><b>x</b>.",
+      "3. <b>False.</b> <i>A</i> = [4 0 1; 2 3 2; 1 0 4] has λ = 3 twice with a 2-D eigenspace, giving 3 independent eigen-solutions. (<i>A</i> = <i>I</i> is the extreme case.)",
+      "4. <b>True.</b> Every solution is built from <i>e</i><sup>α<i>t</i></sup>(cos, sin)·(polynomial) with α &lt; 0.",
+      "5. <b>False.</b> (<i>e</i>ᵗ, 0) and (<i>e</i><sup>2<i>t</i></sup>, 0): det = 0 always, but no constant <i>c</i> gives <i>e</i><sup>2<i>t</i></sup> = <i>c</i><i>e</i>ᵗ. (They can’t both solve one system <b>x</b>′ = <i>A</i>(<i>t</i>)<b>x</b>; for actual solutions the implication holds.)"
+     ]
+    },
+    {
+     "type": "warn",
+     "text": "What it tests: Eigen-solutions <i>e</i><sup>λ<i>t</i></sup><b>v</b> are the building blocks; what matters is whether you have <i>n</i> independent eigenvectors, not whether eigenvalues repeat."
+    }
+   ]
+  },
+  {
+   "title": "Stability with parameters",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "(a) For <b>x</b>′ ="
+    },
+    {
+     "type": "matrix",
+     "rows": [
+      [
+       "0",
+       "1"
+      ],
+      [
+       "−<i>k</i>",
+       "−2"
+      ]
+     ]
+    },
+    {
+     "type": "p",
+     "text": "<b>x</b> (equivalent to <i>y</i>″ + 2<i>y</i>′ + <i>k</i><i>y</i> = 0), classify by <i>k</i>: when are eigenvalues real distinct / repeated / complex, and when do all solutions → <b>0</b>? (b) For <b>x</b>′ ="
+    },
+    {
+     "type": "matrix",
+     "rows": [
+      [
+       "<i>h</i>",
+       "1"
+      ],
+      [
+       "−4",
+       "<i>h</i>"
+      ]
+     ]
+    },
+    {
+     "type": "p",
+     "text": "<b>x</b>, describe trajectories for <i>h</i> &lt; 0, = 0, &gt; 0."
+    }
+   ],
+   "answer": "(a) k &lt; 1 real distinct, k = 1 repeated, k &gt; 1 complex; all → 0 iff k &gt; 0 (b) h &lt; 0 spiral in, h = 0 closed orbits, h &gt; 0 spiral out",
+   "solution": [
+    {
+     "type": "steps",
+     "title": "Solution",
+     "items": [
+      "(a) λ² + 2λ + <i>k</i> = 0 ⇒ λ = −1 ± √(1 − <i>k</i>).",
+      "<i>k</i> &lt; 1: real distinct. Both negative iff √(1−<i>k</i>) &lt; 1 iff <i>k</i> &gt; 0; for <i>k</i> &lt; 0 one is positive (saddle); <i>k</i> = 0 gives λ = 0, −2 (solutions tend to constants).",
+      "<i>k</i> = 1: repeated λ = −1 with only one eigenvector (companion matrices are never λ<i>I</i>) — a defective case, still decays like <i>te</i>⁻ᵗ.",
+      "<i>k</i> &gt; 1: complex −1 ± <i>i</i>√(<i>k</i>−1): decaying spirals. <b>All solutions → 0 ⇔ <i>k</i> &gt; 0</b>.",
+      "(b) Eigenvalues <i>h</i> ± 2<i>i</i>. <i>h</i> &lt; 0: spirals into 0; <i>h</i> = 0: closed orbits (ellipses), periodic, bounded; <i>h</i> &gt; 0: spirals outward."
+     ]
+    },
+    {
+     "type": "warn",
+     "text": "What it tests: Real part decides decay/growth; imaginary part decides rotation. For 2×2: trace = sum, det = product of eigenvalues — stable ⇔ trace &lt; 0 and det &gt; 0."
+    }
+   ]
+  },
+  {
+   "title": "Build A from solutions; stable line",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "Find a 2×2 matrix <i>A</i> for which <b>x</b>′ = <i>A</i><b>x</b> has solutions <i>e</i><sup>−<i>t</i></sup>(1, 2) and <i>e</i><sup>3<i>t</i></sup>(1, −1). Which initial conditions lead to solutions that tend to <b>0</b>?"
+    }
+   ],
+   "answer": "A = [5/3 −4/3; −8/3 1/3]; decays iff x(0) ∈ Span{(1, 2)}",
+   "solution": [
+    {
+     "type": "p",
+     "text": "Need <i>A</i>(1,2) = −(1,2) and <i>A</i>(1,−1) = 3(1,−1): <i>A</i> = <i>PDP</i>⁻¹, <i>P</i> ="
+    },
+    {
+     "type": "matrix",
+     "rows": [
+      [
+       "1",
+       "1"
+      ],
+      [
+       "2",
+       "−1"
+      ]
+     ]
+    },
+    {
+     "type": "p",
+     "text": ", <i>D</i> = diag(−1, 3)."
+    },
+    {
+     "type": "p",
+     "text": "<i>P</i>⁻¹ = (1/3)"
+    },
+    {
+     "type": "matrix",
+     "rows": [
+      [
+       "1",
+       "1"
+      ],
+      [
+       "2",
+       "−1"
+      ]
+     ]
+    },
+    {
+     "type": "p",
+     "text": ". <i>A</i> ="
+    },
+    {
+     "type": "matrix",
+     "rows": [
+      [
+       "5/3",
+       "−4/3"
+      ],
+      [
+       "−8/3",
+       "1/3"
+      ]
+     ]
+    },
+    {
+     "type": "p",
+     "text": ". Check: trace 2 = −1 + 3, det −3 ✓; <i>A</i>(1,2) = (−1, −2) ✓."
+    },
+    {
+     "type": "p",
+     "text": "General solution <i>c</i>₁<i>e</i>⁻ᵗ(1,2) + <i>c</i>₂<i>e</i><sup>3<i>t</i></sup>(1,−1) → 0 iff <i>c</i>₂ = 0: <b>x</b>(0) on the line <b>Span{(1, 2)}</b> (saddle)."
+    },
+    {
+     "type": "warn",
+     "text": "What it tests: The eigenvector of the negative eigenvalue is the stable line; any component along the other eigenvector eventually dominates."
+    }
+   ]
+  },
+  {
+   "title": "Fundamental matrix IVP",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "For <i>A</i> ="
+    },
+    {
+     "type": "matrix",
+     "rows": [
+      [
+       "5",
+       "−3"
+      ],
+      [
+       "6",
+       "−4"
+      ]
+     ]
+    },
+    {
+     "type": "p",
+     "text": ", write a fundamental matrix <i>X</i>(<i>t</i>) for <b>x</b>′ = <i>A</i><b>x</b> and solve with <b>x</b>(0) = (0, 1) using <b>x</b>(<i>t</i>) = <i>X</i>(<i>t</i>)<i>X</i>(0)⁻¹<b>x</b>(0)."
+    }
+   ],
+   "answer": "X(t) = [e²ᵗ e⁻ᵗ; e²ᵗ 2e⁻ᵗ]; x(t) = (e⁻ᵗ − e²ᵗ, 2e⁻ᵗ − e²ᵗ)",
+   "solution": [
+    {
+     "type": "p",
+     "text": "Eigenpairs: 2 ↔ (1,1), −1 ↔ (1,2). <i>X</i>(<i>t</i>) ="
+    },
+    {
+     "type": "matrix",
+     "rows": [
+      [
+       "<i>e</i><sup>2<i>t</i></sup>",
+       "<i>e</i><sup>−<i>t</i></sup>"
+      ],
+      [
+       "<i>e</i><sup>2<i>t</i></sup>",
+       "2<i>e</i><sup>−<i>t</i></sup>"
+      ]
+     ]
+    },
+    {
+     "type": "p",
+     "text": "<i>X</i>(0) ="
+    },
+    {
+     "type": "matrix",
+     "rows": [
+      [
+       "1",
+       "1"
+      ],
+      [
+       "1",
+       "2"
+      ]
+     ]
+    },
+    {
+     "type": "p",
+     "text": ", <i>X</i>(0)⁻¹ ="
+    },
+    {
+     "type": "matrix",
+     "rows": [
+      [
+       "2",
+       "−1"
+      ],
+      [
+       "−1",
+       "1"
+      ]
+     ]
+    },
+    {
+     "type": "p",
+     "text": ", <i>X</i>(0)⁻¹(0,1) = (−1, 1)."
+    },
+    {
+     "type": "p",
+     "text": "<b><b>x</b>(<i>t</i>) = −<i>e</i><sup>2<i>t</i></sup>(1,1) + <i>e</i><sup>−<i>t</i></sup>(1,2)</b> = (<i>e</i>⁻ᵗ − <i>e</i><sup>2<i>t</i></sup>, 2<i>e</i>⁻ᵗ − <i>e</i><sup>2<i>t</i></sup>)."
+    },
+    {
+     "type": "warn",
+     "text": "What it tests: <i>X</i>(<i>t</i>)<i>X</i>(0)⁻¹ = <i>e</i><sup><i>At</i></sup>. Columns of <i>X</i> must be independent solutions (Wronskian ≠ 0)."
+    }
+   ]
+  },
+  {
+   "title": "Coupled oscillators",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "Two masses obey <i>x</i>″ = −2<i>x</i> + <i>y</i>, <i>y</i>″ = <i>x</i> − 2<i>y</i>. (a) Write this as a first-order system in ℝ⁴. (b) Solve with <i>x</i>(0) = 1, <i>y</i>(0) = 0, <i>x</i>′(0) = <i>y</i>′(0) = 0, using eigenvectors of <i>K</i> ="
+    },
+    {
+     "type": "matrix",
+     "rows": [
+      [
+       "−2",
+       "1"
+      ],
+      [
+       "1",
+       "−2"
+      ]
+     ]
+    }
+   ],
+   "answer": "x = ½(cos t + cos √3t), y = ½(cos t − cos √3t)",
+   "solution": [
+    {
+     "type": "p",
+     "text": "(a) <b>u</b> = (<i>x</i>, <i>y</i>, <i>x</i>′, <i>y</i>′): <b>u</b>′ ="
+    },
+    {
+     "type": "matrix",
+     "rows": [
+      [
+       "0",
+       "0",
+       "1",
+       "0"
+      ],
+      [
+       "0",
+       "0",
+       "0",
+       "1"
+      ],
+      [
+       "−2",
+       "1",
+       "0",
+       "0"
+      ],
+      [
+       "1",
+       "−2",
+       "0",
+       "0"
+      ]
+     ]
+    },
+    {
+     "type": "p",
+     "text": "<b>u</b>."
+    },
+    {
+     "type": "p",
+     "text": "(b) Second-order form <b>z</b>″ = <i>K</i><b>z</b>. <i>K</i> has eigenvalues −1 ↔ (1,1) and −3 ↔ (1,−1). Try <b>z</b> = <i>f</i>(<i>t</i>)<b>v</b>: <i>f</i>″ = λ<i>f</i> ⇒ frequencies 1 and √3."
+    },
+    {
+     "type": "p",
+     "text": "<b>z</b> = (<i>a</i>₁ cos <i>t</i> + <i>b</i>₁ sin <i>t</i>)(1,1) + (<i>a</i>₂ cos √3<i>t</i> + <i>b</i>₂ sin √3<i>t</i>)(1,−1)."
+    },
+    {
+     "type": "p",
+     "text": "Zero velocities ⇒ <i>b</i>₁ = <i>b</i>₂ = 0. (1, 0) = <i>a</i>₁(1,1) + <i>a</i>₂(1,−1) ⇒ <i>a</i>₁ = <i>a</i>₂ = ½."
+    },
+    {
+     "type": "p",
+     "text": "<b><i>x</i> = ½(cos <i>t</i> + cos √3<i>t</i>), <i>y</i> = ½(cos <i>t</i> − cos √3<i>t</i>)</b> — a mix of the in-phase and out-of-phase normal modes."
+    },
+    {
+     "type": "warn",
+     "text": "What it tests: Eigenvalue −ω² of <i>K</i> gives angular frequency ω. The ℝ⁴ system has eigenvalues ±<i>i</i>, ±√3<i>i</i>."
+    }
+   ]
+  }
+ ],
+ "keyFacts": [
+  "nth-order ODE → system: x₁ = y, …, xₙ = y⁽ⁿ⁻¹⁾; companion eigenvalues = characteristic roots.",
+  "e^(λt)v solves x′ = Ax ⇔ Av = λv; general solution Σcᵢe^(λᵢt)vᵢ with n independent eigenvectors.",
+  "IVP: solve [v₁ ⋯ vₙ]c = x(0); or x = X(t)X(0)⁻¹x(0).",
+  "Wronskian det[x₁ ⋯ xₙ]: never 0 (fundamental) or always 0 for solutions.",
+  "Repeated eigenvalue with full eigenspace: same formula, no t e^(λt).",
+  "λ = α + iβ, v = a + ib: x₁ = e^(αt)(a cos βt − b sin βt), x₂ = e^(αt)(a sin βt + b cos βt).",
+  "Decay iff no component along eigenvectors with Re λ ≥ 0; 2×2 stable ⇔ tr &lt; 0, det &gt; 0."
+ ]
+}

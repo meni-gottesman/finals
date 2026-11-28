@@ -1,0 +1,935 @@
+{
+ "id": "54-4",
+ "course": "54",
+ "title": "Determinants",
+ "source": "Lay 3.1–3.3 (no Cramer’s rule)",
+ "summary": "How to compute determinants efficiently (cofactor expansion and row reduction), the algebraic rules det(AB) = det A det B and det(cA) = cⁿ det A, and the geometric meaning of |det| as the area/volume scaling factor of a linear map.",
+ "lesson": [
+  {
+   "title": "What a determinant is: cofactor expansion",
+   "blocks": [
+    {
+     "type": "p",
+     "text": "For a 2×2 matrix, det [a b; c d] = ad − bc. For larger matrices we define det recursively."
+    },
+    {
+     "type": "def",
+     "term": "Minor and cofactor",
+     "text": "Aᵢⱼ is A with row i and column j deleted. The (i, j)-cofactor is Cᵢⱼ = (−1)<sup>i+j</sup> det Aᵢⱼ."
+    },
+    {
+     "type": "thm",
+     "name": "Cofactor expansion",
+     "text": "det A can be computed along ANY row i: det A = aᵢ₁Cᵢ₁ + aᵢ₂Cᵢ₂ + ⋯ + aᵢₙCᵢₙ, or down any column j: det A = a₁ⱼC₁ⱼ + ⋯ + aₙⱼCₙⱼ. All give the same number."
+    },
+    {
+     "type": "p",
+     "text": "The sign pattern (−1)<sup>i+j</sup> is a checkerboard starting with + in the top-left:"
+    },
+    {
+     "type": "matrix",
+     "rows": [
+      [
+       "+",
+       "−",
+       "+"
+      ],
+      [
+       "−",
+       "+",
+       "−"
+      ],
+      [
+       "+",
+       "−",
+       "+"
+      ]
+     ]
+    },
+    {
+     "type": "thm",
+     "name": "Triangular matrices",
+     "text": "If A is triangular (upper or lower), det A is the product of the diagonal entries.",
+     "proof": [
+      {
+       "type": "p",
+       "text": "Expand down the first column (or along the first row) repeatedly: only the diagonal entry survives each time."
+      }
+     ]
+    },
+    {
+     "type": "tip",
+     "text": "Always expand along the row or column with the most zeros: each zero kills a whole sub-determinant."
+    },
+    {
+     "type": "example",
+     "title": "Cofactor expansion along the best row/column",
+     "prompt": "Compute det B for B = [2 0 0 3; 1 −1 4 2; 0 0 5 0; 3 0 1 1].",
+     "steps": [
+      "Row 3 has a single nonzero entry, 5, in position (3, 3), sign (−1)⁶ = +.",
+      "det B = 5·det [2 0 3; 1 −1 2; 3 0 1] (delete row 3, column 3).",
+      "In that 3×3, column 2 has a single nonzero entry −1 at (2, 2), sign +: det = −1·det [2 3; 3 1] = −1·(2 − 9) = 7.",
+      "det B = 5·7."
+     ],
+     "answer": "det B = 35"
+    }
+   ]
+  },
+  {
+   "title": "Row operations and determinants",
+   "blocks": [
+    {
+     "type": "thm",
+     "name": "Effect of row operations",
+     "text": "(a) Replacement (add a multiple of one row to another): det unchanged. (b) Interchange of two rows: det changes sign. (c) Scaling a row by k: det is multiplied by k.",
+     "proof": [
+      {
+       "type": "p",
+       "text": "Intuition from volume: det measures the signed volume of the box spanned by the rows. A shear (replacement) slides one edge parallel to the others, keeping base and height, so the volume is unchanged. Scaling one edge by k scales volume by k. A swap reverses orientation, which flips the sign."
+      },
+      {
+       "type": "p",
+       "text": "Algebraically: (b) is proved by induction, expanding along a row not involved in the swap; (a) follows from (b), (c) and linearity in a row: det with row rⱼ + c·rᵢ = det(original) + c·det(matrix with two equal rows rᵢ), and a matrix with two equal rows has det 0 because swapping them changes the sign but not the matrix."
+      }
+     ]
+    },
+    {
+     "type": "steps",
+     "title": "Determinant by row reduction",
+     "items": [
+      "Reduce A to an echelon form U using replacements and interchanges (avoid scaling, or record it).",
+      "Count the interchanges r.",
+      "det A = (−1)ʳ·(product of the diagonal of U), times any factors you pulled out by scaling."
+     ]
+    },
+    {
+     "type": "example",
+     "title": "Row reduction with a swap",
+     "prompt": "Compute det [1 −4 2; −2 8 −9; −1 7 0].",
+     "steps": [
+      "R₂ + 2R₁ → [0 0 −5]; R₃ + R₁ → [0 3 2] (replacements: no change).",
+      "Swap R₂ and R₃ (sign flips): [1 −4 2; 0 3 2; 0 0 −5].",
+      "Triangular: product of diagonal = 1·3·(−5) = −15. One swap ⇒ det A = −(−15)."
+     ],
+     "answer": "det = 15"
+    },
+    {
+     "type": "example",
+     "title": "Row reduction with a factored-out scalar",
+     "prompt": "Compute det [2 −8 6 8; 3 −9 5 10; −3 0 1 −2; 1 −4 0 6].",
+     "steps": [
+      "Factor 2 out of row 1: det = 2·det [1 −4 3 4; 3 −9 5 10; −3 0 1 −2; 1 −4 0 6].",
+      "R₂ − 3R₁ → [0 3 −4 −2]; R₃ + 3R₁ → [0 −12 10 10]; R₄ − R₁ → [0 0 −3 2].",
+      "R₃ + 4R₂ → [0 0 −6 2]; R₄ − ½R₃ → [0 0 0 1].",
+      "Diagonal product 1·3·(−6)·1 = −18; times the factored 2."
+     ],
+     "answer": "det = −36"
+    },
+    {
+     "type": "warn",
+     "text": "Do not confuse 'scale a row by k' (det × k) with 'det(kA)' (every row scaled: det × kⁿ)."
+    },
+    {
+     "type": "thm",
+     "name": "Column operations",
+     "text": "det Aᵀ = det A, so column operations affect det exactly as the corresponding row operations do. A matrix with a zero row or column, or two equal (or proportional) rows or columns, has det 0."
+    }
+   ]
+  },
+  {
+   "title": "Determinants, invertibility and products",
+   "blocks": [
+    {
+     "type": "thm",
+     "name": "Invertibility",
+     "text": "A square matrix A is invertible ⇔ det A ≠ 0.",
+     "proof": [
+      {
+       "type": "p",
+       "text": "Row reduce to echelon form U with det A = ±(nonzero factors)·det U. A is invertible ⇔ U has n pivots ⇔ every diagonal entry of U is nonzero ⇔ det U ≠ 0."
+      }
+     ]
+    },
+    {
+     "type": "thm",
+     "name": "Multiplicative property",
+     "text": "det(AB) = (det A)(det B).",
+     "proof": [
+      {
+       "type": "p",
+       "text": "If A is singular, so is AB, and both sides are 0. Otherwise A is a product of elementary matrices, and det(EB) = det(E)·det(B) for each elementary E by the row-operation rules."
+      }
+     ]
+    },
+    {
+     "type": "list",
+     "items": [
+      "det Aᵀ = det A.",
+      "det A⁻¹ = 1/det A (from det A · det A⁻¹ = det I = 1).",
+      "det(cA) = cⁿ det A for n×n A (each of the n rows is scaled by c).",
+      "det(Aᵏ) = (det A)ᵏ; det(AB) = det(BA) even though AB ≠ BA.",
+      "det(A + B) ≠ det A + det B in general."
+     ]
+    },
+    {
+     "type": "example",
+     "title": "Using the properties",
+     "prompt": "A and B are 3×3 with det A = 4 and det B = −2. Find det(2A), det(A⁻¹B²), det(AᵀB), det(−A), det(B⁻¹AB).",
+     "steps": [
+      "det(2A) = 2³·4 = 32.",
+      "det(A⁻¹B²) = (1/4)·(−2)² = 1.",
+      "det(AᵀB) = 4·(−2) = −8.",
+      "det(−A) = (−1)³·4 = −4.",
+      "det(B⁻¹AB) = (1/(−2))·4·(−2) = 4 (similar matrices have equal determinants)."
+     ],
+     "answer": "32, 1, −8, −4, 4"
+    },
+    {
+     "type": "warn",
+     "text": "det(cA) uses cⁿ, not c. For a 4×4 matrix, det(−A) = +det A."
+    }
+   ]
+  },
+  {
+   "title": "Parameters that make a determinant zero",
+   "blocks": [
+    {
+     "type": "p",
+     "text": "'For which values of h is A singular (non-invertible / columns dependent / A<b>x</b> = <b>0</b> nontrivial)?' all mean: solve det A = 0."
+    },
+    {
+     "type": "example",
+     "title": "Parameter making det 0",
+     "prompt": "For which h is A = [1 2 3; 2 h 4; 3 5 7] not invertible?",
+     "steps": [
+      "Cofactor expansion along row 1: det A = 1(7h − 20) − 2(14 − 12) + 3(10 − 3h).",
+      "= 7h − 20 − 4 + 30 − 9h = 6 − 2h = −2(h − 3).",
+      "det A = 0 ⇔ h = 3."
+     ],
+     "answer": "A is singular exactly when h = 3."
+    },
+    {
+     "type": "tip",
+     "text": "Factor rather than expand when you can: use row operations to pull out common factors (e.g. add all rows together if row sums are equal). A 3×3 det that is a cubic in h may have up to 3 roots; make sure you find all."
+    },
+    {
+     "type": "example",
+     "title": "Equal row sums trick",
+     "prompt": "For which x is the 4×4 matrix with x on the diagonal and 1 elsewhere singular?",
+     "steps": [
+      "Add rows 2, 3, 4 to row 1: row 1 becomes (x + 3)(1, 1, 1, 1). Factor out x + 3.",
+      "Subtract the all-ones row from rows 2–4: they become (x − 1) times standard rows; the matrix is triangular with diagonal 1, x − 1, x − 1, x − 1.",
+      "det = (x + 3)(x − 1)³."
+     ],
+     "answer": "Singular iff x = 1 or x = −3."
+    }
+   ]
+  },
+  {
+   "title": "Area, volume, and linear transformations",
+   "blocks": [
+    {
+     "type": "thm",
+     "name": "Geometric meaning",
+     "text": "If A is 2×2, |det A| is the area of the parallelogram spanned by its columns. If A is 3×3, |det A| is the volume of the parallelepiped spanned by its columns.",
+     "proof": [
+      {
+       "type": "p",
+       "text": "Column operations of replacement type (shears) do not change area (same base, same height) and do not change det; reduce to a diagonal matrix, where the box is a rectangle with area |product of diagonal|."
+      }
+     ]
+    },
+    {
+     "type": "thm",
+     "name": "Scaling under T",
+     "text": "If T(<b>x</b>) = A<b>x</b> and S is a region of finite area (volume), then area(T(S)) = |det A|·area(S)."
+    },
+    {
+     "type": "tip",
+     "text": "This is why det(AB) = det A · det B: applying B scales areas by |det B|, then A scales them by |det A|; the sign tracks whether orientation is reversed."
+    },
+    {
+     "type": "example",
+     "title": "Area of a parallelogram and of its image",
+     "prompt": "Find the area of the parallelogram with vertices (−1, 0), (1, 5), (3, 1), (5, 6). Then find the area of its image under T(x) = [1 2; 0 3]x.",
+     "steps": [
+      "Use edge vectors from one vertex, (−1, 0): (1, 5) − (−1, 0) = (2, 5) and (3, 1) − (−1, 0) = (4, 1). Check: (2, 5) + (4, 1) = (6, 6), and (−1, 0) + (6, 6) = (5, 6). ✓",
+      "Area = |det [2 4; 5 1]| = |2 − 20| = 18.",
+      "det [1 2; 0 3] = 3, so the image has area 3·18."
+     ],
+     "answer": "Area 18; image area 54."
+    },
+    {
+     "type": "example",
+     "title": "Volume and image of the unit ball",
+     "prompt": "Find the volume of the parallelepiped spanned by (1, 2, 0), (0, 1, 3), (2, 0, 1), and the area of the image of the unit disk under T(x) = [2 1; −1 3]x.",
+     "steps": [
+      "det [1 0 2; 2 1 0; 0 3 1] = 1(1 − 0) − 0 + 2(6 − 0) = 13 (columns are the given vectors).",
+      "Unit disk has area π; |det [2 1; −1 3]| = |6 + 1| = 7."
+     ],
+     "answer": "Volume 13; image area 7π."
+    },
+    {
+     "type": "warn",
+     "text": "Use edge vectors (differences of vertices), not the vertices themselves. Triangles have half the parallelogram area. Volumes use |det|."
+    }
+   ]
+  }
+ ],
+ "cards": [
+  {
+   "front": "Cofactor Cᵢⱼ?",
+   "back": [
+    {
+     "type": "p",
+     "text": "(−1)<sup>i+j</sup> det Aᵢⱼ, where Aᵢⱼ deletes row i and column j."
+    }
+   ]
+  },
+  {
+   "front": "Cofactor expansion: along which row?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Any row or column gives det A. Choose the one with the most zeros."
+    }
+   ]
+  },
+  {
+   "front": "Determinant of a triangular matrix?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Product of the diagonal entries."
+    }
+   ]
+  },
+  {
+   "front": "Effect of each row operation on det?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Replacement: none. Interchange: × (−1). Scaling a row by k: × k."
+    }
+   ]
+  },
+  {
+   "front": "Why does a row swap flip the sign while a replacement changes nothing?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Replacement is a shear: same base, same height, same volume. A swap reverses orientation. Algebraically, a matrix with two equal rows has det 0, and det is linear in each row, so adding c·(row i) to row j adds c·0."
+    }
+   ]
+  },
+  {
+   "front": "Determinant by row reduction: recipe?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Reduce to echelon form with replacements and swaps; det = (−1)^(#swaps) × product of the diagonal (× any factors pulled out)."
+    }
+   ]
+  },
+  {
+   "front": "det A ≠ 0 ⇔ ?",
+   "back": [
+    {
+     "type": "p",
+     "text": "A is invertible (one more IMT condition)."
+    }
+   ]
+  },
+  {
+   "front": "det(AB), det(Aᵀ), det(A⁻¹)?",
+   "back": [
+    {
+     "type": "p",
+     "text": "det A · det B; det A; 1/det A."
+    }
+   ]
+  },
+  {
+   "front": "det(cA) for n×n A?",
+   "back": [
+    {
+     "type": "p",
+     "text": "cⁿ det A. For 3×3, det(−A) = −det A; for 4×4, det(−A) = det A."
+    }
+   ]
+  },
+  {
+   "front": "Is det(A + B) = det A + det B?",
+   "back": [
+    {
+     "type": "p",
+     "text": "No: det(I + I) = 2ⁿ ≠ 2 for n ≥ 2."
+    }
+   ]
+  },
+  {
+   "front": "If det A = 0, must A have a zero row or two proportional rows?",
+   "back": [
+    {
+     "type": "p",
+     "text": "No: [1 2 3; 4 5 6; 7 8 9] has det 0 (R₁ − 2R₂ + R₃ = 0) without either."
+    }
+   ]
+  },
+  {
+   "front": "Area of the parallelogram spanned by columns of a 2×2 A? Volume for 3×3?",
+   "back": [
+    {
+     "type": "p",
+     "text": "|det A|."
+    }
+   ]
+  },
+  {
+   "front": "Area of T(S) for T(x) = Ax?",
+   "back": [
+    {
+     "type": "p",
+     "text": "|det A|·area(S). (Volume likewise in ℝ³.)"
+    }
+   ]
+  },
+  {
+   "front": "Connect det(AB) = det A · det B to geometry.",
+   "back": [
+    {
+     "type": "p",
+     "text": "B scales every area by |det B| and A then scales by |det A|, so AB scales by the product; the sign records orientation reversal."
+    }
+   ]
+  },
+  {
+   "front": "Area of the parallelogram with given 4 vertices?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Take two edge vectors from one vertex (differences), then |det [u v]|. Triangle: half of that."
+    }
+   ]
+  },
+  {
+   "front": "Show a 5×5 skew-symmetric matrix (Aᵀ = −A) is singular.",
+   "back": [
+    {
+     "type": "p",
+     "text": "det A = det Aᵀ = det(−A) = (−1)⁵ det A ⇒ det A = 0. False for even n."
+    }
+   ]
+  },
+  {
+   "front": "Similar matrices and det?",
+   "back": [
+    {
+     "type": "p",
+     "text": "det(P⁻¹AP) = det A."
+    }
+   ]
+  },
+  {
+   "front": "Fast det for a matrix with equal row sums s?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Add all columns (or rows) into one: factor out s, then reduce."
+    }
+   ]
+  }
+ ],
+ "hard": [
+  {
+   "title": "Determinant of xI + (ones) and its rank",
+   "level": "hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "Compute det <i>A</i> for the 4×4 matrix with <i>x</i> on the diagonal and 1 everywhere else. For which <i>x</i> is <i>A</i> singular, and what is rank <i>A</i> in each case?"
+    }
+   ],
+   "answer": "det A = (x + 3)(x − 1)³; singular at x = 1 (rank 1) and x = −3 (rank 3); otherwise rank 4",
+   "solution": [
+    {
+     "type": "steps",
+     "title": "Solution",
+     "items": [
+      "Add rows 2, 3, 4 to row 1: row 1 becomes (<i>x</i>+3)(1, 1, 1, 1). Factor out <i>x</i> + 3 (scaling rule).",
+      "Subtract the new row 1 (all ones) from rows 2–4: they become (0, <i>x</i>−1, 0, 0), (0, 0, <i>x</i>−1, 0), (0, 0, 0, <i>x</i>−1). Triangular.",
+      "<b>det <i>A</i> = (<i>x</i> + 3)(<i>x</i> − 1)³</b>.",
+      "<i>x</i> = 1: all entries 1, <b>rank 1</b>. <i>x</i> = −3: rank 3 (nullity 1, Nul = Span{(1,1,1,1)}). Otherwise rank 4."
+     ]
+    },
+    {
+     "type": "warn",
+     "text": "What it tests: Row sums are all equal ⇒ add all rows into one. The multiplicity of a root of det does not directly give the nullity, but here it happens to (symmetric matrix)."
+    }
+   ]
+  },
+  {
+   "title": "Determinant properties (4×4)",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "<i>A</i> is 4×4 with det <i>A</i> = 3. Compute: (a) det(2<i>A</i>) (b) det(<i>A</i>⁻¹·2<i>A</i>ᵀ) (c) det(−<i>A</i>³) (d) det of the matrix obtained from <i>A</i> by swapping rows 1 and 3 and then adding 5·(row 2) to row 4 (e) det(<i>A</i> + <i>A</i>)."
+    }
+   ],
+   "answer": "(a) 48 (b) 16 (c) 27 (d) −3 (e) 48",
+   "solution": [
+    {
+     "type": "steps",
+     "title": "Solution",
+     "items": [
+      "(a) 2⁴·3 = <b>48</b>.",
+      "(b) (1/3)·2⁴·3 = <b>16</b>.",
+      "(c) (−1)⁴·3³ = <b>27</b>.",
+      "(d) swap: −3; replacement: no change. <b>−3</b>.",
+      "(e) <i>A</i> + <i>A</i> = 2<i>A</i>: <b>48</b>, not 6."
+     ]
+    },
+    {
+     "type": "warn",
+     "text": "What it tests: det(<i>cA</i>) = <i>c</i>ⁿ det <i>A</i> with <i>n</i> = 4 here. det <i>A</i>ᵀ = det <i>A</i>; det <i>A</i>⁻¹ = 1/det <i>A</i>."
+    }
+   ]
+  },
+  {
+   "title": "True/False: determinants",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "list",
+     "items": [
+      "1. det(<i>A</i> + <i>B</i>) = det <i>A</i> + det <i>B</i>.",
+      "2. If det <i>A</i> = 0, then <i>A</i> has a zero row or two proportional rows.",
+      "3. det(<i>AB</i>) = det(<i>BA</i>) for <i>n</i>×<i>n</i> <i>A</i>, <i>B</i>.",
+      "4. For 3×3 <i>A</i>, det(−<i>A</i>) = −det <i>A</i>.",
+      "5. If <i>A</i> has integer entries and det <i>A</i> = ±1, then <i>A</i>⁻¹ has integer entries.",
+      "6. If <i>U</i> is an echelon form of <i>A</i> obtained by row operations, then det <i>U</i> = det <i>A</i>."
+     ]
+    }
+   ],
+   "answer": "1 F, 2 F, 3 T, 4 T, 5 T, 6 F",
+   "solution": [
+    {
+     "type": "p",
+     "text": "1. <b>False.</b> <i>A</i> = <i>B</i> = <i>I</i>₂: det(2<i>I</i>) = 4 ≠ 2."
+    },
+    {
+     "type": "p",
+     "text": "2. <b>False.</b>"
+    },
+    {
+     "type": "matrix",
+     "rows": [
+      [
+       "1",
+       "2",
+       "3"
+      ],
+      [
+       "4",
+       "5",
+       "6"
+      ],
+      [
+       "7",
+       "8",
+       "9"
+      ]
+     ]
+    },
+    {
+     "type": "p",
+     "text": "has det 0 (row 1 − 2·row 2 + row 3 = 0), but no zero row and no two proportional rows."
+    },
+    {
+     "type": "p",
+     "text": "3. <b>True.</b> Both equal det <i>A</i> · det <i>B</i>, even though <i>AB</i> ≠ <i>BA</i> in general."
+    },
+    {
+     "type": "p",
+     "text": "4. <b>True.</b> det(<i>cA</i>) = <i>c</i>ⁿ det <i>A</i>; (−1)³ = −1. (For 4×4 it is +det <i>A</i>.)"
+    },
+    {
+     "type": "p",
+     "text": "5. <b>True.</b> <i>A</i>⁻¹ = (1/det <i>A</i>)·adj <i>A</i>, and adj <i>A</i> has integer cofactors."
+    },
+    {
+     "type": "p",
+     "text": "6. <b>False.</b> Swaps flip the sign and scalings multiply it. Only replacements preserve det. E.g."
+    },
+    {
+     "type": "matrix",
+     "rows": [
+      [
+       "0",
+       "1"
+      ],
+      [
+       "1",
+       "0"
+      ]
+     ]
+    },
+    {
+     "type": "p",
+     "text": "→ <i>I</i> by one swap: det −1 vs 1."
+    },
+    {
+     "type": "warn",
+     "text": "What it tests: Determinant is multiplicative, not additive. “det = 0” means the rows are dependent — which can involve all of them at once."
+    }
+   ]
+  },
+  {
+   "title": "Area and volume under T",
+   "level": "hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "(a) Find the area of the parallelogram with vertices (1, 2), (4, 3), (2, 6), (5, 7). (b) <i>T</i>(<b>x</b>) ="
+    },
+    {
+     "type": "matrix",
+     "rows": [
+      [
+       "2",
+       "1"
+      ],
+      [
+       "−1",
+       "3"
+      ]
+     ]
+    },
+    {
+     "type": "p",
+     "text": "<b>x</b>. What is the area of the image of the unit disk? (c) Find the volume of the parallelepiped spanned by (1, 2, 0), (0, 1, 3), (2, 0, 1), and of its image under a 3×3 matrix with determinant −2."
+    }
+   ],
+   "answer": "(a) 11 (b) 7π (c) volume 13, image volume 26",
+   "solution": [
+    {
+     "type": "p",
+     "text": "(a) Edge vectors from (1, 2): (3, 1) and (1, 4) (and (3,1) + (1,4) = (4,5) reaches (5,7) ✓). Area = |det"
+    },
+    {
+     "type": "matrix",
+     "rows": [
+      [
+       "3",
+       "1"
+      ],
+      [
+       "1",
+       "4"
+      ]
+     ]
+    },
+    {
+     "type": "p",
+     "text": "| = |12 − 1| = <b>11</b>."
+    },
+    {
+     "type": "p",
+     "text": "(b) Area scales by |det| = |6 + 1| = 7. Image area = <b>7π</b>."
+    },
+    {
+     "type": "p",
+     "text": "(c) det"
+    },
+    {
+     "type": "matrix",
+     "rows": [
+      [
+       "1",
+       "0",
+       "2"
+      ],
+      [
+       "2",
+       "1",
+       "0"
+      ],
+      [
+       "0",
+       "3",
+       "1"
+      ]
+     ]
+    },
+    {
+     "type": "p",
+     "text": "= 1(1 − 0) − 0 + 2(6 − 0) = 13. Volume <b>13</b>; image volume |−2|·13 = <b>26</b>."
+    },
+    {
+     "type": "warn",
+     "text": "What it tests: Use edge vectors from one vertex, not the vertices themselves. Volume scales by |det|, the absolute value."
+    }
+   ]
+  },
+  {
+   "title": "Vandermonde determinant",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "Show det"
+    },
+    {
+     "type": "matrix",
+     "rows": [
+      [
+       "1",
+       "<i>a</i>",
+       "<i>a</i>²"
+      ],
+      [
+       "1",
+       "<i>b</i>",
+       "<i>b</i>²"
+      ],
+      [
+       "1",
+       "<i>c</i>",
+       "<i>c</i>²"
+      ]
+     ]
+    },
+    {
+     "type": "p",
+     "text": "= (<i>b</i> − <i>a</i>)(<i>c</i> − <i>a</i>)(<i>c</i> − <i>b</i>) using row operations."
+    }
+   ],
+   "answer": "Row ops + expansion give (b − a)(c − a)(c − b)",
+   "solution": [
+    {
+     "type": "steps",
+     "title": "Solution",
+     "items": [
+      "R₂ − R₁, R₃ − R₁: rows (0, <i>b</i>−<i>a</i>, <i>b</i>²−<i>a</i>²), (0, <i>c</i>−<i>a</i>, <i>c</i>²−<i>a</i>²). det unchanged.",
+      "Expand along column 1: det = (<i>b</i>−<i>a</i>)(<i>c</i>²−<i>a</i>²) − (<i>c</i>−<i>a</i>)(<i>b</i>²−<i>a</i>²).",
+      "Factor (<i>b</i>−<i>a</i>)(<i>c</i>−<i>a</i>): = (<i>b</i>−<i>a</i>)(<i>c</i>−<i>a</i>)[(<i>c</i>+<i>a</i>) − (<i>b</i>+<i>a</i>)] = (<i>b</i>−<i>a</i>)(<i>c</i>−<i>a</i>)(<i>c</i>−<i>b</i>). ∎"
+     ]
+    },
+    {
+     "type": "warn",
+     "text": "What it tests: Factor before expanding. Consequence: through 3 points with distinct <i>t</i>-values there is exactly one quadratic."
+    }
+   ]
+  },
+  {
+   "title": "Construct a det-1 integer matrix",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "Construct a 3×3 matrix with integer entries, <b>no zero entries</b>, and determinant 1. Then explain (without computing) why its inverse has integer entries, and find the inverse."
+    }
+   ],
+   "answer": "e.g. A = [1 1 1; 1 2 2; 1 2 3], A⁻¹ = [2 −1 0; −1 2 −1; 0 −1 1]",
+   "solution": [
+    {
+     "type": "p",
+     "text": "<i>A</i> ="
+    },
+    {
+     "type": "matrix",
+     "rows": [
+      [
+       "1",
+       "1",
+       "1"
+      ],
+      [
+       "1",
+       "2",
+       "2"
+      ],
+      [
+       "1",
+       "2",
+       "3"
+      ]
+     ]
+    },
+    {
+     "type": "p",
+     "text": ". Row reduce: R₂ − R₁, R₃ − R₁ → (0,1,1), (0,1,2); R₃ − R₂ → (0,0,1). Triangular with diagonal 1,1,1 and only replacements used ⇒ det = 1."
+    },
+    {
+     "type": "p",
+     "text": "<i>A</i>⁻¹ = adj(<i>A</i>)/1 and cofactors of an integer matrix are integers."
+    },
+    {
+     "type": "p",
+     "text": "<i>A</i>⁻¹ ="
+    },
+    {
+     "type": "matrix",
+     "rows": [
+      [
+       "2",
+       "−1",
+       "0"
+      ],
+      [
+       "−1",
+       "2",
+       "−1"
+      ],
+      [
+       "0",
+       "−1",
+       "1"
+      ]
+     ]
+    },
+    {
+     "type": "p",
+     "text": ". Check row 2 of <i>A</i> times column 2: 1·(−1) + 2·2 + 2·(−1) = 1 ✓."
+    },
+    {
+     "type": "warn",
+     "text": "What it tests: Building from a triangular matrix with unit diagonal by replacements guarantees det 1 — a reliable way to manufacture examples."
+    }
+   ]
+  },
+  {
+   "title": "Skew-symmetric matrices of odd size",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "<i>A</i> is 5×5 with <i>A</i>ᵀ = −<i>A</i>. Prove det <i>A</i> = 0. Is the same true for 4×4 skew-symmetric matrices?"
+    }
+   ],
+   "answer": "det A = (−1)⁵ det A ⇒ det A = 0; false for 4×4 (e.g. block-diagonal [0 1; −1 0] has det 1)",
+   "solution": [
+    {
+     "type": "p",
+     "text": "det <i>A</i> = det <i>A</i>ᵀ = det(−<i>A</i>) = (−1)⁵ det <i>A</i> = −det <i>A</i>."
+    },
+    {
+     "type": "p",
+     "text": "So 2 det <i>A</i> = 0 ⇒ det <i>A</i> = 0. ∎"
+    },
+    {
+     "type": "p",
+     "text": "For even <i>n</i> the argument gives det <i>A</i> = det <i>A</i>, no information — and it’s false:"
+    },
+    {
+     "type": "matrix",
+     "rows": [
+      [
+       "0",
+       "1"
+      ],
+      [
+       "−1",
+       "0"
+      ]
+     ]
+    },
+    {
+     "type": "p",
+     "text": "has det 1, and the 4×4 block-diagonal version of it also has det 1."
+    },
+    {
+     "type": "warn",
+     "text": "What it tests: The key is (−1)ⁿ with <i>n</i> odd. Students who write det(−<i>A</i>) = −det <i>A</i> without the dimension lose the 4×4 part."
+    }
+   ]
+  },
+  {
+   "title": "Tridiagonal determinant recursion",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "Let <i>D</i>ₙ be the determinant of the <i>n</i>×<i>n</i> tridiagonal matrix with 2 on the diagonal and −1 directly above and below it. Show <i>D</i>ₙ = 2<i>D</i>ₙ₋₁ − <i>D</i>ₙ₋₂ and conclude <i>D</i>ₙ = <i>n</i> + 1."
+    }
+   ],
+   "answer": "Dₙ = 2Dₙ₋₁ − Dₙ₋₂ with D₁ = 2, D₂ = 3 ⇒ Dₙ = n + 1",
+   "solution": [
+    {
+     "type": "steps",
+     "title": "Solution",
+     "items": [
+      "Expand along row 1 (only two nonzero entries): <i>D</i>ₙ = 2·<i>C</i>₁₁ + (−1)·<i>C</i>₁₂, where <i>C</i>₁₁ = <i>D</i>ₙ₋₁ and <i>C</i>₁₂ = (−1)¹⁺²<i>M</i>₁₂.",
+      "Deleting row 1 and column 2 leaves a matrix whose first column is (−1, 0, …, 0)ᵀ; expanding down it gives <i>M</i>₁₂ = (−1)·<i>D</i>ₙ₋₂. So <i>C</i>₁₂ = <i>D</i>ₙ₋₂ and the second term is −<i>D</i>ₙ₋₂.",
+      "So <i>D</i>ₙ = 2<i>D</i>ₙ₋₁ − <i>D</i>ₙ₋₂, with <i>D</i>₁ = 2, <i>D</i>₂ = 3.",
+      "Induction: if <i>D</i>ₙ₋₁ = <i>n</i> and <i>D</i>ₙ₋₂ = <i>n</i> − 1 then <i>D</i>ₙ = 2<i>n</i> − (<i>n</i> − 1) = <i>n</i> + 1. ∎ (Checked for <i>n</i> ≤ 7.)"
+     ]
+    },
+    {
+     "type": "warn",
+     "text": "What it tests: Track cofactor signs carefully: it’s (−1)<sup>i+j</sup> times the entry times the minor. The second expansion is down a column with one nonzero entry."
+    }
+   ]
+  },
+  {
+   "title": "When is A − λI singular?",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "For which λ is <i>A</i> − λ<i>I</i> singular, where <i>A</i> ="
+    },
+    {
+     "type": "matrix",
+     "rows": [
+      [
+       "2",
+       "1",
+       "0"
+      ],
+      [
+       "1",
+       "2",
+       "1"
+      ],
+      [
+       "0",
+       "1",
+       "2"
+      ]
+     ]
+    },
+    {
+     "type": "p",
+     "text": "?"
+    }
+   ],
+   "answer": "λ = 2, 2 + √2, 2 − √2",
+   "solution": [
+    {
+     "type": "steps",
+     "title": "Solution",
+     "items": [
+      "det(<i>A</i> − λ<i>I</i>) by row 1: (2−λ)[(2−λ)² − 1] − 1·[(2−λ) − 0] = (2−λ)[(2−λ)² − 2].",
+      "Roots: λ = 2, and (2−λ)² = 2 ⇒ λ = 2 ± √2.",
+      "<b>λ ∈ {2, 2 + √2, 2 − √2}</b> — the eigenvalues of <i>A</i>."
+     ]
+    },
+    {
+     "type": "warn",
+     "text": "What it tests: Factor out (2 − λ) instead of expanding to a cubic. Singular <i>A</i> − λ<i>I</i> is the definition of eigenvalue."
+    }
+   ]
+  }
+ ],
+ "keyFacts": [
+  "det [a b; c d] = ad − bc; triangular: product of the diagonal.",
+  "Cofactor Cᵢⱼ = (−1)^(i+j) det Aᵢⱼ; expand along the row/column with most zeros.",
+  "Replacement: det unchanged; swap: det × (−1); scale a row by k: det × k.",
+  "A invertible ⇔ det A ≠ 0.",
+  "det(AB) = det A det B; det Aᵀ = det A; det A⁻¹ = 1/det A; det(cA) = cⁿ det A.",
+  "Area/volume of box spanned by columns = |det A|; area(T(S)) = |det A|·area(S).",
+  "det(A + B) ≠ det A + det B."
+ ]
+}

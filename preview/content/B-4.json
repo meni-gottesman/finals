@@ -1,0 +1,772 @@
+{
+ "id": "B-4",
+ "course": "B",
+ "title": "Iterators, Iterable, equals, Comparable & Comparator",
+ "source": "CS 61B Lec 10–11 · Ch 10–11",
+ "summary": "The three protocols that let your own classes plug into Java: Iterable/Iterator for for-each loops, equals/hashCode for equality and hash sets, and Comparable/Comparator for sorting and ordered structures. Finals ask you to write lazy iterators (with filtering and skipping), correct equals/hashCode pairs, and compare methods.",
+ "lesson": [
+  {
+   "title": "Iterator and Iterable",
+   "blocks": [
+    {
+     "type": "def",
+     "term": "Iterable&lt;T>",
+     "text": "An interface with one method <code>Iterator&lt;T> iterator()</code>. Anything Iterable can be used in an enhanced for loop."
+    },
+    {
+     "type": "def",
+     "term": "Iterator&lt;T>",
+     "text": "An object that remembers a position: <code>boolean hasNext()</code> (is there another item?) and <code>T next()</code> (return the current item and advance)."
+    },
+    {
+     "type": "p",
+     "text": "The enhanced for loop is shorthand:"
+    },
+    {
+     "type": "code",
+     "lang": "java",
+     "text": "for (T x : thing) { body }\n// means\nIterator<T> it = thing.iterator();\nwhile (it.hasNext()) {\n    T x = it.next();\n    body\n}"
+    },
+    {
+     "type": "code",
+     "lang": "java",
+     "text": "class EvenRange implements Iterable<Integer> {\n    private int n;\n    EvenRange(int n) { this.n = n; }\n    public Iterator<Integer> iterator() { return new It(); }\n    private class It implements Iterator<Integer> {   // inner: sees n\n        private int cur = 0;                           // position lives in the iterator\n        public boolean hasNext() { return cur < n; }\n        public Integer next() { int r = cur; cur += 2; return r; }\n    }\n}"
+    },
+    {
+     "type": "example",
+     "title": "Trace an iterator by hand",
+     "prompt": "With EvenRange above: what does <code>for (int x : new EvenRange(7))</code> print, and what does <code>it = new EvenRange(4).iterator(); print(it.next() + \" \" + it.hasNext() + \" \" + it.next() + \" \" + it.hasNext());</code> print?",
+     "steps": [
+      "Loop: cur = 0 &lt; 7 → 0, cur = 2 → 2, 4, 6, then cur = 8 is not &lt; 7: stop. Prints 0 2 4 6.",
+      "Second: next() returns 0 (cur → 2); hasNext: 2 &lt; 4 true; next() returns 2 (cur → 4); hasNext: 4 &lt; 4 false."
+     ],
+     "answer": "<code>0 2 4 6</code> and <code>0 true 2 false</code> (verified)"
+    },
+    {
+     "type": "list",
+     "items": [
+      "Each call to <code>iterator()</code> returns a fresh iterator, so nested or repeated loops don’t interfere.",
+      "<code>hasNext()</code> must not change observable state; calling it twice in a row must give the same answer.",
+      "<code>next()</code> with no items left should throw NoSuchElementException.",
+      "An Iterator alone (not Iterable) cannot be used in a for-each loop."
+     ]
+    },
+    {
+     "type": "warn",
+     "text": "Modifying a Java collection while a for-each loop iterates over it usually throws ConcurrentModificationException (e.g. removing 2 from [1, 2, 3, 4] inside the loop). Use <code>it.remove()</code> on an explicit iterator instead: removing evens that way gives [1, 3]."
+    }
+   ]
+  },
+  {
+   "title": "Writing iterators that filter or skip",
+   "blocks": [
+    {
+     "type": "p",
+     "text": "The hard part of a filtering iterator is making <code>hasNext()</code> correct without consuming items. Standard trick: <b>keep the iterator positioned at the next valid item</b> at all times. Advance past invalid items in the constructor and at the end of every <code>next()</code>."
+    },
+    {
+     "type": "steps",
+     "title": "Recipe: lazy filtering iterator",
+     "items": [
+      "Fields: the underlying position (pointer, index, or inner iterator) and any bound/predicate.",
+      "A private <code>advance()</code> that moves forward until the position holds a valid item or the end is reached.",
+      "Constructor: initialize, then call advance().",
+      "hasNext(): just check whether the position is at the end.",
+      "next(): save the current item, step past it, call advance(), return the saved item."
+     ]
+    },
+    {
+     "type": "code",
+     "lang": "java",
+     "text": "// Yields the items of an IntList that are <= the list's first item.\nclass LEQIterator implements Iterator<Integer> {\n    private IntList p;\n    private int bound;\n    LEQIterator(IntList L) {\n        p = L;\n        bound = (L == null) ? 0 : L.first;\n        advance();\n    }\n    private void advance() { while (p != null && p.first > bound) p = p.rest; }\n    public boolean hasNext() { return p != null; }\n    public Integer next() {\n        if (!hasNext()) throw new NoSuchElementException();\n        int r = p.first;\n        p = p.rest;\n        advance();\n        return r;\n    }\n}"
+    },
+    {
+     "type": "example",
+     "title": "Filtering iterator trace",
+     "prompt": "Run LEQIterator on [5 8 3 5 9 1 6], on [2 9 9], and on null.",
+     "steps": [
+      "Bound = 5. Constructor’s advance: p at 5 (valid).",
+      "next → 5; step to 8, advance skips 8 → p at 3.",
+      "next → 3; p at 5 (valid). next → 5; advance skips 9 → p at 1.",
+      "next → 1; advance skips 6 → p = null; hasNext false.",
+      "[2 9 9]: yields 2 then skips both 9s. null: hasNext is false immediately."
+     ],
+     "answer": "5 3 5 1; 2; (nothing) (verified)"
+    },
+    {
+     "type": "example",
+     "title": "Lookahead filter over any iterator",
+     "prompt": "Write an iterator that wraps an <code>Iterator&lt;T> it</code> and a <code>Predicate&lt;T> p</code> and yields only items passing p. Trace on [4, 7, 10, 13, 16, 3] with “odd”.",
+     "steps": [
+      "You can’t peek at an Iterator, so store the next valid item in a field <code>nxt</code> and a flag <code>has</code>.",
+      "<code>adv()</code>: set has = false; while it.hasNext(): x = it.next(); if p.test(x) { nxt = x; has = true; return; }",
+      "Constructor calls adv(). hasNext returns has. next saves nxt, calls adv(), returns the saved value.",
+      "Trace: constructor consumes 4, finds 7. next → 7, adv consumes 10, finds 13. next → 13, adv consumes 16, finds 3. next → 3, adv finds nothing."
+     ],
+     "answer": "7 13 3 (verified)"
+    },
+    {
+     "type": "example",
+     "title": "Skip every other item from any Iterable",
+     "prompt": "Write an Iterable wrapper yielding items at positions 0, 2, 4, … of another Iterable; outputs for [10 11 12 13 14] and [10 11 12 13]?",
+     "steps": [
+      "iterator(): grab <code>Iterator&lt;T> it = src.iterator()</code> and return an anonymous Iterator.",
+      "hasNext(): <code>return it.hasNext();</code>",
+      "next(): <code>T r = it.next(); if (it.hasNext()) it.next(); return r;</code> — consume and discard the following item if it exists."
+     ],
+     "answer": "10 12 14 and 10 12 (verified)"
+    }
+   ]
+  },
+  {
+   "title": "A lazy BST in-order iterator",
+   "blocks": [
+    {
+     "type": "p",
+     "text": "Iterating a tree lazily (without first copying all keys into a list) uses an explicit stack that simulates the recursion. Invariant: the stack holds exactly the nodes whose key has not been returned but whose left subtree is finished or pending on the stack; the top is the next smallest key."
+    },
+    {
+     "type": "code",
+     "lang": "java",
+     "text": "class BSTIter implements Iterator<Integer> {\n    private Deque<Node> st = new ArrayDeque<>();\n    BSTIter(Node root) { pushLeft(root); }\n    private void pushLeft(Node n) { while (n != null) { st.push(n); n = n.left; } }\n    public boolean hasNext() { return !st.isEmpty(); }\n    public Integer next() {\n        Node n = st.pop();\n        pushLeft(n.right);      // the successor chain\n        return n.key;\n    }\n}"
+    },
+    {
+     "type": "example",
+     "title": "Stack contents of the in-order iterator",
+     "prompt": "BST built by inserting 50, 30, 70, 20, 40, 60, 80, 35. Show the stack (top first) initially and after two next() calls; list all keys produced.",
+     "steps": [
+      "Constructor pushLeft(50): push 50, 30, 20. Stack top→bottom: 20 30 50.",
+      "next(): pop 20 (no right child) → returns 20. Stack: 30 50.",
+      "next(): pop 30, pushLeft(40) pushes 40, 35. Returns 30. Stack: 35 40 50.",
+      "Remaining nexts return 35, 40, 50, 60, 70, 80."
+     ],
+     "answer": "Initial [20 30 50]; after two nexts [35 40 50]; order 20 30 35 40 50 60 70 80 (verified)"
+    },
+    {
+     "type": "tip",
+     "text": "Each node is pushed and popped exactly once, so iterating all n keys costs Θ(n) total (amortized Θ(1) per next), using Θ(h) extra space where h is the height."
+    }
+   ]
+  },
+  {
+   "title": "==, equals and the hashCode contract",
+   "blocks": [
+    {
+     "type": "p",
+     "text": "<code>==</code> compares the bits in two boxes: values for primitives, addresses for references. <code>equals</code> is a method asking whether two objects represent the same value. Object’s default equals is just ==."
+    },
+    {
+     "type": "example",
+     "title": "== vs equals on Strings and Integers",
+     "prompt": "Predict: <code>new String(\"cat\") == new String(\"cat\")</code>, <code>.equals</code> of them, <code>\"cat\" == \"cat\"</code>; and with <code>Integer i1 = 127, i2 = 127, i3 = 128, i4 = 128;</code> the values <code>i1 == i2</code>, <code>i3 == i4</code>, <code>i3.equals(i4)</code>.",
+     "steps": [
+      "Two <code>new</code> Strings are different objects: == false, equals true.",
+      "String literals are interned (shared), so \"cat\" == \"cat\" is true — an accident you must not rely on.",
+      "Autoboxing reuses cached Integer objects for −128…127: i1 == i2 true. 128 is not cached: two objects, i3 == i4 false, equals true."
+     ],
+     "answer": "false true true / true false true (verified)"
+    },
+    {
+     "type": "code",
+     "lang": "java",
+     "text": "class Pt {\n    int x, y;\n    @Override\n    public boolean equals(Object o) {          // parameter MUST be Object\n        if (this == o) return true;\n        if (!(o instanceof Pt other)) return false;   // handles null too\n        return x == other.x && y == other.y;\n    }\n    @Override\n    public int hashCode() { return 31 * x + y; }     // uses the same fields\n}"
+    },
+    {
+     "type": "thm",
+     "name": "equals rules",
+     "text": "Reflexive, symmetric, transitive, consistent, and <code>x.equals(null)</code> is false (no exception)."
+    },
+    {
+     "type": "thm",
+     "name": "hashCode contract",
+     "text": "If <code>a.equals(b)</code> then <code>a.hashCode() == b.hashCode()</code>. Unequal objects may share a hash code. Hash sets/maps first pick the bucket by hashCode, then use equals within it."
+    },
+    {
+     "type": "example",
+     "title": "Overriding equals without hashCode",
+     "prompt": "<code>NoHash</code> overrides equals (by field x) but not hashCode. Add <code>new NoHash(1)</code> twice to a HashSet. What are size() and contains(new NoHash(1))?",
+     "steps": [
+      "The default hashCode is identity-based, so the two equal objects (almost surely) get different hash codes and land in different buckets.",
+      "The set never compares them with equals, so both are stored.",
+      "contains(new NoHash(1)) looks in yet another bucket: false."
+     ],
+     "answer": "size 2, contains false — even though equals returns true (verified)"
+    },
+    {
+     "type": "example",
+     "title": "Overloading equals by accident",
+     "prompt": "<code>class Q { int v; public boolean equals(Q o) { return o != null && v == o.v; } }</code>. With <code>Q a = new Q(3), b = new Q(3); Object ob = b;</code> and a list containing a: predict <code>a.equals(b)</code>, <code>a.equals(ob)</code>, <code>list.contains(b)</code>.",
+     "steps": [
+      "a.equals(b): argument static type Q → the overload equals(Q) → true.",
+      "a.equals(ob): static type Object → only equals(Object) applies → Object’s address check → false.",
+      "list.contains calls equals(Object) internally → false."
+     ],
+     "answer": "true false false (verified)"
+    },
+    {
+     "type": "example",
+     "title": "Mutating a key inside a HashSet",
+     "prompt": "<code>Pt m = new Pt(1, 1); set.add(m); m.x = 5;</code> Now predict <code>set.contains(m)</code>, <code>set.contains(new Pt(1, 1))</code>, <code>set.size()</code>.",
+     "steps": [
+      "m was stored in the bucket for hashCode 31·1 + 1 = 32.",
+      "After mutation m.hashCode() = 156: contains(m) searches the wrong bucket → false.",
+      "new Pt(1, 1) hashes to the right bucket, but the object there now equals (5, 1), not (1, 1) → false.",
+      "The object is still in the set: size 1, and iterating finds it."
+     ],
+     "answer": "false false 1 (verified) — never mutate the fields used by hashCode while an object is a key"
+    }
+   ]
+  },
+  {
+   "title": "Comparable and Comparator",
+   "blocks": [
+    {
+     "type": "table",
+     "head": [
+      "",
+      "Comparable&lt;T>",
+      "Comparator&lt;T>"
+     ],
+     "rows": [
+      [
+       "Method",
+       "<code>int compareTo(T o)</code> on the object",
+       "<code>int compare(T a, T b)</code> on a separate object"
+      ],
+      [
+       "How many orders",
+       "one natural order per class",
+       "any number"
+      ],
+      [
+       "Used by",
+       "Collections.sort(list), TreeSet, TreeMap, Collections.max",
+       "list.sort(c), new TreeSet&lt;>(c), new PriorityQueue&lt;>(c)"
+      ]
+     ]
+    },
+    {
+     "type": "thm",
+     "name": "Sign convention",
+     "text": "Negative: first comes before second; zero: tie; positive: first comes after. Only the sign matters. Use <code>Integer.compare(a, b)</code>, not <code>a - b</code> (overflow: −5 − Integer.MAX_VALUE is a large positive number)."
+    },
+    {
+     "type": "code",
+     "lang": "java",
+     "text": "class Dog implements Comparable<Dog> {\n    String name; int size;\n    public int compareTo(Dog o) { return Integer.compare(size, o.size); }\n}\n// dogs = [Rex30, Ada5, Bo30, Cy12]\nCollections.sort(dogs);                       // [Ada5, Cy12, Rex30, Bo30]\ndogs.sort(Comparator.comparing((Dog d) -> d.name));\n                                              // [Ada5, Bo30, Cy12, Rex30]\ndogs.sort(Comparator.comparingInt((Dog d) -> d.size)\n          .reversed().thenComparing(d -> d.name));\n                                              // [Bo30, Rex30, Cy12, Ada5]"
+    },
+    {
+     "type": "example",
+     "title": "Sorting with natural order and comparators",
+     "prompt": "Explain each line of output above.",
+     "steps": [
+      "Natural order by size; Rex30 and Bo30 tie and Java’s object sort is stable, so Rex stays before Bo (input order).",
+      "By name: alphabetical Ada, Bo, Cy, Rex.",
+      "Size descending, then name ascending among ties: Bo30, Rex30, then 12, then 5."
+     ],
+     "answer": "Outputs as shown (verified)"
+    },
+    {
+     "type": "example",
+     "title": "Write compareTo for dotted version strings",
+     "prompt": "Order versions like \"1.10\", \"1.2\", \"1.2.0.1\" numerically part by part, with missing parts treated as 0. Sort [1.10, 1.2, 1.2.0.1, 1.9.9, 1.2.0, 0.99].",
+     "steps": [
+      "Parse into int arrays by splitting on \"\\\\.\" (a regex, so the dot must be escaped).",
+      "Loop i from 0 to the longer length; a = parts[i] or 0, b likewise; if a ≠ b return Integer.compare(a, b).",
+      "Return 0 if all parts tie, so 1.2 and 1.2.0 compare equal.",
+      "Sorted: 0.99 &lt; 1.2 = 1.2.0 &lt; 1.2.0.1 &lt; 1.9.9 &lt; 1.10 (10 > 9 numerically, unlike string order). The stable sort keeps 1.2 before 1.2.0 as in the input."
+     ],
+     "answer": "[0.99, 1.2, 1.2.0, 1.2.0.1, 1.9.9, 1.10] (verified)"
+    },
+    {
+     "type": "warn",
+     "text": "A compareTo (or Comparator) that returns 0 for unequal objects makes TreeSet/TreeMap treat them as duplicates: a TreeSet of Rex30, Ada5, Bo30 ordered by size keeps only [Ada5, Rex30]."
+    },
+    {
+     "type": "tip",
+     "text": "String compareTo is lexicographic by char code: \"apple\".compareTo(\"banana\") = −1, \"Zoo\".compareTo(\"apple\") = −7 (uppercase letters come first), \"cat\".compareTo(\"catalog\") = −4 (a proper prefix is smaller; the result is the length difference)."
+    }
+   ]
+  }
+ ],
+ "cards": [
+  {
+   "front": "Method(s) of Iterable&lt;T> and Iterator&lt;T>?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Iterable: <code>Iterator&lt;T> iterator()</code>. Iterator: <code>boolean hasNext()</code>, <code>T next()</code>."
+    }
+   ]
+  },
+  {
+   "front": "What does <code>for (T x : c)</code> desugar to?",
+   "back": [
+    {
+     "type": "p",
+     "text": "<code>Iterator&lt;T> it = c.iterator(); while (it.hasNext()) { T x = it.next(); … }</code>"
+    }
+   ]
+  },
+  {
+   "front": "Where should an iterator store its position?",
+   "back": [
+    {
+     "type": "p",
+     "text": "In the iterator object (a field of the inner class), never in the collection, so independent iterations don’t interfere."
+    }
+   ]
+  },
+  {
+   "front": "Why is the iterator usually a non-static inner class?",
+   "back": [
+    {
+     "type": "p",
+     "text": "So it can access the outer collection’s fields (e.g. its array or sentinel)."
+    }
+   ]
+  },
+  {
+   "front": "Rule for hasNext()?",
+   "back": [
+    {
+     "type": "p",
+     "text": "No side effects visible to the caller: calling it repeatedly gives the same answer and does not consume items."
+    }
+   ]
+  },
+  {
+   "front": "Trick for a filtering iterator?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Keep the position at the next valid item: advance past invalid items in the constructor and at the end of next(); hasNext just checks for the end."
+    }
+   ]
+  },
+  {
+   "front": "Iterator for a circular-sentinel DLList?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Pointer p = sentinel.next; hasNext: p != sentinel; next: save p.item, p = p.next, return it."
+    }
+   ]
+  },
+  {
+   "front": "Lazy in-order BST iterator idea?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Stack: constructor pushes the left spine; next pops n, pushes the left spine of n.right, returns n.key."
+    }
+   ]
+  },
+  {
+   "front": "What happens if you remove from an ArrayList inside a for-each over it?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Usually ConcurrentModificationException. Use Iterator.remove()."
+    }
+   ]
+  },
+  {
+   "front": "Default Object.equals?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Address comparison (same as ==)."
+    }
+   ]
+  },
+  {
+   "front": "Why must equals take Object?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Otherwise it overloads instead of overriding; library code (contains, HashSet) calls equals(Object) and gets address comparison."
+    }
+   ]
+  },
+  {
+   "front": "Skeleton of a correct equals?",
+   "back": [
+    {
+     "type": "p",
+     "text": "<code>if (this == o) return true; if (!(o instanceof Pt other)) return false; return x == other.x &amp;&amp; y == other.y;</code>"
+    }
+   ]
+  },
+  {
+   "front": "The hashCode contract?",
+   "back": [
+    {
+     "type": "p",
+     "text": "a.equals(b) ⇒ a.hashCode() == b.hashCode(). The converse need not hold."
+    }
+   ]
+  },
+  {
+   "front": "Override equals but not hashCode — what breaks?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Hash sets/maps: equal objects land in different buckets, so duplicates get stored and contains returns false."
+    }
+   ]
+  },
+  {
+   "front": "<code>Integer a = 127, b = 127; a == b</code>? With 128?",
+   "back": [
+    {
+     "type": "p",
+     "text": "true (cached −128…127); false for 128. Use equals."
+    }
+   ]
+  },
+  {
+   "front": "Mutating a field used by hashCode after inserting into a HashSet?",
+   "back": [
+    {
+     "type": "p",
+     "text": "The object is stranded in the old bucket: contains returns false for it and for its old value; it still counts in size."
+    }
+   ]
+  },
+  {
+   "front": "Comparable vs Comparator?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Comparable: natural order, compareTo(T o) inside the class. Comparator: external, compare(T a, T b), any number of orders."
+    }
+   ]
+  },
+  {
+   "front": "Sign of compareTo?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Negative = this before o; 0 = tie; positive = after."
+    }
+   ]
+  },
+  {
+   "front": "Why use Integer.compare(a, b) instead of a − b?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Subtraction can overflow and give the wrong sign."
+    }
+   ]
+  },
+  {
+   "front": "Comparator for strings by length, then reverse alphabetical?",
+   "back": [
+    {
+     "type": "p",
+     "text": "<code>Comparator.comparingInt(String::length).thenComparing(Comparator.reverseOrder())</code>"
+    }
+   ]
+  },
+  {
+   "front": "What does <code>c.reversed()</code> do?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Returns a comparator with the opposite order."
+    }
+   ]
+  },
+  {
+   "front": "Inconsistent compareTo and equals: effect on TreeSet?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Items with compare = 0 are treated as duplicates and one is dropped."
+    }
+   ]
+  },
+  {
+   "front": "<code>\"cat\".compareTo(\"catalog\")</code>?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Negative (−4): a proper prefix comes first."
+    }
+   ]
+  },
+  {
+   "front": "Is Collections.sort / List.sort on objects stable?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Yes (TimSort, a merge sort variant): ties keep their input order."
+    }
+   ]
+  }
+ ],
+ "hard": [
+  {
+   "title": "Iterator over a ragged 2D array",
+   "level": "hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "Write an <code>Iterator&lt;Integer></code> over an <code>int[][] g</code> that yields all elements row by row, where rows may be empty (length 0). hasNext must be Θ(1) and must not skip work in a way that breaks repeated hasNext calls. What does it yield for {{}, {1, 2}, {}, {}, {3}, {}}?"
+    }
+   ],
+   "answer": "1 2 3",
+   "solution": [
+    {
+     "type": "code",
+     "lang": "java",
+     "text": "class Grid implements Iterator<Integer> {\n    private int[][] g; private int r = 0, c = 0;\n    Grid(int[][] g) { this.g = g; skip(); }\n    private void skip() {                     // move to a valid (r, c) or r == g.length\n        while (r < g.length && c >= g[r].length) { r++; c = 0; }\n    }\n    public boolean hasNext() { return r < g.length; }\n    public Integer next() {\n        int x = g[r][c];\n        c++;\n        skip();\n        return x;\n    }\n}"
+    },
+    {
+     "type": "p",
+     "text": "Invariant: (r, c) always indexes the next element, or r == g.length. skip() runs in the constructor (to jump over the leading empty row) and after each next (to jump over trailing/interior empty rows). hasNext is a single comparison. Verified: 1 2 3."
+    }
+   ]
+  },
+  {
+   "title": "Write a lazy in-order BST iterator",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "Write an Iterator over a BST’s keys in increasing order that uses O(h) extra memory (no precomputed list). Prove next() is amortized Θ(1). For the BST from inserting 50, 30, 70, 20, 40, 60, 80, 35, what is on the stack (top first) after the third next() call?"
+    }
+   ],
+   "answer": "Stack [40 50] after three nexts (20, 30, 35 returned)",
+   "solution": [
+    {
+     "type": "p",
+     "text": "Code: stack-based BSTIter from the lesson (constructor pushLeft(root); next pops n, pushLeft(n.right), returns n.key)."
+    },
+    {
+     "type": "p",
+     "text": "After 2 nexts the stack is [35 40 50] (verified). Third next pops 35 (no right child): stack [40 50], returns 35."
+    },
+    {
+     "type": "p",
+     "text": "Amortized: every node is pushed exactly once (when it lies on a left spine) and popped exactly once, so n calls cost Θ(n) total. Memory: the stack holds at most one root-to-leaf path: O(h)."
+    }
+   ]
+  },
+  {
+   "title": "A comparator that remembers",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "Design a class <code>Judge&lt;T extends Comparable&lt;T>></code> that implements both <code>Comparator&lt;T></code> and <code>Iterable&lt;T></code>. compare(a, b) returns a.compareTo(b), and additionally records whichever argument was strictly larger (nothing on ties). Iterating a Judge yields every recorded item in the order recorded. Write it and say what iterating yields after sorting [3, 1, 2] with <code>list.sort(judge)</code> — and why you can’t predict the exact sequence without knowing the sort’s comparisons."
+    }
+   ],
+   "answer": "A list of the larger item from each non-tie comparison the sort made; depends on the algorithm",
+   "solution": [
+    {
+     "type": "code",
+     "lang": "java",
+     "text": "class Judge<T extends Comparable<T>> implements Comparator<T>, Iterable<T> {\n    private List<T> winners = new ArrayList<>();\n    public int compare(T a, T b) {\n        int c = a.compareTo(b);\n        if (c > 0) winners.add(a);\n        else if (c < 0) winners.add(b);\n        return c;\n    }\n    public Iterator<T> iterator() { return winners.iterator(); }\n}"
+    },
+    {
+     "type": "p",
+     "text": "Iteration delegates to the list’s iterator (fresh one per call). The sequence depends on exactly which comparisons the sort performs and in which argument order; Java’s TimSort on 3 items uses binary insertion, so the comparisons are an implementation detail. Exam lesson: a comparator is just an object; it can hold state, and an Iterable only needs to return an Iterator."
+    }
+   ]
+  },
+  {
+   "title": "Equals and hashCode for a class with an array field",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "class Poly { int[] coef; } represents polynomials, where trailing zeros don’t matter ([1, 2] and [1, 2, 0] are the same polynomial). Write equals and hashCode satisfying the contract. Why is <code>Arrays.hashCode(coef)</code> wrong here?"
+    }
+   ],
+   "answer": "Compare up to the last nonzero coefficient; hash only that prefix",
+   "solution": [
+    {
+     "type": "code",
+     "lang": "java",
+     "text": "private int degreeLen() {                 // length without trailing zeros\n    int n = coef.length;\n    while (n > 0 && coef[n - 1] == 0) n--;\n    return n;\n}\n@Override public boolean equals(Object o) {\n    if (this == o) return true;\n    if (!(o instanceof Poly p)) return false;\n    int n = degreeLen();\n    if (n != p.degreeLen()) return false;\n    for (int i = 0; i < n; i++) if (coef[i] != p.coef[i]) return false;\n    return true;\n}\n@Override public int hashCode() {\n    int h = 0, n = degreeLen();\n    for (int i = 0; i < n; i++) h = 31 * h + coef[i];\n    return h;\n}"
+    },
+    {
+     "type": "p",
+     "text": "Arrays.hashCode includes the trailing zeros, so [1, 2] and [1, 2, 0] would be equal but hash differently, violating the contract (a HashSet could store both). Hashing exactly the fields/prefix that equals compares fixes it."
+    }
+   ]
+  },
+  {
+   "title": "Remove during iteration: when does it throw?",
+   "level": "hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "For <code>List&lt;Integer> L = new ArrayList&lt;>(List.of(1, 2, 3, 4))</code>, predict: (a) <code>for (int x : L) if (x == 2) L.remove(Integer.valueOf(x));</code> (b) the same with x == 3. (c) Using an explicit iterator, remove the even numbers. Explain (b)."
+    }
+   ],
+   "answer": "(a) ConcurrentModificationException (b) no exception, L = [1, 2, 4] (c) [1, 3]",
+   "solution": [
+    {
+     "type": "p",
+     "text": "(a) After removing 2, the next call to next() checks the modification count and throws ConcurrentModificationException."
+    },
+    {
+     "type": "p",
+     "text": "(b) After removing 3 (index 2), size becomes 3 and the iterator’s cursor is 3, so hasNext() (cursor != size) returns false: the loop ends before next() can detect the change. The 4 is never visited. Result [1, 2, 4]."
+    },
+    {
+     "type": "p",
+     "text": "(c) <code>Iterator&lt;Integer> it = L.iterator(); while (it.hasNext()) if (it.next() % 2 == 0) it.remove();</code> → [1, 3]. All three verified by running."
+    }
+   ]
+  },
+  {
+   "title": "TreeSet with an inconsistent comparator",
+   "level": "hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "Dog compares by size only. What do <code>new TreeSet&lt;>(List.of(Rex30, Ada5, Bo30))</code> and its size print? How would you fix the class so both dogs are kept while still sorting primarily by size?"
+    }
+   ],
+   "answer": "[Ada5, Rex30], size 2; break ties by name",
+   "solution": [
+    {
+     "type": "p",
+     "text": "TreeSet uses compareTo, not equals, to detect duplicates. Bo30 compares 0 with Rex30 so it is considered already present and dropped (verified)."
+    },
+    {
+     "type": "p",
+     "text": "Fix: <code>int c = Integer.compare(size, o.size); return c != 0 ? c : name.compareTo(o.name);</code> — now compareTo is consistent with equals (if equals compares name and size)."
+    }
+   ]
+  },
+  {
+   "title": "Multi-key comparator",
+   "level": "hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "Sort [\"pear\", \"fig\", \"kiwi\", \"apple\", \"date\"] by length ascending and, among equal lengths, in reverse alphabetical order. Write the comparator two ways: with a lambda, and with Comparator combinators. Result?"
+    }
+   ],
+   "answer": "[fig, pear, kiwi, date, apple]",
+   "solution": [
+    {
+     "type": "code",
+     "lang": "java",
+     "text": "Comparator<String> c1 = (a, b) -> {\n    int d = Integer.compare(a.length(), b.length());\n    return d != 0 ? d : b.compareTo(a);        // reversed: b vs a\n};\nComparator<String> c2 = Comparator.comparingInt(String::length)\n                                  .thenComparing(Comparator.reverseOrder());"
+    },
+    {
+     "type": "p",
+     "text": "Length 3: fig. Length 4: pear, kiwi, date in reverse alphabetical order. Length 5: apple. Verified."
+    }
+   ]
+  },
+  {
+   "title": "Peeking iterator",
+   "level": "hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "Write <code>PeekIterator&lt;T> implements Iterator&lt;T></code> wrapping any Iterator, adding <code>T peek()</code> that returns the next item without consuming it. peek and hasNext must be callable any number of times. Show a trace on [1, 2]: peek, peek, next, hasNext, next, hasNext."
+    }
+   ],
+   "answer": "1, 1, 1, true, 2, false",
+   "solution": [
+    {
+     "type": "code",
+     "lang": "java",
+     "text": "class PeekIterator<T> implements Iterator<T> {\n    private Iterator<T> it; private T buf; private boolean full = false;\n    PeekIterator(Iterator<T> it) { this.it = it; }\n    public T peek() {\n        if (!full) { buf = it.next(); full = true; }   // NoSuchElement if empty\n        return buf;\n    }\n    public boolean hasNext() { return full || it.hasNext(); }\n    public T next() {\n        if (full) { full = false; return buf; }\n        return it.next();\n    }\n}"
+    },
+    {
+     "type": "p",
+     "text": "The one-slot buffer makes peek idempotent: first peek pulls 1 into buf, second peek returns the buffer. next returns the buffered 1 and empties it. hasNext: buffer empty but inner has 2 → true. next → 2. hasNext → false."
+    }
+   ]
+  }
+ ],
+ "keyFacts": [
+  "Iterable gives iterator(); Iterator gives hasNext() (no side effects) and next() (return then advance). for-each needs Iterable.",
+  "Filtering iterator: keep the position at the next valid item (advance in constructor and after each next).",
+  "Lazy BST iterator: stack of the left spine; next pops n and pushes the left spine of n.right; Θ(h) space, amortized Θ(1).",
+  "equals(Object o): this == o; instanceof check (handles null); compare fields. Never equals(MyType).",
+  "Contract: a.equals(b) ⇒ equal hashCodes. Override both, using the same fields.",
+  "Never mutate hashCode fields of a key stored in a HashSet/HashMap.",
+  "compareTo/compare: negative = before, 0 = tie, positive = after. Use Integer.compare, not subtraction.",
+  "TreeSet/TreeMap use compareTo for duplicates; Java object sorts are stable."
+ ],
+ "parsons": [
+  {
+   "title": "A correct equals",
+   "goal": "Override equals for class Pt with int fields x and y so that it works in HashSet and List.contains.",
+   "lines": [
+    "@Override",
+    "public boolean equals(Object o) {",
+    "    if (!(o instanceof Pt other)) return false;",
+    "    return x == other.x && y == other.y;",
+    "}"
+   ],
+   "distractors": [
+    "public boolean equals(Pt o) {",
+    "    if (o == null) return true;",
+    "    return this == o;"
+   ]
+  },
+  {
+   "title": "Comparator with a tie-breaker",
+   "goal": "Order dogs by size descending, breaking ties by name ascending.",
+   "lines": [
+    "Comparator&lt;Dog> c = (d1, d2) -> {",
+    "    int bySize = Integer.compare(d2.size, d1.size);",
+    "    if (bySize != 0) return bySize;",
+    "    return d1.name.compareTo(d2.name);",
+    "};"
+   ],
+   "distractors": [
+    "    int bySize = d1.size - d2.size;",
+    "    if (bySize == 0) return bySize;",
+    "    return d2.name.compareTo(d1.name);"
+   ]
+  },
+  {
+   "title": "Filtering iterator: next()",
+   "goal": "In LEQIterator (fields IntList p, int bound; advance() skips nodes with first > bound so p always sits on a valid item), write next().",
+   "lines": [
+    "public Integer next() {",
+    "    if (!hasNext()) throw new NoSuchElementException();",
+    "    int r = p.first;",
+    "    p = p.rest;",
+    "    advance();",
+    "    return r;",
+    "}"
+   ],
+   "distractors": [
+    "    p = p.rest.rest;",
+    "    return p.first;",
+    "    if (hasNext()) throw new NoSuchElementException();"
+   ]
+  },
+  {
+   "title": "Lazy BST iterator: next()",
+   "goal": "The iterator keeps a stack whose top is the next smallest node (the constructor pushed the left spine of the root). Write next().",
+   "lines": [
+    "public Integer next() {",
+    "    Node n = stack.pop();",
+    "    Node c = n.right;",
+    "    while (c != null) { stack.push(c); c = c.left; }",
+    "    return n.key;",
+    "}"
+   ],
+   "distractors": [
+    "    Node c = n.left;",
+    "    while (c != null) { stack.push(c); c = c.right; }",
+    "    Node n = stack.peek();"
+   ]
+  }
+ ]
+}

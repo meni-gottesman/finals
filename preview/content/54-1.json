@@ -1,0 +1,1029 @@
+{
+ "id": "54-1",
+ "course": "54",
+ "title": "Systems, row reduction, span, solution sets",
+ "source": "Lay 1.1–1.5",
+ "summary": "How to solve any linear system by row reduction and read off existence and uniqueness from pivots. The link \"A x = b consistent ⇔ b ∈ span of the columns\" and the structure \"particular + homogeneous\" underlie every later unit.",
+ "lesson": [
+  {
+   "title": "Linear systems and their three possible outcomes",
+   "blocks": [
+    {
+     "type": "def",
+     "term": "Linear equation",
+     "text": "An equation a₁x₁ + a₂x₂ + ⋯ + aₙxₙ = b with numbers a₁, …, aₙ, b. No products of variables, no powers, no functions of variables."
+    },
+    {
+     "type": "def",
+     "term": "Solution / solution set",
+     "text": "A list (s₁, …, sₙ) that makes every equation true at once. The solution set is the set of all solutions. Two systems are <b>equivalent</b> if they have the same solution set."
+    },
+    {
+     "type": "thm",
+     "name": "Three outcomes",
+     "text": "A linear system has either <b>no solution</b>, <b>exactly one</b> solution, or <b>infinitely many</b> solutions. A system with at least one solution is <b>consistent</b>; with none, <b>inconsistent</b>.",
+     "proof": [
+      {
+       "type": "p",
+       "text": "Why never exactly two: if <b>x</b> and <b>y</b> are different solutions, then every point <b>x</b> + t(<b>y</b> − <b>x</b>) on the line through them is also a solution (plug in: the equations are linear), so there are infinitely many."
+      }
+     ]
+    },
+    {
+     "type": "p",
+     "text": "We store a system as its <b>augmented matrix</b>: the coefficients, then a bar, then the right-hand sides. The system x₁ − 2x₂ = −1, −x₁ + 3x₂ = 3 becomes"
+    },
+    {
+     "type": "matrix",
+     "rows": [
+      [
+       "1",
+       "-2",
+       "-1"
+      ],
+      [
+       "-1",
+       "3",
+       "3"
+      ]
+     ],
+     "aug": 2
+    },
+    {
+     "type": "def",
+     "term": "Elementary row operations",
+     "text": "(1) Replacement: add a multiple of one row to another. (2) Interchange: swap two rows. (3) Scaling: multiply a row by a <b>nonzero</b> constant."
+    },
+    {
+     "type": "tip",
+     "text": "Each row operation is reversible, and it never changes the solution set: anything that solves the old equations solves the new ones and vice versa. That is why we may row reduce freely and read the answer from the simplest matrix."
+    }
+   ]
+  },
+  {
+   "title": "Echelon form, RREF, pivots, free variables",
+   "blocks": [
+    {
+     "type": "def",
+     "term": "Echelon form (REF)",
+     "text": "(1) All zero rows are at the bottom. (2) Each leading entry (first nonzero entry of a row) is in a column to the right of the leading entry of the row above. (3) Entries below a leading entry are zero."
+    },
+    {
+     "type": "def",
+     "term": "Reduced echelon form (RREF)",
+     "text": "Echelon form, plus: every leading entry is 1, and it is the only nonzero entry in its column."
+    },
+    {
+     "type": "thm",
+     "name": "Uniqueness of the RREF",
+     "text": "Each matrix is row equivalent to exactly one reduced echelon matrix. (Echelon forms are not unique, but the pivot positions are.)"
+    },
+    {
+     "type": "def",
+     "term": "Pivot position / pivot column",
+     "text": "A pivot position is the location of a leading 1 in the RREF of A. A pivot column is a column containing a pivot position."
+    },
+    {
+     "type": "def",
+     "term": "Basic and free variables",
+     "text": "Variables matching pivot columns are <b>basic</b>; the rest are <b>free</b> (they can be any number, and the basic variables are solved in terms of them)."
+    },
+    {
+     "type": "steps",
+     "title": "Row reduction algorithm",
+     "items": [
+      "Forward phase: take the leftmost nonzero column; swap a nonzero entry to the top; use replacements to create zeros below it.",
+      "Cover that row and repeat on the submatrix below until you reach echelon form.",
+      "Backward phase: starting from the rightmost pivot, scale each pivot to 1 and create zeros above it.",
+      "Read off: pivot columns ↔ basic variables; other columns ↔ free variables."
+     ]
+    },
+    {
+     "type": "example",
+     "title": "Row reduce and name pivots and free variables",
+     "prompt": "Row reduce the augmented matrix [1 2 −1 3 | 4; 2 4 0 2 | 6; −1 −2 3 −7 | −6] to RREF. Name the pivot columns and free variables.",
+     "steps": [
+      "R₂ − 2R₁ → [0 0 2 −4 | −2]; R₃ + R₁ → [0 0 2 −4 | −2].",
+      "R₃ − R₂ → [0 0 0 0 | 0]. Echelon form reached: pivots in columns 1 and 3.",
+      "Scale R₂ by ½ → [0 0 1 −2 | −1]. Then R₁ + R₂ → [1 2 0 1 | 3].",
+      "RREF = [1 2 0 1 | 3; 0 0 1 −2 | −1; 0 0 0 0 | 0].",
+      "Pivot columns 1 and 3 ⇒ x₁, x₃ basic; x₂, x₄ free."
+     ],
+     "answer": "Pivots in columns 1, 3; free variables x₂, x₄; no row 0 = nonzero, so consistent with infinitely many solutions."
+    },
+    {
+     "type": "matrix",
+     "rows": [
+      [
+       "1",
+       "2",
+       "0",
+       "1",
+       "3"
+      ],
+      [
+       "0",
+       "0",
+       "1",
+       "-2",
+       "-1"
+      ],
+      [
+       "0",
+       "0",
+       "0",
+       "0",
+       "0"
+      ]
+     ],
+     "aug": 4
+    },
+    {
+     "type": "warn",
+     "text": "Free variables are decided by the coefficient columns only. The augmented column is never a 'free variable', and a pivot in the augmented column means inconsistency, not a solution."
+    }
+   ]
+  },
+  {
+   "title": "Existence and uniqueness from the echelon form",
+   "blocks": [
+    {
+     "type": "thm",
+     "name": "Existence and Uniqueness Theorem",
+     "text": "A system is consistent <b>iff</b> the rightmost (augmented) column is <b>not</b> a pivot column, i.e. no echelon row looks like [0 ⋯ 0 | c] with c ≠ 0. If consistent, the solution is <b>unique</b> when there are no free variables and there are <b>infinitely many</b> when there is at least one free variable."
+    },
+    {
+     "type": "tip",
+     "text": "A row [0 ⋯ 0 | c] says 0 = c. Everything else can be solved by back-substitution, with free variables as parameters. Each free variable adds one direction of solutions, so even one free variable gives infinitely many."
+    },
+    {
+     "type": "example",
+     "title": "Decide consistency",
+     "prompt": "Is the system with augmented matrix [1 2 −1 3 | 4; 2 4 0 2 | 6; −1 −2 3 −7 | −8] consistent?",
+     "steps": [
+      "R₂ − 2R₁ → [0 0 2 −4 | −2]; R₃ + R₁ → [0 0 2 −4 | −4].",
+      "R₃ − R₂ → [0 0 0 0 | −2].",
+      "That row says 0 = −2: the augmented column is a pivot column."
+     ],
+     "answer": "Inconsistent (no solution)."
+    },
+    {
+     "type": "p",
+     "text": "Counting pivots answers most questions without solving. For an m×n coefficient matrix there are at most min(m, n) pivots, and #free variables = n − #pivots."
+    },
+    {
+     "type": "example",
+     "title": "Why a 3×5 system is never unique",
+     "prompt": "Can a system of 3 equations in 5 unknowns have exactly one solution?",
+     "steps": [
+      "Each pivot uses its own row, so there are at most 3 pivots.",
+      "5 columns − at most 3 pivots ⇒ at least 2 free variables.",
+      "If the system is consistent, the free variables give infinitely many solutions; otherwise none."
+     ],
+     "answer": "No: it has either no solution or infinitely many."
+    },
+    {
+     "type": "example",
+     "title": "Parameter problem",
+     "prompt": "For which h, k does x₁ + hx₂ = 2, 4x₁ + 8x₂ = k have no solution, exactly one, infinitely many?",
+     "steps": [
+      "Augmented matrix [1 h | 2; 4 8 | k]. R₂ − 4R₁ → [0 8 − 4h | k − 8].",
+      "If 8 − 4h ≠ 0 (h ≠ 2): two pivots, no free variable ⇒ exactly one solution, whatever k is.",
+      "If h = 2: the row is [0 0 | k − 8]. If k ≠ 8 it says 0 = nonzero ⇒ no solution.",
+      "If h = 2 and k = 8: the row is all zeros, x₂ is free ⇒ infinitely many."
+     ],
+     "answer": "Unique iff h ≠ 2; none iff h = 2, k ≠ 8; infinitely many iff h = 2, k = 8."
+    },
+    {
+     "type": "warn",
+     "text": "A parameter in the coefficient part decides whether a pivot is lost; a parameter in the augmented column decides whether the lost row reads 0 = 0 or 0 = nonzero. You need both to classify."
+    }
+   ]
+  },
+  {
+   "title": "Vectors, linear combinations, span",
+   "blocks": [
+    {
+     "type": "def",
+     "term": "Vector in ℝⁿ",
+     "text": "An ordered list of n real numbers written as a column. Add entrywise, scale entrywise. Geometrically an arrow from the origin (or a point)."
+    },
+    {
+     "type": "def",
+     "term": "Linear combination",
+     "text": "y = c₁<b>v</b>₁ + ⋯ + cₚ<b>v</b>ₚ with scalars (weights) c₁, …, cₚ."
+    },
+    {
+     "type": "def",
+     "term": "Span",
+     "text": "Span{<b>v</b>₁, …, <b>v</b>ₚ} = the set of all linear combinations of <b>v</b>₁, …, <b>v</b>ₚ. It always contains <b>0</b> (all weights 0). In ℝ³: span of one nonzero vector is a line through 0; of two non-parallel vectors, a plane through 0."
+    },
+    {
+     "type": "thm",
+     "name": "Vector equation = augmented matrix",
+     "text": "x₁<b>a</b>₁ + ⋯ + xₙ<b>a</b>ₙ = <b>b</b> has the same solution set as the system with augmented matrix [<b>a</b>₁ ⋯ <b>a</b>ₙ | <b>b</b>]. So <b>b</b> is in Span{<b>a</b>₁, …, <b>a</b>ₙ} iff that system is consistent.",
+     "proof": [
+      {
+       "type": "p",
+       "text": "Comparing the vector equation entry by entry gives exactly the rows of the system: row i says x₁(a₁)ᵢ + ⋯ + xₙ(aₙ)ᵢ = bᵢ."
+      }
+     ]
+    },
+    {
+     "type": "example",
+     "title": "Is b in the span?",
+     "prompt": "Let v₁ = (1, 0, −2), v₂ = (2, 1, −3). Is b = (3, 1, −5) in Span{v₁, v₂}? Is (3, 1, −4)?",
+     "steps": [
+      "Row reduce [v₁ v₂ | b] = [1 2 | 3; 0 1 | 1; −2 −3 | −5].",
+      "R₃ + 2R₁ → [0 1 | 1]; R₃ − R₂ → [0 0 | 0]; R₁ − 2R₂ → [1 0 | 1]. RREF [1 0 | 1; 0 1 | 1; 0 0 | 0].",
+      "Consistent with x₁ = 1, x₂ = 1, so b = v₁ + v₂. Check: (1+2, 0+1, −2−3) = (3, 1, −5). ✓",
+      "For (3, 1, −4) the same steps end with [0 0 | 1]: 0 = 1."
+     ],
+     "answer": "(3, 1, −5) = v₁ + v₂ is in the span; (3, 1, −4) is not."
+    }
+   ]
+  },
+  {
+   "title": "The matrix equation Ax = b and spanning ℝᵐ",
+   "blocks": [
+    {
+     "type": "def",
+     "term": "Matrix–vector product",
+     "text": "If A = [<b>a</b>₁ ⋯ <b>a</b>ₙ] is m×n and <b>x</b> ∈ ℝⁿ, then A<b>x</b> = x₁<b>a</b>₁ + ⋯ + xₙ<b>a</b>ₙ, a vector in ℝᵐ. (Row–vector rule: entry i of A<b>x</b> is row i of A dotted with <b>x</b>.)"
+    },
+    {
+     "type": "thm",
+     "name": "Three views of one problem",
+     "text": "A<b>x</b> = <b>b</b>, the vector equation x₁<b>a</b>₁ + ⋯ + xₙ<b>a</b>ₙ = <b>b</b>, and the system [A | <b>b</b>] all have the same solutions. Hence <b>A<b>x</b> = <b>b</b> is consistent exactly when <b>b</b> is a linear combination of the columns of A</b>, i.e. <b>b</b> ∈ Span{columns}.",
+     "proof": [
+      {
+       "type": "p",
+       "text": "A<b>x</b> is <i>by definition</i> a combination of the columns with weights x₁, …, xₙ. Asking for some <b>x</b> with A<b>x</b> = <b>b</b> is asking for weights that build <b>b</b> from the columns."
+      }
+     ]
+    },
+    {
+     "type": "thm",
+     "name": "Spanning theorem (Lay Thm 4)",
+     "text": "For an m×n matrix A, these are all true or all false: (a) A<b>x</b> = <b>b</b> has a solution for every <b>b</b> ∈ ℝᵐ; (b) every <b>b</b> is a combination of the columns; (c) the columns span ℝᵐ; (d) A has a pivot position in <b>every row</b>.",
+     "proof": [
+      {
+       "type": "p",
+       "text": "If some row of an echelon form U of A has no pivot, it is a zero row. Choose a right side making that row read 0 = 1 and undo the row operations: you get a <b>b</b> with A<b>x</b> = <b>b</b> inconsistent. If every row has a pivot, no row can read 0 = c ≠ 0, so every system is consistent."
+      }
+     ]
+    },
+    {
+     "type": "warn",
+     "text": "The test is a pivot in every row of the <b>coefficient</b> matrix A, not of [A | <b>b</b>]. And n vectors in ℝᵐ with n &lt; m can never span ℝᵐ (at most n pivots for m rows)."
+    },
+    {
+     "type": "example",
+     "title": "Do the columns span ℝ³? Which b work?",
+     "prompt": "Let A = [1 3 4; −4 2 −6; −3 −2 −7]. Is A<b>x</b> = <b>b</b> consistent for all <b>b</b>? If not, describe the <b>b</b> that work.",
+     "steps": [
+      "Row reduce [A | b]: R₂ + 4R₁ → [0 14 10 | 4b₁ + b₂]; R₃ + 3R₁ → [0 7 5 | 3b₁ + b₃].",
+      "R₃ − ½R₂ → [0 0 0 | b₁ − ½b₂ + b₃].",
+      "Only 2 pivots for 3 rows ⇒ the columns do not span ℝ³.",
+      "Consistent exactly when b₁ − ½b₂ + b₃ = 0, i.e. 2b₁ − b₂ + 2b₃ = 0: a plane through 0."
+     ],
+     "answer": "No. A<b>x</b> = <b>b</b> is consistent iff 2b₁ − b₂ + 2b₃ = 0 (Col A is that plane)."
+    }
+   ]
+  },
+  {
+   "title": "Solution sets: homogeneous systems and parametric vector form",
+   "blocks": [
+    {
+     "type": "def",
+     "term": "Homogeneous system",
+     "text": "A<b>x</b> = <b>0</b>. It always has the <b>trivial solution</b> <b>x</b> = <b>0</b>. It has a nontrivial solution iff there is at least one free variable."
+    },
+    {
+     "type": "def",
+     "term": "Parametric vector form",
+     "text": "Writing the solution set as <b>x</b> = <b>p</b> + s<b>u</b> + t<b>v</b> + ⋯ with free variables s, t, … as parameters."
+    },
+    {
+     "type": "thm",
+     "name": "Structure of solution sets",
+     "text": "If A<b>x</b> = <b>b</b> is consistent and <b>p</b> is any one solution, the solution set is exactly {<b>p</b> + <b>v</b>ₕ : A<b>v</b>ₕ = <b>0</b>}, i.e. <b>p</b> + (solutions of the homogeneous system).",
+     "proof": [
+      {
+       "type": "p",
+       "text": "If A<b>v</b>ₕ = <b>0</b> then A(<b>p</b> + <b>v</b>ₕ) = <b>b</b> + <b>0</b> = <b>b</b>. Conversely if A<b>w</b> = <b>b</b>, then A(<b>w</b> − <b>p</b>) = <b>0</b>, so <b>w</b> = <b>p</b> + (a homogeneous solution)."
+      }
+     ]
+    },
+    {
+     "type": "tip",
+     "text": "Geometrically: the homogeneous solutions form a line/plane through 0; the nonhomogeneous ones form the parallel line/plane shifted by <b>p</b>. So uniqueness for one <b>b</b> means the homogeneous system has only the trivial solution, which forces at most one solution for every <b>b</b>."
+    },
+    {
+     "type": "steps",
+     "title": "Writing parametric vector form",
+     "items": [
+      "Row reduce [A | b] to RREF.",
+      "Write each basic variable in terms of the free variables.",
+      "Write <b>x</b> as a column, substitute, and split it into a constant vector plus one vector per free variable.",
+      "Check: A(constant vector) = <b>b</b>, A(each direction vector) = <b>0</b>."
+     ]
+    },
+    {
+     "type": "example",
+     "title": "Parametric vector form",
+     "prompt": "Write the solution set of the system [1 2 −1 3 | 4; 2 4 0 2 | 6; −1 −2 3 −7 | −6] in parametric vector form, and its homogeneous version.",
+     "steps": [
+      "From the RREF [1 2 0 1 | 3; 0 0 1 −2 | −1; 0 0 0 0 | 0]: x₁ = 3 − 2x₂ − x₄, x₃ = −1 + 2x₄, with x₂, x₄ free.",
+      "<b>x</b> = (3 − 2x₂ − x₄, x₂, −1 + 2x₄, x₄) = (3, 0, −1, 0) + x₂(−2, 1, 0, 0) + x₄(−1, 0, 2, 1).",
+      "Check: A(3, 0, −1, 0) = (3 + 1, 6, −3 − 3) = (4, 6, −6) = <b>b</b>; A(−2, 1, 0, 0) = <b>0</b>; A(−1, 0, 2, 1) = (−1 − 2 + 3, −2 + 0 + 2, 1 + 6 − 7) = <b>0</b>.",
+      "The homogeneous system has solution set Span{(−2, 1, 0, 0), (−1, 0, 2, 1)}: drop <b>p</b>."
+     ],
+     "answer": "<b>x</b> = (3, 0, −1, 0) + s(−2, 1, 0, 0) + t(−1, 0, 2, 1); homogeneous: Span{(−2, 1, 0, 0), (−1, 0, 2, 1)}."
+    },
+    {
+     "type": "warn",
+     "text": "If <b>b</b> ≠ <b>0</b>, the solution set is <b>not</b> a span (it does not contain <b>0</b>); it is a translated span."
+    }
+   ]
+  },
+  {
+   "title": "True/False reasoning on existence and uniqueness",
+   "blocks": [
+    {
+     "type": "p",
+     "text": "A true statement needs a reason that works for every matrix; a false one needs one concrete counterexample. The tools are: the existence/uniqueness theorem, the pivot-in-every-row theorem, pivot counting (≤ min(m, n) pivots), and the structure theorem <b>p</b> + Nul."
+    },
+    {
+     "type": "example",
+     "title": "Four quick True/False",
+     "prompt": "(a) If A is 3×5, A<b>x</b> = <b>0</b> has a nontrivial solution. (b) If A is 5×3, A<b>x</b> = <b>b</b> is consistent for every <b>b</b>. (c) If A<b>x</b> = <b>b</b> has a free variable, it has infinitely many solutions. (d) If [A | <b>b</b>] has a pivot in every row, the system is consistent.",
+     "steps": [
+      "(a) True: at most 3 pivots, 5 columns ⇒ ≥ 2 free variables, and the homogeneous system is always consistent.",
+      "(b) False: at most 3 pivots for 5 rows ⇒ some row has no pivot ⇒ the columns cannot span ℝ⁵.",
+      "(c) False as stated: the system might be inconsistent (a free variable plus a row 0 = 1, e.g. [1 1 | 0; 0 0 | 1]). True if it is consistent.",
+      "(d) False: [1 1 | 0; 0 0 | 1] has a pivot in every row, but one is in the augmented column."
+     ],
+     "answer": "(a) T (b) F (c) F (true only if consistent) (d) F"
+    },
+    {
+     "type": "warn",
+     "text": "'Consistent' and 'unique' are separate questions: consistency is about the augmented column (or rows of A), uniqueness is about free variables (columns of A)."
+    }
+   ]
+  }
+ ],
+ "cards": [
+  {
+   "front": "When is a linear system consistent? (Existence and Uniqueness Theorem)",
+   "back": [
+    {
+     "type": "p",
+     "text": "Consistent iff the augmented column is not a pivot column (no echelon row [0 ⋯ 0 | c], c ≠ 0). Then: unique if no free variables, infinitely many if at least one."
+    }
+   ]
+  },
+  {
+   "front": "What are the three elementary row operations, and why don't they change solutions?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Replacement (add a multiple of a row to another), interchange, scaling by a nonzero constant. Each is reversible, so the old and new systems imply each other."
+    }
+   ]
+  },
+  {
+   "front": "Echelon form vs reduced echelon form?",
+   "back": [
+    {
+     "type": "p",
+     "text": "REF: zero rows at bottom, leading entries step right, zeros below leading entries. RREF additionally: leading entries are 1 and are the only nonzero entries in their columns. RREF is unique; REF is not, but pivot positions are."
+    }
+   ]
+  },
+  {
+   "front": "Basic vs free variables?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Basic: variables of pivot columns. Free: all others; they are parameters and the basic variables are expressed in terms of them."
+    }
+   ]
+  },
+  {
+   "front": "Why can a linear system never have exactly two solutions?",
+   "back": [
+    {
+     "type": "p",
+     "text": "If x ≠ y are solutions, every x + t(y − x) is a solution (linearity), so there are infinitely many."
+    }
+   ]
+  },
+  {
+   "front": "A x = b is consistent exactly when…?",
+   "back": [
+    {
+     "type": "p",
+     "text": "b is a linear combination of the columns of A, i.e. b ∈ Span{a₁, …, aₙ}. Reason: A x = x₁a₁ + ⋯ + xₙaₙ by definition."
+    }
+   ]
+  },
+  {
+   "front": "Four equivalent statements of the spanning theorem for m×n A?",
+   "back": [
+    {
+     "type": "p",
+     "text": "A x = b solvable for every b ⇔ every b is a combination of the columns ⇔ columns span ℝᵐ ⇔ pivot in every <b>row</b> of A."
+    }
+   ]
+  },
+  {
+   "front": "Why can a 3×5 system never have a unique solution?",
+   "back": [
+    {
+     "type": "p",
+     "text": "At most 3 pivots (one per row) but 5 columns ⇒ at least 2 free variables. So: no solution or infinitely many."
+    }
+   ]
+  },
+  {
+   "front": "Can 3 vectors span ℝ⁴?",
+   "back": [
+    {
+     "type": "p",
+     "text": "No. The 4×3 matrix has at most 3 pivots, so some row has no pivot."
+    }
+   ]
+  },
+  {
+   "front": "What is Span{v₁, …, vₚ}? Does it contain 0?",
+   "back": [
+    {
+     "type": "p",
+     "text": "All linear combinations c₁v₁ + ⋯ + cₚvₚ. Yes, always (all weights 0). In ℝ³: a point, line or plane through 0, or all of ℝ³."
+    }
+   ]
+  },
+  {
+   "front": "How do you test whether b ∈ Span{v₁, …, vₚ}?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Row reduce [v₁ ⋯ vₚ | b]. In the span iff consistent; the solution gives the weights."
+    }
+   ]
+  },
+  {
+   "front": "When does A x = 0 have a nontrivial solution?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Iff there is at least one free variable (fewer pivots than columns). Always true when n > m."
+    }
+   ]
+  },
+  {
+   "front": "Structure of the solution set of A x = b (consistent)?",
+   "back": [
+    {
+     "type": "p",
+     "text": "x = p + vₕ, where p is one particular solution and vₕ ranges over all solutions of A x = 0."
+    },
+    {
+     "type": "warn",
+     "text": "If b ≠ 0 it is not a span: it misses 0."
+    }
+   ]
+  },
+  {
+   "front": "Parametric vector form recipe?",
+   "back": [
+    {
+     "type": "p",
+     "text": "RREF → basic variables in terms of free ones → split x into constant vector + (free variable)·(vector) for each free variable. Check A p = b, A v = 0."
+    }
+   ]
+  },
+  {
+   "front": "Pivot in every row of [A | b]: consistent?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Not necessarily. A pivot in the augmented column means 0 = 1. The spanning test uses the coefficient matrix A."
+    }
+   ]
+  },
+  {
+   "front": "If A x = b has a unique solution for one b, what about other c?",
+   "back": [
+    {
+     "type": "p",
+     "text": "At most one solution for every c (Nul A = {0}), but possibly none. E.g. A = [1; 0]."
+    }
+   ]
+  },
+  {
+   "front": "How do you handle a parameter problem (for which h, k)?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Row reduce symbolically. A coefficient that might vanish decides whether a pivot is lost; then the right side of the lost row decides 0 = 0 (infinite) vs 0 = nonzero (none)."
+    }
+   ]
+  },
+  {
+   "front": "Row–vector rule for A x?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Entry i of A x is (row i of A)·x. Column view: A x = x₁a₁ + ⋯ + xₙaₙ."
+    }
+   ]
+  },
+  {
+   "front": "Find all b making A x = b consistent: method?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Row reduce [A | b] with b₁, b₂, b₃ symbolic. Each zero row of A's echelon form gives a linear condition on b that must equal 0."
+    }
+   ]
+  },
+  {
+   "front": "Polynomial span question: is q in Span{p₁, p₂, p₃} ⊂ ℙ₂?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Write each polynomial as its coefficient vector in {1, t, t²} and row reduce [p₁ p₂ p₃ | q]. Watch for dependent generators: three polynomials need not span ℙ₂."
+    }
+   ]
+  },
+  {
+   "front": "Homogeneous solution set geometry vs nonhomogeneous?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Homogeneous: a span (line/plane through 0). Nonhomogeneous: the same line/plane translated by p."
+    }
+   ]
+  }
+ ],
+ "hard": [
+  {
+   "title": "Two-parameter classification",
+   "level": "hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "Consider the system with augmented matrix"
+    },
+    {
+     "type": "matrix",
+     "rows": [
+      [
+       "1",
+       "2",
+       "1",
+       "3"
+      ],
+      [
+       "2",
+       "5",
+       "4",
+       "<i>k</i>"
+      ],
+      [
+       "1",
+       "3",
+       "<i>h</i>",
+       "5"
+      ]
+     ],
+     "aug": 3
+    },
+    {
+     "type": "p",
+     "text": "(a) For which <i>h</i>, <i>k</i> does it have no solution, exactly one, infinitely many? (b) In the infinite case, write the solution set in parametric vector form."
+    }
+   ],
+   "answer": "h ≠ 3: exactly one; h = 3, k ≠ 8: none; h = 3, k = 8: infinitely many, x = (−1, 2, 0) + z(3, −2, 1)",
+   "solution": [
+    {
+     "type": "steps",
+     "title": "Solution",
+     "items": [
+      "R₂ − 2R₁: [0 1 2 | <i>k</i> − 6]. R₃ − R₁: [0 1 <i>h</i>−1 | 2]. Then R₃ − R₂: [0 0 <i>h</i>−3 | 8 − <i>k</i>].",
+      "<b><i>h</i> ≠ 3</b>: three pivots in the coefficient part ⇒ <b>exactly one</b> solution (any <i>k</i>).",
+      "<b><i>h</i> = 3, <i>k</i> ≠ 8</b>: last row reads 0 = 8 − <i>k</i> ≠ 0 ⇒ <b>no</b> solution.",
+      "<b><i>h</i> = 3, <i>k</i> = 8</b>: <i>z</i> free ⇒ <b>infinitely many</b>. Back-substitute: <i>y</i> = 2 − 2<i>z</i>, <i>x</i> = 3 − 2<i>y</i> − <i>z</i> = −1 + 3<i>z</i>.",
+      "<b>x</b> = (−1, 2, 0) + <i>z</i>(3, −2, 1). Check <i>z</i> = 1: (2, 0, 1) gives 2+0+1 = 3, 4+0+4 = 8, 2+0+3 = 5. ✓"
+     ]
+    },
+    {
+     "type": "warn",
+     "text": "What it tests: Classifying needs <i>both</i> parameters: <i>h</i> decides whether a pivot is lost, <i>k</i> decides whether the lost row is 0 = 0 or 0 = nonzero. Students who answer “<i>h</i> = 3 ⇒ infinitely many” lose half the points."
+    }
+   ]
+  },
+  {
+   "title": "Span with a parameter",
+   "level": "hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "Let <b>v</b>₁ = (1, −1, 2), <b>v</b>₂ = (2, 1, <i>h</i>), <b>v</b>₃ = (0, 3, 4). For which <i>h</i> is Span{<b>v</b>₁, <b>v</b>₂, <b>v</b>₃} ≠ ℝ³? For that <i>h</i>, describe the span by a single linear equation and write <b>v</b>₃ as a combination of <b>v</b>₁, <b>v</b>₂."
+    }
+   ],
+   "answer": "h = 8; span is the plane 10x + 4y − 3z = 0; v₃ = −2v₁ + v₂",
+   "solution": [
+    {
+     "type": "p",
+     "text": "Three vectors span ℝ³ ⇔ [<b>v</b>₁ <b>v</b>₂ <b>v</b>₃] has 3 pivots ⇔ its determinant ≠ 0 (or row reduce)."
+    },
+    {
+     "type": "p",
+     "text": "det"
+    },
+    {
+     "type": "matrix",
+     "rows": [
+      [
+       "1",
+       "2",
+       "0"
+      ],
+      [
+       "−1",
+       "1",
+       "3"
+      ],
+      [
+       "2",
+       "<i>h</i>",
+       "4"
+      ]
+     ]
+    },
+    {
+     "type": "p",
+     "text": "= 1(4 − 3<i>h</i>) − 2(−4 − 6) + 0 = 24 − 3<i>h</i> = −3(<i>h</i> − 8). So the span fails to be ℝ³ exactly when <b><i>h</i> = 8</b>."
+    },
+    {
+     "type": "p",
+     "text": "At <i>h</i> = 8 solve <i>a</i><b>v</b>₁ + <i>b</i><b>v</b>₂ = <b>v</b>₃: <i>a</i> + 2<i>b</i> = 0, −<i>a</i> + <i>b</i> = 3 ⇒ <i>b</i> = 1, <i>a</i> = −2; third row 2(−2) + 8 = 4 ✓. So <b>v</b>₃ = −2<b>v</b>₁ + <b>v</b>₂."
+    },
+    {
+     "type": "p",
+     "text": "The span is the plane through <b>0</b> with normal <b>v</b>₁ × <b>v</b>₂ = (−10, −4, 3), i.e. <b>10<i>x</i> + 4<i>y</i> − 3<i>z</i> = 0</b>. (Row-reducing [<b>v</b>₁ <b>v</b>₂ | <b>b</b>] gives the same condition.)"
+    },
+    {
+     "type": "warn",
+     "text": "What it tests: Span = ℝ³ is a pivot-in-every-row question. The plane equation is the consistency condition on <b>b</b>; get it from the zero row of the reduced [<i>A</i> | <b>b</b>] if you don’t like cross products."
+    }
+   ]
+  },
+  {
+   "title": "True/False: existence and uniqueness",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "list",
+     "items": [
+      "1. If <i>A</i><b>x</b> = <b>b</b> is consistent for some <b>b</b>, then <i>A</i><b>x</b> = <b>0</b> has only the trivial solution.",
+      "2. A 3×5 matrix <i>A</i> has <i>A</i><b>x</b> = <b>b</b> consistent for every <b>b</b> in ℝ³ if and only if <i>A</i> has 3 pivot positions.",
+      "3. If the augmented matrix [<i>A</i> | <b>b</b>] has a pivot in every row, the system is consistent.",
+      "4. If <b>x</b>₁ and <b>x</b>₂ both solve <i>A</i><b>x</b> = <b>b</b>, then <b>x</b>₁ − <b>x</b>₂ solves <i>A</i><b>x</b> = <b>0</b>.",
+      "5. If <b>b</b> ≠ <b>0</b>, the solution set of <i>A</i><b>x</b> = <b>b</b> can be written as Span{<b>v</b>₁, …, <b>v</b>ₖ} for suitable vectors."
+     ]
+    }
+   ],
+   "answer": "1 F, 2 T, 3 F, 4 T, 5 F",
+   "solution": [
+    {
+     "type": "p",
+     "text": "1. <b>False.</b> Take <i>A</i> ="
+    },
+    {
+     "type": "matrix",
+     "rows": [
+      [
+       "1",
+       "1"
+      ]
+     ]
+    },
+    {
+     "type": "p",
+     "text": "and <b>b</b> = 0. The system is consistent, yet (1, −1) is a nontrivial solution of <i>A</i><b>x</b> = <b>0</b>. Consistency says nothing about free variables."
+    },
+    {
+     "type": "p",
+     "text": "2. <b>True.</b> Consistent for every <b>b</b> ⇔ columns span ℝ³ ⇔ a pivot in every row of <i>A</i> (the coefficient matrix). 3 rows, so 3 pivots."
+    },
+    {
+     "type": "p",
+     "text": "3. <b>False.</b>"
+    },
+    {
+     "type": "matrix",
+     "rows": [
+      [
+       "1",
+       "1",
+       "0"
+      ],
+      [
+       "0",
+       "0",
+       "1"
+      ]
+     ],
+     "aug": 2
+    },
+    {
+     "type": "p",
+     "text": "has a pivot in each row, but the second pivot is in the augmented column: 0 = 1. The test is a pivot in every row of <i>A</i>, not of [<i>A</i> | <b>b</b>]."
+    },
+    {
+     "type": "p",
+     "text": "4. <b>True.</b> <i>A</i>(<b>x</b>₁ − <b>x</b>₂) = <b>b</b> − <b>b</b> = <b>0</b>."
+    },
+    {
+     "type": "p",
+     "text": "5. <b>False.</b> Every span contains <b>0</b>, but <i>A</i><b>0</b> = <b>0</b> ≠ <b>b</b>. The solution set is a <i>translate</i> <b>p</b> + Span{…}, never a span itself."
+    },
+    {
+     "type": "warn",
+     "text": "What it tests: A true statement needs a reason valid for every matrix; a false one needs one concrete counterexample. “Pivot in every row” always refers to the <i>coefficient</i> matrix."
+    }
+   ]
+  },
+  {
+   "title": "Construct a matrix with given column space",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "Construct a 3×3 matrix <i>A</i> with <b>no zero entries</b> such that <i>A</i><b>x</b> = <b>b</b> is consistent exactly when <i>b</i>₁ − 2<i>b</i>₂ + <i>b</i>₃ = 0. Justify."
+    }
+   ],
+   "answer": "e.g. A = [1 1 2; 1 2 3; 1 3 4] (columns span the plane b₁ − 2b₂ + b₃ = 0)",
+   "solution": [
+    {
+     "type": "p",
+     "text": "Consistent ⇔ <b>b</b> ∈ Col <i>A</i>. So we need Col <i>A</i> = the plane <i>b</i>₁ − 2<i>b</i>₂ + <i>b</i>₃ = 0 (a 2-dimensional subspace)."
+    },
+    {
+     "type": "p",
+     "text": "Pick columns in that plane, two of them independent: (1, 1, 1), (1, 2, 3), and their sum (2, 3, 4). Each satisfies <i>b</i>₁ − 2<i>b</i>₂ + <i>b</i>₃ = 0."
+    },
+    {
+     "type": "p",
+     "text": "<i>A</i> ="
+    },
+    {
+     "type": "matrix",
+     "rows": [
+      [
+       "1",
+       "1",
+       "2"
+      ],
+      [
+       "1",
+       "2",
+       "3"
+      ],
+      [
+       "1",
+       "3",
+       "4"
+      ]
+     ]
+    },
+    {
+     "type": "p",
+     "text": ". Columns 1, 2 are independent and column 3 = col 1 + col 2, so Col <i>A</i> is exactly the plane (2-dimensional subspace of a 2-dimensional plane)."
+    },
+    {
+     "type": "p",
+     "text": "Check by row reduction: [<i>A</i> | <b>b</b>] → last row [0 0 0 | <i>b</i>₁ − 2<i>b</i>₂ + <i>b</i>₃]. ✓"
+    },
+    {
+     "type": "warn",
+     "text": "What it tests: Both directions matter: columns in the plane gives “consistent ⇒ condition”; columns spanning the plane gives “condition ⇒ consistent”. Three multiples of one vector would fail the second."
+    }
+   ]
+  },
+  {
+   "title": "Proof: one unique solution ⇒ at most one always",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "Let <i>A</i> be <i>m</i>×<i>n</i>. Prove: if <i>A</i><b>x</b> = <b>b</b> has <b>exactly one</b> solution for some particular <b>b</b>, then <i>A</i><b>x</b> = <b>c</b> has at most one solution for <b>every</b> <b>c</b>."
+    }
+   ],
+   "answer": "Uniqueness for one b ⇒ A x = 0 has only x = 0 ⇒ at most one solution for every c (possibly none)",
+   "solution": [
+    {
+     "type": "p",
+     "text": "Let <b>p</b> be the unique solution of <i>A</i><b>x</b> = <b>b</b>. If <i>A</i><b>u</b> = <b>0</b>, then <i>A</i>(<b>p</b> + <b>u</b>) = <b>b</b>, so <b>p</b> + <b>u</b> = <b>p</b> by uniqueness, i.e. <b>u</b> = <b>0</b>. Hence <i>A</i><b>x</b> = <b>0</b> has only the trivial solution."
+    },
+    {
+     "type": "p",
+     "text": "Now suppose <i>A</i><b>y</b>₁ = <i>A</i><b>y</b>₂ = <b>c</b>. Then <i>A</i>(<b>y</b>₁ − <b>y</b>₂) = <b>0</b>, so <b>y</b>₁ − <b>y</b>₂ = <b>0</b>. At most one solution. ∎"
+    },
+    {
+     "type": "p",
+     "text": "(It can have <i>zero</i> solutions: <i>A</i> ="
+    },
+    {
+     "type": "matrix",
+     "rows": [
+      [
+       "1"
+      ],
+      [
+       "0"
+      ]
+     ]
+    },
+    {
+     "type": "p",
+     "text": "has a unique solution for <b>b</b> = (1, 0) and none for (0, 1).)"
+    },
+    {
+     "type": "warn",
+     "text": "What it tests: The structure theorem: every solution set of <i>A</i><b>x</b> = <b>b</b> is either empty or <b>p</b> + Nul <i>A</i>. Uniqueness anywhere ⇔ Nul <i>A</i> = {<b>0</b>}. Don’t claim “exactly one for every <b>c</b>”."
+    }
+   ]
+  },
+  {
+   "title": "Reverse-engineer A from its solution set",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "The general solution of <i>A</i><b>x</b> = <b>b</b>, where <i>A</i> is 3×4, is <b>x</b> = (1, 2, 0, 0) + <i>s</i>(1, −1, 1, 0) + <i>t</i>(0, 2, 0, 1), with <i>s</i>, <i>t</i> free."
+    },
+    {
+     "type": "p",
+     "text": "(a) How many pivot columns does <i>A</i> have? (b) Do the columns of <i>A</i> span ℝ³? (c) Find one such <i>A</i> and <b>b</b>."
+    }
+   ],
+   "answer": "(a) 2 pivots (b) No (c) e.g. A = [1 0 −1 0; 1 1 0 −2; 2 1 −1 −2], b = (1, 3, 4)",
+   "solution": [
+    {
+     "type": "p",
+     "text": "(a) Two free parameters ⇒ 2 free variables ⇒ 4 − 2 = <b>2 pivot columns</b>."
+    },
+    {
+     "type": "p",
+     "text": "(b) Only 2 pivots among 3 rows ⇒ some row has no pivot ⇒ columns do <b>not</b> span ℝ³."
+    },
+    {
+     "type": "p",
+     "text": "(c) Each row <b>r</b> of <i>A</i> must satisfy <b>r</b>·(1, −1, 1, 0) = 0 and <b>r</b>·(0, 2, 0, 1) = 0: <i>a</i> − <i>b</i> + <i>c</i> = 0, 2<i>b</i> + <i>d</i> = 0. Solutions: (1, 0, −1, 0) and (1, 1, 0, −2)."
+    },
+    {
+     "type": "p",
+     "text": "Take <i>A</i> ="
+    },
+    {
+     "type": "matrix",
+     "rows": [
+      [
+       "1",
+       "0",
+       "−1",
+       "0"
+      ],
+      [
+       "1",
+       "1",
+       "0",
+       "−2"
+      ],
+      [
+       "2",
+       "1",
+       "−1",
+       "−2"
+      ]
+     ]
+    },
+    {
+     "type": "p",
+     "text": "(third row = sum, so rank 2 and Nul <i>A</i> is exactly the 2-D span). Then <b>b</b> = <i>A</i>(1, 2, 0, 0) = <b>(1, 3, 4)</b>."
+    },
+    {
+     "type": "warn",
+     "text": "What it tests: Free parameters = n − (number of pivots). Rows of <i>A</i> must be orthogonal to the homogeneous directions; then <b>b</b> = <i>A</i><b>p</b>. Forgetting to keep rank exactly 2 (e.g. three independent rows) changes the solution set."
+    }
+   ]
+  },
+  {
+   "title": "Span in ℙ₂ with parameters",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "For which <i>h</i>, <i>k</i> is <i>q</i>(<i>t</i>) = 3 + <i>h</i><i>t</i> + <i>k</i><i>t</i>² in Span{1 + 2<i>t</i> + <i>t</i>², 2 + 3<i>t</i> + <i>t</i>², 1 + <i>t</i>}?"
+    }
+   ],
+   "answer": "q is in the span iff h − k = 3",
+   "solution": [
+    {
+     "type": "p",
+     "text": "Use coordinates in the basis {1, <i>t</i>, <i>t</i>²}: the spanning vectors become (1, 2, 1), (2, 3, 1), (1, 1, 0) and <i>q</i> becomes (3, <i>h</i>, <i>k</i>)."
+    },
+    {
+     "type": "p",
+     "text": "Notice (1, 1, 0) = (2, 3, 1) − (1, 2, 1): the third polynomial is redundant, so the span is 2-dimensional."
+    },
+    {
+     "type": "p",
+     "text": "Row reduce"
+    },
+    {
+     "type": "matrix",
+     "rows": [
+      [
+       "1",
+       "2",
+       "1",
+       "3"
+      ],
+      [
+       "2",
+       "3",
+       "1",
+       "<i>h</i>"
+      ],
+      [
+       "1",
+       "1",
+       "0",
+       "<i>k</i>"
+      ]
+     ],
+     "aug": 3
+    },
+    {
+     "type": "p",
+     "text": ": R₂ − 2R₁ → [0 −1 −1 | <i>h</i> − 6], R₃ − R₁ → [0 −1 −1 | <i>k</i> − 3], R₃ − R₂ → [0 0 0 | <i>k</i> − <i>h</i> + 3]."
+    },
+    {
+     "type": "p",
+     "text": "In the span ⇔ <b><i>h</i> − <i>k</i> = 3</b>. E.g. 3 + 5<i>t</i> + 2<i>t</i>² is in it; 3 + 4<i>t</i> + 2<i>t</i>² is not."
+    },
+    {
+     "type": "warn",
+     "text": "What it tests: Polynomial span questions are column-vector span questions in disguise. With three generators in a 3-D space, it’s tempting to say “three vectors, so they span” — check dependence first."
+    }
+   ]
+  },
+  {
+   "title": "Consistency without knowing A",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "<i>A</i> is 4×4. <i>A</i><b>x</b> = <b>e</b>₁, <i>A</i><b>x</b> = <b>e</b>₂, <i>A</i><b>x</b> = <b>e</b>₃ are each consistent, but <i>A</i><b>x</b> = <b>e</b>₄ is not."
+    },
+    {
+     "type": "p",
+     "text": "(a) What is Col <i>A</i>? (b) How many solutions does <i>A</i><b>x</b> = <b>0</b> have? (c) How many solutions does <i>A</i><b>x</b> = 2<b>e</b>₁ − <b>e</b>₃ have? (d) Is <i>A</i><b>x</b> = <b>e</b>₂ + <b>e</b>₄ consistent?"
+    }
+   ],
+   "answer": "(a) Span{e₁, e₂, e₃} (b) infinitely many (c) infinitely many (d) inconsistent",
+   "solution": [
+    {
+     "type": "steps",
+     "title": "Solution",
+     "items": [
+      "(a) Col <i>A</i> is a subspace containing <b>e</b>₁, <b>e</b>₂, <b>e</b>₃, so it contains Span{<b>e</b>₁, <b>e</b>₂, <b>e</b>₃}, which is 3-dimensional. It is not all of ℝ⁴ (misses <b>e</b>₄). So <b>Col <i>A</i> = Span{<b>e</b>₁, <b>e</b>₂, <b>e</b>₃}</b> = {<i>x</i>₄ = 0}.",
+      "(b) rank 3 ⇒ one free variable ⇒ <b>infinitely many</b> solutions.",
+      "(c) 2<b>e</b>₁ − <b>e</b>₃ ∈ Col <i>A</i> (consistent) and there is a free variable ⇒ <b>infinitely many</b>.",
+      "(d) If <i>A</i><b>x</b> = <b>e</b>₂ + <b>e</b>₄ had a solution <b>x</b>, and <i>A</i><b>y</b> = <b>e</b>₂, then <i>A</i>(<b>x</b> − <b>y</b>) = <b>e</b>₄, contradiction. <b>Inconsistent</b>."
+     ]
+    },
+    {
+     "type": "warn",
+     "text": "What it tests: Col <i>A</i> is closed under combinations — that’s what makes the problem solvable without knowing <i>A</i>. For a square matrix, failing to be onto forces failing to be one-to-one (IMT preview)."
+    }
+   ]
+  }
+ ],
+ "keyFacts": [
+  "Consistent ⇔ no echelon row [0 ⋯ 0 | c] with c ≠ 0 (augmented column is not a pivot column).",
+  "Consistent + no free variables ⇒ unique; consistent + a free variable ⇒ infinitely many.",
+  "#free variables = n − #pivots; #pivots ≤ min(m, n).",
+  "A x = b consistent ⇔ b ∈ Span{columns of A}, because A x = x₁a₁ + ⋯ + xₙaₙ.",
+  "Columns span ℝᵐ ⇔ A x = b solvable for all b ⇔ pivot in every ROW of A.",
+  "A x = 0 has a nontrivial solution ⇔ a free variable exists (always if n > m).",
+  "Solution set of consistent A x = b is p + {solutions of A x = 0}; never a span if b ≠ 0.",
+  "More columns than rows: never a unique solution. More rows than columns: never consistent for every b."
+ ]
+}
