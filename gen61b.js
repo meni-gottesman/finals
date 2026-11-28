@@ -394,11 +394,19 @@
       const res = ilToArr(f(ilOf(xs)));
       if (!res || res.length === 0) return null;
       const call = t === 1 ? 'h(L, null)' : 'h(L)';
+      // call-by-call trace with this list
+      const tr = [];
+      if (t === 1) { let acc = []; for (let i = 0; i <= xs.length; i++) { tr.push('h([' + xs.slice(i).join(' ') + '], acc = [' + acc.join(' ') + '])' + (i === xs.length ? ' → returns acc' : '')); if (i < xs.length) acc = [xs[i] + +src.match(/L\.first \+ (\d+)/)[1]].concat(acc); } }
+      else { const rec = (i) => { const rest = xs.slice(i); if (t === 2 && rest.length < 2) { tr.push('h([' + rest.join(' ') + ']) → ' + (rest.length ? 'returns that last node itself: [' + rest.join(' ') + ']' : 'null')); return rest; }
+          if (t === 0 && !rest.length) { tr.push('h([]) → null'); return []; }
+          if (t === 0) { const sub = rec(i + 1); const m = +src.match(/% (\d+)/)[1], k = +src.match(/L\.first \* (\d+)/)[1], keep = src.includes('== 0'); const c = keep ? xs[i] % m === 0 : xs[i] % m !== 0; const out = c ? [xs[i] * k].concat(sub) : sub; tr.push('h([' + rest.join(' ') + ']): ' + xs[i] + (c ? ' kept → ' + xs[i] + '·' + k + ' = ' + xs[i] * k + ' in front of ' : ' dropped → just ') + '[' + sub.join(' ') + '] = [' + out.join(' ') + ']'); return out; }
+          const sub = rec(i + 2); const k = +src.match(/L\.rest\.first \+ (\d+)/)[1]; const v = xs[i] + xs[i + 1] + k; const out = [v].concat(sub); tr.push('h([' + rest.join(' ') + ']): ' + xs[i] + ' + ' + xs[i + 1] + ' + ' + k + ' = ' + v + ' in front of [' + sub.join(' ') + '] = [' + out.join(' ') + ']'); return out; };
+        rec(0); }
       const body = 'IntList L = IntList.of(' + xs.join(', ') + ');\nSystem.out.println(' + call + ');';
       return Q({ kind: 'list', answer: res,
         prompt: P('What does this print? Enter the numbers in order, comma-separated.') + code(src + '\n\n// in main:\n' + body),
         hint: 'Trust the recursive call on the rest, then ask what this one call adds in front.',
-        solution: P('The method ' + desc + '. On ' + xs.join(' ') + ' that gives <b>' + res.join(' ') + '</b>.'),
+        solution: P('The method ' + desc + '. ' + (t === 1 ? 'Calls, in order:' : 'Results from the deepest call back up:')) + P(tr.join('<br>')) + P('Printed: <b>' + res.join(' ') + '</b>.'),
         _java: { src: javaProg(body, src, INTLIST_SRC), expect: { kind: 'out', out: res.join(' ') } } });
     });
   } });
@@ -513,35 +521,62 @@
       _chk: { c0, pol, N } });
   } });
   B2.push({ id: 'B-2-alist-shrink', type: B2T[1], make(r) {
-    const nAdd = r.int(20, 70), nRem = r.int(10, nAdd - 2), nAdd2 = r.int(0, 10);
-    let cap = 8, size = 0, resizes = 0;
-    const add = () => { if (size === cap) { cap *= 2; resizes++; } size++; };
-    const rem = () => { size--; if (cap >= 16 && size < cap / 4) { cap = cap / 2; resizes++; } };
-    for (let i = 0; i < nAdd; i++) add(); const capPeak = cap;
-    for (let i = 0; i < nRem; i++) rem(); const capMid = cap;
-    for (let i = 0; i < nAdd2; i++) add();
+    // peak capacity chosen uniformly first (16 … 256), then the counts are built to land in that range
+    const peakExp = r.int(4, 8), nAdd = r.int((1 << (peakExp - 1)) + 1, 1 << peakExp);
+    const nRem = r.int(Math.max(3, Math.floor(nAdd / 4)), nAdd - 1), nAdd2 = r.int(0, Math.max(4, Math.floor(nAdd / 2)));
+    let cap = 8, size = 0, resizes = 0; const ev = [];
+    const add = () => { if (size === cap) { ev.push('add #' + (size + 1) + ': size ' + size + ' = cap → grow to ' + cap * 2); cap *= 2; resizes++; } size++; };
+    const rem = () => { size--; if (cap >= 16 && size < cap / 4) { ev.push('remove → size ' + size + ' &lt; ' + cap + '/4 → shrink to ' + cap / 2); cap = cap / 2; resizes++; } };
+    for (let i = 0; i < nAdd; i++) add(); const capPeak = cap; const ev1 = ev.splice(0);
+    for (let i = 0; i < nRem; i++) rem(); const capMid = cap; const ev2 = ev.splice(0);
+    for (let i = 0; i < nAdd2; i++) add(); const ev3 = ev.splice(0);
+    const evs = (l) => (l.length ? l.join('; ') : 'no resize');
     return Q({ kind: 'list', answer: [capPeak, capMid, cap, resizes],
       prompt: P('An AList starts empty with capacity 8. Before an add, if size == capacity it doubles. After a removeLast, if capacity ≥ 16 and size &lt; capacity/4, it halves the capacity (checked once per removal).') +
         P('We do ' + nAdd + ' addLasts, then ' + nRem + ' removeLasts, then ' + nAdd2 + ' more addLasts. Give four numbers: the capacity after the adds, after the removes, at the end, and the total number of resizes (grows + shrinks).'),
       hint: 'Grow at size == cap; shrink only when the usage ratio drops below 1/4 (never below capacity 8).',
-      solution: P('Adds: capacity doubles 8 → … until it holds ' + nAdd + ' items: <b>' + capPeak + '</b>. Removes: size goes down to ' + (nAdd - nRem) + ', halving each time size falls below cap/4: <b>' + capMid + '</b>. Final adds bring size to ' + (nAdd - nRem + nAdd2) + ': capacity <b>' + cap + '</b>. Total resizes <b>' + resizes + '</b>. Shrinking at 1/4 (not 1/2) prevents an add/remove pair at the boundary from resizing every time.'),
+      solution: P('Phase 1 (' + nAdd + ' adds): ' + evs(ev1) + ' → capacity <b>' + capPeak + '</b>.') +
+        P('Phase 2 (' + nRem + ' removes, size ' + nAdd + ' → ' + (nAdd - nRem) + '): ' + evs(ev2) + ' → capacity <b>' + capMid + '</b>.') +
+        P('Phase 3 (' + nAdd2 + ' adds, size → ' + (nAdd - nRem + nAdd2) + '): ' + evs(ev3) + ' → capacity <b>' + cap + '</b>.') +
+        P('Total resizes = ' + ev1.length + ' + ' + ev2.length + ' + ' + ev3.length + ' = <b>' + resizes + '</b>. Shrinking at 1/4 (not 1/2) prevents an add/remove pair at the boundary from resizing every time.'),
       _chk: { nAdd, nRem, nAdd2 } });
   } });
   B2.push({ id: 'B-2-alist-amortized-mc', type: B2T[1], make(r) {
-    const pol = r.pick(['×2', '×1.5', '×3', '+1', '+100', '+N/2', 'shrink½']);
-    const ask = r.pick(['amortized', 'worst']);
-    let correct, why;
-    if (pol === 'shrink½') { correct = 'Θ(N)'; why = 'Halving when exactly half full means an add that just triggered a doubling can be followed by a remove that halves, and so on: alternating add/remove at the boundary pays Θ(N) every time.'; }
-    else if (ask === 'worst') { correct = 'Θ(N)'; why = 'The single add that triggers a resize copies all N items, whatever the growth policy.'; }
-    else if (pol[0] === '×' || pol === '+N/2') { correct = 'Θ(1)'; why = 'Growth by a constant factor (adding N/2 is ×1.5) makes resize costs a geometric series < c·N in total.'; }
-    else { correct = 'Θ(N)'; why = 'Additive growth ' + pol + ' resizes every constant number of adds; total copying is about N²/(2k), Θ(N) per add on average.'; }
-    const pdesc = pol === 'shrink½' ? 'doubles when full and halves as soon as size drops to exactly half the capacity' : pol === '+N/2' ? 'grows by adding N/2 slots (N = current size)' : pol[0] === '×' ? 'multiplies capacity by ' + pol.slice(1) : 'adds ' + pol.slice(1) + ' slot' + (pol === '+1' ? '' : 's');
-    const q = pol === 'shrink½' ? 'what is the amortized cost per operation of a long alternating sequence addLast, removeLast, addLast, … started right at a full array?' :
-      ask === 'worst' ? 'what is the worst-case cost of a <b>single</b> addLast call on a list of N items?' : 'what is the <b>amortized</b> cost per addLast over N addLasts starting from empty?';
-    const m = mcq(r, correct, ['Θ(1)', 'Θ(N)', 'Θ(log N)', 'Θ(N²)', 'Θ(N log N)'], THETA_N);
+    // answer class chosen uniformly first, then a scenario (policy + question) that has that answer
+    const MULT = ['×2', '×1.5', '×3', '+N/2'], ADD = ['+1', '+10', '+100'];
+    const pdescOf = pol => pol === 'shrink½' ? 'doubles when full and halves as soon as size drops to exactly half the capacity' : pol === 'shrink¼' ? 'doubles when full and halves when size drops below a quarter of the capacity' : pol === '+N/2' ? 'grows by adding N/2 slots (N = current size) when full' : pol[0] === '×' ? 'multiplies its capacity by ' + pol.slice(1) + ' when full' : 'adds ' + pol.slice(1) + ' slot' + (pol === '+1' ? '' : 's') + ' to its capacity when full';
+    const fac = pol => (pol === '×2' ? 2 : pol === '×3' ? 3 : 1.5);
+    // concrete copy counts for N = 1000 starting from capacity 1 (to show the numbers behind the Θ)
+    const copies = (pol, N) => { let cap = 1, c = 0, rs = 0; for (let s = 0; s < N; s++) if (s === cap) { c += s; rs++; cap = pol[0] === '×' || pol === '+N/2' ? Math.max(cap + 1, Math.floor(cap * fac(pol))) : cap + +pol.slice(1); } return { c, rs }; };
+    const cls = r.pick(['Θ(1)', 'Θ(log N)', 'Θ(N)', 'Θ(N²)']);
+    let pol, q, why;
+    const N0 = 1000;
+    if (cls === 'Θ(1)') {
+      const s = r.pick(['amort', 'amort', 'shrink¼', 'best']);
+      if (s === 'amort') { pol = r.pick(MULT); const c = copies(pol, N0); q = 'what is the <b>amortized</b> cost per addLast over N addLasts starting from empty?'; why = 'Growth by a constant factor (' + (pol === '+N/2' ? 'adding N/2 is ×1.5' : pol) + ') makes the resize copies a geometric series: the last resize copies about N items and all earlier ones together copy at most a constant times that. E.g. for N = ' + N0 + ' (capacity 1 at the start) the copies total ' + c.c + ' ≈ ' + (c.c / N0).toFixed(2) + '·N, so the cost per add is constant.'; }
+      else if (s === 'shrink¼') { pol = 'shrink¼'; q = 'what is the amortized cost per operation of a long alternating sequence addLast, removeLast, addLast, … started right at a full array of N items?'; why = 'The add at the full array doubles once (Θ(N)), but afterwards size ≈ N sits at half of capacity 2N: a shrink needs size below 2N/4 = N/2, which an alternating sequence never reaches, and no further growth happens either. One Θ(N) resize spread over a long sequence → Θ(1) per operation.'; }
+      else { pol = r.pick(MULT.concat(ADD)); q = 'what is the cost of a single addLast call on a list of N items when the array is <b>not</b> full (size &lt; capacity)?'; why = 'No resize happens: the call writes items[size] and increments size, independent of N and of the growth policy (' + pol + ').'; }
+    } else if (cls === 'Θ(log N)') {
+      pol = r.pick(MULT); const c = copies(pol, N0);
+      q = 'how many <b>resizes</b> happen during N addLasts starting from an empty list of capacity 1 (as a function of N)?';
+      why = 'Capacity grows geometrically (' + pol + '), so after k resizes it is about ' + (pol === '×2' ? '2' : pol === '×3' ? '3' : '1.5') + '^k; reaching N needs k ≈ log N resizes. E.g. N = ' + N0 + ' needs ' + c.rs + ' resizes.';
+    } else if (cls === 'Θ(N)') {
+      const s = r.pick(['worst', 'additive', 'shrink½', 'resizesAdd', 'totalMult']);
+      if (s === 'worst') { pol = r.pick(MULT.concat(ADD)); q = 'what is the worst-case cost of a <b>single</b> addLast call on a list of N items?'; why = 'The add that finds the array full must copy all N items into the new array, whatever the growth policy (' + pol + ').'; }
+      else if (s === 'additive') { pol = r.pick(ADD); const k = +pol.slice(1), c = copies(pol, N0); q = 'what is the <b>amortized</b> cost per addLast over N addLasts starting from empty?'; why = 'Additive growth (+' + k + ') resizes every ' + k + ' adds and the j-th resize copies about j·' + k + ' items: total ≈ N²/(2·' + k + '). E.g. N = ' + N0 + ' gives ' + c.c + ' copies ≈ ' + Math.round(c.c / N0) + ' per add, growing linearly with N → Θ(N) per add.'; }
+      else if (s === 'shrink½') { pol = 'shrink½'; q = 'what is the amortized cost per operation of a long alternating sequence addLast, removeLast, addLast, … started right at a full array of N items?'; why = 'The add doubles (copy N items); the remove drops size back to exactly half the new capacity and halves (copy N items); the next add finds it full again… Every single operation copies Θ(N) items.'; }
+      else if (s === 'resizesAdd') { pol = r.pick(ADD); const k = +pol.slice(1), c = copies(pol, N0); q = 'how many <b>resizes</b> happen during N addLasts starting from an empty list of capacity 1 (as a function of N)?'; why = 'Each resize adds only ' + k + ' slots, so a resize happens every ' + k + ' adds: about N/' + k + ' resizes (N = ' + N0 + ' → ' + c.rs + '), which is Θ(N).'; }
+      else { pol = r.pick(MULT); const c = copies(pol, N0); q = 'what is the <b>total</b> cost (writes + copies) of N addLasts starting from empty?'; why = 'N writes plus a geometric series of copies (≤ a constant times N): e.g. N = ' + N0 + ' → ' + N0 + ' + ' + c.c + ' = ' + (N0 + c.c) + ' operations. Total Θ(N) (i.e. Θ(1) amortized).'; }
+    } else {
+      const s = r.pick(['totalAdd', 'thrash']);
+      if (s === 'totalAdd') { pol = r.pick(ADD); const k = +pol.slice(1), c = copies(pol, N0); q = 'what is the <b>total</b> cost (writes + copies) of N addLasts starting from empty?'; why = 'Resizes happen at sizes ' + k + ', ' + 2 * k + ', ' + 3 * k + ', … and copy that many items: Σ j·' + k + ' for j up to N/' + k + ' ≈ N²/(2·' + k + '). For N = ' + N0 + ': ' + c.c + ' copies. Total Θ(N²).'; }
+      else { pol = 'shrink½'; q = 'what is the <b>total</b> cost of N alternating operations addLast, removeLast, addLast, … started right at a full array holding N items?'; why = 'With halving at exactly half full, every add doubles and every remove halves, each copying about N items: N operations × Θ(N) = Θ(N²) total.'; }
+    }
+    const correct = cls;
+    const m = mcq(r, correct, ['Θ(1)', 'Θ(log N)', 'Θ(N)', 'Θ(N²)', 'Θ(N log N)'], null, 4);
     return Q({ kind: 'mc', choices: m.choices, answer: m.answer,
-      prompt: P('An AList ' + pdesc + '. In terms of N, ' + q),
-      hint: 'Amortized = total cost of the sequence ÷ number of operations; worst case = the one expensive call.', solution: P(why + ' Answer: <b>' + correct + '</b>.') });
+      prompt: P('An AList ' + pdescOf(pol) + '. In terms of N, ' + q),
+      hint: 'Amortized = total cost of the sequence ÷ number of operations; worst case = the one expensive call; count resizes by how fast capacity grows.', solution: P(why + ' Answer: <b>' + correct + '</b>.') });
   } });
   // DLList with circular sentinel: final contents & pointer chasing
   function dllSim(ops) {
@@ -576,7 +611,8 @@
           P('<code>' + ops.map(o => o[0] === 'insert' ? 'insert(' + o[1] + ', ' + o[2] + ')' : opStr(o)).join(', ') + '</code>') +
           P('Enter the final list front-to-back, followed by the value of <code>' + chain + '</code> (all comma-separated).'),
         hint: 'Keep the list as a line of items; prev from the first node goes back to the sentinel, next from the last goes to the sentinel.',
-        solution: P('Final list: ' + s.out.join(' ') + '. Following <code>' + chain + '</code> from the sentinel (it sits between the last and first node) lands on ' + p.item + '.'),
+        solution: P('List after each operation: ' + ops.map((o, i) => (o[0] === 'insert' ? 'insert(' + o[1] + ', ' + o[2] + ')' : opStr(o)) + ' → [' + dllSim(ops.slice(0, i + 1)).out.join(' ') + ']').join('<br>')) +
+          P('Final list: ' + s.out.join(' ') + '. Think of the circle S ⇄ ' + s.out.join(' ⇄ ') + ' ⇄ S. Following <code>' + chain + '</code>: ' + (() => { let q = s.S; const hops = []; for (const st of chain.split('.').slice(1, -1)) { q = q[st]; hops.push(st + ' → ' + (q === s.S ? 'S' : q.item)); } return hops.join(', '); })() + ', so the value is <b>' + p.item + '</b>.'),
         _chk: { ops, chain } });
     });
   } });
@@ -587,14 +623,14 @@
     if (t === 0) {
       k = r.int(1, 3);
       src = 'void mystery() {   // moves nodes around, using the sentinel\n  for (int i = 0; i < ' + k + '; i++) {\n    Node first = sentinel.next;\n    sentinel.next = first.next;\n    Node p = sentinel;\n    while (p.next != null) p = p.next;\n    p.next = first;\n    first.next = null;\n  }\n}';
-      res = xs.slice(k).concat(xs.slice(0, k)); desc = 'moves the front node to the back, ' + k + ' time(s)';
+      res = xs.slice(k).concat(xs.slice(0, k)); desc = 'moves the front node to the back, ' + k + ' time(s): ' + range(1, k + 1).map(i => 'after pass ' + i + ': ' + xs.slice(i).concat(xs.slice(0, i)).join(', ')).join('; ');
     } else if (t === 1) {
       src = 'void mystery() {\n  Node p = sentinel.next;\n  while (p != null && p.next != null) {\n    p.next = p.next.next;\n    p = p.next;\n  }\n}';
-      res = xs.filter((_, i) => i % 2 === 0); desc = 'unlinks every second node (keeps indices 0, 2, 4, …)';
+      res = xs.filter((_, i) => i % 2 === 0); desc = 'unlinks every second node: p starts at ' + xs[0] + ', its next is bypassed (' + xs.filter((_, i) => i % 2 === 1).join(', ') + ' are removed one per step) and p jumps to the node after it, keeping indices 0, 2, 4, …';
     } else {
       k = r.int(2, xs.length - 1);
       src = 'void mystery() {   // reverses part of the list\n  Node prev = null, p = sentinel.next;\n  for (int i = 0; i < ' + k + '; i++) {\n    Node nxt = p.next;\n    p.next = prev;\n    prev = p;\n    p = nxt;\n  }\n  sentinel.next.next = p;   // old first node now k-th\n  sentinel.next = prev;\n}';
-      res = xs.slice(0, k).reverse().concat(xs.slice(k)); desc = 'reverses the first ' + k + ' nodes in place and reattaches the remainder';
+      res = xs.slice(0, k).reverse().concat(xs.slice(k)); desc = 'reverses the first ' + k + ' nodes in place: after the loop prev → ' + xs.slice(0, k).reverse().join(' → ') + ' and p = ' + (xs[k] !== undefined ? xs[k] : 'null') + '; then the old first node ' + xs[0] + ' (sentinel.next) is linked to p and sentinel.next becomes prev (' + xs[k - 1] + ')';
     }
     return Q({ kind: 'list', answer: res,
       prompt: P('An SLList with a sentinel (<code>sentinel.next</code> is the first real node, the last node’s next is null) holds ' + xs.join(', ') + ' (front first). After calling this method, what does the list hold, front to back?') + code(src),
@@ -603,27 +639,30 @@
   } });
   // Find bugs: buggy addFirst without floorMod → exception; buggy get without +1 → wrong value
   for (const VV of [0, 1]) B2.push({ id: 'B-2-find-bug-deque' + ['-crash', '-get'][VV], type: B2T[3], make(r) {
+    const target = VV === 0 ? r.int(3, 9) : 0; // crash variant: the answer (operation number) is chosen uniformly first
     return retry(r, () => {
-      const nf0 = r.int(1, 5);
       const variant = VV;
-      const ops = randDequeOps(r, r.int(6, 8), 7, { pRemove: 0.2 });
+      const nf0 = variant === 0 ? r.int(1, Math.min(5, target - 2)) : r.int(1, 5);
+      const ops = variant === 0 ? randDequeOps(r, r.int(target, target + 2), 7, { pRemove: 0.2 }) : randDequeOps(r, r.int(6, 8), 7, { pRemove: 0.2 });
       if (variant === 0) {
         // addFirst uses nextFirst = nextFirst - 1 (no wrap): throws when writing at index -1
-        let nf = nf0, nl = nf0 + 1, size = 0, crash = -1; const a = new Array(8).fill(null);
+        let nf = nf0, nl = nf0 + 1, size = 0, crash = -1; const a = new Array(8).fill(null); const trace = [];
         for (let k = 0; k < ops.length && crash < 0; k++) {
           const op = ops[k];
-          if (op[0] === 'addFirst') { if (nf < 0) { crash = k; break; } a[nf] = op[1]; nf = nf - 1; size++; }
+          if (op[0] === 'addFirst') { if (nf < 0) { crash = k; trace.push((k + 1) + ': addFirst writes items[' + nf + '] → exception'); break; } a[nf] = op[1]; nf = nf - 1; size++; }
           else if (op[0] === 'addLast') { a[nl] = op[1]; nl = (nl + 1) % 8; size++; }
           else if (op[0] === 'removeFirst') { nf = (nf + 1) % 8; a[nf] = null; size--; }
           else { nl = floorMod(nl - 1, 8); a[nl] = null; size--; }
+          if (crash < 0) trace.push((k + 1) + ': ' + opStr(op) + ' → nextFirst = ' + nf);
         }
-        if (crash < 0) return null;
+        if (crash < 0 || crash + 1 !== target) return null;
         return Q({ kind: 'num', answer: crash + 1,
           prompt: P('This ArrayDeque (capacity 8, starts empty with nextFirst = ' + nf0 + ', nextLast = ' + (nf0 + 1) + ') has a bug in addFirst:') +
             code('public void addFirst(T x) {\n  items[nextFirst] = x;\n  nextFirst = nextFirst - 1;\n  size += 1;\n}') +
             P('Everything else is correct (removeFirst does nextFirst = (nextFirst + 1) % 8 before reading). Operations, numbered from 1: ' + ops.map((o, i) => (i + 1) + ': <code>' + opStr(o) + '</code>').join(', ') + '. On which operation number is an ArrayIndexOutOfBoundsException first thrown?'),
           hint: 'Track nextFirst: once it reaches −1, the next addFirst writes items[−1].',
-          solution: P('nextFirst is never wrapped: it goes down by one per addFirst (and up by one per removeFirst). It reaches −1 and the next addFirst, operation <b>' + (crash + 1) + '</b>, executes items[−1]. Fix: <code>nextFirst = Math.floorMod(nextFirst − 1, items.length)</code>.'),
+          solution: P('nextFirst is never wrapped: it goes down by one per addFirst (and up by one per removeFirst); addLast/removeLast do not touch it. Starting from ' + nf0 + ':') + P(trace.join('<br>')) +
+            P('So operation <b>' + (crash + 1) + '</b> is the first to execute items[−1]. Fix: <code>nextFirst = Math.floorMod(nextFirst − 1, items.length)</code>.'),
           _chk: { variant, nf0, ops } });
       } else {
         const s = dequeSim(nf0, ops);
@@ -632,6 +671,7 @@
         const bug = s.a[(s.nf + i) % 8];
         const good = s.get(i);
         if (bug === good) return null;
+        if (bug === null && r.float() < 0.8) return null; // keep "null" from being the go-to guess
         return Q({ kind: 'num', answer: bug === null ? 0 : bug,
           prompt: P('This ArrayDeque get has a bug:') + code('public T get(int i) {\n  return items[(nextFirst + i) % items.length];\n}') +
             P('Starting empty with capacity 8, nextFirst = ' + nf0 + ', nextLast = ' + (nf0 + 1) + ' (all other methods correct; ' + DEQUE_CONV + ') we run <code>' + ops.map(opStr).join(', ') + '</code>. What does the buggy <code>get(' + i + ')</code> return? (Enter 0 if it returns null.)'),
@@ -718,7 +758,7 @@
       const used = r.sample(decl, 4);
       const vn = ['x', 'y', 'z', 'w'];
       used.forEach((d, i) => vars.push({ v: vn[i], S: d[0], Dy: d[1] }));
-      const calls = [], outs = [];
+      const calls = [], outs = [], whys = [];
       const nCalls = 5;
       let tries = 0;
       while (calls.length < nCalls && tries++ < 60) {
@@ -739,9 +779,12 @@
           if (!hasH || !h.isSub(rc.S, B)) continue;
           txt = rc.v + '.h();'; const p = resolve(A, B); out = runtime(A, p);
         }
-        if (form <= 3) { const p = resolve(recvS, argS); if (!p) continue; out = runtime(recvDyn, p); }
+        let why;
+        if (form <= 3) { const p = resolve(recvS, argS); if (!p) continue; out = runtime(recvDyn, p); why = 'static types: receiver ' + recvS + ', argument ' + argS + ' → most specific m visible in ' + recvS + ' is m(' + p + '); dynamic type ' + recvDyn + ' → runs ' + out; }
+        else if (form === 4) { why = 'inside g(), this has static type ' + A + ' → m(' + resolve(A, A) + ') is locked in; dynamic type ' + recvDyn + ' → runs ' + out; }
+        else { why = 'super.m(this) in ' + B + ': this has static type ' + B + ', methods searched in ' + A + ' → m(' + resolve(A, B) + '), and super calls are not dynamically dispatched → runs ' + out; }
         if (calls.includes(txt)) continue;
-        calls.push(txt); outs.push(out);
+        calls.push(txt); outs.push(out); whys.push(why);
       }
       if (calls.length < nCalls) return null;
       // make it interesting: at least one call where naive "dynamic arg type" reasoning differs
@@ -755,7 +798,7 @@
       }).join('\n');
       const declLines = vars.map(v => v.S + ' ' + v.v + ' = new ' + v.Dy + '();');
       const mainBody = declLines.concat(calls).join('\n');
-      return { h, defs, vars, calls, outs, clsSrc, mainBody, hasH };
+      return { h, defs, vars, calls, outs, whys, clsSrc, mainBody, hasH };
     });
   }
   function dispatchQ(g, withInherited) {
@@ -765,7 +808,7 @@
       hint: 'Step 1 (compile): from the STATIC types of receiver and argument, pick the most specific m(…) visible in the receiver’s static class. Step 2 (run): use the receiver’s DYNAMIC type to find an override of exactly that signature.',
       solution: P('For each call: lock in the signature using static types only (a cast changes the static type of that expression), then look for that exact signature starting at the dynamic class and walking up.' +
         (withInherited ? ' Inside g(), <code>this</code> has static type ' + g.h.A + ', so <code>m(this)</code> always locks in m(' + g.h.A + '); then dynamic dispatch on the object.' + (g.hasH ? ' <code>super.m(this)</code> in h() locks in a signature using ' + g.h.A + '’s methods with argument type ' + g.h.B + ' and runs ' + g.h.A + '’s version: super calls are never dynamically dispatched.' : '') : '')) +
-        P(g.calls.map((c, i) => '<code>' + esc(c) + '</code> → ' + esc(g.outs[i])).join('<br>')),
+        P(g.calls.map((c, i) => '<code>' + esc(c) + '</code>: ' + esc(g.whys[i]) + ' → prints <b>' + esc(g.outs[i]) + '</b>').join('<br>')),
       _java: { src: javaProg(g.mainBody, '', g.clsSrc + '\n'), expect: { kind: 'out', out: g.outs.join('\n') } } });
   }
   B3.push({ id: 'B-3-overload-override', type: B3T[1], make(r) { return dispatchQ(genDispatch(r, false), false); } });
@@ -821,18 +864,21 @@
       const T = r.pick([A, B, C, D]), U = r.pick([A, B, C, D, 'Object']);
       let stmt, res; // res: {k:'compile'} | {k:'cce'} | {k:'out', out}
       const callable = (t, m) => (m === 'speak' ? h.isSub(t, A) : h.isSub(t, B));
-      if (form === 0) { stmt = T + ' v = ' + w + ';\nv.speak();'; res = h.isSub(S[w], T) ? { k: 'out', out: spk(Dy[w]) } : { k: 'compile' }; }
+      const unrel = () => 'the cast (' + U + ') ' + w + ' is between unrelated types (' + w + ' has static type ' + S[w] + ', and neither ' + U + ' nor ' + S[w] + ' is a subtype of the other)';
+      const ccew = () => 'it compiles (' + U + ' and ' + S[w] + ' are related), but at runtime ' + w + ' points to a ' + Dy[w] + ', which is not a ' + U + ', so the cast check fails';
+      const runw = (m, from) => 'it compiles (' + from + ') and ' + (U && stmt.includes('(' + U + ')') ? 'the runtime check passes (' + Dy[w] + ' is a ' + U + '); ' : '') + m + '() dispatches on the dynamic type ' + Dy[w] + ' → ' + (m === 'speak' ? spk(Dy[w]) : B + '.fetch');
+      if (form === 0) { stmt = T + ' v = ' + w + ';\nv.speak();'; res = h.isSub(S[w], T) ? { k: 'out', out: spk(Dy[w]), why: runw('speak', S[w] + ' is assignable to ' + T + ', and ' + T + ' has speak()') } : { k: 'compile', why: 'the static type of ' + w + ' is ' + S[w] + ', which is not a subtype of ' + T + ', so the assignment needs a cast' }; }
       else if (form === 1) {
         if (U === 'Object') return null;
         stmt = T + ' v = (' + U + ') ' + w + ';\nv.speak();';
-        if (!h.related(U, S[w]) || !h.isSub(U, T)) res = { k: 'compile' }; else if (!h.isSub(Dy[w], U)) res = { k: 'cce' }; else res = { k: 'out', out: spk(Dy[w]) };
-      } else if (form === 2) { stmt = w + '.fetch();'; res = callable(S[w], 'fetch') ? { k: 'out', out: B + '.fetch' } : { k: 'compile' }; }
+        if (!h.related(U, S[w])) res = { k: 'compile', why: unrel() }; else if (!h.isSub(U, T)) res = { k: 'compile', why: 'the cast expression has static type ' + U + ', which is not a subtype of the declared type ' + T }; else if (!h.isSub(Dy[w], U)) res = { k: 'cce', why: ccew() }; else res = { k: 'out', out: spk(Dy[w]), why: runw('speak', U + ' is related to ' + S[w] + ' and assignable to ' + T) };
+      } else if (form === 2) { stmt = w + '.fetch();'; res = callable(S[w], 'fetch') ? { k: 'out', out: B + '.fetch', why: runw('fetch', 'static type ' + S[w] + ' has fetch()') } : { k: 'compile', why: 'fetch() is only defined in ' + B + ' (and inherited by its subclasses); the static type ' + S[w] + ' has no fetch()' }; }
       else if (form === 3) {
         stmt = '((' + U + ') ' + w + ').fetch();';
-        if (!h.related(U, S[w]) || U === 'Object' || !callable(U, 'fetch')) res = { k: 'compile' }; else if (!h.isSub(Dy[w], U)) res = { k: 'cce' }; else res = { k: 'out', out: B + '.fetch' };
+        if (U === 'Object') res = { k: 'compile', why: 'the cast expression has static type Object, which has no fetch()' }; else if (!h.related(U, S[w])) res = { k: 'compile', why: unrel() }; else if (!callable(U, 'fetch')) res = { k: 'compile', why: 'the cast expression has static type ' + U + ', which has no fetch() (only ' + B + ' and its subclasses do)' }; else if (!h.isSub(Dy[w], U)) res = { k: 'cce', why: ccew() }; else res = { k: 'out', out: B + '.fetch', why: runw('fetch', U + ' is related to ' + S[w] + ' and has fetch()') };
       } else {
         stmt = '((' + U + ') ' + w + ').speak();';
-        if (!h.related(U, S[w]) || U === 'Object' || !callable(U, 'speak')) res = { k: 'compile' }; else if (!h.isSub(Dy[w], U)) res = { k: 'cce' }; else res = { k: 'out', out: spk(Dy[w]) };
+        if (U === 'Object') res = { k: 'compile', why: 'the cast expression has static type Object, which has no speak()' }; else if (!h.related(U, S[w])) res = { k: 'compile', why: unrel() }; else if (!h.isSub(Dy[w], U)) res = { k: 'cce', why: ccew() }; else res = { k: 'out', out: spk(Dy[w]), why: runw('speak', U + ' is related to ' + S[w] + ' and has speak()') };
       }
       if (target && res.k !== target) return null;
       if (ctx0 && target === null && r.float() < 0.3 && res.k === 'compile') return null;
@@ -844,16 +890,13 @@
   B3.push({ id: 'B-3-compile-vs-cce', type: B3T[2], make(r) {
     const g = genCastStmt(r, r.pick(['compile', 'cce', 'out']));
     const { h } = g;
-    const lab = res => (res.k === 'compile' ? 'Compile error' : res.k === 'cce' ? 'Compiles, then throws ClassCastException at runtime' : 'Compiles and prints ' + res.out);
+    const lab = res => (res.k === 'compile' ? 'Compile-time error' : res.k === 'cce' ? 'ClassCastException' : 'Prints ' + res.out);
     const correct = lab(g.res);
-    const wr = ['Compile error', 'Compiles, then throws ClassCastException at runtime'].concat(g.speakers.map(s => 'Compiles and prints ' + s + '.speak')).concat(['Compiles and prints ' + h.B + '.fetch']);
-    const m = mcq(r, correct, wr, null, 5);
-    let why;
-    if (g.res.k === 'compile') why = 'The compiler only knows static types: ' + (g.stmt.includes('(') && /\(\w+\) /.test(g.stmt) ? 'either the cast is between unrelated classes, the cast result is not assignable to the declared type, or the method is not defined in the (cast) static type.' : 'the expression’s static type is not a subtype of the declared variable type, or the method is not defined in the static type.');
-    else if (g.res.k === 'cce') why = 'It compiles (the cast types are related), but the object’s dynamic type ' + g.Dy[g.w] + ' is not a subtype of the cast type, so the runtime check fails.';
-    else why = 'Compiles (static types check out) and the runtime cast check passes; the call dispatches on the dynamic type ' + g.Dy[g.w] + ' → ' + g.res.out + '.';
+    const wr = ['Compile-time error', 'ClassCastException'].concat(g.speakers.map(s => 'Prints ' + s + '.speak')).concat(['Prints ' + h.B + '.fetch']);
+    const m = mcq(r, correct, wr, null, 4);
+    const why = (g.res.k === 'compile' ? 'The compiler only knows static types, and ' : g.res.k === 'cce' ? 'Here ' : 'Here ') + g.res.why + '.';
     return Q({ kind: 'mc', choices: m.choices, answer: m.answer,
-      prompt: P('Given these classes and the three setup lines, what happens when the last statement(s) are added to main?') + code(g.clsSrc + '\n\n// in main:\n' + g.setupSrc + '\n// the statement in question:\n' + g.stmt),
+      prompt: P('Given these classes and the three setup lines, what happens when the last statement(s) are added to main? (“ClassCastException” means it compiles but throws at runtime; “Prints …” means it compiles and runs.)') + code(g.clsSrc + '\n\n// in main:\n' + g.setupSrc + '\n// the statement in question:\n' + g.stmt),
       hint: 'Compile time: casts need related types; assignments and method calls are checked against the static type. Run time: a cast checks the dynamic type.',
       solution: P('Static types: o : Object, a : ' + h.A + ', b : ' + h.B + '. Dynamic type of ' + g.w + ': ' + g.Dy[g.w] + '. ' + why) + P('Answer: <b>' + esc(correct) + '</b>.'),
       _java: { src: javaProg(g.setupSrc + '\n' + g.stmt, '', g.clsSrc + '\n'), expect: g.res.k === 'out' ? { kind: 'out', out: g.res.out } : { kind: g.res.k } } });
@@ -872,12 +915,13 @@
       }
       if (items.length < 4) return null;
       const n = items.filter(x => x.ok).length; if (n === 0 || n === items.length) return null;
+      items.splice(0, items.length, ...r.shuffle(items));
       const m = multi(items.map(x => ({ t: '<code>' + esc(x.g.stmt.replace('\n', ' ')) + '</code>', ok: x.ok })));
       return Q({ kind: 'multi', choices: m.choices, answer: m.answer,
         prompt: P('Each option is added to main on its own, after the setup lines. Which options <b>compile</b> (even if they would crash at runtime)?') + code(base.clsSrc + '\n\n// in main:\n' + base.setupSrc),
         hint: 'Make a table: static type of o, a, b. Only static types matter for compiling; a cast must be between related types.',
         solution: P('Static types: o : Object, a : ' + base.h.A + ', b : ' + base.h.B + ' (dynamic types don’t matter for compiling).') +
-          P(items.map(x => '<code>' + esc(x.g.stmt.replace('\n', ' ')) + '</code>: ' + (x.ok ? 'compiles' + (x.g.res.k === 'cce' ? ' (but throws ClassCastException at runtime)' : '') : 'compile error')).join('<br>')),
+          P(items.map(x => '<code>' + esc(x.g.stmt.replace('\n', ' ')) + '</code>: ' + (x.ok ? '<b>compiles</b>' + (x.g.res.k === 'cce' ? ' (but throws ClassCastException at runtime)' : '') : '<b>compile error</b>') + ': ' + x.g.res.why).join('<br>')),
         _java: items.map(x => ({ src: javaProg(base.setupSrc + '\n' + x.g.stmt, '', base.clsSrc + '\n'), expect: x.g.res.k === 'out' ? { kind: 'out', out: x.g.res.out } : { kind: x.g.res.k } })) });
     }, 2000);
   } });
@@ -981,16 +1025,16 @@
       if (v === 0) {
         const s = r.int(0, 2), k = r.int(2, 3);
         cls = 'class SkipIter implements Iterator<Integer> {\n  private int[] a; private int i;\n  SkipIter(int[] a) { this.a = a; i = ' + s + '; }\n  public boolean hasNext() { return i < a.length; }\n  public Integer next() { int v = a[i]; i += ' + k + '; return v; }\n}';
-        out = a.filter((_, j) => j >= s && (j - s) % k === 0); desc = 'returns a[' + s + '], a[' + (s + k) + '], … (every ' + k + 'th index starting at ' + s + ')';
+        out = a.filter((_, j) => j >= s && (j - s) % k === 0); desc = 'returns a[' + s + '], a[' + (s + k) + '], … (every ' + k + 'th index starting at ' + s + '): indices ' + range(0, a.length).filter(j => j >= s && (j - s) % k === 0).join(', ') + ' hold ' + out.join(', ');
       } else if (v === 1) {
         const m = r.pick([2, 3, 4]), rr = r.int(0, m - 1);
         cls = 'class SkipIter implements Iterator<Integer> {\n  private int[] a; private int i = 0;\n  SkipIter(int[] a) { this.a = a; }\n  public boolean hasNext() {\n    while (i < a.length && a[i] % ' + m + ' != ' + rr + ') i++;\n    return i < a.length;\n  }\n  public Integer next() { hasNext(); int v = a[i]; i++; return v; }\n}';
-        out = a.filter(x => x % m === rr); desc = 'skips to the next item with item % ' + m + ' == ' + rr + ' (hasNext may be called many times safely: it stops ON a match)';
+        out = a.filter(x => x % m === rr); desc = 'skips to the next item with item % ' + m + ' == ' + rr + ' (hasNext may be called many times safely: it stops ON a match). Remainders mod ' + m + ': ' + a.map(x => x + '→' + (x % m)).join(', ') + '; the matches are ' + out.join(', ');
       } else {
         const t = r.int(8, 20);
         cls = 'class SkipIter implements Iterator<Integer> {\n  private int[] a; private int i = 0;\n  SkipIter(int[] a) { this.a = a; }\n  public boolean hasNext() { return i < a.length; }\n  public Integer next() {\n    int v = a[i]; i++;\n    while (i < a.length && a[i] <= v) i++;   // skip items not bigger than v\n    return v;\n  }\n}';
-        out = []; let i = 0; while (i < a.length) { const x = a[i]; i++; while (i < a.length && a[i] <= x) i++; out.push(x); }
-        desc = 'returns an item, then skips every following item that is ≤ it';
+        out = []; const stp = []; let i = 0; while (i < a.length) { const x = a[i]; i++; const sk = []; while (i < a.length && a[i] <= x) { sk.push(a[i]); i++; } out.push(x); stp.push('next() → ' + x + (sk.length ? ', skipping ' + sk.join(', ') + ' (each ≤ ' + x + ')' : '')); }
+        desc = 'returns an item, then skips every following item that is ≤ it: ' + stp.join('; ');
       }
       if (out.length < 2 || out.length === a.length) return null;
       const body = 'int[] arr = {' + a.join(', ') + '};\nIterator<Integer> it = new SkipIter(arr);\nString s = "";\nwhile (it.hasNext()) s += it.next() + " ";\nSystem.out.println(s.trim());';
@@ -1080,21 +1124,26 @@
       let id = 0; const mk = (x, y) => ({ x, y, id: id++ });
       const ax = r.int(1, 5), ay = r.int(1, 5), by = ay + r.int(1, 3), cx = ax + r.int(1, 3);
       const p = mk(ax, ay);
-      const adds = [['p', p], ['new Pt(' + ax + ', ' + ay + ')', mk(ax, ay)], ['new Pt(' + ax + ', ' + by + ')', mk(ax, by)], ['new Pt(' + cx + ', ' + ay + ')', mk(cx, ay)], ['p', p]];
-      const order = r.shuffle(adds.slice(1, 4)); const seq = [adds[0]].concat(order).concat(r.bool() ? [adds[4]] : []);
-      const set = [];
-      for (const [, o] of seq) if (!set.some(e => M.match(o, e))) set.push(o);
-      const q = mk(ax, ay);
+      // random multiset of adds (after p itself): re-adding p, equal copies, same-x points, different points
+      const pool = [['p', () => p], ['new Pt(' + ax + ', ' + ay + ')', () => mk(ax, ay)], ['new Pt(' + ax + ', ' + by + ')', () => mk(ax, by)], ['new Pt(' + cx + ', ' + ay + ')', () => mk(cx, ay)], ['new Pt(' + cx + ', ' + by + ')', () => mk(cx, by)]];
+      const seq = [['p', p]].concat(range(0, r.int(2, 5)).map(() => { const e = r.pick(pool); return [e[0], e[1]()]; }));
+      const set = []; const addLog = [];
+      for (const [txt, o] of seq) { const hit = set.find(e => M.match(o, e)); if (!hit) set.push(o); addLog.push('s.add(' + txt + '): ' + (hit ? (hit === o ? 'same object already stored (==) → not added' : 'a stored (' + hit.x + ', ' + hit.y + ') has the same hash and equals(Object) is true → not added') : 'no stored item with the same hash that is ==/equals → added (size ' + set.length + ')')); }
+      const [qx, qy] = r.pick([[ax, ay], [ax, by], [cx, ay], [cx + 4, ay + 4]]);
+      const q = mk(qx, qy);
       const contains = set.some(e => M.match(q, e));
-      const eq1 = M.eqStatic(p, mk(ax, ay), true), eq2 = M.eqStatic(p, mk(ax, ay), false);
+      const [ex, ey] = r.pick([[ax, ay], [ax, ay], [ax, by], [cx, ay]]);
+      const eq1 = M.eqStatic(p, mk(ex, ey), true), eq2 = M.eqStatic(p, mk(ex, ey), false);
       const out = [String(set.length), String(contains), String(eq1), String(eq2)];
       const body = 'Set<Pt> s = new HashSet<>();\nPt p = new Pt(' + ax + ', ' + ay + ');\n' + seq.map(x => 's.add(' + x[0] + ');').join('\n') +
-        '\nObject o = new Pt(' + ax + ', ' + ay + ');\nSystem.out.println(s.size() + " " + s.contains(new Pt(' + ax + ', ' + ay + ')) + " " + p.equals(new Pt(' + ax + ', ' + ay + ')) + " " + p.equals(o));';
+        '\nObject o = new Pt(' + ex + ', ' + ey + ');\nSystem.out.println(s.size() + " " + s.contains(new Pt(' + qx + ', ' + qy + ')) + " " + p.equals(new Pt(' + ex + ', ' + ey + ')) + " " + p.equals(o));';
       return Q({ kind: 'text', answer: [out.join(' '), out.join(','), out.join(', ')],
         prompt: P('What does the last line print? (Assume objects without a hashCode override get distinct identity hash codes.) Type the four values separated by spaces.') + code(ptSrc(v) + '\n\n// in main:\n' + body),
         hint: 'A HashSet only calls equals(Object) on items with the SAME hashCode. An equals(Pt) method is an overload the set never calls.',
         solution: P('This Pt has ' + v.d + '. HashSet.add(e) skips e only if some stored item has the same hash code and is == or equals(Object) e.') +
-          P({ 0: 'Everything is consistent: equal coordinates ⇒ same hash and equals true.', 1: 'Equal points get different identity hash codes, so the set never even compares them: every distinct object is added (adding the same reference p twice is still caught by ==).', 2: 'The set calls equals(Object), which is still Object’s identity check; only p itself is recognized. But p.equals(new Pt(…)) with static type Pt picks the overload (true), while p.equals(o) with static type Object picks Object.equals (false).', 3: 'hashCode = x is valid (equal points have equal x), just collides more; results are correct.', 4: 'Points with the same x are “equal” but usually hash differently, breaking the contract: the set may keep both, but only finds equal items whose hash also matches.' }[vi]) +
+          P({ 0: 'Everything is consistent: equal coordinates ⇒ same hash and equals true.', 1: 'Equal points get different identity hash codes, so the set never even compares them: every distinct object is added (adding the same reference p twice is still caught by ==).', 2: 'The set calls equals(Object), which is still Object’s identity check; only p itself is recognized. But p.equals(new Pt(…)) with static type Pt picks the overload, while p.equals(o) with static type Object picks Object.equals (identity → false).', 3: 'hashCode = x is valid (equal points have equal x), just collides more; results are correct.', 4: 'Points with the same x are “equal” but usually hash differently, breaking the contract: the set may keep both, but only finds equal items whose hash also matches.' }[vi]) +
+          P(addLog.join('<br>')) +
+          P('size() = ' + set.length + '. contains(new Pt(' + qx + ', ' + qy + ')): ' + (contains ? 'some stored item has the same hash and equals(Object) it → true' : 'no stored item has the same hash AND equals(Object) it → false') + '. p.equals(new Pt(' + ex + ', ' + ey + ')) (argument static type Pt) → ' + eq1 + '; p.equals(o) (static type Object' + (v.ov ? ', but equals(Object) is overridden' : ', so the overload equals(Pt) is not a candidate') + ') → ' + eq2 + '.') +
           P('Output: <b>' + out.join(' ') + '</b>.'),
         _java: { src: ITER_IMPORT + javaProg(body, '', ptSrc(v) + '\n'), expect: { kind: 'out', out: out.join(' ') } }, _chk: { vi } });
     });
@@ -1104,19 +1153,25 @@
       const vi = r.int(0, 4), v = PT_VARIANTS[vi], M = ptModel(v);
       let id = 0; const mk = (x, y) => ({ x, y, id: id++ });
       const pts = [[r.int(1, 4), r.int(1, 4)]]; pts.push([pts[0][0], pts[0][1]]); pts.push([pts[0][0], pts[0][1] + r.int(1, 2)]); pts.push([r.int(5, 7), r.int(1, 4)]);
-      const ord = r.shuffle(pts).concat([pts[r.int(0, 3)]]);
-      const map = []; const lines = []; const vals = ['a', 'b', 'c', 'd', 'e'];
-      ord.forEach((c, i) => { const k = mk(c[0], c[1]); const e = map.find(e => M.match(k, e.k)); if (e) e.v = vals[i]; else map.push({ k, v: vals[i] }); lines.push('m.put(new Pt(' + c[0] + ', ' + c[1] + '), "' + vals[i] + '");'); });
-      const g1 = pts[0], qk = mk(g1[0], g1[1]); const e1 = map.find(e => M.match(qk, e.k));
-      const g2 = pts[2], qk2 = mk(g2[0], g2[1]); const e2 = map.find(e => M.match(qk2, e.k));
+      const K = mk(pts[0][0], pts[0][1]); // a named key object k that may be reused (same reference)
+      const nPut = r.int(4, 6);
+      const ord = range(0, nPut).map(() => (r.float() < 0.3 ? 'k' : r.pick(pts)));
+      const map = []; const lines = []; const vals = ['a', 'b', 'c', 'd', 'e', 'f']; const log = [];
+      ord.forEach((c, i) => { const k = c === 'k' ? K : mk(c[0], c[1]); const kt = c === 'k' ? 'k' : 'new Pt(' + c[0] + ', ' + c[1] + ')'; const e = map.find(e => M.match(k, e.k));
+        if (e) { log.push('put(' + kt + ', "' + vals[i] + '"): finds stored key (' + e.k.x + ', ' + e.k.y + ')' + (e.k === k ? ' (same object)' : '') + ' → value "' + e.v + '" replaced by "' + vals[i] + '"'); e.v = vals[i]; }
+        else { map.push({ k, v: vals[i] }); log.push('put(' + kt + ', "' + vals[i] + '"): no stored key with equal hash that is ==/equals → new entry (size ' + map.length + ')'); }
+        lines.push('m.put(' + kt + ', "' + vals[i] + '");'); });
+      const p1 = r.pick(['k', pts[0], pts[0]]), p2 = r.pick([pts[2], pts[3], 'k']);
+      const probe = c => (c === 'k' ? K : mk(c[0], c[1])), ptxt = c => (c === 'k' ? 'k' : 'new Pt(' + c[0] + ', ' + c[1] + ')');
+      const e1 = map.find(e => M.match(probe(p1), e.k)), e2 = map.find(e => M.match(probe(p2), e.k));
       const out = [String(map.length), e1 ? e1.v : 'null', e2 ? e2.v : 'null'];
-      if (vi === 0 && r.float() < 0.5) return null;
-      const body = 'Map<Pt, String> m = new HashMap<>();\n' + lines.join('\n') + '\nSystem.out.println(m.size() + " " + m.get(new Pt(' + g1.join(', ') + ')) + " " + m.get(new Pt(' + g2.join(', ') + ')));';
+      const body = 'Map<Pt, String> m = new HashMap<>();\nPt k = new Pt(' + pts[0].join(', ') + ');\n' + lines.join('\n') + '\nSystem.out.println(m.size() + " " + m.get(' + ptxt(p1) + ') + " " + m.get(' + ptxt(p2) + '));';
       return Q({ kind: 'text', answer: [out.join(' '), out.join(','), out.join(', ')],
         prompt: P('What does the last line print? (Assume objects without a hashCode override get distinct identity hash codes.) Three values separated by spaces.') + code(ptSrc(v) + '\n\n// in main:\n' + body),
         hint: 'put replaces the value only if it finds a stored key with equal hash code that equals(Object) the new key; get uses the same test.',
         solution: P('This Pt has ' + v.d + '. HashMap finds an existing key only when hash codes match and equals(Object) says true.') +
-          P('Final entries: ' + map.map(e => '(' + e.k.x + ',' + e.k.y + ')→' + e.v).join(', ') + '. Output <b>' + out.join(' ') + '</b>.'),
+          P(log.join('<br>')) +
+          P('Final entries: ' + map.map(e => '(' + e.k.x + ',' + e.k.y + ')→' + e.v).join(', ') + '. get(' + ptxt(p1) + ') → ' + out[1] + ', get(' + ptxt(p2) + ') → ' + out[2] + '. Output <b>' + out.join(' ') + '</b>.'),
         _java: { src: ITER_IMPORT + javaProg(body, '', ptSrc(v) + '\n'), expect: { kind: 'out', out: out.join(' ') } }, _chk: { vi } });
     });
   } });
@@ -1195,6 +1250,29 @@
     if (node.t === 'if') return ind + 'if (' + node.cond + ') {\n' + node.body.map(b => loopSrc(b, ind + '  ')).join('\n') + '\n' + ind + '}';
     return ind + 'for (int ' + node.v + ' = ' + node.init + '; ' + node.cond + '; ' + node.v + node.upd + ') {\n' + node.body.map(b => loopSrc(b, ind + '  ')).join('\n') + '\n' + ind + '}';
   }
+  // count++ executions of a loop AST for a concrete n (to show real numbers in the solutions)
+  const LOOP_FN = new Map();
+  const TH_GROW = { 'Θ(1)': n => 1, 'Θ(log n)': n => Math.log2(n), 'Θ(log² n)': n => Math.log2(n) ** 2, 'Θ(√n)': n => Math.sqrt(n), 'Θ(n)': n => n, 'Θ(n log n)': n => n * Math.log2(n), 'Θ(n log² n)': n => n * Math.log2(n) ** 2, 'Θ(n²)': n => n * n, 'Θ(n² log n)': n => n * n * Math.log2(n), 'Θ(n³)': n => n ** 3 };
+  // two sizes n and 4n, as large as possible while the count stays cheap to simulate
+  function loopCheck(ast, th) {
+    let n1 = 16; for (const c of [64, 256, 1024, 4096]) if (TH_GROW[th](4 * c) <= 1e6) n1 = c;
+    const a = loopCount(ast, n1), b = loopCount(ast, 4 * n1);
+    return 'Check with real counts: n = ' + n1 + ' → count = ' + a + '; n = ' + 4 * n1 + ' → count = ' + b + ' (n grew 4×, count grew ' + (b / Math.max(1, a)).toFixed(2) + '×; ' + th + ' predicts ×' + (TH_GROW[th](4 * n1) / TH_GROW[th](n1)).toFixed(2) + ').';
+  }
+  function loopCount(ast, n) {
+    const env = { n }; let c = 0;
+    const ev = e => { let f = LOOP_FN.get(e); if (!f) { f = Function('n', 'i', 'j', 'k', 'return (' + e + ');'); LOOP_FN.set(e, f); } return f(env.n, env.i || 0, env.j || 0, env.k || 0); };
+    const run = nd => {
+      if (nd.t === 'op') { c++; return; }
+      if (nd.t === 'if') { if (ev(nd.cond)) nd.body.forEach(run); return; }
+      env[nd.v] = ev(nd.init);
+      for (let guard = 0; ev(nd.cond) && guard < 1e8; guard++) {
+        nd.body.forEach(run); const u = nd.upd.trim();
+        if (u === '++') env[nd.v]++; else { const [op, x] = u.split(/\s+/); const v = ev(x); env[nd.v] = op === '+=' ? env[nd.v] + v : op === '*=' ? env[nd.v] * v : Math.trunc(env[nd.v] / v); }
+      }
+    };
+    ast.forEach(run); return c;
+  }
   const LOOP_TEMPLATES = [
     r => { const c = r.pick([2, 3]); return [[F('i', '1', 'i < n', ' *= ' + c, [F('j', '0', 'j < i', '++', [OP])])], 'Θ(n)', 'Inner loop runs i times, and i takes the values 1, ' + c + ', ' + c + '², … < n. That sum is geometric: about n·' + c + '/' + (c - 1) + ' → Θ(n).']; },
     r => { const c = r.pick([2, 3]), s = r.pick([1, 2]); return [[F('i', '0', 'i < n', s === 1 ? '++' : ' += ' + s, [F('j', '1', 'j < n', ' *= ' + c, [OP])])], 'Θ(n log n)', 'Outer runs n/' + s + ' times; inner always runs log_' + c + ' n times → Θ(n log n).']; },
@@ -1216,14 +1294,17 @@
   const neighbors = (t) => { const i = THETA_LADDER.indexOf(t); return THETA_LADDER.filter((x, j) => j !== i && Math.abs(j - i) <= 3); };
   for (const part of [[0, 8], [8, 15]]) {
     B5.push({ id: 'B-5-nested-loops-' + (part[0] === 0 ? 'a' : 'b'), type: B5T[0], make(r) {
-      const ti = r.int(part[0], part[1] - 1);
+      // answer class first (uniform over the classes this half can produce), then a template of that class
+      const tis = range(part[0], part[1]); const thOfT = ti => LOOP_TEMPLATES[ti]({ pick: a => a[0] })[1];
+      const cls = r.pick(Array.from(new Set(tis.map(thOfT))));
+      const ti = r.pick(tis.filter(t => thOfT(t) === cls));
       const [ast, th, why] = LOOP_TEMPLATES[ti](r);
       const src = 'int count = 0;\n' + ast.map(a => loopSrc(a)).join('\n');
       const m = mcq(r, th, neighbors(th), THETA_LADDER, 5);
       return Q({ kind: 'mc', choices: m.choices, answer: m.answer,
         prompt: P('What is the order of growth of the final value of <code>count</code> (equivalently, the runtime) as a function of n?') + code(src),
         hint: 'Write the inner loop’s iteration count as a function of the outer variable, then sum over the values the outer variable actually takes.',
-        solution: P(why) + P('Answer: <b>' + th + '</b>.'), _chk: { ast, th } });
+        solution: P(why) + P(loopCheck(ast, th)) + P('Answer: <b>' + th + '</b>.'), _chk: { ast, th } });
     } });
   }
   // recursion: T(n) = a·T(arg) + work
@@ -1243,6 +1324,13 @@
     { a: 1, arg: { div: 2 }, work: 'n2', th: 'Θ(n²)', why: 'n² + n²/4 + … : geometric, dominated by the first level.' },
     { a: 2, arg: { div: 2 }, work: 'logn', th: 'Θ(n)', why: 'Work per level is 2^k·log(n/2^k); the bottom levels dominate and the sum is Θ(n).' },
   ];
+  // describe the recursion tree of template t with its actual branching factor / argument / per-call work
+  function recCalls(t) {
+    const argS = t.arg.div ? 'n/' + t.arg.div : 'n − ' + t.arg.sub;
+    const wS = { '1': 'Θ(1)', n: 'Θ(size)', n2: 'Θ(size²)', logn: 'Θ(log size)' }[t.work];
+    const depth = t.arg.div ? 'log_' + t.arg.div + ' n' : (t.arg.sub === 1 ? 'n' : 'n/' + t.arg.sub);
+    return 'Recursion tree here: each call on size n makes ' + t.a + ' call' + (t.a > 1 ? 's' : '') + ' on ' + argS + ' and does ' + wS + ' work itself, so depth k has ' + t.a + '^k call' + (t.a > 1 ? 's' : '') + ' and the depth is about ' + depth + '.';
+  }
   function recSrc(t) {
     const argS = t.arg.div ? 'n / ' + t.arg.div : 'n - ' + t.arg.sub;
     const work = t.work === '1' ? '' : t.work === 'n' ? '  for (int i = 0; i < n; i++) count++;\n' : t.work === 'n2' ? '  for (int i = 0; i < n; i++)\n    for (int j = 0; j < n; j++) count++;\n' : '  for (int i = 1; i < n; i *= 2) count++;\n';
@@ -1252,11 +1340,13 @@
   }
   for (const part of [[0, 7], [7, 14]]) {
     B5.push({ id: 'B-5-recursion-' + (part[0] === 0 ? 'a' : 'b'), type: B5T[1], make(r) {
-      const t = REC_TEMPLATES[r.int(part[0], part[1] - 1)];
+      const pool = REC_TEMPLATES.slice(part[0], part[1]);
+      const cls = r.pick(Array.from(new Set(pool.map(t => t.th)))); // answer class first, uniformly
+      const t = r.pick(pool.filter(x => x.th === cls));
       const m = mcq(r, t.th, neighbors(t.th).concat(t.th === 'Θ(n)' ? ['Θ(2ⁿ)'] : []), THETA_LADDER, 5);
       return Q({ kind: 'mc', choices: m.choices, answer: m.answer,
         prompt: P('What is the runtime of <code>f(n)</code>?') + code(recSrc(t)),
-        hint: 'Draw the recursion tree: how many calls at depth k, how much work each, how deep is it?', solution: P(t.why) + P('Answer: <b>' + t.th + '</b>.'), _chk: { t } });
+        hint: 'Draw the recursion tree: how many calls at depth k, how much work each, how deep is it?', solution: P(t.why) + P(recCalls(t)) + P('Answer: <b>' + t.th + '</b>.'), _chk: { t } });
     } });
   }
   // best vs worst
@@ -1269,9 +1359,14 @@
     { src: c => 'static int bs(int[] a, int t) {   // a is sorted\n  int lo = 0, hi = a.length - 1;\n  while (lo <= hi) {\n    int mid = (lo + hi) / 2;\n    if (a[mid] == t) return mid;\n    if (a[mid] < t) lo = mid + 1; else hi = mid - 1;\n  }\n  return -1;\n}', b: 'Θ(1)', w: 'Θ(log n)', why: 'Best: t is at the first middle. Worst: t absent, the range halves until empty.' },
     { src: c => 'static void g(int[] a) {\n  int n = a.length;\n  for (int i = 1; i < n; i *= 2) {\n    if (a[i] > a[0]) return;\n    for (int j = 0; j < n; j++) count++;\n  }\n}', b: 'Θ(1)', w: 'Θ(n log n)', why: 'Best: a[1] > a[0] returns at once. Worst: never returns early: log n rounds of n work.' },
     { src: c => 'static void g(int[] a) {\n  int n = a.length;\n  for (int i = 0; i < n; i++) {\n    int j = i;\n    while (j < n && a[j] != ' + c + ') j++;\n  }\n}', b: 'Θ(n)', w: 'Θ(n²)', why: 'Best: every a[j] equals c, the while loop stops at once for each i → Θ(n). Worst: no element equals c, inner scans n − i each time → Θ(n²).' },
+    { src: c => 'static void g(int[] a) {\n  int n = a.length;\n  for (int i = 0; i < n; i++)\n    if (a[i] > ' + c + ')\n      for (int j = 1; j < n; j *= 2) count++;\n}', b: 'Θ(n)', w: 'Θ(n log n)', why: 'The outer loop always runs n times. Best: no element exceeds c, so the inner loop never runs → Θ(n). Worst: every element exceeds c, each runs the doubling loop log₂ n times → Θ(n log n).' },
+    { src: c => 'static void g(int[] a) {\n  int n = a.length;\n  for (int i = 1; i < n; i *= 2)\n    if (a[i] == ' + c + ')\n      for (int j = 0; j < n; j++) count++;\n}', b: 'Θ(log n)', w: 'Θ(n log n)', why: 'The outer loop visits i = 1, 2, 4, … : log₂ n iterations with no early exit. Best: none of those a[i] equal c → Θ(log n). Worst: all of them do, each adding n → Θ(n log n).' },
+    { src: c => 'static int g(int[] a) {\n  int n = a.length, cnt = 0;\n  for (int i = 0; i < n; i++)\n    if (a[i] < ' + c + ') cnt++;\n  return cnt;\n}', b: 'Θ(n)', w: 'Θ(n)', why: 'There is no early exit and the if-body is Θ(1), so every input of size n costs exactly n iterations: best = worst = Θ(n).' },
   ];
   for (const VV of [0, 1]) B5.push({ id: 'B-5-best-worst' + ['-a', '-b'][VV], type: B5T[2], make(r) {
-    const k = VV === 0 ? r.int(0, 3) : r.int(4, 7), t = BW[k], c = r.int(2, 9);
+    const ks = VV === 0 ? [0, 1, 3, 5, 6] : [2, 4, 7, 8, 9, 10];
+    const cls = r.pick(Array.from(new Set(ks.map(i => BW[i].b + '|' + BW[i].w)))); // answer class first, uniformly
+    const k = r.pick(ks.filter(i => BW[i].b + '|' + BW[i].w === cls)), t = BW[k], c = r.int(2, 9);
     const lab = (b, w) => 'best ' + b + ', worst ' + w;
     const correct = lab(t.b, t.w);
     const wr = []; const opts = ['Θ(1)', 'Θ(log n)', 'Θ(n)', 'Θ(n log n)', 'Θ(n²)'];
@@ -1362,15 +1457,22 @@
     { s: 'for (int x : list) total += x;', needs: 'list', cost: { 'ArrayList': '1', 'LinkedList': '1' }, why: { ArrayList: 'iteration is Θ(1) per item', LinkedList: 'an iterator walks node to node: Θ(1) per item' } },
     { s: 'for (int i = 0; i < n; i++) if (set.contains(i)) total++;', needs: 'set', cost: { 'TreeSet': 'log', 'HashSet': '1' }, why: { TreeSet: 'contains is Θ(log n)', HashSet: 'contains is Θ(1) average' } },
     { s: 'while (!pq.isEmpty()) total += pq.poll();', needs: 'pq', cost: { 'PriorityQueue': 'log' }, why: { PriorityQueue: 'each poll sinks: Θ(log n), n polls' } },
+    { s: 'Collections.sort(list);', needs: 'list', cost: { 'ArrayList': 'log', 'LinkedList': 'log' }, why: { ArrayList: 'Collections.sort is a merge sort (TimSort): Θ(n log n) comparisons for n items', LinkedList: 'Collections.sort copies to an array and merge-sorts it: Θ(n log n)' } },
+    { s: 'for (int x : set) for (int y : set) if (x < y) total++;', needs: 'set', cost: { 'TreeSet': 'n', 'HashSet': 'n' }, why: { TreeSet: 'the nested for-each loops visit all n·n ordered pairs: Θ(n²)', HashSet: 'the nested for-each loops visit all n·n ordered pairs: Θ(n²)' } },
+    { s: 'for (int x : pq) for (int y : pq) if (x < y) total++;', needs: 'pq', cost: { 'PriorityQueue': 'n' }, why: { PriorityQueue: 'the nested for-each loops visit all n·n pairs (iteration order does not matter): Θ(n²)' } },
   ];
   const growOf = per => (per === '1' ? 1 : per === 'log' ? 2 : 3); // total over n ops: n, n log n, n²
   const thOf = g => ['', 'Θ(n)', 'Θ(n log n)', 'Θ(n²)'][g];
   for (const VV of [0, 1]) B5.push({ id: 'B-5-ds-runtime' + ['-lists', '-sets'][VV], type: B5T[5], make(r) {
+    // enumerate every (phase 1, phase 2) combination, choose the answer class uniformly, then a combination with that class
+    const combos = [];
+    for (const a of DS_OPS.filter((_, i) => (VV === 0 ? i < 3 : i >= 3))) {
+      const varName = a.ds.match(/> (\w+) =/)[1], cls = a.ds.match(/^(\w+)</)[1];
+      for (const b of [null].concat(DS_SECOND.filter(s => s.needs === varName && s.cost[cls]))) combos.push({ a, b, cls, th: thOf(Math.max(growOf(a.per), b ? growOf(b.cost[cls]) : 0)) });
+    }
+    const want = r.pick(Array.from(new Set(combos.map(c => c.th))));
     return retry(r, () => {
-      const a = r.pick(DS_OPS.filter((_, i) => (VV === 0 ? i < 3 : i >= 3))); const varName = a.ds.match(/> (\w+) =/)[1];
-      const cls = a.ds.match(/^(\w+)</)[1];
-      const sec = DS_SECOND.filter(s => s.needs === varName && s.cost[cls]);
-      const b = sec.length && r.float() < 0.85 ? r.pick(sec) : null;
+      const { a, b, cls } = r.pick(combos.filter(c => c.th === want));
       const g1 = growOf(a.per), g2 = b ? growOf(b.cost[cls]) : 0;
       const th = thOf(Math.max(g1, g2));
       const src = a.ds + '\nlong total = 0;\nfor (int i = 0; i < n; i++) ' + a.s + (b ? '\n' + b.s : '');
@@ -1457,23 +1559,37 @@
   for (const VV of [0, 1]) B6.push({ id: 'B-6-wqu-height' + ['-bound', '-trace'][VV], type: B6T[1], make(r) {
     const v = VV;
     if (v === 0) {
-      const N = r.int(5, 2000);
+      const h0 = r.int(2, 12), N = r.int(Math.max(5, 1 << h0), (1 << (h0 + 1)) - 1); // height chosen uniformly first
       const h = Math.floor(Math.log2(N));
       return Q({ kind: 'num', answer: h,
         prompt: P('In weighted quick union (union by size, no path compression) on N = ' + N + ' items, what is the maximum possible height of any tree after any sequence of connects? (A single node has height 0.)'),
         hint: 'A node’s depth only increases when its tree is merged under one at least as large, so its tree size at least doubles each time.',
-        solution: P('Depth of x grows by 1 only when x’s tree (size s) is placed under a tree of size ≥ s, giving size ≥ 2s. Size can double at most ⌊log₂ N⌋ times: ⌊log₂ ' + N + '⌋ = <b>' + h + '</b>. It is achieved by repeatedly merging equal-size trees (needs 2^' + h + ' = ' + Math.pow(2, h) + ' ≤ N items).'),
+        solution: P('Depth of x grows by 1 only when x’s tree (size s) is placed under a tree of size ≥ s, giving size ≥ 2s. Size can double at most ⌊log₂ N⌋ times: 2^' + h + ' = ' + (1 << h) + ' ≤ ' + N + ' &lt; ' + (2 << h) + ' = 2^' + (h + 1) + ', so ⌊log₂ ' + N + '⌋ = <b>' + h + '</b>. It is achieved by repeatedly merging equal-size trees (needs 2^' + h + ' = ' + Math.pow(2, h) + ' ≤ N items).'),
         _chk: { N } });
     }
+    const N = r.pick([8, 16]), want = r.int(1, N === 8 ? 3 : 4); // answer (height) chosen uniformly first
     return retry(r, () => {
-      const N = r.pick([8, 16]);
-      const ops = dsRandOps(r, N, r.int(9, 14)).map(o => ['conn', o[0], o[1]]);
-      const res = wquRun(N, ops, false); if (res.height < 2) return null;
+      // build connects that merge components; pEq biases toward merging equal-size trees (needed for tall trees)
+      const pEq = want >= 3 ? 0.7 + 0.3 * r.float() : r.float(), comp = range(0, N), ops = [];
+      const members = c => range(0, N).filter(x => comp[x] === c);
+      const nOps = r.int(6, N === 8 ? 10 : 18);
+      for (let i = 0; i < nOps; i++) {
+        const cs = Array.from(new Set(comp)); if (cs.length < 2) break;
+        let pair = null;
+        if (r.float() < 0.15) { const c = r.pick(cs); const ms = members(c); if (ms.length >= 2) { const [x, y] = r.sample(ms, 2); ops.push(['conn', x, y]); continue; } }
+        if (r.float() < pEq) { const bySize = {}; cs.forEach(c => { const k = members(c).length; (bySize[k] = bySize[k] || []).push(c); }); const eq = Object.values(bySize).filter(l => l.length >= 2); if (eq.length) pair = r.sample(r.pick(eq), 2); }
+        if (!pair && want === 1) { const singles = cs.filter(c => members(c).length === 1); if (!singles.length) break; const sg = r.pick(singles); pair = r.shuffle([sg, r.pick(cs.filter(c => c !== sg))]); }
+        if (!pair) pair = r.sample(cs, 2);
+        const x = r.pick(members(pair[0])), y = r.pick(members(pair[1]));
+        ops.push(['conn', x, y]); const old = comp[x]; for (let k = 0; k < N; k++) if (comp[k] === old) comp[k] = comp[y];
+      }
+      const res = wquRun(N, ops, false); if (res.height !== want || ops.length < 5) return null;
+      if (ops.length > (want === 4 ? 18 : 14)) return null;
       return Q({ kind: 'num', answer: res.height,
         prompt: P(WQU_CONV + ' On items 0…' + (N - 1) + ', after ' + ops.map(o => 'connect(' + o[1] + ', ' + o[2] + ')').join(', ') + ', what is the height of the tallest tree (root has depth 0)?'),
         hint: 'Trace the array; height increases only when two trees of equal height-ish size merge.',
         solution: P(res.steps.join('<br>')) + P('Tallest tree height: <b>' + res.height + '</b> (never more than ⌊log₂ ' + N + '⌋ = ' + Math.log2(N) + ').'), _chk: { N, ops } });
-    });
+    }, 4000);
   } });
   for (const VV of [0, 1]) B6.push({ id: 'B-6-op-runtimes' + ['-single', '-total'][VV], type: B6T[2], make(r) {
     const tbl = {
@@ -1481,23 +1597,40 @@
       'Quick Union': { c: 'Θ(N)', f: 'Θ(N)', why: 'trees can become spindly chains of height N − 1' },
       'Weighted Quick Union': { c: 'Θ(log N)', f: 'Θ(log N)', why: 'height ≤ log₂N, and both ops walk to a root' },
     };
-    const ds = r.pick(Object.keys(tbl)), op = r.pick(['connect', 'isConnected']);
     const v = VV;
     if (v === 0) {
-      const correct = op === 'connect' ? tbl[ds].c : tbl[ds].f;
+      // answer class first (uniform), then a (structure, operation) pair with that worst case
+      const pairs = []; for (const d of Object.keys(tbl)) for (const o of ['connect', 'isConnected']) pairs.push([d, o, o === 'connect' ? tbl[d].c : tbl[d].f]);
+      const want = r.pick(Array.from(new Set(pairs.map(p => p[2]))));
+      const [ds, op] = r.pick(pairs.filter(p => p[2] === want));
+      const correct = want;
       const m = mcq(r, correct, ['Θ(1)', 'Θ(log N)', 'Θ(N)', 'Θ(N log N)', 'Θ(log* N)'], null, 4);
       return Q({ kind: 'mc', choices: m.choices, answer: m.answer,
         prompt: P('Worst-case runtime of a single <code>' + op + '</code> call in ' + ds + ' on N items (no path compression)?'),
-        hint: 'What is the worst tree shape (or array work) this structure allows?', solution: P(ds + ': ' + tbl[ds].why + '. Answer <b>' + correct + '</b>.') });
+        hint: 'What is the worst tree shape (or array work) this structure allows?', solution: P(ds + ' ' + op + ': ' + ({
+          'Quick Find|connect': 'connect(p, q) must scan the whole id array and relabel every entry equal to id[p]: N reads',
+          'Quick Find|isConnected': 'isConnected(p, q) only compares id[p] == id[q]: two array reads',
+          'Quick Union|connect': 'connect walks from p and q up to their roots; with no balancing the trees can be chains of height N − 1',
+          'Quick Union|isConnected': 'isConnected walks from p and q up to their roots; with no balancing the trees can be chains of height N − 1',
+          'Weighted Quick Union|connect': 'connect walks p and q up to their roots; union by size keeps every height ≤ log₂ N, and linking two roots is Θ(1)',
+          'Weighted Quick Union|isConnected': 'isConnected walks p and q up to their roots; union by size keeps every height ≤ log₂ N',
+        })[ds + '|' + op] + '. Worst case <b>' + correct + '</b>.') });
     }
-    const N = r.pick([1000, 10000, 1000000]), M = r.pick([N, 10 * N]);
-    const ds2 = r.pick(['Quick Find', 'Quick Union', 'Weighted Quick Union']);
-    const correct = ds2 === 'Quick Find' ? 'Θ(MN)' : ds2 === 'Quick Union' ? 'Θ(MN)' : 'Θ(M log N)';
-    const m = mcq(r, correct, ['Θ(M + N)', 'Θ(MN)', 'Θ(M log N)', 'Θ(N log M)', 'Θ(M²)'], null, 4);
+    // answer class first (uniform), then a scenario with that total cost
+    const SC = {
+      'Θ(MN)': [['Quick Find', 'a mix of connect and isConnected', 'each connect relabels the whole id array (Θ(N)), and an adversary can make most operations connects'], ['Quick Union', 'a mix of connect and isConnected', 'connects can build a spindly chain of height ≈ N, after which every operation walks Θ(N) links']],
+      'Θ(M log N)': [['Weighted Quick Union', 'a mix of connect and isConnected', 'union by size keeps every tree’s height ≤ log₂ N, so each operation is Θ(log N) and an adversary can make them all that expensive']],
+      'Θ(M + N)': [['Quick Find', 'only isConnected calls', 'building the id array costs Θ(N), and each isConnected just compares id[p] == id[q] in Θ(1)']],
+      'Θ((M + N) α(N))': [['Weighted Quick Union with path compression', 'a mix of connect and isConnected', 'union by size plus path compression makes the amortized cost per operation α(N) (inverse Ackermann, ≤ 5 for any practical N)']],
+    };
+    const correct = r.pick(Object.keys(SC));
+    const [ds2, mix, why2] = r.pick(SC[correct]);
+    const Mtxt = r.pick(['N', '10N', 'N²']);
+    const m = mcq(r, correct, ['Θ(M + N)', 'Θ(MN)', 'Θ(M log N)', 'Θ((M + N) α(N))', 'Θ(N log M)', 'Θ(M²)'], null, 4);
     return Q({ kind: 'mc', choices: m.choices, answer: m.answer,
-      prompt: P('Worst-case total cost of M = ' + (M === N ? 'N' : '10N') + ' operations (a mix of connect and isConnected, adversarially chosen) on N items using ' + ds2 + ' (no path compression)?'),
-      hint: 'Multiply the worst single-operation cost by the number of operations.',
-      solution: P(ds2 + ': each op can cost ' + (ds2 === 'Weighted Quick Union' ? 'Θ(log N)' : 'Θ(N)') + ', so the total is <b>' + correct + '</b>. (WQU with path compression would be nearly linear: O(M α(N)).)') });
+      prompt: P('Worst-case total cost (including initialization of the N items) of M = ' + Mtxt + ' operations (' + mix + ', adversarially chosen) using ' + ds2 + '? Answer in terms of M and N.'),
+      hint: 'Total = initialization + (number of operations) × (worst cost of one operation, amortized if the structure allows).',
+      solution: P(ds2 + ': ' + why2 + '. Initialization is Θ(N), so the total is Θ(N) + M × (per-operation cost) = <b>' + correct + '</b>' + (correct === 'Θ(MN)' ? ' (the Θ(N) initialization is dominated since M ≥ N here)' : '') + '.') });
   } });
   B6.push({ id: 'B-6-connectivity', type: B6T[3], make(r) {
     const N = r.int(8, 12), k = r.int(5, 8);
@@ -1534,6 +1667,10 @@
   const postOrder = t => (t ? postOrder(t.l).concat(postOrder(t.r), [t.k]) : []);
   const height = t => (t ? 1 + Math.max(height(t.l), height(t.r)) : -1);
   const nested = t => (!t ? '·' : (!t.l && !t.r) ? String(t.k) : t.k + '(' + nested(t.l) + ', ' + nested(t.r) + ')');
+  // describe deleting k from t (before mutating it): which case applies
+  const delNote = (t, k) => { let x = t; while (x && x.k !== k) x = k < x.k ? x.l : x.r; if (!x) return 'delete ' + k + ': not present';
+    if (x.l && x.r) { const sc = bstMin(x.r); return 'delete ' + k + ': two children → successor ' + sc.k + ' (go right to ' + x.r.k + ', then left as far as possible) replaces it, and ' + sc.k + ' is removed from the right subtree'; }
+    return 'delete ' + k + ': ' + (x.l || x.r ? 'one child → its child ' + (x.l || x.r).k + ' takes its place' : 'leaf → just removed'); };
   B7.push({ id: 'B-7-bst-delete-level', type: B7T[0], make(r) {
     return retry(r, () => {
       const keys = distinctInts(r, r.int(9, 11), 1, 99);
@@ -1542,13 +1679,13 @@
       if (two.length < 2) return null;
       const dels = [r.pick(two)]; const rest = keys.filter(k => k !== dels[0]); dels.push(r.pick(rest));
       if (r.bool()) { const rest2 = rest.filter(k => k !== dels[1]); dels.push(r.pick(rest2)); }
-      const before = nested(t);
-      dels.forEach(k => { t = bstDel(t, k); });
+      const before = nested(t); const notes = [];
+      dels.forEach(k => { notes.push(delNote(t, k)); t = bstDel(t, k); notes[notes.length - 1] += ' → ' + nested(t); });
       const ans = levelOrder(t);
       return Q({ kind: 'list', answer: ans,
         prompt: P('Insert ' + keys.join(', ') + ' (in that order) into an empty BST. Then delete ' + dels.join(', then ') + ' using Hibbard deletion with the <b>successor</b> (smallest key in the right subtree) for nodes with two children. Give the final tree in level order (top to bottom, left to right), comma-separated.'),
         hint: 'Two children: copy the successor’s key up (go right once, then left all the way), then delete the successor from the right subtree; it has at most a right child.',
-        solution: P('Tree after inserts (key(left, right), · = empty): ' + before + '.') + P('After deleting ' + dels.join(', ') + ': ' + nested(t) + '.') + P('Level order: <b>' + ans.join(', ') + '</b>.'),
+        solution: P('Tree after inserts (key(left, right), · = empty): ' + before + '.') + P(notes.join('<br>')) + P('Level order: <b>' + ans.join(', ') + '</b>.'),
         _chk: { keys, dels } });
     });
   } });
@@ -1559,20 +1696,21 @@
       if (!t.l || !t.r) return null;
       const extra = r.pick(keys.slice(1));
       const dels = [t.k, extra].filter((v, i, a) => a.indexOf(v) === i);
-      dels.forEach(k => { t = bstDel(t, k); });
+      const before = nested(t); const notes = [];
+      dels.forEach(k => { notes.push(delNote(t, k)); t = bstDel(t, k); notes[notes.length - 1] += ' → ' + nested(t); });
       const ans = preOrder(t);
       return Q({ kind: 'list', answer: ans.concat([height(t)]),
         prompt: P('Insert ' + keys.join(', ') + ' into an empty BST, then delete ' + dels.join(' and then ') + ' (Hibbard deletion with the successor). Give the final preorder traversal followed by the final height (root alone = height 0), comma-separated.'),
         hint: 'Deleting the root (two children) promotes the leftmost key of the right subtree.',
-        solution: P('Final tree: ' + nested(t) + '. Preorder: ' + ans.join(', ') + '; height ' + height(t) + '.'), _chk: { keys, dels } });
+        solution: P('Tree after inserts (key(left, right), · = empty): ' + before + '.') + P(notes.join('<br>')) + P('Preorder (node, left, right): ' + ans.join(', ') + '; height (longest root-to-leaf path in edges) ' + height(t) + '.'), _chk: { keys, dels } });
     });
   } });
   B7.push({ id: 'B-7-validate-bst', type: B7T[0], make(r) {
+    const valid = r.bool(); // truth value chosen first
     return retry(r, () => {
       const keys = distinctInts(r, 8, 1, 99);
       let t = null; keys.forEach(k => { t = bstIns(t, k); });
       if (height(t) < 3) return null;
-      const valid = r.bool();
       if (!valid) {
         // change a depth≥2 node's key so it still respects its parent but violates an ancestor
         const nodes = []; const walk = (x, d, lo, hi, par) => { if (!x) return; nodes.push({ x, d, lo, hi, par }); walk(x.l, d + 1, lo, x.k, x); walk(x.r, d + 1, x.k, hi, x); };
@@ -1594,7 +1732,9 @@
       return Q({ kind: 'tf', answer: truth,
         prompt: P('Notation: key(left, right), · = empty. Is this a valid BST? <code>' + nested(t) + '</code>') + P('(Note: every node is correctly ordered relative to its own children. A buggy <code>isBST</code> that only checks parent/child pairs would say “yes”.)'),
         hint: 'Every key must lie strictly inside the (low, high) window inherited from ALL its ancestors.',
-        solution: P(truth ? 'Every key lies within the bounds set by all of its ancestors (check recursively with a (lo, hi) window), so <b>True</b>.' : 'Some leaf satisfies its parent but not an ancestor: its key falls outside the window (lo, hi) inherited from higher up. Inorder traversal is not sorted: ' + inOrder(t).join(' ') + '. <b>False</b>.'),
+        solution: P('Check each key against the (low, high) window inherited from ALL its ancestors (going left lowers high to the parent’s key, going right raises low):') +
+          P((() => { const rows = []; const w = (x, lo, hi) => { if (!x) return; const good = x.k > lo && x.k < hi; rows.push(x.k + ' ∈ (' + (lo === -Infinity ? '−∞' : lo) + ', ' + (hi === Infinity ? '∞' : hi) + ')' + (good ? ' ✓' : ' ✗')); w(x.l, lo, x.k); w(x.r, x.k, hi); }; w(t, -Infinity, Infinity); return rows.join(', '); })()) +
+          P(truth ? 'Every key is inside its window (equivalently the inorder traversal ' + inOrder(t).join(' ') + ' is sorted), so <b>True</b>.' : 'The ✗ key satisfies its parent but not a higher ancestor; the inorder traversal ' + inOrder(t).join(' ') + ' is not sorted. <b>False</b>.'),
         _chk: { t: JSON.parse(JSON.stringify(t)) } });
     });
   } });
@@ -1626,24 +1766,24 @@
   B7.push({ id: 'B-7-23-tree', type: B7T[1], make(r) {
     return retry(r, () => {
       const keys = distinctInts(r, r.int(9, 12), 1, 99);
-      let t = null; keys.forEach(k => { t = btInsert(t, k, 2); });
+      let t = null; const log = []; keys.forEach(k => { const before = t ? btCount(t) : 0; t = btInsert(t, k, 2); log.push('insert ' + k + (before && btCount(t) > before ? ' (overflow → split' + (btCount(t) - before > 1 ? 's' : '') + ')' : '') + ': ' + btStr(t)); });
       const h = btHeight(t); if (h < 2) return null;
       return Q({ kind: 'list', answer: [h, btCount(t)].concat(t.k),
         prompt: P('Insert ' + keys.join(', ') + ' (in order) into an empty 2-3 tree (an overfull node [a b c] sends b up). Give: the height (a single leaf = 0), the total number of nodes, then the root’s keys in order; all comma-separated.'),
         hint: 'Always insert into a leaf; split overflowing nodes bottom-up; the tree grows only at the root.',
-        solution: P('Final tree (node(children)): ' + btStr(t) + '. Height ' + h + ', ' + btCount(t) + ' nodes, root ' + t.k.join(' ') + '.'), _chk: { keys, L: 2 } });
+        solution: P(log.join('<br>')) + P('Final tree (node(children)): ' + btStr(t) + '. Height ' + h + ', ' + btCount(t) + ' nodes, root ' + t.k.join(' ') + '.'), _chk: { keys, L: 2 } });
     });
   } });
   B7.push({ id: 'B-7-234-tree', type: B7T[1], make(r) {
     return retry(r, () => {
       const keys = distinctInts(r, r.int(10, 14), 1, 99);
-      let t = null; keys.forEach(k => { t = btInsert(t, k, 3); });
+      let t = null; const log = []; keys.forEach(k => { const before = t ? btCount(t) : 0; t = btInsert(t, k, 3); log.push('insert ' + k + (before && btCount(t) > before ? ' (overflow → split' + (btCount(t) - before > 1 ? 's' : '') + ')' : '') + ': ' + btStr(t)); });
       if (btHeight(t) < 1 || t.k.length < 2 && r.bool()) return null;
       const leaves = []; const walk = x => { if (!x.c) leaves.push(x); else x.c.forEach(walk); }; walk(t);
       return Q({ kind: 'list', answer: [btHeight(t), leaves.length].concat(t.k),
         prompt: P('Insert ' + keys.join(', ') + ' into an empty 2-3-4 tree (max 3 keys per node). 61B convention: an overfull node [a b c d] sends the <b>left-middle</b> key b up, leaving [a] and [c d]. Splits happen bottom-up only when a node overflows. Give the height, the number of leaves, then the root’s keys; comma-separated.'),
         hint: 'A node only splits when it would hold 4 keys; the pushed-up key is the second smallest of the four.',
-        solution: P('Final tree: ' + btStr(t) + '.'), _chk: { keys, L: 3 } });
+        solution: P(log.join('<br>')) + P('Final tree: ' + btStr(t) + ': height ' + btHeight(t) + ', ' + leaves.length + ' leaves, root ' + t.k.join(' ') + '.'), _chk: { keys, L: 3 } });
     });
   } });
   // ---- LLRB ----
@@ -1693,29 +1833,38 @@
     });
   } });
   B7.push({ id: 'B-7-heights', type: B7T[3], make(r) {
-    const N = r.int(10, 5000);
+    const N = Math.max(10, Math.round(Math.pow(2, 3.4 + r.float() * 9.2))); // log-uniform in [10, ~6000], so log-based answers spread evenly
     const v = r.int(0, 3);
-    const fl = Math.floor;
+    const fl = Math.floor, P2 = k => Math.pow(2, k), P3 = k => Math.pow(3, k);
     let ans, q, why;
-    if (v === 0) { ans = N - 1; q = 'maximum height of a BST'; why = 'Inserting keys in sorted order makes a chain: height N − 1.'; }
-    else if (v === 1) { ans = fl(Math.log2(N)); q = 'minimum height of a BST'; why = 'A complete tree of height h holds up to 2^{h+1} − 1 keys, so h ≥ ⌈log₂(N+1)⌉ − 1 = ⌊log₂ N⌋.'; }
-    else if (v === 2) { ans = fl(Math.log2(N + 1)) - 1; q = 'maximum height of a 2-3 tree'; why = 'Tallest when every node is a 2-node: height h needs at least 2^{h+1} − 1 keys, so h = ⌊log₂(N+1)⌋ − 1.'; }
-    else if (v === 3) { let h = 0; while (Math.pow(3, h + 1) - 1 < N) h++; ans = h; q = 'minimum height of a 2-3 tree'; why = 'Shortest when every node is a 3-node: height h holds at most 3^{h+1} − 1 keys; smallest h with 3^{h+1} − 1 ≥ N.'; }
+    if (v === 0) { ans = N - 1; q = 'maximum height of a BST'; why = 'Inserting keys in sorted order makes a chain of ' + N + ' nodes: height N − 1 = ' + (N - 1) + '.'; }
+    else if (v === 1) { ans = fl(Math.log2(N)); q = 'minimum height of a BST'; why = 'A tree of height h holds at most 2^{h+1} − 1 keys (complete tree), so we need the smallest h with 2^{h+1} − 1 ≥ ' + N + ': 2^' + ans + ' − 1 = ' + (P2(ans) - 1) + ' &lt; ' + N + ' ≤ 2^' + (ans + 1) + ' − 1 = ' + (P2(ans + 1) - 1) + ' → h = ⌊log₂ N⌋ = ' + ans + '.'; }
+    else if (v === 2) { ans = fl(Math.log2(N + 1)) - 1; q = 'maximum height of a 2-3 tree'; why = 'Tallest when every node is a 2-node: all leaves are at the same depth, so height h needs at least 2^{h+1} − 1 keys. Largest h with 2^{h+1} − 1 ≤ ' + N + ': 2^' + (ans + 1) + ' − 1 = ' + (P2(ans + 1) - 1) + ' ≤ ' + N + ' &lt; ' + (P2(ans + 2) - 1) + ' = 2^' + (ans + 2) + ' − 1 → h = ' + ans + '.'; }
+    else if (v === 3) { let h = 0; while (P3(h + 1) - 1 < N) h++; ans = h; q = 'minimum height of a 2-3 tree'; why = 'Shortest when every node is a 3-node: height h holds at most 3^{h+1} − 1 keys. Smallest h with 3^{h+1} − 1 ≥ ' + N + ': ' + (h > 0 ? '3^' + h + ' − 1 = ' + (P3(h) - 1) + ' &lt; ' + N + ' ≤ ' : '') + '3^' + (h + 1) + ' − 1 = ' + (P3(h + 1) - 1) + ' → h = ' + h + '.'; }
     return Q({ kind: 'num', answer: ans,
       prompt: P('With N = ' + N + ' distinct keys, what is the ' + q + '? (A single node has height 0.)'),
       hint: 'Relate the number of keys to the height for the extreme shape (chain, complete binary tree, all 2-nodes, all 3-nodes).',
       solution: P(why + ' Here: <b>' + ans + '</b>.'), _chk: { N, v } });
   } });
   B7.push({ id: 'B-7-runtime-mc', type: B7T[3], make(r) {
-    const s = r.pick(['BST (no balancing)', '2-3 tree', 'LLRB']);
-    const c = r.pick(['worst', 'sorted']);
+    const BAL = ['2-3 tree', 'LLRB', '2-3-4 tree'], ANY = ['BST (no balancing)'].concat(BAL);
     const op = r.pick(['contains', 'insert']);
-    const correct = s === 'BST (no balancing)' ? 'Θ(N)' : 'Θ(log N)';
-    const q = c === 'worst' ? 'the worst-case runtime of one ' + op + ' in a ' + s + ' holding N keys' : 'the runtime of the ' + op + ' of the largest key into a ' + s + ' built by inserting 1, 2, …, N in sorted order';
-    const m = mcq(r, correct, ['Θ(1)', 'Θ(log N)', 'Θ(N)', 'Θ(N log N)', 'Θ(√N)'], null, 4);
+    const SC = {
+      'Θ(1)': [() => { const s = r.pick(ANY); return ['the <b>best-case</b> runtime of contains(k) in a ' + s + ' holding N keys', 'Best case: k is the key stored in the root, found after one comparison, whatever the shape.']; }],
+      'Θ(log N)': [() => { const s = r.pick(BAL); return ['the worst-case runtime of one ' + op + ' in a ' + s + ' holding N keys', 'A ' + s + ' is balanced: height Θ(log N) for any insertion order, and ' + op + ' walks one root-to-leaf path (plus O(1) fix-up work per level).']; },
+        () => { const s = r.pick(BAL); return ['the runtime of the ' + op + ' of the largest key into a ' + s + ' built by inserting 1, 2, …, N in sorted order', 'Sorted insertion order does not hurt a ' + s + ': it stays balanced with height Θ(log N).']; }],
+      'Θ(N)': [() => ['the worst-case runtime of one ' + op + ' in a BST (no balancing) holding N keys', 'An unbalanced BST can be a chain (e.g. after sorted inserts), height N − 1, and ' + op + ' may walk the whole chain.'],
+        () => ['the runtime of the ' + op + ' of the largest key into a BST (no balancing) built by inserting 1, 2, …, N in sorted order', 'Sorted inserts make every new key the right child of the previous one: a chain of N nodes, and the largest key is at its bottom.'],
+        () => { const s = r.pick(ANY); return ['the runtime of printing all N keys of a ' + s + ' in sorted order (in-order traversal)', 'An in-order traversal visits each of the N nodes once (Θ(1) per node), regardless of the shape.']; }],
+      'Θ(N log N)': [() => { const s = r.pick(BAL); return ['the total worst-case runtime of building a ' + s + ' by inserting N keys one at a time into an empty tree', 'The i-th insert costs Θ(log i) in a balanced tree; Σ log i = log(N!) = Θ(N log N).']; }],
+      'Θ(N²)': [() => ['the total runtime of building a BST (no balancing) by inserting 1, 2, …, N in sorted order', 'The i-th insert walks a chain of i − 1 nodes: 0 + 1 + … + (N − 1) = N(N−1)/2 = Θ(N²).']],
+    };
+    const correct = r.pick(Object.keys(SC)); // answer class first, uniformly
+    const [q, why] = r.pick(SC[correct])();
+    const m = mcq(r, correct, ['Θ(1)', 'Θ(log N)', 'Θ(N)', 'Θ(N log N)', 'Θ(N²)'], null, 4);
     return Q({ kind: 'mc', choices: m.choices, answer: m.answer, prompt: P('What is ' + q + '?'),
-      hint: 'Runtime is Θ(height). Which structures guarantee logarithmic height?',
-      solution: P(s === 'BST (no balancing)' ? 'An unbalanced BST can be a chain (e.g. sorted inserts), height N − 1 → Θ(N).' : 'A ' + s + ' is balanced: height Θ(log N) for any insertion order → Θ(log N).') });
+      hint: 'One operation costs Θ(height of the path it walks); a sequence of operations costs the sum. Which structures guarantee logarithmic height?',
+      solution: P(why + ' → <b>' + correct + '</b>.') });
   } });
   G['B-7'] = B7;
 
@@ -1756,6 +1905,8 @@
       hint: 'Start at the last non-leaf n/2 − 1; leaves are already heaps.',
       solution: P(steps.join('<br>')), _chk: { orig, sortSteps } });
   } });
+  // first parent/child violation in a level-order array (0-based storage, reported with 1-based indices), or null
+  const heapViol = (a, okPair) => { for (let k = 1; k < a.length; k++) { const p = Math.floor((k + 1) / 2) - 1; if (!okPair(a[p], a[k])) return a[p] + ' (index ' + (p + 1) + ') vs ' + a[k] + ' (index ' + (k + 1) + ')'; } return null; };
   B8.push({ id: 'B-8-check-heap', type: B8T[1], make(r) {
     return retry(r, () => {
       const items = [];
@@ -1773,7 +1924,7 @@
       return Q({ kind: 'multi', choices: m.choices, answer: m.answer,
         prompt: P('Each array lists a complete binary tree in level order (first entry = root, i.e. index 1 in 61B’s layout). Which are valid <b>min-heaps</b>?'),
         hint: 'Check every parent/child pair: entry at index k (1-based) must be ≤ entries at 2k and 2k+1.',
-        solution: P(items.map(x => x.t + ': ' + (x.ok ? 'valid' : 'invalid (some child is smaller than its parent)')).join('<br>')), _chk: { arrs: items.map(x => x.a) } });
+        solution: P('Index k (1-based) has children 2k and 2k+1; check each parent ≤ child:') + P(items.map(x => { const bad = heapViol(x.a, (p, c) => p <= c); return x.t + ': ' + (bad ? 'invalid: parent ' + bad + ' is larger than its child' : 'valid (every parent ≤ its children)'); }).join('<br>')), _chk: { arrs: items.map(x => x.a) } });
     });
   } });
   B8.push({ id: 'B-8-topk', type: B8T[2], make(r) {
@@ -1802,7 +1953,10 @@
       return Q({ kind: 'text', answer: [ans, seq.join(','), seq.join('')],
         prompt: P('Binary tree in the notation key(left, right) with · for an empty child: <code>' + nested(t) + '</code>. (This is NOT a BST: letters are just labels.) Give its <b>' + kind + '</b> traversal, letters separated by spaces.'),
         hint: kind === 'level order' ? 'Depth by depth, left to right (a queue).' : 'Walk around the tree: ' + kind + ' records a node ' + { preorder: 'the first time you pass it (left side)', inorder: 'when you pass underneath it', postorder: 'the last time (right side)' }[kind] + '.',
-        solution: P(kind[0].toUpperCase() + kind.slice(1) + ': <b>' + ans + '</b>.'), _chk: { t: JSON.parse(JSON.stringify(t)), kind } });
+        solution: (kind === 'level order'
+          ? P('Depth by depth, left to right: ' + (() => { const rows = []; let lvl = [t]; while (lvl.length) { rows.push('depth ' + rows.length + ': ' + lvl.map(x => x.k).join(' ')); lvl = [].concat.apply([], lvl.map(x => [x.l, x.r].filter(Boolean))); } return rows.join('; '); })() + '.')
+          : P('Rule: ' + { preorder: 'node, then left subtree, then right subtree', inorder: 'left subtree, then node, then right subtree', postorder: 'left subtree, then right subtree, then node' }[kind] + '. At the root ' + t.k + ': left subtree ' + (t.l ? nested(t.l) + ' gives ' + ({ preorder: preOrder, inorder: inOrder, postorder: postOrder }[kind](t.l).join(' ')) : 'empty') + '; right subtree ' + (t.r ? nested(t.r) + ' gives ' + ({ preorder: preOrder, inorder: inOrder, postorder: postOrder }[kind](t.r).join(' ')) : 'empty') + '.')) +
+          P(kind[0].toUpperCase() + kind.slice(1) + ': <b>' + ans + '</b>.'), _chk: { t: JSON.parse(JSON.stringify(t)), kind } });
     });
   } });
   B8.push({ id: 'B-8-rebuild-traversals', type: B8T[3], make(r) {
@@ -1826,10 +1980,10 @@
       const lines = order.map(s => (s === 'P' ? '  System.out.print(t.key + " ");' : '  mystery(t.' + (s === 'L' ? 'left' : 'right') + ');'));
       if (twice) lines.push('  System.out.print(t.key.toLowerCase() + " ");');
       const src = 'static void mystery(Node t) {\n  if (t == null) return;\n' + lines.join('\n') + '\n}';
-      return Q({ kind: 'text', answer: [out.join(' '), out.join(',')],
-        prompt: P('Tree (key(left, right), · = empty): <code>' + nested(t) + '</code>. What does <code>mystery(root)</code> print? (tokens separated by spaces)') + code(src),
+      return Q({ kind: 'text', answer: [out.join(' '), out.join(',')], caseSensitive: twice,
+        prompt: P('Tree (key(left, right), · = empty): <code>' + nested(t) + '</code>. What does <code>mystery(root)</code> print? (tokens separated by spaces' + (twice ? '; upper/lower case matters' : '') + ')') + code(src),
         hint: 'Same walk-around idea, but this code may visit RIGHT before LEFT. Follow the statement order exactly.',
-        solution: P('The method does ' + order.map(s => ({ P: 'print', L: 'left', R: 'right' })[s]).join(', ') + (twice ? ', then prints the lowercase key' : '') + ' at every node. Output: <b>' + out.join(' ') + '</b>.'),
+        solution: P('The method does ' + order.map(s => ({ P: 'print', L: 'recurse left', R: 'recurse right' })[s]).join(', ') + (twice ? ', then prints the lowercase key' : '') + ' at every node. At the root ' + t.k + ' that means: ' + order.map(s => (s === 'P' ? 'print ' + t.k : 'everything from the ' + (s === 'L' ? 'left' : 'right') + ' subtree (' + ((() => { const o = []; const go = x => { if (!x) return; for (const z of order) { if (z === 'P') o.push(x.k); else go(z === 'L' ? x.l : x.r); } if (twice) o.push(x.k.toLowerCase()); }; go(s === 'L' ? t.l : t.r); return o.join(' ') || 'nothing'; })()) + ')')).join(', then ') + (twice ? ', then ' + t.k.toLowerCase() : '') + '.') + P('Output: <b>' + out.join(' ') + '</b>.'),
         _chk: { t: JSON.parse(JSON.stringify(t)), order, twice } });
     });
   } });
@@ -1913,7 +2067,7 @@
       return Q({ kind: 'list', answer: b.dist,
         prompt: P('Undirected unweighted graph on 0…' + (V - 1) + ' with edges ' + uEdgeStr(g) + '. Give distTo[v] (fewest edges from ' + s + ') for v = 0, 1, …, ' + (V - 1) + '.'),
         hint: 'BFS rings: everything adjacent to ring d that is unmarked is in ring d + 1.',
-        solution: P('BFS from ' + s + ' gives distances ' + b.dist.map((d, v) => v + ':' + d).join(', ') + '.'), _chk: { g, s } });
+        solution: P('BFS rings from ' + s + ': ' + range(0, Math.max.apply(null, b.dist) + 1).map(d => 'distance ' + d + ': {' + range(0, V).filter(v => b.dist[v] === d).join(', ') + '}').join('; ') + ' (each ring = unmarked neighbors of the previous ring).') + P('distTo: ' + b.dist.map((d, v) => v + ':' + d).join(', ') + '.'), _chk: { g, s } });
     });
   } });
   B9.push({ id: 'B-9-bfs-edgeto', type: B9T[2], make(r) {
@@ -1962,25 +2116,39 @@
     edges.sort((x, y) => x[0] - y[0] || x[1] - y[1]);
     const adj = range(0, V).map(() => []); edges.forEach(([a, b]) => adj[a].push(b));
     // cycle check with colors
-    const col = new Array(V).fill(0); let cyc = false; const go = v => { col[v] = 1; for (const w of adj[v]) { if (col[w] === 1) cyc = true; else if (col[w] === 0) go(w); } col[v] = 2; };
+    const col = new Array(V).fill(0); let cyc = false, cycle = null; const stack = []; const post = [];
+    const go = v => { col[v] = 1; stack.push(v); for (const w of adj[v]) { if (col[w] === 1) { cyc = true; if (!cycle) cycle = stack.slice(stack.indexOf(w)).concat([w]); } else if (col[w] === 0) go(w); } col[v] = 2; stack.pop(); post.push(v); };
     range(0, V).forEach(v => { if (!col[v]) go(v); });
     return Q({ kind: 'tf', answer: cyc,
       prompt: P('Directed graph on 0…' + (V - 1) + ' with edges ' + edges.map(e => e[0] + '→' + e[1]).join(', ') + '. True or false: this graph has a directed cycle (so it has no topological order).'),
       hint: 'Run DFS keeping an on-stack flag; an edge to a vertex currently on the stack closes a cycle (an edge to a finished vertex does not).',
-      solution: P(cyc ? 'DFS finds an edge v→w with w still on the call stack: a directed cycle exists. <b>True</b>.' : 'No DFS edge ever points to a vertex on the current stack (edges to finished vertices are just paths re-joining), so it is a DAG. <b>False</b>.'), _chk: { V, edges } });
+      solution: P(cyc ? 'DFS (from 0, 1, …, neighbors in increasing order) reaches edge ' + cycle[cycle.length - 2] + '→' + cycle[cycle.length - 1] + ' while ' + cycle[cycle.length - 1] + ' is still on the call stack, closing the directed cycle ' + cycle.join(' → ') + '. <b>True</b>.' : 'DFS never meets an edge into a vertex still on the call stack (edges to finished vertices are just paths re-joining), so it is a DAG; reverse postorder ' + post.slice().reverse().join(' ') + ' is a topological order in which every edge points forward. <b>False</b>.'), _chk: { V, edges } });
   } });
   B9.push({ id: 'B-9-bipartite', type: B9T[4], make(r) {
+    const want = r.bool(); // truth value chosen first; the graph is regenerated until it matches
+    return retry(r, () => {
     const V = r.int(6, 8);
-    const mkBip = r.bool();
+    const mkBip = want ? r.float() < 0.7 : r.float() < 0.2;
     let g;
     if (mkBip) { const side = range(0, V).map(() => r.int(0, 1)); const es = new Set(), edges = []; let guard = 0; while (edges.length < V && guard++ < 300) { const u = r.int(0, V - 1), v = r.int(0, V - 1); if (u === v || side[u] === side[v]) continue; const a = Math.min(u, v), b = Math.max(u, v); if (!es.has(a + '-' + b)) { es.add(a + '-' + b); edges.push([a, b]); } } edges.sort((x, y) => x[0] - y[0] || x[1] - y[1]); const adj = range(0, V).map(() => []); edges.forEach(([a, b]) => { adj[a].push(b); adj[b].push(a); }); g = { V, edges, adj }; }
     else g = randUGraph(r, V, r.int(V - 1, V + 1), false);
-    const col = new Array(V).fill(-1); let ok = true;
-    for (let s = 0; s < V; s++) if (col[s] < 0) { col[s] = 0; const q = [s]; while (q.length) { const v = q.shift(); for (const w of g.adj[v]) { if (col[w] < 0) { col[w] = 1 - col[v]; q.push(w); } else if (col[w] === col[v]) ok = false; } } }
+    if (g.edges.length < V - 2) return null;
+    const col = new Array(V).fill(-1), par = new Array(V).fill(-1); let ok = true, bad = null;
+    for (let s = 0; s < V; s++) if (col[s] < 0) { col[s] = 0; const q = [s]; while (q.length) { const v = q.shift(); for (const w of g.adj[v]) { if (col[w] < 0) { col[w] = 1 - col[v]; par[w] = v; q.push(w); } else if (col[w] === col[v]) { if (ok) bad = [v, w]; ok = false; } } } }
+    if (ok !== want) return null;
+    let oddTxt = '';
+    if (!ok) { // odd cycle: tree paths from both ends of the conflict edge up to their lowest common ancestor
+      const up = x => { const p = []; for (; x >= 0; x = par[x]) p.push(x); return p; };
+      const pv = up(bad[0]), pw = up(bad[1]); const lca = pv.find(x => pw.includes(x));
+      const cyc = pv.slice(0, pv.indexOf(lca) + 1).concat(pw.slice(0, pw.indexOf(lca)).reverse());
+      oddTxt = 'Edge ' + bad[0] + '–' + bad[1] + ' joins two vertices of the same colour (' + (col[bad[0]] ? 'B' : 'A') + '). Following BFS parents gives the cycle ' + cyc.concat([cyc[0]]).join('–') + ' of odd length ' + cyc.length + ', and no 2-colouring can colour an odd cycle.';
+    }
     return Q({ kind: 'tf', answer: ok,
       prompt: P('Undirected graph on 0…' + (V - 1) + ' with edges ' + uEdgeStr(g) + '. True or false: the graph is bipartite.'),
       hint: '2-colour with BFS from every uncoloured vertex; a conflict (edge between equal colours) means an odd cycle.',
-      solution: P(ok ? 'BFS 2-colouring succeeds: side A = {' + range(0, V).filter(v => col[v] === 0).join(', ') + '}, side B = {' + range(0, V).filter(v => col[v] === 1).join(', ') + '}. <b>True</b>.' : 'BFS 2-colouring hits an edge whose ends got the same colour: there is an odd cycle. <b>False</b>.'), _chk: { g } });
+      solution: P('BFS 2-colouring from each uncoloured vertex (smallest first), giving each newly reached vertex the opposite colour of its parent: ' + range(0, V).map(v => v + ':' + (col[v] ? 'B' : 'A')).join(', ') + '.') +
+        P(ok ? 'Every edge joins A to B, so side A = {' + range(0, V).filter(v => col[v] === 0).join(', ') + '}, side B = {' + range(0, V).filter(v => col[v] === 1).join(', ') + '}. <b>True</b>.' : oddTxt + ' <b>False</b>.'), _chk: { g } });
+    });
   } });
   B9.push({ id: 'B-9-components', type: B9T[4], make(r) {
     const V = r.int(8, 11), g = randUGraph(r, V, r.int(Math.floor(V / 2), V - 2), false);
@@ -2001,10 +2169,18 @@
       const [op, mat, lst] = r.pick(ops); const rep = r.pick(['adjacency matrix', 'adjacency list']);
       const correct = rep === 'adjacency matrix' ? mat : lst;
       const m = mcq(r, correct, ['Θ(1)', 'Θ(V)', 'Θ(E)', 'Θ(V + E)', 'Θ(V²)', 'Θ(deg u)', 'Θ(deg v)', 'Θ(V·E)'], null, 5);
+      const RWHY = {
+        'check whether u–v is an edge': ['read the single entry adj[u][v]', 'scan u’s list, which has deg u entries'],
+        'iterate over the neighbors of v': ['scan the whole row v, all V entries, even the zeros', 'walk v’s list: exactly deg v entries'],
+        'run DFS on the whole graph': ['each of the V vertices scans its full row of V entries', 'each vertex is visited once (V) and every list entry is examined once (2E for undirected)'],
+        'store the graph (space)': ['a V × V array regardless of E', 'V list headers plus one entry per edge end'],
+        'add an edge': ['set one or two entries', 'prepend to one or two lists'],
+        'iterate over all edges': ['every one of the V² entries must be checked', 'walk every list: V headers plus 2E entries'],
+      }[op];
       return Q({ kind: 'mc', choices: m.choices, answer: m.answer, prompt: P('Using an ' + rep + ', what is the cost to ' + op + '? (worst case, V vertices, E edges)'),
-        hint: 'A matrix row has V entries no matter how many neighbors; a list holds just the neighbors.', solution: P('Matrix: ' + mat + '; list: ' + lst + '. Answer: <b>' + correct + '</b>.') });
+        hint: 'A matrix row has V entries no matter how many neighbors; a list holds just the neighbors.', solution: P('Adjacency matrix: ' + RWHY[0] + ' → ' + mat + '. Adjacency list: ' + RWHY[1] + ' → ' + lst + '. For the ' + rep + ': <b>' + correct + '</b>.') });
     }
-    const V = r.pick([100, 1000, 5000]), E = r.pick([2 * V, 5 * V, Math.floor(V * V / 10)]);
+    const V = r.int(2, 60) * 100, E = r.pick([2 * V, 5 * V, Math.floor(V * V / 10)]);
     const rep = r.pick(['matrix', 'list']);
     const ans = rep === 'matrix' ? V * V : V + 2 * E;
     return Q({ kind: 'num', answer: ans,
@@ -2039,6 +2215,19 @@
     }
     return { dist, edgeTo, order };
   }
+  // step-by-step Dijkstra / A* log (same tie rule and relaxation as dijkstra()), one line per pop
+  function dijkTrace(V, edges, s, hfun, goal) {
+    const dist = new Array(V).fill(Infinity), done = new Array(V).fill(false), lines = []; dist[s] = 0; const h = hfun || (() => 0);
+    for (;;) {
+      let b = -1; for (let v = 0; v < V; v++) if (!done[v] && dist[v] < Infinity && (b < 0 || dist[v] + h(v) < dist[b] + h(b))) b = v;
+      if (b < 0) break; done[b] = true;
+      const rel = [];
+      if (!(goal !== undefined && b === goal)) for (const [u, w, c] of edges) if (u === b && !done[w]) { const nd = dist[b] + c; if (nd < dist[w]) { rel.push(w + ': ' + (dist[w] === Infinity ? '∞' : dist[w]) + ' → ' + nd); dist[w] = nd; } else rel.push(w + ': ' + nd + ' not better than ' + dist[w]); }
+      lines.push('pop ' + b + ' (distTo ' + dist[b] + (hfun ? ' + h ' + h(b) + ' = ' + (dist[b] + h(b)) : '') + ')' + (goal !== undefined && b === goal ? ': goal reached, stop' : rel.length ? '; relax ' + rel.join(', ') : '; no unvisited out-neighbors'));
+      if (goal !== undefined && b === goal) break;
+    }
+    return lines.join('<br>');
+  }
   B10.push({ id: 'B-10-dijkstra-order-dist', type: B10T[0], make(r) {
     return retry(r, () => {
       const V = r.int(6, 7), edges = randWDigraph(r, V, r.int(V + 3, V + 5), 1, 9);
@@ -2050,7 +2239,7 @@
       return Q({ kind: 'list', answer: d.order.concat(d.dist),
         prompt: P('Directed graph, edge weights in parentheses: ' + wEdgeStr(edges) + '. Run Dijkstra from 0 (ties in the PQ: smaller vertex number first). Give the order vertices are popped (visited), followed by the final distTo[0], …, distTo[' + (V - 1) + '] (' + 2 * V + ' numbers).'),
         hint: 'Pop the unvisited vertex with smallest distTo; relax its out-edges (distTo[v] + w < distTo[w] → update). A distTo can drop several times before it is popped.',
-        solution: P('Pop order: ' + d.order.join(' ') + '. distTo: ' + d.dist.map((x, v) => v + ':' + x).join(', ') + '. edgeTo: ' + d.edgeTo.map((x, v) => v + '←' + (x < 0 ? '–' : x)).join(', ') + '.'), _chk: { V, edges } });
+        solution: P(dijkTrace(V, edges, 0)) + P('Pop order: ' + d.order.join(' ') + '. distTo: ' + d.dist.map((x, v) => v + ':' + x).join(', ') + '. edgeTo: ' + d.edgeTo.map((x, v) => v + '←' + (x < 0 ? '–' : x)).join(', ') + '.'), _chk: { V, edges } });
     });
   } });
   B10.push({ id: 'B-10-dijkstra-kth-edgeto', type: B10T[0], make(r) {
@@ -2063,7 +2252,7 @@
       return Q({ kind: 'list', answer: [d.order[k - 1]].concat(path),
         prompt: P('Directed graph: ' + wEdgeStr(edges) + '. Dijkstra from 0, PQ ties → smaller vertex. Give (1) the ' + k + (k === 3 ? 'rd' : 'th') + ' vertex popped, then (2) the shortest path from 0 to ' + t + ' encoded by edgeTo, starting at 0.'),
         hint: 'Keep a table of distTo and edgeTo; edgeTo[w] changes whenever distTo[w] improves.',
-        solution: P('Pop order ' + d.order.join(' ') + ' (so #' + k + ' is ' + d.order[k - 1] + '). edgeTo: ' + d.edgeTo.map((x, v) => v + '←' + (x < 0 ? '–' : x)).join(', ') + ' → path ' + path.join(' → ') + ', length ' + d.dist[t] + '.'), _chk: { V, edges, k, t } });
+        solution: P(dijkTrace(V, edges, 0)) + P('Pop order ' + d.order.join(' ') + ' (so #' + k + ' is ' + d.order[k - 1] + '). edgeTo: ' + d.edgeTo.map((x, v) => v + '←' + (x < 0 ? '–' : x)).join(', ') + ' → path ' + path.join(' → ') + ', length ' + d.dist[t] + '.'), _chk: { V, edges, k, t } });
     });
   } });
   B10.push({ id: 'B-10-dijkstra-negative', type: B10T[0], make(r) {
@@ -2103,26 +2292,38 @@
       return Q({ kind: 'list', answer: a.order,
         prompt: P('Undirected weighted graph: ' + und + '. Run A* from 0 to goal ' + goal + ' with heuristic h = [' + h.join(', ') + '] (h[v] for v = 0, 1, …). Priority = distTo[v] + h[v]; ties → smaller vertex; a vertex is visited when popped; stop when the goal is popped. List the visited vertices in order (including the goal).'),
         hint: 'Same as Dijkstra, but compare distTo + h. Vertices whose distTo + h never becomes the minimum are never visited.',
-        solution: P('A* pops ' + a.order.join(' ') + ' (goal distance ' + a.dist[goal] + '). Plain Dijkstra would pop ' + dj.order.join(' ') + ' before reaching the goal. (This h is consistent: it is a scaled-down true distance.)'), _chk: { V, edges, goal, h } });
+        solution: P(dijkTrace(V, edges, 0, v => h[v], goal)) + P('A* pops ' + a.order.join(' ') + ' (goal distance ' + a.dist[goal] + '). Plain Dijkstra would pop ' + dj.order.join(' ') + ' before reaching the goal. (This h is consistent: it is a scaled-down true distance.)'), _chk: { V, edges, goal, h } });
     });
   } });
   B10.push({ id: 'B-10-astar-heuristic-props', type: B10T[1], make(r) {
+    // class chosen uniformly first among the three possible ones (with h(goal) = 0, consistent ⇒ admissible,
+    // so "Consistent, not admissible" can never be right; it stays as the classic trap choice)
+    const LAB = { ac: 'Admissible and consistent', a: 'Admissible, not consistent', c: 'Consistent, not admissible', n: 'Neither of the two' };
+    const want = r.pick(['ac', 'a', 'n']);
     return retry(r, () => {
       const V = r.int(5, 6), es = randWUGraph(r, V, r.int(V + 2, V + 3), true).map(([u, v, c]) => [u, v, c % 9 + 1]);
       const edges = es.concat(es.map(([u, v, c]) => [v, u, c]));
       const goal = V - 1; const td = trueDistTo(V, edges, goal); if (td.some(x => x === Infinity)) return null;
-      const h = td.map((d, v) => (v === goal ? 0 : Math.max(0, d + r.pick([-3, -2, -1, 0, 0, 1, 2]))));
+      const noise = want === 'ac' ? [-2, -1, 0, 0, 0] : want === 'a' ? [-4, -3, -2, -1, 0, 0] : [-2, -1, 0, 1, 2, 3];
+      const alpha = want === 'ac' ? r.pick([0.5, 0.75, 1]) : 1;
+      const h = td.map((d, v) => (v === goal ? 0 : Math.max(0, Math.floor(alpha * d) + r.pick(noise))));
       const adm = h.every((x, v) => x <= td[v]);
       const cons = edges.every(([u, v, c]) => h[u] <= c + h[v]) && h[goal] === 0;
-      const lab = adm && cons ? 'Admissible and consistent' : adm ? 'Admissible but not consistent' : cons ? 'Consistent but not admissible' : 'Neither admissible nor consistent';
-      const m = mcq(r, lab, ['Admissible and consistent', 'Admissible but not consistent', 'Consistent but not admissible', 'Neither admissible nor consistent'], null, 4);
-      const viol = edges.filter(([u, v, c]) => h[u] > c + h[v]).map(([u, v, c]) => 'h(' + u + ')=' + h[u] + ' > ' + c + ' + h(' + v + ')=' + (c + h[v]));
+      const key = adm && cons ? 'ac' : adm ? 'a' : cons ? 'c' : 'n';
+      if (key !== want) return null;
+      if (h.filter((x, v) => v !== goal && x === td[v]).length === V - 1 && r.float() < 0.8) return null; // avoid h = exact distances too often
+      const lab = LAB[key];
+      const m = mcq(r, lab, Object.values(LAB), null, 4);
+      const admRows = range(0, V).map(v => 'h(' + v + ') = ' + h[v] + (h[v] <= td[v] ? ' ≤ ' : ' &gt; ') + td[v] + (h[v] <= td[v] ? '' : ' ✗'));
+      const consRows = es.map(([u, v, c]) => { const f = (a, b) => 'h(' + a + ') = ' + h[a] + (h[a] <= c + h[b] ? ' ≤ ' : ' &gt; ') + c + ' + ' + h[b] + (h[a] <= c + h[b] ? '' : ' ✗'); return u + '–' + v + ' (' + c + '): ' + f(u, v) + '; ' + f(v, u); });
       return Q({ kind: 'mc', choices: m.choices, answer: m.answer,
         prompt: P('Undirected graph: ' + es.map(e => e[0] + '–' + e[1] + ' (' + e[2] + ')').join(', ') + '. Goal: ' + goal + '. Heuristic h = [' + h.join(', ') + '] for vertices 0…' + (V - 1) + '. Classify h.'),
         hint: 'Admissible: h(v) ≤ true distance to goal for every v. Consistent: h(u) ≤ w(u,v) + h(v) for every edge (both directions), h(goal) = 0.',
-        solution: P('True distances to ' + goal + ': [' + td.join(', ') + ']. ' + (adm ? 'No h exceeds them: admissible. ' : 'Some h exceeds the true distance: not admissible. ') + (cons ? 'Every edge satisfies h(u) ≤ w + h(v): consistent.' : 'Violations: ' + viol.slice(0, 3).join('; ') + '.') + ' → <b>' + lab + '</b>. (Consistent with h(goal)=0 always implies admissible.)'),
+        solution: P('Step 1, true distances to ' + goal + ' (Dijkstra from the goal): [' + td.join(', ') + ']. Admissibility, h(v) ≤ dist(v): ' + admRows.join(', ') + ' → ' + (adm ? 'admissible.' : 'NOT admissible.')) +
+          P('Step 2, consistency, h(u) ≤ w(u,v) + h(v) for every edge in both directions:<br>' + consRows.join('<br>') + '<br>→ ' + (cons ? 'consistent.' : 'NOT consistent.')) +
+          P('→ <b>' + lab + '</b>. (Consistent with h(goal) = 0 always implies admissible, so “consistent, not admissible” is impossible here.)'),
         _chk: { V, edges, goal, h } });
-    });
+    }, 3000);
   } });
   // MST helpers
   function randWUGraph(r, V, E, distinct) {
@@ -2153,7 +2354,8 @@
     return Q({ kind: 'list', answer: ws.concat([sum(ws)]),
       prompt: P('Undirected graph (distinct weights): ' + wEdgeStr(edges, '–') + '. Run Kruskal’s algorithm. Give the weights of the accepted edges in the order Kruskal accepts them, followed by the total MST weight.'),
       hint: 'Sort edges by weight; accept an edge unless its endpoints are already connected (it would close a cycle).',
-      solution: P('Sorted weights: ' + edges.map(e => e[2]).sort((a, b) => a - b).join(', ') + '. Accepted: ' + ws.join(', ') + ' (rejected before finishing: ' + (rej.length ? rej.join(', ') : 'none') + '). Total <b>' + sum(ws) + '</b>.'), _chk: { V, edges } });
+      solution: P('Edges in weight order, with the components before each decision:') + P((() => { const comp = range(0, V); const rows = []; for (const e of edges.slice().sort((a, b) => a[2] - b[2])) { if (rows.filter(x => x.includes('accept')).length === V - 1) break; const a = comp[e[0]], b = comp[e[1]]; if (a === b) rows.push(e[0] + '–' + e[1] + ' (' + e[2] + '): ' + e[0] + ' and ' + e[1] + ' already connected → reject (would close a cycle)'); else { rows.push(e[0] + '–' + e[1] + ' (' + e[2] + '): different components → accept'); for (let i = 0; i < V; i++) if (comp[i] === a) comp[i] = b; } } return rows.join('<br>'); })()) +
+        P('Accepted: ' + ws.join(', ') + ' (rejected before finishing: ' + (rej.length ? rej.join(', ') : 'none') + '). Total = ' + ws.join(' + ') + ' = <b>' + sum(ws) + '</b>.'), _chk: { V, edges } });
   } });
   B10.push({ id: 'B-10-prim-order', type: B10T[2], make(r) {
     return retry(r, () => {
@@ -2163,7 +2365,8 @@
       return Q({ kind: 'list', answer: pa,
         prompt: P('Undirected graph (distinct weights): ' + wEdgeStr(edges, '–') + '. Run Prim’s algorithm from vertex ' + s + '. Give the weights of the MST edges in the order Prim adds them.'),
         hint: 'Prim always adds the lightest edge leaving the current tree, so the order follows how the tree grows, not sorted order.',
-        solution: P('Prim from ' + s + ' adds: ' + pa.join(', ') + ' (total ' + sum(pa) + '). Kruskal would accept the same edges in sorted order ' + ka.join(', ') + '.'), _chk: { V, edges, s } });
+        solution: P((() => { const inT = new Set([s]); const rows = []; while (inT.size < V) { const cross = edges.filter(e => inT.has(e[0]) !== inT.has(e[1])).sort((a, b) => a[2] - b[2]); const e = cross[0]; rows.push('tree {' + Array.from(inT).sort((a, b) => a - b).join(', ') + '}: crossing edges ' + cross.map(x => x[2]).join(', ') + ' → add ' + e[0] + '–' + e[1] + ' (' + e[2] + ')'); inT.add(e[0]); inT.add(e[1]); } return rows.join('<br>'); })()) +
+          P('Prim from ' + s + ' adds: ' + pa.join(', ') + ' (total ' + sum(pa) + '). Kruskal would accept the same edges in sorted order ' + ka.join(', ') + '.'), _chk: { V, edges, s } });
     });
   } });
   B10.push({ id: 'B-10-kruskal-wqu', type: B10T[2], make(r) {
@@ -2178,26 +2381,57 @@
     });
   } });
   for (const VV of [0, 1]) B10.push({ id: 'B-10-mst-tf' + ['-edge', '-unique'][VV], type: B10T[3], make(r) {
+    const wantTruth = r.bool(); // truth value chosen first, the instance is regenerated until it matches
     return retry(r, () => {
       const V = r.int(5, 6), edges = randWUGraph(r, V, r.int(V + 1, V + 3), false);
-      const e = r.pick(edges); const [u, v, w] = e;
-      const connectedVia = (pred) => { const par = range(0, V); const f = x => { while (par[x] !== x) x = par[x]; return x; }; for (const x of edges) if (x !== e && pred(x[2])) par[f(x[0])] = f(x[1]); return f(u) === f(v); };
-      const inSome = !connectedVia(c => c < w), inAll = !connectedVia(c => c <= w);
-      const kind = VV === 0 ? r.pick(['every', 'some', 'no']) : 'unique';
-      let truth, stmt;
-      if (kind === 'every') { truth = inAll; stmt = 'edge ' + u + '–' + v + ' (' + w + ') is in <b>every</b> MST'; }
-      else if (kind === 'some') { truth = inSome; stmt = 'edge ' + u + '–' + v + ' (' + w + ') is in <b>at least one</b> MST'; }
-      else if (kind === 'no') { truth = !inSome; stmt = 'edge ' + u + '–' + v + ' (' + w + ') is in <b>no</b> MST'; }
-      else { // MST unique iff every edge in some MST is in all MSTs
-        const per = edges.map(x => { const cv = (pred) => { const par = range(0, V); const f = y => { while (par[y] !== y) y = par[y]; return y; }; for (const y of edges) if (y !== x && pred(y[2])) par[f(y[0])] = f(y[1]); return f(x[0]) === f(x[1]); }; return { some: !cv(c => c < x[2]), all: !cv(c => c <= x[2]) }; });
-        truth = per.every(p => !p.some || p.all); stmt = 'the graph has a <b>unique</b> MST';
+      const eS = e => e[0] + '–' + e[1] + ' (' + e[2] + ')';
+      // path from a to b using only edges satisfying pred (excluding edge `skip`), as a list of edges, or null
+      const pathVia = (a, b, pred, skip) => {
+        const prev = new Map([[a, null]]), q = [a];
+        while (q.length) { const x = q.shift(); if (x === b) break; for (const y of edges) { if (y === skip || !pred(y[2])) continue; const o = y[0] === x ? y[1] : y[1] === x ? y[0] : -1; if (o >= 0 && !prev.has(o)) { prev.set(o, [x, y]); q.push(o); } } }
+        if (!prev.has(b)) return null; const out = []; for (let x = b; prev.get(x); x = prev.get(x)[0]) out.unshift(prev.get(x)[1]); return out;
+      };
+      const compOf = (a, pred, skip) => { const seen = new Set([a]), st = [a]; while (st.length) { const x = st.pop(); for (const y of edges) { if (y === skip || !pred(y[2])) continue; const o = y[0] === x ? y[1] : y[1] === x ? y[0] : -1; if (o >= 0 && !seen.has(o)) { seen.add(o); st.push(o); } } } return Array.from(seen).sort((p, q) => p - q); };
+      const pS = (a, es) => { let x = a; const vs = [a]; for (const y of es) { x = y[0] === x ? y[1] : y[0]; vs.push(x); } return vs.join('–') + ' (weights ' + es.map(y => y[2]).join(', ') + ')'; };
+      if (VV === 0) {
+        const e = r.pick(edges); const [u, v, w] = e;
+        const lighter = pathVia(u, v, c => c < w, e), leq = pathVia(u, v, c => c <= w, e);
+        const inSome = !lighter, inAll = !leq;
+        const kind = r.pick(['every', 'some', 'no']);
+        let truth, stmt;
+        if (kind === 'every') { truth = inAll; stmt = 'edge ' + eS(e) + ' is in <b>every</b> MST'; }
+        else if (kind === 'some') { truth = inSome; stmt = 'edge ' + eS(e) + ' is in <b>at least one</b> MST'; }
+        else { truth = !inSome; stmt = 'edge ' + eS(e) + ' is in <b>no</b> MST'; }
+        if (truth !== wantTruth) return null;
+        let why;
+        if (lighter) why = 'Using only edges lighter than ' + w + ', ' + u + ' and ' + v + ' are already connected: ' + pS(u, lighter) + '. Together with ' + eS(e) + ' this path forms a cycle on which ' + u + '–' + v + ' is the strictly heaviest edge, so by the cycle property it is in <b>no</b> MST (Kruskal would reject it: its endpoints are connected before weight ' + w + ' is reached).';
+        else {
+          const S = compOf(u, c => c < w, e);
+          why = 'Using only edges lighter than ' + w + ', ' + u + ' and ' + v + ' are NOT connected: the vertices reachable from ' + u + ' that way are S = {' + S.join(', ') + '}, and ' + v + ' ∉ S. Every edge crossing the cut (S, rest) weighs ≥ ' + w + ', so ' + u + '–' + v + ' is a lightest crossing edge and some MST contains it (cut property).';
+          if (leq) why += ' But it is not forced: the other edges of weight ≤ ' + w + ' also connect ' + u + ' to ' + v + ' via ' + pS(u, leq) + ', which must use another edge of weight exactly ' + w + '. Swapping ' + u + '–' + v + ' for that equal-weight edge on the cycle gives a second MST without it, so it is in some but <b>not every</b> MST.';
+          else { const S2 = compOf(u, c => c <= w, e); why += ' Moreover, even all the other edges of weight ≤ ' + w + ' leave ' + v + ' outside S′ = {' + S2.join(', ') + '}: ' + u + '–' + v + ' is the unique lightest edge crossing the cut (S′, rest), so <b>every</b> MST must contain it.'; }
+        }
+        return Q({ kind: 'tf', answer: truth,
+          prompt: P('Undirected graph (weights may repeat): ' + wEdgeStr(edges, '–') + '. True or false: ' + stmt + '.'),
+          hint: 'Edge e = (u, v, w) is in some MST iff u and v are NOT connected using only edges lighter than w; in every MST iff they are not connected using the other edges of weight ≤ w (cut/cycle properties).',
+          solution: P(why) + P('So the statement is <b>' + (truth ? 'True' : 'False') + '</b>.'),
+          _chk: { V, edges, e, kind } });
       }
+      // uniqueness: build one MST T with Kruskal; T is the unique MST iff every non-tree edge is STRICTLY heavier than every edge on the tree path between its endpoints
+      const T = kruskal(V, edges), inT = new Set(T);
+      const nonTree = edges.filter(x => !inT.has(x));
+      const treePath = (a, b) => { const prev = new Map([[a, null]]), q = [a]; while (q.length) { const x = q.shift(); for (const y of T) { const o = y[0] === x ? y[1] : y[1] === x ? y[0] : -1; if (o >= 0 && !prev.has(o)) { prev.set(o, [x, y]); q.push(o); } } } const out = []; for (let x = b; prev.get(x); x = prev.get(x)[0]) out.unshift(prev.get(x)[1]); return out; };
+      let witness = null; const lines = [];
+      for (const f of nonTree) { const tp = treePath(f[0], f[1]); const mx = Math.max.apply(null, tp.map(y => y[2])); lines.push(eS(f) + ': tree path ' + pS(f[0], tp) + ', max ' + mx + (mx < f[2] ? ' &lt; ' + f[2] + ' ✓' : ' = ' + f[2] + ' → tie')); if (mx === f[2] && !witness) witness = [f, tp.find(y => y[2] === f[2])]; }
+      const truth = !witness;
+      if (truth !== wantTruth) return null;
       return Q({ kind: 'tf', answer: truth,
-        prompt: P('Undirected graph (weights may repeat): ' + wEdgeStr(edges, '–') + '. True or false: ' + stmt + '.'),
-        hint: 'Edge e = (u, v, w) is in some MST iff u and v are NOT connected using only edges lighter than w; in every MST iff they are not connected using other edges of weight ≤ w (cut/cycle properties).',
-        solution: P(kind === 'unique' ? 'The MST is unique iff no tie lets one MST edge be swapped for another edge of equal weight on a cycle. Checking each edge with the cut/cycle test gives: <b>' + (truth ? 'True' : 'False') + '</b>.' :
-          'Using only edges lighter than ' + w + ', ' + u + ' and ' + v + ' are ' + (inSome ? 'not connected' : 'connected (so ' + u + '–' + v + ' is the heaviest edge on a cycle of lighter edges → in no MST)') + '; using other edges of weight ≤ ' + w + ' they are ' + (inAll ? 'not connected (so every spanning tree must cross that cut with this edge → in every MST)' : 'connected (an equal-weight swap exists or a lighter route exists)') + '. Statement: <b>' + (truth ? 'True' : 'False') + '</b>.'),
-        _chk: { V, edges, e, kind } });
+        prompt: P('Undirected graph (weights may repeat): ' + wEdgeStr(edges, '–') + '. True or false: the graph has a <b>unique</b> MST.'),
+        hint: 'Find one MST (e.g. Kruskal). It is the only one iff every non-tree edge is strictly heavier than every tree edge on the cycle it would close.',
+        solution: P('Kruskal gives one MST T = {' + T.map(eS).join(', ') + '}, total ' + sum(T.map(x => x[2])) + '. Another MST exists iff some non-tree edge f ties with the heaviest tree edge on the cycle f closes (then swapping them keeps the weight).') +
+          P(lines.join('<br>')) +
+          P(truth ? 'Every non-tree edge is strictly heavier than its whole tree path, so no swap keeps the weight: the MST is unique. <b>True</b>.' : 'Swap: remove ' + eS(witness[1]) + ' from T and add ' + eS(witness[0]) + ' → another spanning tree of the same total weight ' + sum(T.map(x => x[2])) + '. Not unique: <b>False</b>.'),
+        _chk: { V, edges, e: edges[0], kind: 'unique' } });
     });
   } });
   for (const VV of [0, 1]) B10.push({ id: 'B-10-dag-sp' + ['-shortest', '-longest'][VV], type: B10T[4], make(r) {
@@ -2217,7 +2451,9 @@
       return Q({ kind: 'list', answer: dist,
         prompt: P('DAG with weights (some negative): ' + wEdgeStr(edges) + '. Using the topological-order algorithm (relax each vertex’s out-edges in topological order), give the ' + (longest ? '<b>longest</b>' : 'shortest') + ' path distance from 0 to each vertex 0, 1, …, ' + (V - 1) + '.'),
         hint: longest ? 'Longest path in a DAG: negate every weight, find shortest paths, negate back (or relax with > instead of <).' : 'Process vertices in topological order; when you reach v, all edges into v have been relaxed, so negative edges are fine.',
-        solution: P('Topological order (reverse DFS postorder): ' + topo.join(' ') + '. Relaxing in that order gives ' + dist.map((x, v) => v + ':' + x).join(', ') + '.' + (longest ? ' (Longest paths are easy in DAGs only; in general graphs the problem is hard.)' : '')), _chk: { V, edges, longest } });
+        solution: P('Topological order (reverse DFS postorder): ' + topo.join(' ') + '. Relax each vertex’s out-edges in that order (' + (longest ? 'keep the LARGER value' : 'keep the smaller value') + '):') +
+          P((() => { const d = new Array(V).fill(longest ? -Infinity : Infinity); d[0] = 0; const rows = []; for (const v of topo) { const out = edges.filter(e => e[0] === v); if (!out.length || Math.abs(d[v]) === Infinity) continue; rows.push(v + ' (dist ' + d[v] + '): ' + out.map(e => { const nd = d[v] + e[2]; const better = longest ? nd > d[e[1]] : nd < d[e[1]]; const old = Math.abs(d[e[1]]) === Infinity ? (longest ? '−∞' : '∞') : d[e[1]]; if (better) d[e[1]] = nd; return '→' + e[1] + ': ' + d[v] + ' + (' + e[2] + ') = ' + nd + (better ? ' replaces ' + old : ' (keep ' + old + ')'); }).join(', ')); } return rows.join('<br>'); })()) +
+          P('Distances: ' + dist.map((x, v) => v + ':' + x).join(', ') + '.' + (longest ? ' (Longest paths are easy in DAGs only; in general graphs the problem is hard.)' : '')), _chk: { V, edges, longest } });
     });
   } });
   G['B-10'] = B10;
@@ -2274,41 +2510,53 @@
       _chk: { M0, alpha, N } });
   } });
   B11.push({ id: 'B-11-chaining-runtime', type: B11T[1], make(r) {
+    const a = r.pick([0.75, 1, 1.5, 2]), M0 = r.pick([4, 10, 16, 100]), kk = r.pick([3, 4, 8]);
     const cases = [
-      ['get, good hashCode, table resizes to keep N/M ≤ 1.5', 'Θ(1)', 'chains have constant average length'],
-      ['get, every key has hashCode 0, table resizes', 'Θ(N)', 'all N items sit in one chain; resizing cannot split identical hash codes'],
-      ['put, good hashCode, table NEVER resizes (M fixed at 10)', 'Θ(N)', 'average chain length N/10 grows linearly (and put must scan for duplicates)'],
-      ['one resize of a table holding N items', 'Θ(N)', 'every item is rehashed into the new array'],
-      ['N puts into an initially empty resizing table with a good hashCode (total)', 'Θ(N)', 'doubling makes resizes geometric: amortized Θ(1) per put'],
-      ['N puts where all keys collide (total)', 'Θ(N²)', 'the i-th put scans a chain of length i − 1 to check for duplicates'],
-      ['get, keys hash to only 4 distinct values, resizing table', 'Θ(N)', 'at most 4 non-empty chains, so some chain holds ≥ N/4 items'],
+      ['get, good hashCode, table doubles M whenever N/M exceeds ' + a, 'Θ(1)', 'the load factor stays ≤ ' + a + ', so with a good hash the average chain has at most about ' + a + ' items to scan'],
+      ['put of a new key, good hashCode, table doubles M whenever N/M exceeds ' + a + ' (amortized)', 'Θ(1)', 'the chain scanned is short (≤ ' + a + ' on average), and resizes are geometric (each doubling copies N items, but only after ~N/2 new puts), so Θ(1) amortized'],
+      ['get, every key has hashCode 0, table resizes', 'Θ(N)', 'all N items sit in the same chain; resizing cannot split identical hash codes, so a get may scan all N'],
+      ['put of a new key, good hashCode, table NEVER resizes (M fixed at ' + M0 + ')', 'Θ(N)', 'the average chain length is N/' + M0 + ', which grows linearly with N, and put must scan its chain for a duplicate'],
+      ['one resize of a table holding N items', 'Θ(N)', 'every one of the N items is rehashed into the new array'],
+      ['N puts into an initially empty resizing table with a good hashCode (total)', 'Θ(N)', 'each put is Θ(1) amortized (short chains, geometric doubling), so N puts cost Θ(N) in total'],
+      ['get, keys hash to only ' + kk + ' distinct values, resizing table', 'Θ(N)', 'at most ' + kk + ' non-empty chains, so some chain holds ≥ N/' + kk + ' items'],
+      ['N puts of distinct keys where all keys have the same hashCode (total)', 'Θ(N²)', 'the i-th put scans a chain of length i − 1 to check for a duplicate: 0 + 1 + … + (N−1) = N(N−1)/2'],
+      ['N puts of distinct keys into a table whose M stays fixed at ' + M0 + ', good hashCode (total)', 'Θ(N²)', 'the i-th put scans a chain of average length i/' + M0 + ': Σ i/' + M0 + ' ≈ N²/(2·' + M0 + ')'],
+      ['get, all keys collide, but each bucket is a balanced search tree (like Java 8 HashMap with Comparable keys)', 'Θ(log N)', 'the single bucket holds all N keys in a balanced BST, searched in Θ(log N)'],
+      ['how many resizes happen during N puts into a table that starts with M = ' + M0 + ' and doubles when N/M exceeds ' + a, 'Θ(log N)', 'M doubles each time, so after k resizes M = ' + M0 + '·2^k ≈ N/' + a + ' → k ≈ log₂(N/(' + a + '·' + M0 + ')) = Θ(log N)'],
+      ['N puts of distinct keys, all colliding, into buckets that are balanced search trees (total)', 'Θ(N log N)', 'the i-th put is an insertion into a balanced BST of i − 1 keys: Σ log i = Θ(N log N)'],
     ];
-    const [d, th, why] = r.pick(cases);
+    const want = r.pick(Array.from(new Set(cases.map(c => c[1])))); // answer class first, uniformly
+    const [d, th, why] = r.pick(cases.filter(c => c[1] === want));
     const m = mcq(r, th, ['Θ(1)', 'Θ(log N)', 'Θ(N)', 'Θ(N log N)', 'Θ(N²)'], null, 4);
-    return Q({ kind: 'mc', choices: m.choices, answer: m.answer, prompt: P('Separate-chaining hash table with N items. Runtime (average case where relevant) of: ' + d + '?'),
+    return Q({ kind: 'mc', choices: m.choices, answer: m.answer, prompt: P('Separate-chaining hash table holding N items (N large). Runtime/count (average case where relevant) of: ' + d + '?'),
       hint: 'Cost = length of the chain you scan; that is N/M only if the hash spreads keys evenly.', solution: P(why + ' → <b>' + th + '</b>.') });
   } });
   B11.push({ id: 'B-11-bad-hash', type: B11T[2], make(r) {
+    const wantA = r.int(2, 6), wantB = r.int(1, 6); // target answers chosen first (relaxed only if an instance is hard to hit)
+    let tries = 0;
     return retry(r, () => {
-      const pts = []; const seen = new Set(); while (pts.length < 10) { const p = [r.int(0, 5), r.int(0, 5)]; if (!seen.has(p.join())) { seen.add(p.join()); pts.push(p); } }
-      const M = r.pick([8, 10, 16]);
+      const strict = ++tries < 3000;
+      const nP = r.int(8, 12), C = r.int(4, 7);
+      const pts = []; const seen = new Set(); while (pts.length < nP) { const p = [r.int(0, C), r.int(0, C)]; if (!seen.has(p.join())) { seen.add(p.join()); pts.push(p); } }
+      const M = r.pick([5, 7, 8, 10, 11, 16]);
       const fns = [['x + y', p => p[0] + p[1]], ['31 * x + y', p => 31 * p[0] + p[1]], ['x', p => p[0]], ['x * y', p => p[0] * p[1]], ['x - y', p => p[0] - p[1]]];
       const [A, B] = r.sample(fns, 2);
       const mx = f => { const c = {}; pts.forEach(p => { const b = floorMod(f(p), M); c[b] = (c[b] || 0) + 1; }); return Math.max.apply(null, Object.values(c)); };
       const a = mx(A[1]), b = mx(B[1]); if (a === b) return null;
+      if (strict && (a !== wantA || (b !== wantB && r.float() < 0.9))) return null;
       return Q({ kind: 'list', answer: [a, b],
-        prompt: P('Ten Pt objects: ' + pts.map(p => '(' + p.join(',') + ')').join(' ') + ' go into a table with M = ' + M + ' buckets, bucket = floorMod(hashCode, M). Give the size of the largest bucket if hashCode() returns (1) <code>' + A[0] + '</code>, (2) <code>' + B[0] + '</code>.'),
+        prompt: P(['', '', '', '', '', '', '', '', 'Eight', 'Nine', 'Ten', 'Eleven', 'Twelve'][nP] + ' Pt objects: ' + pts.map(p => '(' + p.join(',') + ')').join(' ') + ' go into a table with M = ' + M + ' buckets, bucket = floorMod(hashCode, M). Give the size of the largest bucket if hashCode() returns (1) <code>' + A[0] + '</code>, (2) <code>' + B[0] + '</code>.'),
         hint: 'Compute each hash, reduce mod M, tally. Both are VALID if equals compares x and y; they differ in how well they spread.',
-        solution: P('(1) ' + A[0] + ': buckets ' + pts.map(p => floorMod(A[1](p), M)).join(' ') + ' → largest ' + a + '. (2) ' + B[0] + ': buckets ' + pts.map(p => floorMod(B[1](p), M)).join(' ') + ' → largest ' + b + '. Symmetric formulas like x + y or x·y collide on swapped coordinates.'),
+        solution: P('(1) ' + A[0] + ': hashes ' + pts.map(p => A[1](p)).join(', ') + ' → buckets (mod ' + M + ') ' + pts.map(p => floorMod(A[1](p), M)).join(' ') + ' → largest bucket ' + a + '.') + P('(2) ' + B[0] + ': hashes ' + pts.map(p => B[1](p)).join(', ') + ' → buckets ' + pts.map(p => floorMod(B[1](p), M)).join(' ') + ' → largest bucket ' + b + '.') + P('Symmetric formulas like x + y or x·y collide on swapped coordinates; x alone ignores y entirely.'),
         _chk: { pts, M, A: A[0], B: B[0] } });
-    });
+    }, 5000);
   } });
   B11.push({ id: 'B-11-hash-valid-good', type: B11T[2], make(r) {
     const opts = [
-      ['return 31 * x + y;', true, 'valid and spreads well'], ['return 0;', true, 'valid (equal objects get equal codes) but terrible: one bucket'],
+      ['return 31 * x + y;', true, 'uses only x and y, which equals compares, and spreads keys well'], ['return 0;', true, 'valid (equal objects get equal codes) but terrible: one bucket'],
       ['return x;', true, 'valid: depends only on fields equals uses'], ['return x + y + z;', false, 'uses z, which equals ignores: equal objects may hash differently'],
       ['return (int) (Math.random() * 100);', false, 'not deterministic'], ['return System.identityHashCode(this);', false, 'equal but distinct objects get different codes'],
-      ['return Objects.hash(x, y);', true, 'valid and good'], ['return x * y;', true, 'valid (but (2,3) and (3,2) collide)'], ['return y - x;', true, 'valid'],
+      ['return Objects.hash(x, y);', true, 'hashes exactly the fields equals compares'], ['return x * y;', true, 'valid (but (2,3) and (3,2) collide)'], ['return y - x;', true, 'uses only x and y, which equals compares (pairs with equal y − x collide, but that is allowed)'],
       ['return name.length() + x;', false, 'uses name, which equals ignores'],
     ];
     const pick = r.sample(opts, 5);
@@ -2360,12 +2608,18 @@
     ['append to the end and read the i-th item in Θ(1)', 'alist', 'An array list gives Θ(1) get(i) and amortized Θ(1) addLast.'],
     ['find the k largest of a stream of N numbers using only O(k) memory', 'heap', 'Keep a min-heap of size k: Θ(N log k) time, O(k) memory.'],
     ['find all stored keys between lo and hi (a range query) efficiently', 'tree', 'A BST can prune subtrees outside [lo, hi]; hashing scatters nearby keys.'],
+    ['count how many times each item occurs (item → count), with Θ(1) average updates; order never matters', 'hash', 'A HashMap from item to count gives Θ(1) average lookups and updates; nothing needs sorting.'],
+    ['walk the items in order with an iterator and insert or delete right at the iterator’s position in Θ(1); no index access is ever needed', 'llist', 'A (doubly) linked list splices a node in or out at a known position in Θ(1); an array list would shift Θ(N) items.'],
+    ['autocomplete: list every stored string that begins with what the user has typed so far', 'trie', 'Walk the typed prefix in a trie and collect its subtree; cost depends on the prefix and the results, not on N.'],
+    ['process connections between items as they arrive and report how many connected groups exist', 'wqu', 'Each connection is a union; the group count drops by one whenever a union merges two different roots.'],
+    ['use the items as a queue AND a stack (push/pop at the front, append at the back) in Θ(1) amortized', 'deque', 'A circular-array deque supports Θ(1) amortized adds and removes at both ends.'],
   ];
   const NOUNS = ['usernames', 'flight numbers', 'student IDs', 'words of a dictionary', 'sensor readings', 'URLs', 'order numbers', 'song titles', 'license plates', 'zip codes'];
   for (const half of [0, 1]) {
     B11.push({ id: 'B-11-choose-ds-' + half, type: B11T[4], make(r) {
-      const pool = DS_REQS.filter((_, i) => i % 2 === half || r.float() < 0.3);
-      const [req, k, why] = r.pick(pool);
+      const pool = DS_REQS.filter((_, i) => i % 2 === half);
+      const kw = r.pick(Array.from(new Set(pool.map(x => x[1])))); // answer (structure) first, uniformly
+      const [req, k, why] = r.pick(pool.filter(x => x[1] === kw));
       const noun = r.pick(NOUNS), N = r.pick(['10⁵', '10⁶', '10⁷']);
       const words = req.includes('string') || req.includes('prefix');
       const m = mcq(r, DS_CHOICES[k], Object.values(DS_CHOICES), null, 5);
@@ -2394,28 +2648,36 @@
       const words = randWords(r, r.int(6, 8), alpha, 1, 4);
       const T = trieBuild(words);
       const prefixes = new Set(); words.forEach(w => { for (let i = 1; i < w.length; i++) prefixes.add(w.slice(0, i)); });
-      const qs = []; const nonKeyPref = Array.from(prefixes).filter(p => !words.includes(p));
+      const nonKeyPref = Array.from(prefixes).filter(p => !words.includes(p));
       if (!nonKeyPref.length) return null;
-      qs.push(r.pick(nonKeyPref)); qs.push(r.pick(words)); qs.push(r.pick(words));
-      let tries = 0; while (qs.length < 5 && tries++ < 50) { const q = range(0, r.int(1, 4)).map(() => r.pick(alpha)).join(''); if (!qs.includes(q)) qs.push(q); }
-      const uq = Array.from(new Set(qs)); if (uq.length < 4) return null;
+      // number of true options chosen uniformly first (1…4 of 5); false ones mix “node exists but unmarked”, extensions and fall-offs
+      const nTrue = r.int(1, 4); if (words.length < nTrue) return null;
+      const qs = r.sample(words, nTrue);
+      const falsePool = r.shuffle(nonKeyPref).slice(0, 2).concat(words.map(w => w + r.pick(alpha)), range(0, 6).map(() => range(0, r.int(1, 4)).map(() => r.pick(alpha)).join('')))
+        .filter(x => !words.includes(x));
+      for (const f of r.shuffle(falsePool.slice(0, 2)).concat(r.shuffle(falsePool.slice(2)))) { if (qs.length >= 5) break; if (!qs.includes(f)) qs.push(f); }
+      if (qs.length < 5 || !qs.some(q => nonKeyPref.includes(q))) return null;
+      const uq = r.shuffle(qs);
       const truth = uq.map(q => words.includes(q));
       if (truth.every(x => x) || truth.every(x => !x)) return null;
       const m = multi(uq.map((q, i) => ({ t: 'contains("' + q + '")', ok: truth[i] })));
       return Q({ kind: 'multi', choices: m.choices, answer: m.answer,
         prompt: P('Insert ' + words.map(w => '"' + w + '"').join(', ') + ' into an empty trie. Which calls return true? (Remember: reaching a node is not enough, it must be marked as the end of a key.)'),
         hint: 'contains walks down character by character and returns the marked bit of the last node (false if a link is missing).',
-        solution: P('The trie has ' + T.nodes + ' nodes including the root. ' + uq.map((q, i) => '"' + q + '": ' + (truth[i] ? 'true (inserted key)' : (prefixes.has(q) ? 'false (a node exists but is not marked)' : 'false (path falls off the trie)'))).join('; ') + '.'), _chk: { words, qs: uq } });
+        solution: P('The trie has ' + T.nodes + ' nodes including the root; marked (end-of-key) nodes: ' + words.map(w => '"' + w + '"').join(', ') + '.') +
+          P(uq.map((q, i) => { let x = T.root, d = 0; for (; d < q.length && x.ch[q[d]]; d++) x = x.ch[q[d]];
+            return '"' + q + '": ' + (d < q.length ? 'follows "' + q.slice(0, d) + '" then no link for \'' + q[d] + '\' → false' : 'reaches the node for "' + q + '", which is ' + (x.end ? 'marked → true' : 'not marked → false')); }).join('<br>')), _chk: { words, qs: uq } });
     });
   } });
   B12.push({ id: 'B-12-trie-node-count', type: B12T[0], make(r) {
     const alpha = r.pick([['a', 'b', 'c', 'd'], ['s', 'a', 'p', 'e'], ['t', 'i', 'n', 'o']]);
-    const words = randWords(r, r.int(6, 9), alpha, 1, 4);
+    const words = randWords(r, r.int(5, 11), alpha, 1, 4);
     const T = trieBuild(words); const chars = sum(words.map(w => w.length));
+    const seenP = new Set(); const perWord = words.map(w => { let n = 0; for (let i = 1; i <= w.length; i++) if (!seenP.has(w.slice(0, i))) { seenP.add(w.slice(0, i)); n++; } return '"' + w + '" +' + n; });
     return Q({ kind: 'num', answer: T.nodes,
       prompt: P('Insert ' + words.map(w => '"' + w + '"').join(', ') + ' into an empty trie (one node per character, plus the root). How many nodes does the trie have, counting the root?'),
       hint: 'Each insert creates one node per character that isn’t already on an existing path; shared prefixes are free.',
-      solution: P('Total characters: ' + chars + '; shared prefixes save ' + (chars + 1 - T.nodes) + ' nodes. Node count = <b>' + T.nodes + '</b>.'), _chk: { words } });
+      solution: P('Insert in order and count the NEW nodes each word creates (a node per character not already on an existing path): root 1, ' + perWord.join(', ') + '.') + P('Total characters: ' + chars + '; shared prefixes save ' + (chars + 1 - T.nodes) + ' nodes. Node count = 1 + ' + (T.nodes - 1) + ' = <b>' + T.nodes + '</b>.'), _chk: { words } });
   } });
   B12.push({ id: 'B-12-keys-with-prefix', type: B12T[1], make(r) {
     return retry(r, () => {
@@ -2440,20 +2702,27 @@
       return Q({ kind: 'text', answer: [best],
         prompt: P('A trie holds ' + words.map(w => '"' + w + '"').join(', ') + '. What is longestPrefixOf("' + q + '") (the longest key that is a prefix of the query)?'),
         hint: 'Walk down following the query; remember the last MARKED node you pass; stop when a link is missing or the query ends.',
-        solution: P('Prefixes of "' + q + '" that are keys: ' + range(1, q.length + 1).map(i => q.slice(0, i)).filter(s => words.includes(s)).join(', ') + '. Longest: <b>' + best + '</b>.'), _chk: { words, q } });
+        solution: P('Walk down the trie along "' + q + '", remembering the last marked node: ' + (() => { const pre = new Set(); words.forEach(w => { for (let i = 1; i <= w.length; i++) pre.add(w.slice(0, i)); }); const st = []; for (let i = 1; i <= q.length; i++) { const p = q.slice(0, i); if (!pre.has(p)) { st.push('no link for \'' + q[i - 1] + '\' after "' + q.slice(0, i - 1) + '" → stop'); break; } st.push('"' + p + '" ' + (words.includes(p) ? 'marked (best so far)' : 'not marked')); } return st.join('; '); })() + '.') + P('Longest key that is a prefix: <b>' + best + '</b>.'), _chk: { words, q } });
     });
   } });
   for (const VV of [0, 1]) B12.push({ id: 'B-12-runtime' + ['-a', '-b'][VV], type: B12T[2], make(r) {
     const L = r.int(5, 30), N = r.pick(['10⁴', '10⁶', '10⁹']);
-    const cases = [
-      ['contains on a trie (array children)', 'Θ(L)', 'one step per character, independent of N'],
-      ['contains on a balanced BST of strings (count character comparisons, worst case)', 'Θ(L log N)', 'log N string comparisons, each up to L characters'],
-      ['keysWithPrefix of a length-L prefix on a trie, when the prefix matches exactly one key of length L', 'Θ(L)', 'walk L characters, then a subtree that is a single path'],
-      ['contains on a hash table of strings (average, including computing the hash)', 'Θ(L)', 'computing String.hashCode reads all L characters; the bucket is short on average'],
-      ['inserting a key of length L into a trie', 'Θ(L)', 'walk/create one node per character'],
+    const cases = VV === 0 ? [
+      ['contains on a trie (array children)', 'Θ(L)', 'one step down per character of the query (' + L + ' steps), independent of N'],
+      ['inserting a key of length L into a trie', 'Θ(L)', 'walk/create one node per character: ' + L + ' steps, independent of N'],
+      ['contains on a trie (array children) when the query’s FIRST character has no child link at the root', 'Θ(1)', 'the walk stops at the root after one array lookup: neither L nor N matters'],
+      ['contains on a balanced BST of strings (count character comparisons, worst case)', 'Θ(L log N)', 'about log₂ N string comparisons on the root-to-leaf path, each comparing up to L characters'],
+      ['contains on an unsorted linked list of the N strings (count calls to equals, worst case)', 'Θ(N)', 'the query may be absent (or last), so all N strings are compared once'],
+    ] : [
+      ['contains on a hash table of strings (average, including computing the hash)', 'Θ(L)', 'computing String.hashCode reads all ' + L + ' characters; the bucket is short on average'],
+      ['keysWithPrefix of a length-L prefix on a trie, when the prefix matches exactly one key of length L', 'Θ(L)', 'walk ' + L + ' characters, then collect a subtree that is a single node'],
+      ['contains on a balanced BST of strings (count NODES visited, worst case)', 'Θ(log N)', 'one node per level of a tree of height Θ(log N); node visits do not depend on string length'],
+      ['contains on an unsorted list of N strings that all share the query’s first L − 1 characters (count character comparisons, worst case)', 'Θ(N L)', 'each of the N equals calls must read ~L characters before finding the difference'],
+      ['contains on a hash table where every string has the same hashCode (count calls to equals, worst case)', 'Θ(N)', 'all N strings sit in one bucket, and the scan may compare against every one'],
     ];
-    const [d, th, why] = r.pick(cases.filter((_, i) => i % 2 === VV || i === 0));
-    const m = mcq(r, th, ['Θ(1)', 'Θ(L)', 'Θ(log N)', 'Θ(L log N)', 'Θ(N)', 'Θ(N L)'], null, 5);
+    const want = r.pick(Array.from(new Set(cases.map(c => c[1])))); // answer class first, uniformly
+    const [d, th, why] = r.pick(cases.filter(c => c[1] === want));
+    const m = mcq(r, th, ['Θ(1)', 'Θ(L)', 'Θ(log N)', 'Θ(L log N)', 'Θ(N)', 'Θ(N L)'], null, 4);
     return Q({ kind: 'mc', choices: m.choices, answer: m.answer, prompt: P('N = ' + N + ' keys, query length L = ' + L + ' characters. Runtime of: ' + d + '?'),
       hint: 'Tries pay per character of the query, not per key stored.', solution: P(why + ' → <b>' + th + '</b>.') });
   } });
@@ -2512,21 +2781,22 @@
   };
   const SORT_LABEL = { selection: 'Selection sort', insertion: 'Insertion sort', heapsort: 'Heapsort (in-place max-heap)', mergesort: 'Mergesort (top-down)' };
   B13.push({ id: 'B-13-identify-sort', type: B13T[0], make(r) {
+    const algs = Object.keys(SORT_STATES); const X = r.pick(algs); // answer chosen uniformly before the retry loop
+    const SHORT = { selection: 'Selection sort', insertion: 'Insertion sort', heapsort: 'Heapsort', mergesort: 'Mergesort' };
     return retry(r, () => {
       const n = r.int(7, 9); const a = r.shuffle(range(1, 20)).slice(0, n);
-      const algs = Object.keys(SORT_STATES); const X = r.pick(algs);
       const states = SORT_STATES[X](a); const sorted = a.slice().sort((x, y) => x - y);
       const cand = states.filter(s => s.join() !== sorted.join() && s.join() !== a.join());
       if (!cand.length) return null;
       const S = r.pick(cand);
       for (const Y of algs) if (Y !== X && SORT_STATES[Y](a).some(s => s.join() === S.join())) return null;
-      const m = mcq(r, SORT_LABEL[X], Object.values(SORT_LABEL), null, 4);
+      const m = mcq(r, SHORT[X], Object.values(SHORT), null, 4);
       const tell = { selection: 'the prefix holds the smallest items of the whole array, in final position, while the rest is scrambled', insertion: 'the prefix is sorted but holds only the original first items (the suffix is untouched input)', heapsort: 'the largest items sit sorted at the END, and the front is a max-heap (or the whole array is a max-heap right after heapify)', mergesort: 'sorted runs appear in blocks aligned with the recursive halves, other blocks untouched' }[X];
       return Q({ kind: 'mc', choices: m.choices, answer: m.answer,
-        prompt: P('The input ' + fmtArr(a) + ' is being sorted into increasing order. At some point mid-sort the array is ' + fmtArr(S) + '. Which algorithm (exactly as in the 61B notes) produced it?'),
+        prompt: P('The input ' + fmtArr(a) + ' is being sorted into increasing order. At some point mid-sort the array is ' + fmtArr(S) + '. Which algorithm (exactly as in the 61B notes: heapsort = in-place max-heap, mergesort = top-down) produced it?'),
         hint: 'Selection: smallest items final at the front. Insertion: sorted prefix of the ORIGINAL first items. Heapsort: largest items final at the back. Mergesort: sorted blocks.',
-        solution: P('Tell-tale sign: ' + tell + '. Simulating all four, only ' + SORT_LABEL[X] + ' ever produces this array. Its states: ' + states.map(fmtArr).join(' → ') + '.'), _chk: { a, S, X } });
-    });
+        solution: P('Tell-tale sign: ' + tell + '. Simulating all four, only ' + SORT_LABEL[X] + ' ever produces this array. Its states: ' + states.map(x => (x.join() === S.join() ? '<b>' + fmtArr(x) + '</b>' : fmtArr(x))).join(' → ') + '.'), _chk: { a, S, X } });
+    }, 3000);
   } });
   B13.push({ id: 'B-13-after-pass-k', type: B13T[0], make(r) {
     const n = r.int(7, 9); const a = r.shuffle(range(1, 30)).slice(0, n);
@@ -2545,6 +2815,16 @@
     'Selection sort': { st: false, ip: true }, 'Insertion sort': { st: true, ip: true }, 'Heapsort': { st: false, ip: true }, 'Mergesort': { st: true, ip: false },
     'Quicksort with Hoare partitioning': { st: false, ip: true }, 'Quicksort with the simple 3-list partition': { st: true, ip: false }, 'Counting sort': { st: true, ip: false }, 'LSD radix sort': { st: true, ip: false },
   };
+  const SORT_WHY = {
+    'Selection sort': { st: 'the long-distance swap of the minimum into place can jump an item over an equal one', ip: 'swaps within the array, Θ(1) extra' },
+    'Insertion sort': { st: 'an item only moves left past strictly larger items, never past an equal one', ip: 'swaps neighbours within the array, Θ(1) extra' },
+    'Heapsort': { st: 'heap sinks and the root/last swaps move items across the array, reordering equal keys', ip: 'the heap lives inside the input array, Θ(1) extra' },
+    'Mergesort': { st: 'merging takes from the left half on ties, so equal keys keep their order', ip: 'merging needs a Θ(n) auxiliary array' },
+    'Quicksort with Hoare partitioning': { st: 'the two-pointer swaps exchange items across the array, reordering equal keys', ip: 'partitions by swapping within the array (only the recursion stack is extra)' },
+    'Quicksort with the simple 3-list partition': { st: 'items are appended to the less/equal/greater lists in their original order', ip: 'builds three new lists, Θ(n) extra' },
+    'Counting sort': { st: 'items are placed in input order within each key’s block', ip: 'needs a count array and a Θ(n) output array' },
+    'LSD radix sort': { st: 'each digit pass is a stable counting sort (and must be, for correctness)', ip: 'each pass uses counting sort’s Θ(n + R) extra arrays' },
+  };
   B13.push({ id: 'B-13-stable-multi', type: B13T[1], make(r) {
     return retry(r, () => {
       const names = r.sample(Object.keys(SORT_PROPS), 5); const prop = r.pick(['st', 'ip']);
@@ -2554,7 +2834,7 @@
       return Q({ kind: 'multi', choices: m.choices, answer: m.answer,
         prompt: P('Which of these sorts (standard 61B versions) are ' + (prop === 'st' ? '<b>stable</b>?' : '<b>in place</b> (Θ(1) extra memory apart from recursion)?')),
         hint: prop === 'st' ? 'Long-distance swaps (selection, heap, Hoare) break stability; merging with ties-from-left, insertion with strict >, and counting/radix keep it.' : 'Mergesort, counting and radix need auxiliary arrays.',
-        solution: P(names.map(nm => nm + ': ' + (SORT_PROPS[nm][prop] ? 'yes' : 'no')).join('<br>')), _chk: { names, prop } });
+        solution: P(names.map(nm => nm + ': ' + (SORT_PROPS[nm][prop] ? 'yes' : 'no') + ' — ' + SORT_WHY[nm][prop]).join('<br>')), _chk: { names, prop } });
     });
   } });
   B13.push({ id: 'B-13-stability-trace', type: B13T[1], make(r) {
@@ -2582,11 +2862,19 @@
       'Heapsort': { sorted: 'Θ(n log n)', reversed: 'Θ(n log n)', equal: 'Θ(n)', random: 'Θ(n log n)' },
       'Mergesort': { sorted: 'Θ(n log n)', reversed: 'Θ(n log n)', equal: 'Θ(n log n)', random: 'Θ(n log n)' },
     };
-    const alg = r.pick(Object.keys(tbl)), inp = r.pick(VV === 0 ? ['sorted', 'reversed'] : ['equal', 'random']);
+    const inps = VV === 0 ? ['sorted', 'reversed'] : ['equal', 'random'];
+    const pairs = []; for (const a of Object.keys(tbl)) for (const i of inps) pairs.push([a, i, tbl[a][i]]);
+    const want = r.pick(Array.from(new Set(pairs.map(p => p[2])))); // answer class first, uniformly
+    const [alg, inp] = r.pick(pairs.filter(p => p[2] === want));
     const desc = { sorted: 'already sorted', reversed: 'in reverse order', equal: 'all equal', random: 'a random permutation (expected/typical)' }[inp];
     const th = tbl[alg][inp];
-    const m = mcq(r, th, ['Θ(n)', 'Θ(n log n)', 'Θ(n²)', 'Θ(log n)'], null, 4);
-    const why = { 'Selection sort': 'always scans the whole unsorted part', 'Insertion sort': 'cost is Θ(n + inversions)', 'Heapsort': 'each sink costs up to log n (all-equal: every sink stops at once)', 'Mergesort': 'always log n levels of Θ(n) merging' }[alg];
+    const m = mcq(r, th, ['Θ(n)', 'Θ(n log n)', 'Θ(n²)'], [r.pick(['Θ(log n)', 'Θ(n² log n)', 'Θ(n log² n)'])], 4);
+    const why = {
+      'Selection sort': 'scans the whole unsorted part on every pass regardless of the input: (n−1) + (n−2) + … + 1 = n(n−1)/2 comparisons',
+      'Insertion sort': { sorted: 'cost is Θ(n + inversions); a sorted array has 0 inversions, so each item is compared once and stays', reversed: 'cost is Θ(n + inversions); a reversed array has n(n−1)/2 inversions, every one fixed by a swap', equal: 'cost is Θ(n + inversions); equal keys are never inverted (a[j−1] &gt; a[j] is false), so each item stops immediately', random: 'cost is Θ(n + inversions); a random permutation has n(n−1)/4 inversions on average' }[inp],
+      'Heapsort': inp === 'equal' ? 'with all keys equal, heapify and every sink stop at once (no child is strictly larger), so each of the n removals is Θ(1)' : 'heapify is Θ(n), then each of the n removals sinks the swapped-in item through up to log n levels; this order does not prevent those long sinks',
+      'Mergesort': 'always splits into log₂ n levels and every level merges n items, whatever the input order',
+    }[alg];
     return Q({ kind: 'mc', choices: m.choices, answer: m.answer, prompt: P('Runtime of ' + alg + ' (61B version) on n items that are ' + desc + '?'),
       hint: 'Insertion sort depends on inversions; selection never benefits from order; mergesort never changes; heapsort only speeds up when all keys are equal.', solution: P(alg + ' ' + why + ' → <b>' + th + '</b>.') });
   } });
@@ -2597,8 +2885,9 @@
     return Q({ kind: 'list', answer: [inv, inv, cmp],
       prompt: P('For ' + fmtArr(a) + ': give (1) the number of inversions, (2) the number of swaps insertion sort makes, and (3) the number of comparisons <code>a[j-1] &gt; a[j]</code> it evaluates, using <code>for (j = i; j &gt; 0 &amp;&amp; a[j-1] &gt; a[j]; j--) swap</code>.'),
       hint: 'Each swap fixes exactly one inversion. Comparisons = swaps + one failing comparison per i, except when the item slides all the way to index 0 (then j > 0 stops the loop first).',
-      solution: P('Inversions: count pairs i < j with a[i] > a[j] = ' + inv + '. Swaps = inversions = ' + inv + '. Comparisons: ' + cmp + ' (= ' + inv + ' successful + ' + (cmp - inv) + ' failing).'), _chk: { a } });
+      solution: P('Inversion pairs (a larger item before a smaller one): ' + (() => { const o = []; for (let i = 0; i < n; i++) for (let j = i + 1; j < n; j++) if (a[i] > a[j]) o.push('(' + a[i] + ',' + a[j] + ')'); return o.join(' ') || 'none'; })() + '.') + P('Inversions: count pairs i < j with a[i] > a[j] = ' + inv + '. Swaps = inversions = ' + inv + '. Comparisons: ' + cmp + ' (= ' + inv + ' successful + ' + (cmp - inv) + ' failing).'), _chk: { a } });
   } });
+  const SORT_TRAITS = { Mergesort: 'stable, Θ(n log n) always, but Θ(n) extra memory', Heapsort: 'in place, Θ(n log n) worst case, not stable', 'Insertion sort': 'Θ(n + inversions): great when tiny or nearly sorted, Θ(n²) in general', Quicksort: 'fastest in practice, but not stable and Θ(n²) worst case', 'Selection sort': 'only Θ(n) swaps but always Θ(n²) comparisons, not stable', 'Counting sort': 'Θ(N + R) for small integer keys only', 'LSD radix sort': 'Θ(W(N + R)) for fixed-width keys only' };
   B13.push({ id: 'B-13-which-sort-when', type: B13T[3], make(r) {
     const cases = [
       ['sort 10 million Student objects by GPA, keeping existing alphabetical order among equal GPAs, with plenty of memory', 'Mergesort', 'needs stability and Θ(n log n) worst case'],
@@ -2610,7 +2899,7 @@
     ];
     const [d, a, why] = r.pick(cases);
     const m = mcq(r, a, ['Mergesort', 'Heapsort', 'Insertion sort', 'Quicksort', 'Selection sort'], null, 4);
-    return Q({ kind: 'mc', choices: m.choices, answer: m.answer, prompt: P('Best choice: ' + d + '?'), hint: 'Match the constraint (stability, memory, near-sortedness, writes) to the sort that guarantees it.', solution: P(a + ': ' + why + '.') });
+    return Q({ kind: 'mc', choices: m.choices, answer: m.answer, prompt: P('Best choice: ' + d + '?'), hint: 'Match the constraint (stability, memory, near-sortedness, writes) to the sort that guarantees it.', solution: P(a + ': ' + why + '.') + P('The other options: ' + m.choices.filter(c => c !== a).map(c => c + ' (' + SORT_TRAITS[c] + ')').join('; ') + '.') });
   } });
   G['B-13'] = B13;
 
@@ -2667,19 +2956,31 @@
       solution: P(steps.join('<br>')) + P('Answer ' + ans + ' after ' + parts + ' partitions. Expected Θ(n) total; worst case Θ(n²) (e.g. sorted input with leftmost pivot).'), _chk: { a, k } });
   } });
   B14.push({ id: 'B-14-worst-input', type: B14T[1], make(r) {
-    const n = r.int(6, 8); const base = range(1, n + 1);
-    const opts = { sorted: base.slice(), reversed: base.slice().reverse(), random: r.shuffle(base), zig: base.map((_, i) => (i % 2 ? n - Math.floor(i / 2) : 1 + Math.floor(i / 2))) };
-    // count comparisons of simple 3-way quicksort (each partition compares n-1 items with the pivot)
-    const cost = a => (a.length <= 1 ? 0 : a.length - 1 + cost(a.filter(x => x < a[0])) + cost(a.filter(x => x > a[0])));
-    const costs = Object.fromEntries(Object.entries(opts).map(([k, v]) => [k, cost(v)]));
-    const maxC = Math.max.apply(null, Object.values(costs));
-    const items = Object.entries(opts).map(([k, v]) => ({ t: fmtArr(v), ok: costs[k] === maxC }));
-    if (new Set(items.map(x => x.t)).size < 4) return Q({ kind: 'tf', answer: false, prompt: P('Quicksort with a leftmost pivot runs in Θ(n log n) on already-sorted input of size ' + n + '. True or false?'), hint: 'Leftmost pivot on sorted input is the minimum every time.', solution: P('False: each partition peels off one item, Θ(n²).') });
-    const m = multi(items);
-    return Q({ kind: 'multi', choices: m.choices, answer: m.answer,
-      prompt: P('Quicksort with leftmost pivot and the simple 3-way partition. Each partition of a sub-array of size s costs s − 1 pivot comparisons. Which of these inputs make it do the <b>maximum</b> number of comparisons, n(n−1)/2 = ' + n * (n - 1) / 2 + '? (select all)'),
-      hint: 'The worst case happens when every pivot is the minimum or maximum of its sub-array.',
-      solution: P(Object.entries(opts).map(([k, v]) => fmtArr(v) + ': ' + costs[k] + ' comparisons').join('<br>')), _chk: { opts } });
+    return retry(r, () => {
+      const n = r.int(6, 8); const base = range(1, n + 1), maxC = n * (n - 1) / 2;
+      const cost = a => (a.length <= 1 ? 0 : a.length - 1 + cost(a.filter(x => x < a[0])) + cost(a.filter(x => x > a[0])));
+      // worst inputs: every element is the min or max of what remains (built randomly); others: random or "almost" worst
+      const worstRand = () => { let lo = 1, hi = n; const o = []; while (lo <= hi) o.push(r.bool() ? lo++ : hi--); return o; };
+      const almost = () => { const w = worstRand(); const i = r.int(0, n - 3); const j = r.int(i + 1, n - 1); [w[i], w[j]] = [w[j], w[i]]; return w; };
+      const medianFirst = () => { const m = r.int(2, n - 1); return [m].concat(r.shuffle(base.filter(x => x !== m))); };
+      const nWorst = r.int(1, 4); // number of correct options chosen uniformly first
+      const arrs = [], seen = new Set();
+      const push = a => { const k = a.join(); if (seen.has(k)) return false; seen.add(k); arrs.push(a); return true; };
+      const worstGens = [() => base.slice(), () => base.slice().reverse(), worstRand, worstRand, worstRand];
+      for (let t = 0; t < 60 && arrs.filter(a => cost(a) === maxC).length < nWorst; t++) { const a = r.pick(worstGens)(); if (cost(a) === maxC) push(a); }
+      for (let t = 0; t < 60 && arrs.length < 5; t++) { const a = r.pick([() => r.shuffle(base), almost, medianFirst])(); if (cost(a) < maxC) push(a); }
+      if (arrs.length < 5 || arrs.filter(a => cost(a) === maxC).length !== nWorst) return null;
+      const order = r.shuffle(arrs);
+      const opts = {}; order.forEach((a, i) => { opts['o' + i] = a; });
+      const items = order.map(a => ({ t: fmtArr(a), ok: cost(a) === maxC }));
+      const pivots = a => { const out = []; const go = x => { if (x.length < 2) return; const p = x[0]; out.push(p + ' of {' + x.slice().sort((u, v) => u - v).join(',') + '}'); go(x.filter(y => y < p)); go(x.filter(y => y > p)); }; go(a); return out; };
+      const m = multi(items);
+      return Q({ kind: 'multi', choices: m.choices, answer: m.answer,
+        prompt: P('Quicksort with leftmost pivot and the simple 3-way partition. Each partition of a sub-array of size s costs s − 1 pivot comparisons. Which of these inputs make it do the <b>maximum</b> number of comparisons, n(n−1)/2 = ' + maxC + '? (select all)'),
+        hint: 'The worst case happens exactly when every pivot is the minimum or maximum of its sub-array (each partition peels off one item).',
+        solution: P('The maximum ' + maxC + ' = ' + range(1, n).reverse().join(' + ') + ' happens iff every partition removes only its pivot, i.e. every pivot is the min or max of its sub-array (sorted and reversed arrays are just two of many such inputs).') +
+          P(order.map(a => fmtArr(a) + ': ' + cost(a) + ' comparisons' + (cost(a) === maxC ? ' — every pivot is an extreme' : ' — pivot ' + pivots(a).find(t => { const p = +t.split(' ')[0]; const set = t.match(/\{(.*)\}/)[1].split(',').map(Number); return p !== set[0] && p !== set[set.length - 1]; }) + ' is not an extreme, so that partition splits in two')).join('<br>')), _chk: { opts } });
+    });
   } });
   for (const VV of [0, 1]) B14.push({ id: 'B-14-lower-bound' + ['-count', '-tf'][VV], type: B14T[2], make(r) {
     const n = r.int(3, 14); let lf = 0; for (let i = 2; i <= n; i++) lf += Math.log2(i); const lb = Math.ceil(lf - 1e-9);
@@ -2727,7 +3028,7 @@
     else { const claim = r.bool() ? f[kind] : r.pick(['Θ(n)', 'Θ(n log n)', 'Θ(n²)'].filter(x => x !== f[kind])); stmt = 'the ' + (kind === 'worst' ? 'worst-case' : 'best-case') + ' runtime of ' + alg + ' is ' + claim; truth = claim === f[kind]; }
     return Q({ kind: 'tf', answer: truth, prompt: P('True or false: ' + stmt + '.'),
       hint: 'Recall the summary table: stability, memory, best/worst for each sort (heapsort best case Θ(n) only for all-equal keys).',
-      solution: P(alg + ': ' + (f.stable ? 'stable' : 'not stable') + ', ' + (f.inplace ? 'in place' : 'not in place') + ', worst ' + f.worst + ', best ' + f.best + '. → <b>' + (truth ? 'True' : 'False') + '</b>.') });
+      solution: P(alg + ': ' + (f.stable ? 'stable' : 'not stable') + ', ' + (f.inplace ? 'in place' : 'not in place') + ', worst ' + f.worst + ', best ' + f.best + '. ' + ({ stable: 'The claim is about stability, and ' + alg + ' is ' + (f.stable ? '' : 'not ') + 'stable', inplace: 'The claim is about memory, and ' + alg + ' is ' + (f.inplace ? '' : 'not ') + 'in place', worst: 'The claimed worst case ' + (truth ? 'matches' : 'differs from') + ' the true ' + f.worst, best: 'The claimed best case ' + (truth ? 'matches' : 'differs from') + ' the true ' + f.best }[kind]) + ' → <b>' + (truth ? 'True' : 'False') + '</b>.') });
   } });
   B14.push({ id: 'B-14-choose-sort', type: B14T[4], make(r) {
     const N = r.pick(['10⁶', '10⁷', '5·10⁶']);
@@ -2740,7 +3041,7 @@
     ];
     const [d, a, why] = r.pick(cases);
     const m = mcq(r, a, ['Counting sort', 'LSD radix sort', 'Mergesort', 'Heapsort', 'Quicksort', 'Insertion sort'], null, 5);
-    return Q({ kind: 'mc', choices: m.choices, answer: m.answer, prompt: P('Best choice: ' + d + '?'), hint: 'Small integer keys → counting/radix; stability → merge; memory → heap; raw speed → quick.', solution: P(a + ': ' + why + '.') });
+    return Q({ kind: 'mc', choices: m.choices, answer: m.answer, prompt: P('Best choice: ' + d + '?'), hint: 'Small integer keys → counting/radix; stability → merge; memory → heap; raw speed → quick.', solution: P(a + ': ' + why + '.') + P('The other options: ' + m.choices.filter(c => c !== a).map(c => c + ' (' + SORT_TRAITS[c] + ')').join('; ') + '.') });
   } });
   G['B-14'] = B14;
 
@@ -2794,17 +3095,21 @@
   } });
   B15.push({ id: 'B-15-prefix-free-check', type: B15T[1], make(r) {
     return retry(r, () => {
+      const nOk = r.int(1, 3), targets = r.shuffle([0, 1, 2, 3].map(i => i < nOk)); // pattern of correct options chosen first
       const items = [];
       for (let t = 0; t < 4; t++) {
-        const n = r.int(3, 4); const cw = []; while (cw.length < n) { const c = range(0, r.int(1, 3)).map(() => r.pick(['0', '1'])).join(''); if (!cw.includes(c)) cw.push(c); }
-        const pf = cw.every(a => cw.every(b => a === b || !b.startsWith(a)));
-        items.push({ t: '{' + cw.join(', ') + '}', ok: pf, cw });
+        let cw, pf, guard = 0;
+        do { const n = r.int(3, 4); cw = []; while (cw.length < n) { const c = range(0, r.int(1, 3)).map(() => r.pick(['0', '1'])).join(''); if (!cw.includes(c)) cw.push(c); }
+          pf = cw.every(a => cw.every(b => a === b || !b.startsWith(a))); } while (pf !== targets[t] && guard++ < 200);
+        if (pf !== targets[t]) return null;
+        const clash = pf ? null : (() => { for (const a of cw) for (const b of cw) if (a !== b && b.startsWith(a)) return [a, b]; })();
+        items.push({ t: '{' + cw.join(', ') + '}', ok: pf, cw, clash });
       }
-      const k = items.filter(x => x.ok).length; if (k === 0 || k === 4) return null;
       if (new Set(items.map(x => x.t)).size < 4) return null;
       const m = multi(items);
       return Q({ kind: 'multi', choices: m.choices, answer: m.answer, prompt: P('Which of these sets of codewords are prefix-free?'),
-        hint: 'Prefix-free: no codeword is the beginning of another codeword.', solution: P(items.map(x => x.t + ': ' + (x.ok ? 'prefix-free' : 'not prefix-free')).join('<br>')), _chk: { sets: items.map(x => x.cw) } });
+        hint: 'Prefix-free: no codeword is the beginning of another codeword.',
+        solution: P('Check every pair: is one codeword the start of another?') + P(items.map(x => x.t + ': ' + (x.ok ? 'no codeword starts another → prefix-free' : x.clash[1] + ' starts with ' + x.clash[0] + ' → not prefix-free')).join('<br>')), _chk: { sets: items.map(x => x.cw) } });
     });
   } });
   for (const VV of [0, 1]) B15.push({ id: 'B-15-compression-limits' + ['-count', '-tf'][VV], type: B15T[2], make(r) {
@@ -2817,11 +3122,29 @@
         hint: 'Different inputs need different outputs. Count the bitstrings of length 0, 1, …, n − k.',
         solution: P('There are 2⁰ + 2¹ + … + 2^' + (n - k) + ' = 2^' + (n - k + 1) + ' − 1 = <b>' + ans + '</b> bitstrings that short, so at most that many inputs (a fraction below 2^−' + (k - 1) + ').'), _chk: { n, k } });
     }
-    const m = r.int(1, n - 1);
-    const truth = false;
-    return Q({ kind: 'tf', answer: truth,
-      prompt: P('True or false: there is a lossless compressor that maps every one of the 2^' + n + ' files of exactly ' + n + ' bits to a file of at most ' + (n - 1) + ' bits.'),
-      hint: 'Pigeonhole: count the possible outputs.', solution: P('There are only 2^' + n + ' − 1 bitstrings of length &lt; ' + n + ', fewer than the 2^' + n + ' inputs, so two inputs would share an output. <b>False</b>.'), _chk: { n } });
+    // truth value chosen first; then a claim "at least C of the 2^n inputs map to outputs of at most L bits" that matches it
+    const truth = r.bool();
+    const L = n - k, cap = Math.pow(2, L + 1) - 1, all = Math.pow(2, n);
+    let C, claim;
+    const form = r.int(0, 2);
+    if (form === 0) { // every file
+      const LL = truth ? n : n - r.int(1, 2); C = all; claim = 'maps <b>every one</b> of the 2^' + n + ' files of exactly ' + n + ' bits to a file of at most ' + LL + ' bits';
+      const capL = Math.pow(2, LL + 1) - 1;
+      return Q({ kind: 'tf', answer: truth, prompt: P('True or false: there is a lossless compressor that ' + claim + '.'), hint: 'Pigeonhole: different inputs need different outputs. Count the possible outputs.',
+        solution: P('Outputs of at most ' + LL + ' bits: 2⁰ + 2¹ + … + 2^' + LL + ' = 2^' + (LL + 1) + ' − 1 = ' + capL + '. Inputs: 2^' + n + ' = ' + all + '. ' + (capL >= all ? 'There are enough outputs (e.g. the identity map, or any injective relabeling), so such a compressor exists. <b>True</b>.' : capL + ' &lt; ' + all + ', so two inputs would have to share an output, and decompression could not tell them apart. <b>False</b>.')), _chk: { n, L: LL, C } });
+    }
+    if (form === 1) { // fraction of files compressed by k bits or more
+      const pct = truth ? r.pick([1, 5, 10, 20]) / 100 * Math.pow(2, -(k - 1)) : r.pick([60, 75, 90]) / 100 * Math.pow(2, -(k - 1)) * 2;
+      C = Math.ceil(pct * all); if (C < 1) C = 1;
+      if ((C <= cap) !== truth) { C = truth ? Math.max(1, Math.floor(cap / 2)) : cap + 1 + Math.floor(cap / 4); }
+    } else { C = truth ? r.int(Math.max(1, cap - Math.floor(cap / 3)), cap) : r.int(cap + 1, Math.min(all, cap + Math.max(1, Math.floor(cap / 3)))); }
+    C = Math.min(C, all);
+    claim = 'shrinks at least ' + C + ' of the 2^' + n + ' = ' + all + ' files of exactly ' + n + ' bits to outputs of at most ' + L + ' bits (and is lossless on all inputs)';
+    const ok = C <= cap;
+    return Q({ kind: 'tf', answer: ok,
+      prompt: P('True or false: there is a lossless compressor that ' + claim + '.'),
+      hint: 'Pigeonhole: the inputs that end up short need DIFFERENT short outputs. Count bitstrings of length 0 … ' + L + '.',
+      solution: P('Bitstrings of length at most ' + L + ': 2⁰ + 2¹ + … + 2^' + L + ' = 2^' + (L + 1) + ' − 1 = ' + cap + '. Distinct inputs need distinct outputs, so at most ' + cap + ' inputs can become that short. Claim: ' + C + (ok ? ' ≤ ' : ' &gt; ') + cap + ' → <b>' + (ok ? 'True' : 'False') + '</b>' + (ok ? ' (map ' + C + ' chosen inputs to distinct short strings and the rest to longer ones, e.g. with a 1-bit flag prefix).' : ' (pigeonhole: two inputs would share an output).')), _chk: { n, L, C } });
   } });
   const SE_STATEMENTS = [
     ['Change amplification means a simple change requires edits in many different places.', true], ['Cognitive load is how much a developer must know to make a change safely.', true],
@@ -2829,10 +3152,10 @@
     ['A deep module has a simple interface that hides a lot of functionality.', true], ['A hash map (put/get/remove hiding buckets and resizing) is an example of a deep module.', true],
     ['Tactical programming prioritizes getting features working fast, letting complexity accumulate.', true], ['Returning a List rather than an ArrayList from a public method is a form of information hiding.', true],
     ['Information leakage is when one design decision is reflected in several modules.', true],
-    ['A shallow module has a tiny interface and a huge implementation.', false], ['In this framework, complexity mostly means code that runs slowly.', false],
-    ['Making every field public reduces change amplification.', false], ['Strategic programming means never spending time on design once code works.', false],
-    ['Complexity usually comes from a single big mistake rather than many small shortcuts.', false], ['Unknown unknowns are the mildest symptom because a search tool always finds the affected code.', false],
-    ['A class whose methods each forward to one line of another class is a good example of a deep module.', false], ['Information hiding means putting every design decision in the public interface so users can see it.', false],
+    ['A shallow module has a tiny interface and a huge implementation.', false, 'that describes a DEEP module; a shallow one has an interface about as complex as what it hides'], ['In this framework, complexity mostly means code that runs slowly.', false, 'complexity is whatever makes a system hard to understand and modify, not running time'],
+    ['Making every field public reduces change amplification.', false, 'it leaks representation into every user, so a representation change must be edited everywhere: more amplification'], ['Strategic programming means never spending time on design once code works.', false, 'strategic programming continually invests time in good design; skipping it is tactical programming'],
+    ['Complexity usually comes from a single big mistake rather than many small shortcuts.', false, 'complexity is incremental: it accumulates from many small dependencies and obscurities'], ['Unknown unknowns are the mildest symptom because a search tool always finds the affected code.', false, 'they are the worst symptom precisely because you cannot tell what to search for'],
+    ['A class whose methods each forward to one line of another class is a good example of a deep module.', false, 'pass-through methods add interface without hiding anything: a shallow module'], ['Information hiding means putting every design decision in the public interface so users can see it.', false, 'it means the opposite: keep design decisions inside a module so others need not know them'],
   ];
   B15.push({ id: 'B-15-se-statements', type: B15T[3], make(r) {
     return retry(r, () => {
@@ -2840,22 +3163,22 @@
       const m = multi(pick.map(x => ({ t: x[0], ok: x[1] })));
       return Q({ kind: 'multi', choices: m.choices, answer: m.answer, prompt: P('Software engineering (Ousterhout, as in 61B): which statements are true?'),
         hint: 'Complexity = what makes a system hard to understand/change; symptoms: change amplification, cognitive load, unknown unknowns; causes: dependencies, obscurity; deep modules hide a lot behind a simple interface.',
-        solution: P(pick.map(x => (x[1] ? 'True: ' : 'False: ') + x[0]).join('<br>')) });
+        solution: P(pick.map(x => (x[1] ? 'True: ' : 'False: ') + x[0] + (x[2] ? ' (' + x[2] + ')' : '')).join('<br>')) });
     });
   } });
   B15.push({ id: 'B-15-se-symptom', type: B15T[3], make(r) {
     const thing = r.pick(['tax rate', 'brand color', 'maximum upload size', 'timeout value', 'date format']);
     const n = r.int(12, 60), k = r.int(4, 9);
     const sc = [
-      ['The ' + thing + ' is written as a literal in ' + n + ' different files, so changing it requires ' + n + ' edits.', 'Change amplification'],
-      ['To add a small feature, a new teammate must first learn how ' + k + ' classes interact and in what order their methods must be called.', 'Cognitive load'],
-      ['After changing how the ' + thing + ' is stored, a distant module silently breaks; nothing in the code indicated that it depended on that detail.', 'Unknown unknowns'],
-      ['The ' + thing + ' is read through a single method in one class, so updating it is a one-line change.', 'None (good information hiding)'],
+      ['The ' + thing + ' is written as a literal in ' + n + ' different files, so changing it requires ' + n + ' edits.', 'Change amplification', 'One conceptual change (the ' + thing + ') forces ' + n + ' separate edits: that is change amplification. You do know where to edit (it is searchable), so it is not an unknown unknown, and each edit is easy, so it is not mainly cognitive load.'],
+      ['To add a small feature, a new teammate must first learn how ' + k + ' classes interact and in what order their methods must be called.', 'Cognitive load', 'The change itself is small, but the developer must hold ' + k + ' classes and their calling order in their head first: that is cognitive load. Nothing is hidden (it can be learned), so it is not an unknown unknown.'],
+      ['After changing how the ' + thing + ' is stored, a distant module silently breaks; nothing in the code indicated that it depended on that detail.', 'Unknown unknowns', 'The developer could not have known that the distant module needed changing: no code, name or error pointed to it. Not knowing WHAT must change is the unknown-unknowns symptom (the worst one).'],
+      ['The ' + thing + ' is read through a single method in one class, so updating it is a one-line change.', 'None (good information hiding)', 'The decision lives in one place behind one method, so a change touches one line, needs no extra knowledge and cannot surprise other modules: no symptom, this is information hiding working.'],
     ];
-    const [d, a] = r.pick(sc);
+    const [d, a, expl] = r.pick(sc);
     const m = mcq(r, a, ['Change amplification', 'Cognitive load', 'Unknown unknowns', 'None (good information hiding)'], null, 4);
     return Q({ kind: 'mc', choices: m.choices, answer: m.answer, prompt: P('Which complexity symptom does this describe? ' + d),
-      hint: 'Many edits → change amplification; much to learn → cognitive load; can’t tell what to change → unknown unknowns.', solution: P('<b>' + a + '</b>.') });
+      hint: 'Many edits → change amplification; much to learn → cognitive load; can’t tell what to change → unknown unknowns.', solution: P(expl + ' → <b>' + a + '</b>.') });
   } });
   G['B-15'] = B15;
 
@@ -2925,12 +3248,14 @@
   B3.push({ id: 'B-3-which-throw-cce', type: B3T[2], make(r) {
     return retry(r, () => {
       const ctx = castCtx(r); const items = [];
-      for (let i = 0; i < 40 && items.length < 5; i++) {
-        const g = genCastStmt(r, i % 2 ? 'cce' : 'out', ctx);
+      const nCce = r.int(1, 4); // number of correct options chosen uniformly first; positions shuffled below
+      const targets = r.shuffle(range(0, 5).map(i => (i < nCce ? 'cce' : 'out')));
+      for (let i = 0, tries = 0; i < 5 && tries < 60; tries++) {
+        let g; try { g = genCastStmt(r, targets[i], ctx); } catch (e) { return null; }
         if (items.some(x => x.g.stmt === g.stmt)) continue;
-        items.push({ g, ok: g.res.k === 'cce' });
+        items.push({ g, ok: g.res.k === 'cce' }); i++;
       }
-      if (items.length < 4) return null;
+      if (items.length < 5) return null;
       const n = items.filter(x => x.ok).length; if (n === 0 || n === items.length) return null;
       const base = items[0].g;
       const m = multi(items.map(x => ({ t: '<code>' + esc(x.g.stmt.replace('\n', ' ')) + '</code>', ok: x.ok })));
@@ -2938,7 +3263,7 @@
         prompt: P('Each option compiles. Added to main on its own after the setup lines, which options throw a <b>ClassCastException</b> at runtime?') + code(base.clsSrc + '\n\n// in main:\n' + base.setupSrc),
         hint: 'A cast succeeds at runtime iff the object’s DYNAMIC type is the cast type or a subclass of it.',
         solution: P('Dynamic types: o → ' + base.Dy.o + ', a → ' + base.Dy.a + ', b → ' + base.Dy.b + '.') +
-          P(items.map(x => '<code>' + esc(x.g.stmt.replace('\n', ' ')) + '</code>: ' + (x.ok ? 'ClassCastException' : 'runs, prints ' + x.g.res.out)).join('<br>')),
+          P(items.map(x => '<code>' + esc(x.g.stmt.replace('\n', ' ')) + '</code>: ' + (x.ok ? '<b>ClassCastException</b>: ' : 'runs, prints ' + x.g.res.out + ': ') + x.g.res.why).join('<br>')),
         _java: items.map(x => ({ src: javaProg(base.setupSrc + '\n' + x.g.stmt, '', base.clsSrc + '\n'), expect: x.g.res.k === 'out' ? { kind: 'out', out: x.g.res.out } : { kind: x.g.res.k } })) });
     });
   } });
@@ -2962,19 +3287,37 @@
       }).join('\n');
       // simulate object construction of dyn
       const dchain = chain.slice(0, chain.indexOf(dyn) + 1);
-      const init = new Set(); const out = [];
-      const showFrom = (start) => { // run show() implementation found from class `start` upward
-        for (let k = chain.indexOf(start); k >= 0; k--) { const c = chain[k]; if (overrides[c]) { if (k > 0 && superShow[c]) showFrom(chain[k - 1]); out.push(c[0] + '.show:' + (init.has(c) ? fld[c] : 0)); return; } }
+      // simulate construction; the flags model the classic mistakes (used to build the wrong choices)
+      const sim = (o) => {
+        const init = new Set(); const out = []; const steps = [];
+        const showFrom = (start, ctx) => { // run the show() implementation found from class `start` upward
+          for (let k = chain.indexOf(start); k >= 0; k--) { const c = chain[k]; if (overrides[c]) {
+            if (k > 0 && superShow[c] && !o.noSuper) { steps.push(c + '.show() first calls super.show()'); showFrom(chain[k - 1], ctx); }
+            const val = o.preInit ? fld[c] : (init.has(c) ? fld[c] : 0);
+            steps.push(c + '.show() reads ' + fname(c) + ' = ' + val + (init.has(c) || o.preInit ? '' : ' (' + c + '’s field initializer has not run yet → default 0)'));
+            out.push(c[0] + '.show:' + val); return; } }
+        };
+        const order = o.bottomUp ? dchain.slice().reverse() : dchain;
+        for (const c of order) {
+          init.add(c); out.push(c); steps.push(c + ' constructor body runs (' + c + '’s fields are initialized just before it: ' + fname(c) + ' = ' + fld[c] + ')' + (callsShow[c] ? ' and calls show() → dynamic type is ' + dyn + ', so the lookup starts at ' + dyn : ''));
+          if (callsShow[c]) showFrom(o.staticDispatch ? c : dyn);
+        }
+        return { out: out.join(' '), steps };
       };
-      for (const c of dchain) { init.add(c); out.push(c); if (callsShow[c]) showFrom(dyn); }
-      if (!out.some(t => t.endsWith(':0'))) return null;
+      const right = sim({});
+      if (!right.out.split(' ').some(t => t.endsWith(':0'))) return null;
+      const wrongs = [sim({ preInit: true }), sim({ staticDispatch: true }), sim({ noSuper: true }), sim({ bottomUp: true }), sim({ preInit: true, staticDispatch: true }), sim({ preInit: true, noSuper: true }), sim({ staticDispatch: true, noSuper: true })].map(x => x.out);
+      const distinctW = Array.from(new Set(wrongs.filter(w => w !== right.out)));
+      if (distinctW.length < 3) return null;
+      const m = mcq(r, right.out, distinctW, null, Math.min(5, distinctW.length + 1));
       const body = h.A + ' x = new ' + dyn + '();\nSystem.out.println();';
-      return Q({ kind: 'text', answer: [out.join(' ')],
-        prompt: P('What does <code>new ' + dyn + '()</code> print? (tokens separated by spaces)') + code(src + '\n\n// in main:\n' + body),
+      return Q({ kind: 'mc', choices: m.choices, answer: m.answer,
+        prompt: P('What does <code>new ' + dyn + '()</code> print?') + code(src + '\n\n// in main:\n' + body),
         hint: 'Constructors run top-down (super() first). A subclass’s field initializers run only AFTER super() returns, and show() always dispatches on the object’s dynamic type.',
         solution: P('Building a ' + dyn + ': the ' + h.A + ' part is constructed first. Field initializers of a class run right after its super() call returns, so when a superclass constructor calls the overridden show(), the subclass’s fields still hold their default value 0. super.show() inside show runs the parent’s version (no dynamic dispatch).') +
-          P('Output: <b>' + out.join(' ') + '</b>.'),
-        _java: { src: javaProg(body, '', src + '\n'), expect: { kind: 'out', out: out.join(' ') } } });
+          P(right.steps.join('<br>')) +
+          P('Output: <b>' + right.out + '</b>.'),
+        _java: { src: javaProg(body, '', src + '\n'), expect: { kind: 'out', out: right.out } } });
     });
   } });
 
@@ -3042,7 +3385,7 @@
       return Q({ kind: 'multi', choices: m.choices, answer: m.answer,
         prompt: P('Each array lists a complete binary tree in level order (first entry = root). Which are valid <b>max-heaps</b>?'),
         hint: 'Every parent must be ≥ both children: entry k (1-based) vs entries 2k and 2k+1.',
-        solution: P(items.map(x => x.t + ': ' + (x.ok ? 'valid' : 'invalid')).join('<br>')), _chk: { arrs: items.map(x => x.a), max: true } });
+        solution: P('Index k (1-based) has children 2k and 2k+1; check each parent ≥ child:') + P(items.map(x => { const bad = heapViol(x.a, (p, c) => p >= c); return x.t + ': ' + (bad ? 'invalid: parent ' + bad + ' is smaller than its child' : 'valid (every parent ≥ its children)'); }).join('<br>')), _chk: { arrs: items.map(x => x.a), max: true } });
     });
   } });
   B8.push({ id: 'B-8-ksmallest-maxheap', type: B8T[2], make(r) {
