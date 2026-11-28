@@ -7,7 +7,7 @@
 <meta name="theme-color" content="#f6f7f9" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#11151b" media="(prefers-color-scheme: dark)">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%2315773a'/%3E%3Ctext x='32' y='44' font-size='34' text-anchor='middle' fill='white' font-family='Georgia,serif'%3E%E2%96%B6%3C/text%3E%3C/svg%3E">
-<title>Finals Study</title>
+<title>Finals Course</title>
 <style>
 :root{--bg:#f6f7f9;--surface:#fff;--ink:#17202b;--muted:#5a6473;--rule:#dde2e9;--accent:#1f4cc9;--accent-bg:#edf2ff;--ok:#15773a;--ok-bg:#ecf8f0;--bad:#c02a2a;--bad-bg:#fff0ef;--warn:#b4520a;--warn-bg:#fff4e6;--c54:#7a3fb8;--c54-bg:#f4edfc;--c55:#1f4cc9;--c55-bg:#edf2ff;--cb:#15773a;--cb-bg:#ecf8f0;--math:"STIX Two Text","Cambria Math",Georgia,serif}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#11151b;--surface:#181d25;--ink:#e6eaf0;--muted:#9aa4b3;--rule:#2a313c;--accent:#8fb0ff;--accent-bg:#1c2640;--ok:#7fd39b;--ok-bg:#16261c;--bad:#ff8f8a;--bad-bg:#2d1718;--warn:#f2b26b;--warn-bg:#2a2016;--c54:#c9a2f5;--c54-bg:#251c33;--c55:#8fb0ff;--c55-bg:#1c2640;--cb:#7fd39b;--cb-bg:#16261c;color-scheme:dark}}
@@ -88,12 +88,40 @@ label.stp.ok span{color:var(--muted);text-decoration:line-through}
   #viewer{left:50%;border-left:1px solid var(--rule)}
   body.split .wrap{margin-left:calc((50vw - min(680px,50vw - 32px))/2);max-width:min(680px,50vw - 32px)}
 }
+body.wide .wrap{max-width:1500px}
+.home h2{margin-top:4px}
+.cbar{display:grid;grid-template-columns:72px 1fr 64px;gap:10px;align-items:center;margin:8px 0;font-size:.85rem}
+.cbar .t{height:10px;background:var(--rule);border-radius:99px;overflow:hidden}.cbar .t i{display:block;height:100%}
+.cont{display:block;width:100%;text-align:left;border:0;border-radius:16px;padding:16px;margin-top:12px;background:var(--ok);color:var(--surface);cursor:pointer;font:inherit}
+.cont b{display:block;font-size:1.1rem}.cont span{font-size:.85rem;opacity:.9}
+details.day{border-top:1px solid var(--rule);padding:6px 0}details.day summary{cursor:pointer;font-weight:600;padding:6px 0;display:flex;gap:8px}
+details.day summary .dm{margin-left:auto;font-weight:400;color:var(--muted);font-size:.82rem}
+.trow{display:flex;gap:8px;align-items:baseline;font-size:.9rem;margin:5px 0 5px 4px}
+.trow .ic{width:18px;flex:none;text-align:center}.trow.done{color:var(--muted)}.trow.cur{font-weight:700}
+.player .pgrid{display:block}
+.pside .pills{display:flex;gap:6px;flex-wrap:wrap;margin:10px 0}
+.pills button{min-width:40px;min-height:36px;border-radius:99px;border:1px solid var(--rule);background:var(--surface);color:var(--ink);font:700 .85rem system-ui;cursor:pointer}
+.pills button.ok{background:var(--ok-bg);color:var(--ok);border-color:var(--ok)}.pills button.cur{outline:2px solid var(--accent)}
+.stext{font-size:1.02rem;margin:8px 0}
+.pmat{margin-top:12px}
+.mtabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px}
+.mtabs button{border:1px solid var(--rule);background:var(--surface);color:var(--ink);border-radius:10px;padding:6px 10px;font:600 .82rem system-ui;cursor:pointer}
+.mtabs button.on{background:var(--accent);color:var(--surface);border-color:var(--accent)}
+iframe.mat{width:100%;height:72vh;border:1px solid var(--rule);border-radius:12px;background:#fff}
+.nomat{border:1px dashed var(--rule);border-radius:12px;padding:18px;color:var(--muted);text-align:center}
+.ptime{display:flex;justify-content:space-between;align-items:baseline;font-size:.85rem;color:var(--muted)}
+.ptime b{font:700 1.2rem ui-monospace,Menlo,monospace;color:var(--ink)}
+@media (min-width:1100px){
+  .player .pgrid{display:grid;grid-template-columns:minmax(340px,430px) 1fr;gap:18px;align-items:start}
+  .pmat{margin-top:0;position:sticky;top:12px}
+  iframe.mat{height:calc(100vh - 90px)}
+}
 footer{margin-top:28px;font-size:.8rem;color:var(--muted)}
 </style>
 </head>
 <body>
 <div class="wrap">
-  <div class="top"><h1 id="h">Today</h1><a href="#" id="schedLink">Schedule</a><a href="#" id="logLink">Error log</a><a href="plan.html">Plan</a></div>
+  <div class="top"><h1 id="h">Finals</h1><a href="#" id="homeLink">Course home</a><a href="#" id="schedLink">Schedule</a><a href="#" id="logLink">Error log</a></div>
   <div class="prog"><i id="bar"></i></div>
   <div class="meta"><span id="m1"></span><span id="m2"></span></div>
   <div id="main"></div>
@@ -108,9 +136,10 @@ footer{margin-top:28px;font-size:.8rem;color:var(--muted)}
 "use strict";
 const P=window.PLAN, G=window.GEN||{};
 const KEY='finals-app-v2';
-let S={done:{},start:{},err:[],check:{},notes:[],q:null,days:{},ahead:{},steps:{},hlog:{},redo:[]};
+let S={done:{},start:{},err:[],check:{},notes:[],q:null,days:{},ahead:{},steps:{},hlog:{},redo:[],pos:{},scroll:{},tab:{}};
 try{ S=Object.assign(S,JSON.parse(localStorage.getItem(KEY)||'{}')); }catch(e){}
-S.steps=S.steps||{}; S.hlog=S.hlog||{}; S.redo=S.redo||[];
+S.steps=S.steps||{}; S.hlog=S.hlog||{}; S.redo=S.redo||[]; S.pos=S.pos||{}; S.scroll=S.scroll||{}; S.tab=S.tab||{};
+let VIEW='home';
 const save=()=>{ try{ localStorage.setItem(KEY,JSON.stringify(S)); }catch(e){} };
 const $=id=>document.getElementById(id);
 const TAG={'54':'<span class="tag t54">Math 54</span>','55':'<span class="tag t55">Math 55</span>','B':'<span class="tag tB">CS 61B</span>','A':'<span class="tag tA">All</span>'};
@@ -306,11 +335,103 @@ function renderRedo(t,pre){
     if(b.dataset.s==='ok'){ r.cleared=true; } else { r.due=addDays(today(),2); }
     save(); render(); })); }
 
+// ---------- one course: friendly names, lesson player, course home ----------
+function niceName(href,label){ let x; try{ x=new URL(href); }catch(e){ return label||href; }
+  const f=x.pathname.split('/').pop(), q=x.searchParams.get('deck'), h=x.hash.replace('#','');
+  const N={'guide.html':'Math 55 study guide','counting-probability.html':'Notes: counting & probability','expectation-recurrences.html':'Notes: expectation & recurrences','inclusion-exclusion-relations.html':'Notes: inclusion–exclusion & relations',
+   'math54-de.html':'Notes: differential equations','math55-late.html':'Notes: relations & graphs','cs61b.html':'61B notes','math54-hard.html':'Hard problems','math55-hard.html':'Hard problems','cs61b-hard.html':'Hardest exam questions',
+   'math54-practice.html':'Practice final','math55-practice.html':'Practice final','pastfinals.html':'Past finals','notes.html':'Math 54 notes','flashcards.html':'Math 54 flashcards','ch5-6.html':'Ch 5–6 from scratch','cards.html':'Flashcards'};
+  if(x.hostname.includes('meni-gottesman.github.io')&&N[f]) return N[f]+(q?' · deck '+q:'')+(h&&!/^(top|part\d|drill)$/.test(h)?'':(h==='drill'?' · drill':''));
+  if(/beacon/.test(x.hostname)) return (/solution/.test(x.pathname)?'Solution':'Exam')+' '+(x.pathname.split('/').slice(-2,-1)[0]||'')+(x.hash?' '+x.hash.replace('#page=','p.'):'');
+  if(/tbp/.test(x.hostname)) return label&&!/^https?:/.test(label)&&!/tbp\./.test(label)?label:'Past exam (PDF)';
+  if(/math\.berkeley/.test(x.hostname)) return 'Exam PDF: '+decodeURIComponent(f).replace(/\.pdf$/,'');
+  return label&&!/^https?:|\.(edu|io|es|com)\b/.test(label)?label:x.hostname; }
+function prettyLinks(root){ root.querySelectorAll('a[href]').forEach(a=>{ if(/^https?:|github\.io|\.(html|pdf)/.test(a.textContent.trim())) a.textContent=niceName(a.href,a.textContent); a.removeAttribute('target'); }); return root; }
+function parseTask(t){ const d=document.createElement('div'); d.innerHTML=t.html||''; prettyLinks(d);
+  const steps=[], pre=[], post=[]; let seen=false;
+  [...d.children].forEach(el=>{ if(el.tagName==='P'&&/^\s*\d+\.\s/.test(el.textContent)){ steps.push(el); seen=true; } else (seen?post:pre).push(el); });
+  const L=el=>[...el.querySelectorAll('a[href]')].map(a=>({href:a.href,label:a.textContent}));
+  const open=pre.flatMap(L); let prev=open;
+  const st=steps.map(p=>{ const own=L(p), txt=p.textContent; let mat;
+    if(own.length) mat=own; else if(/close everything|blank page|from memory|no notes|out loud/i.test(txt)) mat=[]; else mat=open.length?open:prev;
+    if(mat.length) prev=mat; return {html:p.innerHTML.replace(/^\s*\d+\.\s*/,''),text:txt,mat}; });
+  return {steps:st,open,pre:pre.map(e=>e.outerHTML).join(''),post:post.map(e=>e.outerHTML).join(''),full:d.innerHTML}; }
+const EMBED_CSS='body>header,header#top,header.mast,header.hero,footer,body>nav.bar,body>nav.toc,.wrap>nav.bar,.wrap>.top,.wrap>.nav{display:none!important}';
+function wireFrame(fr,url){ fr.addEventListener('load',()=>{ try{ const w=fr.contentWindow, d=fr.contentDocument; if(!d||!d.body) return;
+    const stl=d.createElement('style'); stl.textContent=EMBED_CSS; d.head.appendChild(stl);
+    if(S.scroll[url]) setTimeout(()=>w.scrollTo(0,S.scroll[url]),60);
+    let tm=null; w.addEventListener('scroll',()=>{ clearTimeout(tm); tm=setTimeout(()=>{ S.scroll[url]=w.scrollY; save(); },400); });
+    d.addEventListener('click',ev=>{ const a=ev.target.closest&&ev.target.closest('a[href]'); if(!a) return; const h=a.getAttribute('href')||'';
+      if(h.startsWith('#')||h.startsWith('javascript:')) return; ev.preventDefault(); openViewer(a.href,a.textContent); });
+  }catch(e){} }); }
+function matPane(t,i,mat){
+  if(!mat.length) return `<div class="nomat">Nothing to look at for this step: close everything and work from memory on paper.</div>`;
+  const k=t.key+'|'+i, cur=Math.min(S.tab[k]||0,mat.length-1);
+  const tabs=mat.length>1?`<div class="mtabs">${mat.map((m,j)=>`<button data-j="${j}" class="${j===cur?'on':''}">${esc(niceName(m.href,m.label))}</button>`).join('')}</div>`:'';
+  const e=embedURL(mat[cur].href);
+  return tabs+(e?`<iframe class="mat" id="matframe" title="${esc(niceName(mat[cur].href,mat[cur].label))}" src="${esc(e)}"></iframe>`:`<div class="nomat">${esc(niceName(mat[cur].href,mat[cur].label))} is on a site that can’t be shown inside the course (it needs your login). <button class="btn sec" id="vext2">Open it in the browser</button></div>`); }
+function renderPlayer(t,pre,ahead,needMs){
+  const st=S.start[t.key], P2=parseTask(t), n=P2.steps.length, done=S.steps[t.key]=S.steps[t.key]||{};
+  let i=S.pos[t.key]; if(i==null||i>n) { i=0; while(i<n&&done[i]) i++; } if(i>=n) i=n; S.pos[t.key]=i;
+  document.body.classList.add('wide');
+  const course=TAG[t.c]||'';
+  const pills=n?`<div class="pills">${P2.steps.map((x,j)=>`<button data-s="${j}" class="${done[j]?'ok':''} ${j===i?'cur':''}">${done[j]?'✓':j+1}</button>`).join('')}<button data-s="${n}" class="${i===n?'cur':''}">${'Check'}</button></div>`:'';
+  const s=P2.steps[i];
+  const deckA=s&&(s.mat.find(m=>/finals\/cards\.html\?deck=/.test(m.href)));
+  const side= i<n ? `<div class="step">Step ${i+1} of ${n}</div><div class="stext">${s.html}</div>${deckA?'<p class="small" id="deckst"></p>':''}
+      <button class="btn ${done[i]?'sec':''}" id="sdone">${done[i]?'Done ✓ · go to next step':'✓ I finished this step'}</button>
+      ${i===n-1&&P2.post?`<details class="instrbox" open><summary>You’ll be checked on</summary><div class="instr">${P2.post}</div></details>`:''}`
+    : (n?`<div class="step">Last step · prove it</div><div class="instr">${P2.post||''}</div>`
+        :`${t.t==='R'?'<div class="banner info"><b>Topics</b> (what you actually learned 3 and 7 days ago): '+reviewUnits(t).map(u=>esc(P.U[u]?P.U[u].n:u)).join(' · ')+'. These replace the list below.</div>':''}<div class="instr">${P2.full}</div>`);
+  $('main').innerHTML=pre+`<div class="card player"><div class="ptime"><span>${ahead?'Working ahead · ':''}${t.d<today()?'Catch-up from '+fmt(t.d)+' · ':''}${course}</span><span id="tm"></span></div><h2>${esc(t.title)}</h2>
+    <div class="pgrid"><div class="pside">${pills}${side}<div id="hlog"></div><div id="after"></div>
+      <details class="instrbox"><summary>Whole task at a glance</summary><div class="instr">${P2.full}</div></details></div>
+    <div class="pmat">${i<n?matPane(t,i,s.mat):(P2.open.length?matPane(t,'o',P2.open):'')}</div></div></div>`;
+  const fr=$('matframe'); if(fr) wireFrame(fr, i<n?(s.mat[Math.min(S.tab[t.key+'|'+i]||0,s.mat.length-1)]||{}).href:(P2.open[0]||{}).href);
+  document.querySelectorAll('.mtabs button').forEach(b=>b.onclick=()=>{ S.tab[t.key+'|'+(i<n?i:'o')]=+b.dataset.j; save(); render(); });
+  if($('vext2')) $('vext2').onclick=()=>{ const m=(i<n?s.mat:P2.open)[Math.min(S.tab[t.key+'|'+i]||0,(i<n?s.mat:P2.open).length-1)]; window.open(m.href,'_blank','noopener'); };
+  document.querySelectorAll('.pills button').forEach(b=>b.onclick=()=>{ S.pos[t.key]=+b.dataset.s; save(); render(); });
+  const deckOK=()=>{ if(!deckA) return true; const dk=new URL(deckA.href).searchParams.get('deck'), pr=deckProgress(dk); if($('deckst')) $('deckst').innerHTML=pr?`Flashcards: <b>${pr.k}/${pr.n}</b> marked “Got it”${pr.k>=pr.n?' ✓':' · finish the deck to complete this step'}`:'Loading flashcards…'; return pr&&pr.n>0&&pr.k>=pr.n; };
+  if(deckA) loadCards().then(deckOK);
+  if($('sdone')) $('sdone').onclick=()=>{ if(!done[i]){ if(!deckOK()){ alert('Finish the flashcard deck first: every card marked “Got it”.'); return; } done[i]=Date.now(); }
+    S.pos[t.key]=i+1; save(); render(); };
+  if(t.t==='H'&&(i===n||(s&&/grade/i.test(s.text)))) mountHardLog(t,$('hlog'));
+  const draw=()=>{ const el=Date.now()-st, rem=needMs-el, sd=stepsDone(t,n);
+    $('tm').innerHTML=`<b>${clock(el)}</b> ${rem>0?'· check unlocks in '+clock(rem):''}`;
+    if(deckA) deckOK();
+    if(i===n){ if(rem<=0&&sd&&!$('ck')){ $('after').innerHTML=preCheckForm(t); bindPreCheck(t); }
+      else if(!$('ck')) $('after').innerHTML=`<p class="small">${!sd?'Finish every step first (the numbered buttons above).':'The check unlocks when the timer reaches the minimum time.'}</p>`; } };
+  draw(); tick=setInterval(draw,1000); }
+function courseStats(){ const all=allTasks().filter(t=>t.t!=='K'); const by={};
+  ['54','55','B','A'].forEach(c=>{ const ts=all.filter(t=>t.c===c); by[c]={n:ts.length,k:ts.filter(t=>S.done[t.key]).length,m:ts.reduce((s,t)=>s+(t.min||0),0),md:ts.filter(t=>S.done[t.key]).reduce((s,t)=>s+(t.min||0),0)}; });
+  const n=all.length,k=all.filter(t=>S.done[t.key]).length,m=all.reduce((s,t)=>s+(t.min||0),0),md=all.filter(t=>S.done[t.key]).reduce((s,t)=>s+(t.min||0),0); return {by,n,k,m,md}; }
+function renderHome(){ clearInterval(tick); document.body.classList.remove('wide');
+  const td=today(), list=todayList(), {q}=queue(), cs=courseStats(), cur=q[0];
+  const left=list.filter(t=>!S.done[t.key]).reduce((s,t)=>s+(t.min||0),0), behind=list.filter(t=>t.t!=='X'&&t.d<td&&!S.done[t.key]);
+  const col={'54':'var(--c54)','55':'var(--c55)','B':'var(--cb)','A':'var(--muted)'}, nm={'54':'Math 54','55':'Math 55','B':'CS 61B','A':'Mixed'};
+  const bar=c=>{ const b=cs.by[c]; return `<div class="cbar"><span>${nm[c]}</span><span class="t"><i style="width:${b.m?100*b.md/b.m:0}%;background:${col[c]}"></i></span><span class="small">${b.k}/${b.n}</span></div>`; };
+  let curInfo=''; if(cur&&cur.t!=='X'&&S.start[cur.key]){ const n=parseTask(cur).steps.length, p=S.pos[cur.key]||0; curInfo=n?` · step ${Math.min(p+1,n)} of ${n}`:''; }
+  const days=P.days.filter(d=>d.tasks.some(t=>t.t!=='K'));
+  const icon=t=>S.done[t.key]?'✓':(cur&&cur.key===t.key?'▶':(t.d<td?'⏳':'○'));
+  $('main').innerHTML=`<div class="card home"><div class="step">Finals course · Math 54 · Math 55 · CS 61B</div>
+    <h2>${Math.round(100*cs.md/cs.m)}% done · ${fm(cs.md)} of ${fm(cs.m)}</h2>${bar('54')}${bar('55')}${bar('B')}
+    ${cur?`<button class="cont" id="cont"><b>▶ ${S.start[cur.key]?'Continue':'Start'}: ${esc(cur.title)}</b><span>${TAG[cur.c]?nm[cur.c]:'All courses'}${curInfo} · ${fm(cur.min||0)}</span></button>`:`<p><b>Nothing due right now.</b></p>`}
+    <p class="small" style="margin-top:10px">${list.length?`Today: ${list.filter(t=>S.done[t.key]).length} of ${list.length} done · ≈ ${fm(left)} left`:''}${behind.length?` · ${behind.length} catch-up task${behind.length>1?'s':''} from earlier days come first`:''}</p></div>
+    <div class="card"><div class="step">The whole course, in order</div>
+    ${days.map(d=>{ const ts=allTasks().filter(x=>x.d===d.d&&x.t!=='K');
+      const k=ts.filter(t=>S.done[t.key]).length, isCur=cur&&ts.includes(cur);
+      return `<details class="day" ${isCur?'open':''}><summary>${k===ts.length?'✓':(d.d<td?'⏳':(d.d===td?'▶':'○'))} ${fmt(d.d)}<span class="dm">${k}/${ts.length} · ${fm(ts.reduce((s,t)=>s+(t.min||0),0))}</span></summary>
+        ${ts.map(t=>`<div class="trow ${S.done[t.key]?'done':''} ${cur&&cur.key===t.key?'cur':''}"><span class="ic">${icon(t)}</span>${TAG[t.c]||''}<span>${esc(t.title)}</span></div>`).join('')}</details>`; }).join('')}
+    ${allTasks().filter(t=>t.t==='K'&&/FINAL/.test(t.title)).map(k=>`<p class="small">🎯 ${fmt(k.d)} · ${esc(k.title)}</p>`).join('')}</div>`;
+  if($('cont')) $('cont').onclick=()=>{ VIEW='task'; render(); window.scrollTo(0,0); }; }
+
 function render(){
   clearInterval(tick);
+  if(VIEW==='home'){ const td0=today(), l0=todayList(), d0=l0.filter(t=>S.done[t.key]).length; $('h').textContent='Finals · '+fmt(td0); $('bar').style.width=(l0.length?100*d0/l0.length:100)+'%'; $('m1').textContent=''; $('m2').textContent=''; return renderHome(); }
+  document.body.classList.remove('wide');
   const td=today(), list=todayList(), {q,ahead}=queue();
   const doneToday=list.filter(t=>S.done[t.key]).length, aheadDone=Object.values(S.done).filter(ms=>dateOf(ms)===td).length-doneToday;
-  $('h').textContent=fmt(td);
+  $('h').textContent='Finals · '+fmt(td);
   $('bar').style.width=(list.length?100*doneToday/list.length:100)+'%';
   const left=list.filter(t=>!S.done[t.key]).reduce((s,t)=>s+(t.min||0),0);
   $('m1').textContent=list.length?(doneToday+' of '+list.length+' tasks done today'+(aheadDone>0?' · +'+aheadDone+' ahead':'')):(td<PLAN_START?'Plan starts '+fmt(PLAN_START):'Nothing scheduled today');
@@ -342,16 +463,9 @@ function renderTask(t,pre,ahead){
   const head=`${pre}<div class="card"><div class="step">${ahead?'Ahead · '+fmt(t.d):(t.d<today()?'Catch-up · from '+fmt(t.d):'Task')} · ${fm(t.min||0)}</div>${TAG[t.c]||''}<h2>${esc(t.title)}</h2>`;
   const instr=`<div class="instr">${t.t==='R'?'<div class="banner info"><b>Topics for this review</b> (picked from what you actually learned 3 and 7 days ago): '+reviewUnits(t).map(u=>esc(P.U[u]?P.U[u].n:u)).join(' · ')+'. These replace the list below.</div>':''}${t.html||''}</div>`;
   const C=S.check[t.key];
-  if(!st){ main.innerHTML=head+instr+`<button class="btn" id="go">Start this task</button></div>`;
+  if(!st){ main.innerHTML=head+`<div class="instr">${prettyLinks(Object.assign(document.createElement('div'),{innerHTML:instr})).innerHTML}</div><button class="btn" id="go">Start this task</button></div>`;
     $('go').onclick=()=>{ S.start[t.key]=Date.now(); save(); render(); }; return; }
-  if(!C||!C.phase){
-    main.innerHTML=head+`<details class="instrbox" open><summary>Instructions · tick each step as you finish it</summary>${instr}</details><div id="hlog"></div><div class="timer" id="tm"></div><div id="after"></div></div>`;
-    const nSteps=mountSteps(t,main); if(t.t==='H') mountHardLog(t,$('hlog'));
-    const draw=()=>{ const el=Date.now()-st, rem=needMs-el, sd=stepsDone(t,nSteps);
-      $('tm').innerHTML=`${clock(el)}<small>${rem>0?'check unlocks in '+clock(rem):(sd?'check unlocked':'tick every step above to unlock the check')} · planned ${fm(t.min||0)}</small>`;
-      if(rem<=0 && sd && !$('ck')){ $('after').innerHTML=preCheckForm(t); bindPreCheck(t); }
-      if(!sd && $('ck')) $('after').innerHTML=''; };
-    draw(); tick=setInterval(draw,1000); return; }
+  if(!C||!C.phase) return renderPlayer(t,pre,ahead,needMs);
   renderCheck(t,head); }
 const clock=ms=>{ms=Math.max(0,ms);const s=Math.floor(ms/1000);return (s>=3600?Math.floor(s/3600)+':':'')+String(Math.floor(s/60)%60).padStart(2,'0')+':'+String(s%60).padStart(2,'0');};
 
@@ -452,6 +566,8 @@ function showSchedule(){ clearInterval(tick);
     <button class="btn sec" id="back">Back to today</button>`;
   $('back').onclick=render; window.scrollTo(0,0); }
 $('schedLink').onclick=e=>{ e.preventDefault(); showSchedule(); };
+$('homeLink').onclick=e=>{ e.preventDefault(); VIEW='home'; closeViewer(); render(); window.scrollTo(0,0); };
+$('h').style.cursor='pointer'; $('h').onclick=()=>$('homeLink').click();
 $('logLink').onclick=e=>{ e.preventDefault(); clearInterval(tick);
   const open=S.err.filter(x=>!x.cleared);
   $('main').innerHTML=`<div class="card"><h2>Error log</h2><p class="small">Every wrong answer comes back with fresh numbers in 2 and 7 days. It clears after you get it right twice.</p>
@@ -489,6 +605,7 @@ $('vback').onclick=closeViewer;
 $('vprev').onclick=()=>{ if(VSTACK.length>1){ VSTACK.pop(); showV(VSTACK[VSTACK.length-1]); } };
 const linkHandler=e=>{ const a=e.target.closest&&e.target.closest('a[href]'); if(!a) return; const h=a.getAttribute('href');
   if(!h||h.startsWith('#')||h.startsWith('javascript:')||a.closest('.vbar')) return;
+  const mf=$('matframe'); if(mf&&a.closest('.pside')){ e.preventDefault(); const u=embedURL(a.href); if(u){ mf.src=u; wireFrame(mf,a.href); return; } }
   e.preventDefault(); openViewer(a.href,a.textContent); };
 document.addEventListener('click',linkHandler);
 $('vframe').addEventListener('load',()=>{ try{ const d=$('vframe').contentDocument; if(!d||!d.body) return;
