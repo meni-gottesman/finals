@@ -45,11 +45,27 @@ function mc(r,correct,wrongs,max){max=max||5;const seen=new Set([norm(correct)])
   for(const w of wrongs){if(w==null)continue;const k=norm(w);if(!seen.has(k)){seen.add(k);ch.push(w);}if(ch.length>=max)break;}
   if(ch.length<4)return null;const idx=r.shuffle(ch.map((_,i)=>i));return {choices:idx.map(i=>ch[i]),answer:idx.indexOf(0),order:idx};}
 // retry wrapper: f returns a question or null
-const rq=f=>function(r){for(let t=0;t<500;t++){const q=f(r);if(q)return q;}throw new Error('generator failed to find parameters');};
-const gen=(id,type,f)=>({id,type,make:rq(f)});
+// longest-choice tell: an mc question whose correct choice is strictly the longest is usually redrawn
+const plainLen=s=>String(s).replace(/<[^>]*>/g,'').replace(/&[a-z]+;/g,'x').length;
+const longTell=q=>{if(!q||q.kind!=='mc')return false;const L=q.choices.map(plainLen);return L.every((x,i)=>i===q.answer||x<L[q.answer]);};
+const rq=f=>function(r){for(let t=0;t<500;t++){const q=f(r);if(!q)continue;if(t<450&&longTell(q)&&r.float()<0.8)continue;return q;}throw new Error('generator failed to find parameters');};
+const gen=(id,type,f)=>{const g={id,type,make:rq(f)};Object.defineProperty(g,'_f',{value:f});return g;};
+// answer balancing: pick the target answer class uniformly FIRST, then draw parameters until the question matches it
+const balanced=(f,{key,classes})=>function(r){for(let round=0;round<60;round++){const t=String(r.pick(classes));for(let i=0;i<400;i++){const q=f(r);if(!q)continue;if(longTell(q)&&r.float()<0.8)continue;if(String(key(q))===t)return q;}}throw new Error('balance: no instance for any class');};
+const stripT=s=>String(s).replace(/<[^>]*>/g,'');
+const kAns=q=>JSON.stringify(q.answer);
+const kMC=q=>stripT(q.choices[q.answer]).slice(0,40);
+const kMulti=q=>q.answer.map(i=>stripT(q.choices[i])).sort().join(' | ')||'(none)';
 const ul=items=>'<ul>'+items.map(x=>`<li>${x}</li>`).join('')+'</ul>';
 const ol=items=>'<ol>'+items.map(x=>`<li>${x}</li>`).join('')+'</ol>';
 const mat=(rows)=>'<table class="mat">'+rows.map(r=>'<tr>'+r.map(x=>`<td>${x}</td>`).join('')+'</tr>').join('')+'</table>';
+// successive-squaring trace b^e mod m (shown with the instance's numbers)
+function powSteps(b,e,m){const bits=e.toString(2);const sq=[];let x=mod(b,m);for(let i=0;i<bits.length;i++){sq.push(x);x=x*x%m;}
+  const used=[...bits].reverse().map((c,i)=>c==='1'?i:-1).filter(i=>i>=0);let acc=1;const prod=used.map(i=>{const before=acc;acc=acc*sq[i]%m;return `${before}·${sq[i]} ≡ ${acc}`;});
+  return `${e} = (${bits})<sub>2</sub> = ${used.map(i=>1<<i).reverse().join(' + ')}. Squares mod ${m}: ${sq.map((v,i)=>`${b}<sup>${1<<i}</sup> ≡ ${v}`).join(', ')}. Multiply the needed ones: ${prod.join(', ')}. So ${b}<sup>${e}</sup> ≡ ${acc} (mod ${m}).`;}
+// extended Euclid table: returns {html, g, s, t} with a·s + b·t = g
+function xgcdT(a,b){let r0=a,r1=b,s0=1,s1=0,t0=0,t1=1;const rows=[[r0,'',s0,t0],[r1,'',s1,t1]];while(r1!==0){const q=Math.floor(r0/r1);[r0,r1]=[r1,r0-q*r1];[s0,s1]=[s1,s0-q*s1];[t0,t1]=[t1,t0-q*t1];rows[rows.length-1][1]=q;rows.push([r1,'',s1,t1]);}
+  rows.pop();return {g:r0,s:s0,t:t0,html:`<p>Extended Euclid (each row = previous-but-one − q·previous):</p>`+tbl(['r','q','s','t'],rows.map(x=>x.map(v=>typeof v==='number'?sn(v):v)))+`<p>Last nonzero remainder: ${a}·(${sn(s0)}) + ${b}·(${sn(t0)}) = ${r0}.</p>`};}
 const tbl=(head,rows)=>'<table class="mat"><tr>'+head.map(x=>`<th>${x}</th>`).join('')+'</tr>'+rows.map(r=>'<tr>'+r.map(x=>`<td>${x}</td>`).join('')+'</tr>').join('')+'</table>';
 
 // ---------- propositional logic ----------
@@ -76,6 +92,7 @@ function randF(r,nv,d){if(d<=0||(d===1&&r.float()<0.25))return r.float()<0.7?V(r
   return [op,randF(r,nv,d-1),randF(r,nv,r.int(d>1?1:0,d-1))];}
 function counterRow(fl,nv){for(let i=(1<<nv)-1;i>=0;i--){const a=asg(i,nv);if(fl(a))return a;}return null;}
 const asgStr=(a)=>a.map((v,j)=>`${VN[j]}=${TF(v)}`).join(', ');
+const premRows=(prem,nv)=>{const o=[];for(let i=(1<<nv)-1;i>=0;i--){const a=asg(i,nv);if(prem.every(p=>fev(p,a)))o.push(a);}return o;};
 
 let FOL,BIFF;  // shared internals for second-variant generators
 // =========================================================
@@ -232,7 +249,7 @@ G['55-A']=[
     gen('55-A-argument-tf',TA[5],r=>{const t=r.pick(ARG);const v=r.shuffle([0,1,2]);const L=v.map(i=>r.float()<0.35?NN(V(i)):V(i));const prem=t[0](...L),conc=t[1](...L);
       const ce=valid(prem,conc,3);const ok=!ce;
       return Q(`<p>Is the following argument form valid?</p>${ul(prem.map(p=>fs(p)))}<p>∴ ${fs(conc)}</p>`,'tf',ok,{hint:'Valid ⇔ no row makes every premise true and the conclusion false.',
-        solution:ok?`<p><b>Valid</b> (${t[2]}): every row that makes all premises true makes ${fs(conc)} true.</p>`:`<p><b>Invalid</b> (${t[2]}). Counterexample row: ${asgStr(ce)}: premises ${prem.map(p=>fs(p)).join(', ')} are all T but the conclusion ${fs(conc)} is F.</p>`,
+        solution:ok?`<p>Method: look only at the rows where every premise is T, and check the conclusion there.</p><p>Rows with all premises ${prem.map(p=>fs(p)).join(', ')} true: ${premRows(prem,3).map(a=>`(${asgStr(a)}: ${fs(conc)} = ${TF(fev(conc,a))})`).join('; ')||'none'}.</p><p>The conclusion is T in every such row, so the form is <b>valid</b> (${t[2]}).</p>`:`<p><b>Invalid</b> (${t[2]}). Counterexample row: ${asgStr(ce)}: premises ${prem.map(p=>fs(p)).join(', ')} are all T but the conclusion ${fs(conc)} is F.</p>`,
         meta:{prem:prem.map(p=>fs(p)),conc:fs(conc),nv:3}});}),
     gen('55-A-argument-conclude',TA[5],r=>{const SETS=[(a,b,c,d)=>[I_(a,b),I_(b,c),N(c)],(a,b,c,d)=>[O_(a,b),O_(N(a),c),N(c)],(a,b,c,d)=>[I_(a,b),I_(N(a),c),N(b)],(a,b,c,d)=>[I_(A_(a,b),c),a,N(c)],
        (a,b,c,d)=>[I_(a,O_(b,c)),N(b),a],(a,b,c,d)=>[I_(a,b),I_(c,d),O_(a,c),N(b)],(a,b,c,d)=>[O_(a,b),I_(a,c),I_(b,c)],(a,b,c,d)=>[I_(a,b),I_(b,c),I_(c,d),a]];
@@ -245,7 +262,8 @@ G['55-A']=[
       if(!val.length)return null;const lv=val.filter(f=>f[0]!=='imp');const cor=lv.length?r.pick(lv):r.pick(val);
       const usedV=new Set();prem.forEach(p=>fvars(p,usedV));const m=mc(r,fs(cor),r.shuffle(inv.filter(f=>[...fvars(f)].every(x=>usedV.has(x)))).map(f=>fs(f)));if(!m)return null;
       return Q(`<p>From the premises</p>${ul(prem.map(p=>fs(p)))}<p>which conclusion follows validly?</p>`,'mc',m.answer,{choices:m.choices,hint:'Chain rules of inference (modus ponens/tollens, disjunctive syllogism, resolution); test a candidate by looking for a row with all premises T and it F.',
-        solution:`<p><b>${fs(cor)}</b> follows: every assignment making all premises true makes it true. Each other choice has a counterexample row (all premises T, choice F).</p>`,meta:{prem:prem.map(p=>fs(p)),nv}});}),
+        solution:(()=>{const rows=premRows(prem,nv);const ce=m.choices.filter(c=>c!==fs(cor)).map(c=>{const f=inv.find(g=>fs(g)===c);const a=f?valid(prem,f,nv):null;return a?`${c} fails at ${asgStr(a)}`:null;}).filter(x=>x);
+          return `<p>Rows (p, q, r, s) where ALL premises are true: ${rows.map(a=>'('+asgStr(a)+')').join('; ')}.</p><p>In each of these rows ${fs(cor)} is T, so <b>${fs(cor)}</b> follows validly.</p>${ce.length?`<p>Counterexample rows for the other choices (premises all T, choice F): ${ce.join('; ')}.</p>`:''}`;})(),meta:{prem:prem.map(p=>fs(p)),nv}});}),
    ];})(),
  gen('55-A-translate-rev',TA[2],r=>{const AT=[['the bridge is open','the bridge is closed'],['you pass the exam','you fail the exam'],['the sensor detects motion','the sensor detects no motion'],['the file is saved','the file is not saved'],
      ['it is a weekday','it is not a weekday'],['the light turns green','the light does not turn green'],['you buy a ticket','you do not buy a ticket'],['the function is continuous','the function is not continuous'],['the battery is charged','the battery is not charged']];
@@ -319,16 +337,19 @@ G['55-B']=[
        solution:`<p>Contrapositive of P → Q is ¬Q → ¬P: <b>${items[0][0]}</b></p><p>“If ${q}, then ${p}” is the converse, “If ${np}, then ${nq}” is the inverse (both NOT equivalent), and “${p} and ${nq}” is the negation (what a contradiction proof assumes).${disj?' Negating an “or” gives an “and” (De Morgan).':''}</p>`,
        meta:{forms:idx.map(i=>items[i][1]),orig:`${F.p} → ${F.q}`,nv:disj?3:2}});})];})(),
  gen('55-B-irrational',TB[2],r=>{const items=[];
-   const sq=()=>{const k=r.int(2,15);return r.bool()?{t:`√${k*k}`,rat:true}:{t:`√${k*k+r.int(1,2*k)}`,rat:false};};
-   const cb=()=>{const k=r.int(2,6);return r.bool()?{t:`∛${k*k*k}`,rat:true}:{t:`∛${k*k*k+r.pick([1,-1])*r.int(1,3*k)}`,rat:false};};
-   const lg=()=>{const t=r.pick([2,3,5]);const i=r.int(1,3),j=r.int(1,4);if(i===j)return null;if(r.bool())return {t:`log<sub>${Math.pow(t,i)}</sub> ${Math.pow(t,j)}`,rat:true};const o=r.pick([2,3,5,6,7,10].filter(x=>x!==t&&x%t&&t%x));return {t:`log<sub>${Math.pow(t,i)}</sub> ${Math.pow(o,j)}`,rat:false};};
-   const fq=()=>{const a=r.int(2,9),b=r.int(2,9);if(a===b)return null;if(r.bool())return {t:`√(${a*a}/${b*b*1})`.replace(/\((\d+)\/(\d+)\)/,'($1/$2)'),rat:true,skip:gcd(a,b)!==1};return {t:`√(${a*a}/${b*b*2})`,rat:false,skip:gcd(a,2*b)!==1};};
-   const sm=()=>{const a=r.int(2,7),b=r.int(2,7);if(r.bool())return {t:`√${a*a} + √${b*b}`,rat:true};const k=r.pick([2,3,5]);return {t:`√${k*a*a} + √${k*b*b}`,rat:false};};
+   const oddP=(m,e)=>factorize(m).find(([p,x])=>x%e!==0);
+   const rootPf=(m,e,sym)=>{const [p,x]=oddP(m,e);const fm=fmtFact(factorize(m));return `irrational. ${m} = ${fm} is not a perfect ${e===2?'square':'cube'}: the prime ${p} appears to the power ${x}, not a multiple of ${e}. Suppose ${sym}${m} = a/b in lowest terms. Then a${sup(e)} = ${m}·b${sup(e)}. The exponent of ${p} in a${sup(e)} and in b${sup(e)} is a multiple of ${e}, so on the right it is (multiple of ${e}) + ${x}, which is not a multiple of ${e}: the two sides have different exponents of ${p}, contradicting unique factorization.`;};
+   const sq=()=>{const k=r.int(2,15);if(r.bool())return {t:`√${k*k}`,rat:true,why:`rational: √${k*k} = ${k} since ${k}² = ${k*k}.`};const m=k*k+r.int(1,2*k);return {t:`√${m}`,rat:false,why:`${k}² = ${k*k} &lt; ${m} &lt; ${(k+1)*(k+1)} = ${k+1}², so it is not an integer; ${rootPf(m,2,'√')}`};};
+   const cb=()=>{const k=r.int(2,6);if(r.bool())return {t:`∛${k*k*k}`,rat:true,why:`rational: ∛${k*k*k} = ${k} since ${k}³ = ${k*k*k}.`};const m=k*k*k+r.pick([1,-1])*r.int(1,3*k);return {t:`∛${m}`,rat:false,why:rootPf(m,3,'∛')};};
+   const lg=()=>{const t=r.pick([2,3,5]);const i=r.int(1,3),j=r.int(1,4);if(i===j)return null;const B=Math.pow(t,i);if(r.bool()){const g=gcd(i,j);return {t:`log<sub>${B}</sub> ${Math.pow(t,j)}`,rat:true,why:`rational: ${B} = ${t}${sup(i)} and ${Math.pow(t,j)} = ${t}${sup(j)}, so (${t}${sup(i)})${sup('x')} = ${t}${sup(j)} gives ${i}x = ${j}, x = ${j/g}/${i/g}${i/g===1?' = '+(j/g):''}.`};}
+     const o=r.pick([2,3,5,6,7,10].filter(x=>x!==t&&x%t&&t%x));const q=factorize(o).map(f=>f[0]).find(p=>p!==t);const Y=Math.pow(o,j);return {t:`log<sub>${B}</sub> ${Y}`,rat:false,why:`irrational. The value is positive; suppose it equals a/b with a, b positive integers. Then ${B}${sup('a/b')} = ${Y}, so ${B}${sup('a')} = ${Y}${sup('b')}, i.e. ${t}${sup(i+'a')} = ${o}${sup(j+'b')}. The right side is divisible by the prime ${q}, the left side (a power of ${t}) is not: contradiction.`};};
+   const fq=()=>{const a=r.int(2,9),b=r.int(2,9);if(a===b)return null;if(r.bool())return {t:`√(${a*a}/${b*b})`,rat:true,skip:gcd(a,b)!==1,why:`rational: √(${a*a}/${b*b}) = ${a}/${b}.`};return {t:`√(${a*a}/${b*b*2})`,rat:false,skip:gcd(a,2*b)!==1,why:`irrational. √(${a*a}/${b*b*2}) = ${a}/(${b}√2). If it equalled a rational c/d, then √2 = ${a}d/(${b}c) would be rational. But √2 is irrational: if √2 = m/n in lowest terms then m² = 2n², so m is even, m = 2u, so n² = 2u² and n is even too, contradicting lowest terms.`};};
+   const sm=()=>{const a=r.int(2,7),b=r.int(2,7);if(r.bool())return {t:`√${a*a} + √${b*b}`,rat:true,why:`rational: ${a} + ${b} = ${a+b}.`};const k=r.pick([2,3,5]);return {t:`√${k*a*a} + √${k*b*b}`,rat:false,why:`irrational. √${k*a*a} = ${a}√${k} and √${k*b*b} = ${b}√${k}, so the sum is ${a+b}√${k}. If it equalled c/d, then √${k} = c/(${a+b}d) would be rational. But √${k} is irrational: if √${k} = m/n in lowest terms then m² = ${k}n², so the prime ${k} divides m, m = ${k}u, then n² = ${k}u², so ${k} divides n too, contradicting lowest terms.`};};
    const makers=[sq,cb,lg,fq,sm];for(const f of r.shuffle(makers)){let it=null;for(let t=0;t<10&&!it;t++){it=f();if(it&&it.skip)it=null;}if(!it)return null;items.push(it);}
    if(items.every(x=>x.rat)||items.every(x=>!x.rat))return null;if(new Set(items.map(x=>x.t)).size<5)return null;
    return Q(`<p>Select ALL numbers that are <b>irrational</b>.</p>`,'multi',items.map((x,i)=>x.rat?-1:i).filter(i=>i>=0),{choices:items.map(x=>x.t),
      hint:'√n is rational only for perfect squares (proof by contradiction, as for √2); log_a b is rational only if a and b are powers of a common base.',
-     solution:ul(items.map(x=>`${x.t}: ${x.rat?'rational (it simplifies exactly)':'irrational: assuming it equals a/b in lowest terms leads to a contradiction (a prime appears to an odd power on one side / a power of one prime equals a power of another)'}`)),meta:{items:items.map(x=>x.t.replace(/<sub>(\d+)<\/sub>/,'_$1 '))}});}),
+     solution:`<p>Simplify each number; for the ones that do not simplify, run the proof by contradiction (assume it is a/b in lowest terms) with the actual numbers.</p>`+ul(items.map(x=>`<b>${x.t}</b>: ${x.why}`)),meta:{items:items.map(x=>x.t.replace(/<sub>(\d+)<\/sub>/,'_$1 '))}});}),
  gen('55-B-euclid-primes',TB[2],r=>{const ps=primesUpTo(23);const k=r.int(3,7);const S=r.sample(ps,k).sort((a,b)=>a-b);const sgn=r.pick([1,1,-1]);
    const prod=S.reduce((a,b)=>a*b,1);const Nn=prod+sgn;if(Nn<10||isPrime(Nn))return null;let sp=2;while(Nn%sp)sp++;
    return Q(`<p>In Euclid's proof that there are infinitely many primes, one forms N = p₁p₂⋯pₖ ${sgn>0?'+':'−'} 1. Take the primes ${S.join(', ')}:</p><p style="text-align:center">N = ${S.join('·')} ${sgn>0?'+':'−'} 1 = ${Nn}.</p><p>N is NOT prime here. What is its smallest prime factor? (The proof only needs that this factor is a NEW prime.)</p>`,'num',sp,{
@@ -338,7 +359,7 @@ G['55-B']=[
    const IFF=[
     {mk:r=>{const k=r.int(2,60);return {k,s:`For every integer n: ${k} | n² ⟺ ${k} | n`,L:'(n*n)%k===0',R:'n%k===0'};},why:(k,v)=>v?`${k} = ${fmtFact(factorize(k))} is squarefree, so if every prime p | k divides n² then p | n (Euclid's lemma), hence k | n. (⇐) is immediate.`:`${k} = ${fmtFact(factorize(k))} has a squared prime factor; take n = ${factorize(k).reduce((a,[p,e])=>a*Math.pow(p,Math.ceil(e/2)),1)}: then ${k} | n² but ${k} ∤ n.`,truth:k=>factorize(k).every(([p,e])=>e===1)},
     {mk:r=>{const a=r.int(2,12),b=r.int(2,12);return {k:a,k2:b,s:`For every integer n: (${a} | n and ${b} | n) ⟺ ${a*b} | n`,L:`n%${a}===0&&n%${b}===0`,R:`n%${a*b}===0`};},why:(k,v,k2)=>v?`gcd(${k}, ${k2}) = 1, so lcm = product.`:`gcd(${k}, ${k2}) = ${gcd(k,k2)} > 1: n = lcm(${k}, ${k2}) = ${lcm(k,k2)} is divisible by both but not by ${k*k2}.`,truth:(k,k2)=>gcd(k,k2)===1},
-    {mk:r=>{const k=r.int(3,40);return {k,s:`For every integer n: n² ≡ 1 (mod ${k}) ⟺ n ≡ ±1 (mod ${k})`,L:'((n*n)%k)===1%k',R:'n%k===1%k||n%k===k-1'};},why:(k,v)=>{if(v)return `Checking residues 0…${k-1}, only n ≡ ±1 square to 1 mod ${k}.`;const n=range(2,k-2).find(n=>(n*n)%k===1);return `n = ${n}: ${n}² = ${n*n} ≡ 1 (mod ${k}) but ${n} ≢ ±1.`;},truth:k=>range(0,k-1).filter(n=>(n*n)%k===1%k).length===(k<=2?1:2)},
+    {mk:r=>{const k=r.int(3,40);return {k,s:`For every integer n: n² ≡ 1 (mod ${k}) ⟺ n ≡ ±1 (mod ${k})`,L:'((n*n)%k)===1%k',R:'n%k===1%k||n%k===k-1'};},why:(k,v)=>{if(v)return `(⇐) (±1)² = 1. (⇒) Square every residue mod ${k}: ${range(0,k-1).map(n=>`${n}²≡${(n*n)%k}`).join(', ')}. Only n ≡ 1 and n ≡ ${k-1} give 1.`;const n=range(2,k-2).find(n=>(n*n)%k===1);return `n = ${n}: ${n}² = ${n*n} ≡ 1 (mod ${k}) but ${n} ≢ ±1.`;},truth:k=>range(0,k-1).filter(n=>(n*n)%k===1%k).length===(k<=2?1:2)},
     {mk:r=>{const k=r.int(2,40);return {k,s:`For all integers x, y: ${k} | xy ⟺ (${k} | x or ${k} | y)`,L:'(x*y)%k===0',R:'x%k===0||y%k===0',two:true};},why:(k,v)=>v?`${k} is prime, so this is Euclid's lemma (⇒); (⇐) is clear.`:`${k} is composite: ${k} = ${divisors(k)[1]}·${k/divisors(k)[1]}, take x = ${divisors(k)[1]}, y = ${k/divisors(k)[1]}.`,truth:k=>isPrime(k)},
    ];
    BIFF=IFF;
@@ -359,7 +380,9 @@ G['55-B']=[
  gen('55-B-unique-tf',TB[5],r=>{const m=r.int(6,24),a=r.int(2,m-1),b=r.int(1,m-1);const lo=r.int(0,30),hi=lo+m-1+r.pick([0,0,r.int(1,m)]);
    const sols=range(lo,hi).filter(x=>mod(a*x-b,m)===0);const v=sols.length===1;if(!v&&r.float()<0.4)return null;
    return Q(`<p>True or false: there is a <b>unique</b> integer x with ${lo} ≤ x ≤ ${hi} and ${a}x ≡ ${b} (mod ${m}).</p>`,'tf',v,{hint:'Existence AND uniqueness: find all solutions mod m (depends on gcd(a, m)), then count those in the interval.',
-     solution:`<p>gcd(${a}, ${m}) = ${gcd(a,m)}. Solutions in [${lo}, ${hi}]: ${sols.length?sols.join(', '):'none'}. So the statement is <b>${v}</b>.</p>`,meta:{m,a,b,lo,hi}});}),
+     solution:(()=>{const g=gcd(a,m);let st;if(b%g){st=`gcd(${a}, ${m}) = ${g} does not divide ${b}, so there is no solution at all (existence fails).`;}else{const m2=m/g,a2=a/g,b2=b/g;const inv=range(0,m2-1).find(x=>(a2*x)%m2===1%m2);const x0=mod(b2*inv,m2);
+       st=`gcd(${a}, ${m}) = ${g} divides ${b}. ${g>1?`Divide by ${g}: ${a2}x ≡ ${b2} (mod ${m2}); `:''}${a2}⁻¹ ≡ ${inv} (mod ${m2}), so x ≡ ${b2}·${inv} ≡ ${x0} (mod ${m2}). The solutions are x = ${x0} + ${m2}t.`;}
+       return `<p>${st} Those in [${lo}, ${hi}]: ${sols.length?sols.join(', '):'none'} (${sols.length} of them). So the statement is <b>${v}</b>.</p>`;})(),meta:{m,a,b,lo,hi}});}),
  ...(()=>{
    // bogus proofs: steps are claims; the flaw is the first claim that is FALSE for the concrete values
    const T1=r=>{const t=r.int(2,9);return {intro:`Let a = b = ${t}.`,vars:{a:t,b:t},steps:[['a = b','a===b','given'],['a² = ab','a*a===a*b','multiply both sides by a'],['a² − b² = ab − b²','a*a-b*b===a*b-b*b','subtract b²'],
@@ -375,7 +398,7 @@ G['55-B']=[
      const choices=tp.steps.slice(1).map((s,i)=>`Step ${i+2}: ${s[0]} (${s[2]})`);let opts=choices.map((c,i)=>i+1);
      if(opts.length>5){const keep=new Set([bad]);for(const i of r.shuffle(opts))if(keep.size<5)keep.add(i);opts=[...keep].sort((a,b)=>a-b);}
      const idx=r.shuffle(opts);
-     return Q(`<p>Find the flaw. ${tp.intro} “Proof” that ${tp.concl}:</p>${ol(tp.steps.map(s=>`${s[0]} &nbsp;<i>(${s[2]})</i>`))}<p>Which step is the FIRST invalid one?</p>`,'mc',idx.indexOf(bad),{choices:idx.map(i=>`Step ${i+1}: ${tp.steps[i][0]} (${tp.steps[i][2]})`),
+     return Q(`<p>Find the flaw. ${tp.intro} “Proof” that ${tp.concl}:</p>${ol(tp.steps.map(s=>`${s[0]} &nbsp;<i>(${s[2]})</i>`))}<p>Which step is the FIRST invalid one?</p>`,'mc',idx.indexOf(bad),{choices:idx.map(i=>`Step ${i+1}: ${tp.steps[i][0]}`),
        hint:'Plug in the actual numbers: every valid step keeps a true statement true. Watch for dividing by 0, square roots (x² = y² ⇏ x = y), and multiplying an inequality by a negative.',
        solution:`<p>Evaluate each claim with ${Object.entries(vs).map(([k,v])=>`${k} = ${sn(v)}`).join(', ')}: steps 1–${bad} are true, step ${bad+1} (“${tp.steps[bad][0]}”) is false. The justification “${tp.steps[bad][2]}” is the error${/divide/.test(tp.steps[bad][2])&&tp.intro.includes('a = b')?' (a − b = 0)':''}.</p>`,
        meta:{vars:vs,steps:tp.steps.map(s=>s[1]),choiceStep:idx}});})];})(),
@@ -395,12 +418,21 @@ G['55-B']=[
    return Q(`<p>Original statement: “If ${s.P[0]}, then ${q}.” True or false: the statement “${items[k][0]}” is logically equivalent to the original (so proving it would prove the original)?</p>`,'tf',v,{
      hint:'Only the contrapositive ¬Q → ¬P is equivalent to P → Q. Converse and inverse are not. Negating “A or B” gives “not A and not B”.',
      solution:`<p>With p = “${s.P[0]}”${two?`, q, r the two parts of the conclusion`:', q = the conclusion'}: original ${orig}; given statement ${items[k][1]}. ${v?'This is the contrapositive: <b>true</b>.':'This is '+(k===1?'the converse':k===2?'the inverse':'not the contrapositive (check the negation of the compound conclusion)')+': <b>false</b>.'}</p>`,meta:{orig,form:items[k][1],nv}});}),
- gen('55-B-iff-direction',TB[4],r=>{const t=r.pick(BIFF);const o=t.mk(r);let fwd=true,back=true;
-   if(o.two){const fl=new Function('x','y','k','return '+o.L),frr=new Function('x','y','k','return '+o.R);for(let x=0;x<2*o.k;x++)for(let y=0;y<2*o.k;y++){const l=fl(x,y,o.k),rr2=frr(x,y,o.k);if(l&&!rr2)fwd=false;if(rr2&&!l)back=false;}}
-   else{const fl=new Function('n','k','return '+o.L),frr=new Function('n','k','return '+o.R);const K=o.k*(o.k2||1);for(let n=0;n<4*K+4;n++){const l=fl(n,o.k),rr2=frr(n,o.k);if(l&&!rr2)fwd=false;if(rr2&&!l)back=false;}}
-   const CH=['Both directions hold (the ⟺ is true)','Only ⇒ holds','Only ⇐ holds','Neither direction holds'];const k=fwd&&back?0:fwd?1:back?2:3;if(k===0&&r.float()<0.5)return null;const idx=r.shuffle([0,1,2,3]);
+ gen('55-B-iff-direction',TB[4],r=>{let o,ti=-1,swapped=false;
+   const EASY=[k=>`if ${k} | n then n = ${k}m, so n² = ${k}·(${k}m²)`,(k,k2)=>`if ${k*k2} | n then n = ${k*k2}m is a multiple of ${k} and of ${k2}`,k=>`if n ≡ ±1 (mod ${k}) then n² ≡ (±1)² = 1`,k=>`if ${k} | x (or ${k} | y) then ${k} divides the product xy`];
+   if(r.bool()){ti=r.int(0,BIFF.length-1);o=Object.assign({},BIFF[ti].mk(r));if(r.bool()){const c=o.s.indexOf(': ');const parts=o.s.slice(c+2).split(' ⟺ ');if(parts.length!==2)return null;o.s=o.s.slice(0,c+2)+parts[1]+' ⟺ '+parts[0];[o.L,o.R]=[o.R,o.L];swapped=true;}}
+   else{const a=r.int(2,15),b=r.int(2,15);if(a===b)return null;o={k:Math.max(a,b),s:`For every integer n: ${a} | n ⟺ ${b} | n`,L:`n%${a}===0`,R:`n%${b}===0`,a,b};}
+   let fwd=true,back=true,ceF=null,ceB=null;
+   if(o.two){const fl=new Function('x','y','k','return '+o.L),frr=new Function('x','y','k','return '+o.R);for(let x=0;x<2*o.k;x++)for(let y=0;y<2*o.k;y++){const l=fl(x,y,o.k),rr2=frr(x,y,o.k);if(l&&!rr2){fwd=false;ceF=ceF||`x = ${x}, y = ${y}`;}if(rr2&&!l){back=false;ceB=ceB||`x = ${x}, y = ${y}`;}}}
+   else{const fl=new Function('n','k','return '+o.L),frr=new Function('n','k','return '+o.R);const K=o.k*(o.k2||1);for(let n=1;n<=4*K+40;n++){const l=fl(n,o.k),rr2=frr(n,o.k);if(l&&!rr2){fwd=false;ceF=ceF||`n = ${n}`;}if(rr2&&!l){back=false;ceB=ceB||`n = ${n}`;}}}
+   const CH=['Both directions hold (the ⟺ is true)','Only ⇒ holds','Only ⇐ holds','Neither direction holds'];const k=fwd&&back?0:fwd?1:back?2:3;const idx=r.shuffle([0,1,2,3]);
+   const [ls,rs]=o.s.slice(o.s.indexOf(': ')+2).split(' ⟺ ');
+   const dirWhy=(isF,ok)=>{const from=isF?ls:rs,to=isF?rs:ls;if(!ok)return `false: ${isF?ceF:ceB} makes “${from}” true but “${to}” false`;
+     if(ti<0)return `true: ${isF?o.b:o.a} | ${isF?o.a:o.b}, so “${from}” forces “${to}”`;
+     const easyDir=swapped?isF:!isF;   // in the bank's own orientation the ⇐ direction is the easy one
+     return easyDir?`true: ${EASY[ti](o.k,o.k2)}`:`true: ${BIFF[ti].why(o.k,true,o.k2)}`;};
    return Q(`<p>Consider</p><p style="text-align:center"><b>${o.s}</b></p><p>Which directions are true?</p>`,'mc',idx.indexOf(k),{choices:idx.map(i=>CH[i]),hint:'Check ⇒ and ⇐ separately: prove each or find a counterexample (small residues).',
-     solution:`<p>⇒ is ${fwd?'true':'false'}, ⇐ is ${back?'true':'false'}: <b>${CH[k]}</b>. ${t.why(o.k,fwd&&back,o.k2)}</p>`,meta:{L:o.L,R:o.R,k:o.k,two:!!o.two}});}),
+     solution:`<p>Check each direction separately.</p>${ul([`⇒ (“${ls}” implies “${rs}”): ${dirWhy(true,fwd)}.`,`⇐ (“${rs}” implies “${ls}”): ${dirWhy(false,back)}.`])}<p>So: <b>${CH[k]}</b>.</p>`,meta:{L:o.L,R:o.R,k:o.k,two:!!o.two}});}),
 ];
 
 // =========================================================
@@ -438,7 +470,8 @@ G['55-C']=[
      const f=randF(r,3,3);if(fvars(f).size<3||fsize(f)<6||f[0]==='imp'||JSON.stringify(f).includes('imp')||JSON.stringify(f).includes('iff'))return null;
      const res=U.filter(x=>fev(f,S.map(s=>s.includes(x))));if(res.length===0||res.length===n)return null;
      return Q(`<p>Universe U = {1, 2, …, ${n}}. Let</p>${ul(S.map((s,i)=>`${SN[i]} = ${fmtSet(s)}`))}<p>Find |${ss(f)}|. (ᶜ = complement in U.)</p>`,'num',res.length,{
-       hint:'Work from the inside out; for complements list U minus the set.',solution:`<p>${ss(f)} = ${fmtSet(res)}, so the size is <b>${res.length}</b>.</p>`,meta:{n,S,expr:ss(f)}});}),
+       hint:'Work from the inside out; for complements list U minus the set.',solution:(()=>{const st=[];const walk=g=>{if(g[0]==='v')return;for(let i=1;i<g.length;i++)walk(g[i]);st.push(`${ss(g)} = ${fmtSet(U.filter(x=>fev(g,S.map(s=>s.includes(x)))))}`);};walk(f);
+         return `<p>Inside out:</p>${ul(st)}<p>So the size is <b>${res.length}</b>.</p>`;})(),meta:{n,S,expr:ss(f)}});}),
  ];})(),
  gen('55-C-powerset',TC[1],r=>{const t=r.int(0,5);const pool=r.shuffle(['a','b','c','d','e','f','g','h']);
    if(t===0){const a=r.int(2,4),b=r.int(2,3);const A=range(1,a),B=pool.slice(0,b);const ans=Math.pow(2,a*b);
@@ -450,7 +483,7 @@ G['55-C']=[
      const Uu=[...new Set(A.concat(B))];const ans=Math.pow(2,Uu.length)-Math.pow(2,A.length);
      return Q(`<p>A = ${fmtSet(A)}, B = ${fmtSet(B)}. How many subsets of A ∪ B are NOT subsets of A? (i.e. |𝒫(A ∪ B) − 𝒫(A)|)</p>`,'num',ans,{hint:'𝒫(A) ⊆ 𝒫(A ∪ B); subtract.',solution:`<p>|A ∪ B| = ${Uu.length}, |A| = ${A.length}: 2<sup>${Uu.length}</sup> − 2<sup>${A.length}</sup> = <b>${ans}</b>.</p>`,meta:{t,A,B,op}});}
    if(t===3){const a=r.int(2,4),b=r.int(2,4),k=r.int(2,a*b-2);const ans=C(a*b,k);
-     return Q(`<p>|A| = ${a}, |B| = ${b}. How many subsets of A × B have exactly ${k} elements?</p>`,'num',ans,{hint:'Choose k of the |A||B| ordered pairs.',solution:`<p>C(${a*b}, ${k}) = <b>${ans}</b>.</p>`,meta:{t,a,b,k}});}
+     return Q(`<p>|A| = ${a}, |B| = ${b}. How many subsets of A × B have exactly ${k} elements?</p>`,'num',ans,{hint:'Choose k of the |A||B| ordered pairs.',solution:`<p>A × B has ${a}·${b} = ${a*b} ordered pairs. A subset of size ${k} is a choice of ${k} of them, order irrelevant: C(${a*b}, ${k}) = ${a*b}!/(${k}!·${a*b-k}!) = <b>${ans}</b>.</p>`,meta:{t,a,b,k}});}
    if(t===4){const n=r.int(2,7);const ans=Math.pow(3,n);
      return Q(`<p>|S| = ${n}. How many ordered pairs (X, Y) of subsets of S satisfy X ⊆ Y?</p>`,'num',ans,{hint:'Each element independently: in X (hence in Y), in Y only, or in neither.',solution:`<p>3 choices per element: 3<sup>${n}</sup> = <b>${ans}</b>.</p>`,meta:{t,n}});}
    const n=r.int(2,4);const ans=Math.pow(2,Math.pow(2,n));return Q(`<p>|A| = ${n}. Find |𝒫(𝒫(A))|.</p>`,'num',ans,{hint:'Apply |𝒫(S)| = 2^|S| twice.',solution:`<p>|𝒫(A)| = 2<sup>${n}</sup> = ${1<<n}, so |𝒫(𝒫(A))| = 2<sup>${1<<n}</sup> = <b>${ans}</b>.</p>`,meta:{t,n}});}),
@@ -476,37 +509,43 @@ G['55-C']=[
  ];})(),
  gen('55-C-floor-sum',TC[3],r=>{const t=r.int(0,2);const N=r.int(20,60);let ans=0,expr,sol;
    if(t===0){const a=r.int(3,7);for(let k=1;k<=N;k++)ans+=Math.floor(k/a);expr=`∑<sub>k=1</sub><sup>${N}</sup> ⌊k/${a}⌋`;const q=Math.floor(N/a);sol=`⌊k/${a}⌋ = j for ${a} consecutive k (k = ${a}j … ${a}j+${a-1}); j = 1…${q-1} contribute ${a}·(1+…+${q-1}) = ${a*(q-1)*q/2}, and j = ${q} appears ${N-a*q+1} times: ${q*(N-a*q+1)}.`;}
-   else if(t===1){const a=r.int(3,7);for(let k=1;k<=N;k++)ans+=Math.ceil(k/a);expr=`∑<sub>k=1</sub><sup>${N}</sup> ⌈k/${a}⌉`;sol=`⌈k/${a}⌉ = j for k = ${a}(j−1)+1 … ${a}j; group the terms in blocks of ${a}.`;}
-   else{for(let k=1;k<=N;k++)ans+=Math.floor(Math.sqrt(k)+1e-9);expr=`∑<sub>k=1</sub><sup>${N}</sup> ⌊√k⌋`;sol=`⌊√k⌋ = j for j² ≤ k < (j+1)², i.e. 2j + 1 values (last block truncated at ${N}).`;}
+   else if(t===1){const a=r.int(3,7);for(let k=1;k<=N;k++)ans+=Math.ceil(k/a);expr=`∑<sub>k=1</sub><sup>${N}</sup> ⌈k/${a}⌉`;const q=Math.floor(N/a),rem=N-a*q;sol=`⌈k/${a}⌉ = j for the ${a} values k = ${a}(j−1)+1 … ${a}j. Full blocks j = 1…${q} contribute ${a}·(1 + … + ${q}) = ${a}·${q*(q+1)/2} = ${a*q*(q+1)/2}${rem?`; the last ${rem} value${rem>1?'s':''} k = ${a*q+1}…${N} have ⌈k/${a}⌉ = ${q+1}, contributing ${rem*(q+1)}`:''}.`;}
+   else{for(let k=1;k<=N;k++)ans+=Math.floor(Math.sqrt(k)+1e-9);expr=`∑<sub>k=1</sub><sup>${N}</sup> ⌊√k⌋`;const J=Math.floor(Math.sqrt(N)+1e-9);const parts=range(1,J).map(j=>{const c=Math.min((j+1)*(j+1)-1,N)-j*j+1;return `${j}·${c}`;});sol=`⌊√k⌋ = j for j² ≤ k ≤ (j+1)² − 1, i.e. 2j + 1 values (last block truncated at ${N}): ${parts.join(' + ')}.`;}
    return Q(`<p>Compute ${expr}.</p>`,'num',ans,{hint:'Group the k by the common value of the floor/ceiling.',solution:`<p>${sol} Total = <b>${ans}</b>.</p>`,meta:{t,N,a:+(expr.match(/k\/(\d+)/)||[0,0])[1]}});}),
  gen('55-C-floor-count',TC[3],r=>{const t=r.int(0,2);const N=r.int(30,90);const a=r.int(2,7);let b=r.int(2,9);if(a===b)b++;let pred,txt;
    if(t===0){pred=n=>Math.floor(n/a)===Math.floor(n/b);txt=`⌊n/${a}⌋ = ⌊n/${b}⌋`;}else if(t===1){pred=n=>Math.ceil(n/a)===Math.floor(n/b);txt=`⌈n/${a}⌉ = ⌊n/${b}⌋`;}
    else{pred=n=>n%Math.floor(Math.sqrt(n)+1e-9)===0;txt=`⌊√n⌋ divides n`;}
    const sols=range(1,N).filter(pred);if(!sols.length)return null;
-   return Q(`<p>How many integers n with 1 ≤ n ≤ ${N} satisfy ${txt}?</p>`,'num',sols.length,{hint:'Write n = qm + r and see where each side changes value; or organize by the value of the floor.',solution:`<p>They are ${sols.join(', ')}: <b>${sols.length}</b> integers.</p>`,meta:{t,N,a,b}});}),
+   let how;if(t===2){const J=Math.floor(Math.sqrt(N)+1e-9);how=range(1,J).map(m=>{const hi=Math.min((m+1)*(m+1)-1,N);const L=range(m*m,hi).filter(n=>n%m===0);return `⌊√n⌋ = ${m} for ${m*m} ≤ n ≤ ${hi}; multiples of ${m} there: ${L.join(', ')} (${L.length})`;});}
+   else{const per=t===0?`⌊n/${a}⌋ and ⌊n/${b}⌋`:`⌈n/${a}⌉ and ⌊n/${b}⌋`;const vals=range(0,Math.floor(N/Math.min(a,b))+1).map(v=>{const L=sols.filter(n=>(t===0?Math.floor(n/a):Math.ceil(n/a))===v);return L.length?`common value ${v}: n = ${L.join(', ')} (${L.length})`:null;}).filter(x=>x);how=[`Organize by the common value of ${per}:`].concat(vals);}
+   return Q(`<p>How many integers n with 1 ≤ n ≤ ${N} satisfy ${txt}?</p>`,'num',sols.length,{hint:'Write n = qm + r and see where each side changes value; or organize by the value of the floor.',solution:`${ul(how)}<p>Total: <b>${sols.length}</b> integers.</p>`,meta:{t,N,a,b}});}),
  gen('55-C-floor-tf',TC[3],r=>{const den=r.pick([2,4,8]);const x=r.int(-30,30)/den,y=r.int(-30,30)/den;const fl=Math.floor,ce=Math.ceil;
    const T=[[`⌊x + y⌋ = ⌊x⌋ + ⌊y⌋`,()=>fl(x+y)===fl(x)+fl(y)],[`⌈x + y⌉ = ⌈x⌉ + ⌈y⌉`,()=>ce(x+y)===ce(x)+ce(y)],[`⌊−x⌋ = −⌊x⌋`,()=>fl(-x)===-fl(x)],[`⌊2x⌋ = 2⌊x⌋`,()=>fl(2*x)===2*fl(x)],
      [`⌊2x⌋ = ⌊x⌋ + ⌊x + 1/2⌋`,()=>fl(2*x)===fl(x)+fl(x+0.5)],[`⌈x⌉ − ⌊x⌋ = 1`,()=>ce(x)-fl(x)===1],[`⌊xy⌋ = ⌊x⌋·⌊y⌋`,()=>fl(x*y)===fl(x)*fl(y)],[`⌈x⌉ = −⌊−x⌋`,()=>ce(x)===-fl(-x)],[`⌊x⌋ + ⌈y⌉ = ⌊x + y⌋ + 1`,()=>fl(x)+ce(y)===fl(x+y)+1]];
    const t=r.int(0,T.length-1);const v=T[t][1]();if(v&&r.float()<0.3)return null;const uses=T[t][0].includes('y');
    return Q(`<p>Let x = ${sn(x)}${uses?` and y = ${sn(y)}`:''}. True or false: <b>${T[t][0]}</b>?</p>`,'tf',v,{hint:'⌊t⌋ is the greatest integer ≤ t (careful with negatives: ⌊−1.5⌋ = −2).',
-     solution:`<p>⌊x⌋ = ${sn(fl(x))}, ⌈x⌉ = ${sn(ce(x))}${uses?`, ⌊y⌋ = ${sn(fl(y))}, ⌈y⌉ = ${sn(ce(y))}, x + y = ${sn(x+y)}`:''}, 2x = ${sn(2*x)}, −x = ${sn(-x)}. Evaluating both sides, the statement is <b>${v}</b>.</p>`,meta:{x,y,t}});}),
+     solution:(()=>{const SIDES=[[`⌊${sn(x+y)}⌋ = ${sn(fl(x+y))}`,`${sn(fl(x))} + ${sn(fl(y))} = ${sn(fl(x)+fl(y))}`],[`⌈${sn(x+y)}⌉ = ${sn(ce(x+y))}`,`${sn(ce(x))} + ${sn(ce(y))} = ${sn(ce(x)+ce(y))}`],[`⌊${sn(-x)}⌋ = ${sn(fl(-x))}`,`−(${sn(fl(x))}) = ${sn(-fl(x))}`],[`⌊${sn(2*x)}⌋ = ${sn(fl(2*x))}`,`2·(${sn(fl(x))}) = ${sn(2*fl(x))}`],
+       [`⌊${sn(2*x)}⌋ = ${sn(fl(2*x))}`,`${sn(fl(x))} + ⌊${sn(x+0.5)}⌋ = ${sn(fl(x)+fl(x+0.5))}`],[`${sn(ce(x))} − (${sn(fl(x))}) = ${sn(ce(x)-fl(x))}`,`1`],[`⌊${sn(x*y)}⌋ = ${sn(fl(x*y))}`,`${sn(fl(x))}·${sn(fl(y))} = ${sn(fl(x)*fl(y))}`],[`⌈${sn(x)}⌉ = ${sn(ce(x))}`,`−⌊${sn(-x)}⌋ = ${sn(-fl(-x))}`],[`${sn(fl(x))} + ${sn(ce(y))} = ${sn(fl(x)+ce(y))}`,`⌊${sn(x+y)}⌋ + 1 = ${sn(fl(x+y)+1)}`]][t];
+       return `<p>⌊x⌋ = ${sn(fl(x))}, ⌈x⌉ = ${sn(ce(x))}${uses?`, ⌊y⌋ = ${sn(fl(y))}, ⌈y⌉ = ${sn(ce(y))}`:''}.</p><p>Left side: ${SIDES[0]}. Right side: ${SIDES[1]}. ${v?'Equal':'Not equal'}, so the statement is <b>${v}</b>.</p>`;})(),meta:{x,y,t}});}),
  gen('55-C-listing',TC[4],r=>{const t=r.int(0,2);
    if(t===0){const a=r.int(0,9),b=r.int(0,9);const d=a+b;const ans=d*(d+1)/2+a;
      return Q(`<p>ℕ × ℕ is listed along diagonals: (0,0), (0,1), (1,0), (0,2), (1,1), (2,0), (0,3), … (diagonal a + b = d is listed in order of increasing first coordinate). Counting the first pair as position 0, at which position does (${a}, ${b}) appear?</p>`,'num',ans,{
        hint:'Diagonals 0…d−1 contain 1 + 2 + … + d = d(d+1)/2 pairs.',solution:`<p>d = ${d}; earlier diagonals contain ${d}·${d+1}/2 = ${d*(d+1)/2} pairs; within diagonal ${d}, (${a}, ${b}) is at offset ${a}. Position <b>${ans}</b>.</p>`,meta:{t,a,b}});}
    if(t===1){const k=r.int(10,80);const val=k%2===0?k/2:-(k-1)/2;
-     return Q(`<p>The bijection f : ℤ<sup>+</sup> → ℤ lists ℤ as 0, 1, −1, 2, −2, 3, −3, … (f(1) = 0, f(2) = 1, f(3) = −1, …). What is f(${k})?</p>`,'num',val,{hint:'f(n) = n/2 for even n and −(n−1)/2 for odd n.',solution:`<p>${k} is ${k%2?'odd':'even'}, so f(${k}) = <b>${val}</b>.</p>`,meta:{t,k}});}
+     return Q(`<p>The bijection f : ℤ<sup>+</sup> → ℤ lists ℤ as 0, 1, −1, 2, −2, 3, −3, … (f(1) = 0, f(2) = 1, f(3) = −1, …). What is f(${k})?</p>`,'num',val,{hint:'f(n) = n/2 for even n and −(n−1)/2 for odd n.',solution:`<p>The list pairs positions 2m and 2m + 1 with m and −m: f(n) = n/2 for even n, f(n) = −(n − 1)/2 for odd n. ${k} is ${k%2?`odd, so f(${k}) = −(${k} − 1)/2`:`even, so f(${k}) = ${k}/2`} = <b>${val}</b>.</p>`,meta:{t,k}});}
    // positive rationals p/q listed by p+q then p, skipping non-reduced
    const p=r.int(1,7),q=r.int(1,7);if(gcd(p,q)!==1)return null;let pos=0,found=0;for(let s=2;!found;s++)for(let a=1;a<s;a++){const b=s-a;if(gcd(a,b)!==1)continue;pos++;if(a===p&&b===q){found=pos;break;}}
    return Q(`<p>The positive rationals are listed by increasing p + q, and for equal sums by increasing p, SKIPPING fractions not in lowest terms: 1/1, 1/2, 2/1, 1/3, 3/1, 1/4, 2/3, 3/2, 4/1, 1/5, … (1/1 is position 1). At which position is ${p}/${q}?</p>`,'num',found,{
-     hint:'For each sum s, the reduced fractions a/(s−a) number φ(s).',solution:`<p>Count reduced fractions with smaller sum, then those with sum ${p+q} and numerator ≤ ${p}: position <b>${found}</b>.</p>`,meta:{t,p,q}});}),
+     hint:'For each sum s, the reduced fractions a/(s−a) number φ(s).',solution:(()=>{const s0=p+q;const rows=range(2,s0-1).map(s=>[s,range(1,s-1).filter(a=>gcd(a,s-a)===1).length]);const before=sum(rows.map(x=>x[1]));const within=range(1,p).filter(a=>gcd(a,s0-a)===1);
+       return `<p>Reduced fractions with smaller sum s: ${rows.map(([s,c])=>`s = ${s}: ${c}`).join(', ')}, total ${before}. With sum ${s0} and numerator ≤ ${p}: ${within.map(a=>`${a}/${s0-a}`).join(', ')} (${within.length}). Position ${before} + ${within.length} = <b>${found}</b>.</p>`;})(),meta:{t,p,q}});}),
  ...(()=>{const POOL=[['ℤ × ℤ',1],['the set of all finite bit strings',1],['the set of all infinite bit strings',0],['𝒫(ℕ)',0],['ℚ',1],['(0, 1) ⊂ ℝ',0],['polynomials with integer coefficients',1],['the irrational numbers',0],
    ['all functions ℕ → {0, 1}',0],['the finite subsets of ℕ',1],['the algebraic numbers',1],['all Java programs',1],['ℝ × ℝ',0],['the set of all real roots of quadratics with rational coefficients',1],['ℕ<sup>ℕ</sup> (all sequences of naturals)',0],
    ['the set of odd negative integers',1],['ℚ × ℤ × ℕ',1],['[0, 1] ∩ ℚ',1],['the set of all lines in the plane',0],['the union of countably many countable sets',1],['the set of all subsets of ℤ of size 3',1],['ℝ − ℚ ∪ {0}',0],['the set of decimal numbers using only digits 3 and 7 (infinite expansions)',0],['the set of all finite sequences of integers',1]];
+   const WHY={"ℤ × ℤ": "list by |a| + |b| = 0, 1, 2, … (finitely many pairs each)", "the set of all finite bit strings": "list by length, then lexicographically", "the set of all infinite bit strings": "Cantor diagonal argument", "𝒫(ℕ)": "bijection with infinite bit strings (characteristic sequences); Cantor's theorem", "ℚ": "image of ℤ × ℤ⁺ under (p, q) ↦ p/q", "(0, 1) ⊂ ℝ": "diagonalize decimal expansions", "polynomials with integer coefficients": "for each N, finitely many with degree + ∑|coefficients| ≤ N", "the irrational numbers": "ℝ = ℚ ∪ irrationals; if the irrationals were countable, ℝ would be a union of two countable sets", "all functions ℕ → {0, 1}": "these are the infinite bit strings: diagonalize", "the finite subsets of ℕ": "countable union over n of the finite sets with maximum n", "the algebraic numbers": "each integer polynomial has finitely many roots; countable union", "all Java programs": "finite strings over a finite alphabet", "ℝ × ℝ": "contains a copy of ℝ (x ↦ (x, 0))", "the set of all real roots of quadratics with rational coefficients": "countably many quadratics (ℚ³), at most 2 roots each", "ℕ<sup>ℕ</sup> (all sequences of naturals)": "contains all 0/1 sequences, which are uncountable", "the set of odd negative integers": "a subset of ℤ (list −1, −3, −5, …)", "ℚ × ℤ × ℕ": "finite product of countable sets", "[0, 1] ∩ ℚ": "subset of ℚ", "the set of all lines in the plane": "contains the lines y = c for every real c", "the union of countably many countable sets": "list the k-th element of the j-th set along diagonals j + k", "the set of all subsets of ℤ of size 3": "injects into ℤ³", "ℝ − ℚ ∪ {0}": "contains the irrationals, which are uncountable", "the set of decimal numbers using only digits 3 and 7 (infinite expansions)": "bijection with infinite bit strings (3 ↔ 0, 7 ↔ 1)", "the set of all finite sequences of integers": "countable union over length n of ℤⁿ"};
    return [gen('55-C-countable-multi',TC[5],r=>{const pick=r.sample(POOL,5);const mode=r.bool();if(pick.every(x=>x[1])||pick.every(x=>!x[1]))return null;
      return Q(`<p>Select ALL sets that are <b>${mode?'countable':'uncountable'}</b>.</p>`,'multi',pick.map((x,i)=>(x[1]===1)===mode?i:-1).filter(i=>i>=0),{choices:pick.map(x=>x[0]),
        hint:'Countable: can be listed (finite strings over a finite alphabet, countable unions of countable sets). Uncountable: contains or maps onto infinite bit strings / ℝ (Cantor diagonal).',
-       solution:ul(pick.map(x=>`${x[0]}: <b>${x[1]?'countable':'uncountable'}</b>`)),meta:{items:pick.map(x=>x[0]),mode}});})];})(),
+       solution:ul(pick.map(x=>`${x[0]}: <b>${x[1]?'countable':'uncountable'}</b>, because ${WHY[x[0]]}.`)),meta:{items:pick.map(x=>x[0]),mode}});})];})(),
  gen('55-C-diagonal',TC[5],r=>{const n=r.int(5,7);const rows=range(1,n).map(()=>range(1,n).map(()=>r.int(0,1)).join(''));if(new Set(rows).size<n)return null;
    const dec=r.bool();if(dec){const dr=range(1,n).map(()=>range(1,n).map(()=>r.int(0,9)).join(''));const ans='0.'+dr.map((s,i)=>s[i]==='4'?'5':'4').join('');
      return Q(`<p>Cantor's diagonal argument (Rosen's rule: the new i-th digit is 4 if the i-th digit of the i-th number is not 4, and 5 if it is 4). Using the first ${n} numbers of a supposed list of (0,1):</p>${ol(dr.map(s=>`r<sub>i</sub> = 0.${s}…`))}<p>Give the first ${n} digits of the diagonal number as 0.d₁d₂…</p>`,'text',[ans],{
@@ -548,10 +587,10 @@ G['55-D']=[
    return Q(`<p>Select ALL integers congruent to ${sn(a)} modulo ${m}.</p>`,'multi',ans,{choices:cs.map(sn),hint:`x ≡ a (mod m) ⇔ m | (x − a) ⇔ x mod m = a mod m; here ${sn(a)} mod ${m} = ${mod(a,m)}.`,
      solution:ul(cs.map(x=>`${sn(x)} mod ${m} = ${mod(x,m)} ${mod(x-a,m)===0?'✓':'✗'}`)),meta:{a,m,cs}});}),
  gen('55-D-lastdigits',TD[1],r=>{const a=r.int(3,99);if(a%10===0)return null;const e=r.int(100,99999);const two=r.bool();const m=two?100:10;const ans=powmod(a,e,m);
-   const per=(()=>{let x=a%m,k=1;const s=x;do{x=x*a%m;k++;}while(x!==s&&k<200);return k-1;})();
+   const seq=[];const seen={};let x=a%m,j=1;while(seen[x]===undefined){seen[x]=j;seq.push(x);x=x*a%m;j++;}const mu=seen[x],lam=j-mu;const idx=e<mu?e:mu+mod(e-mu,lam);
    return Q(`<p>What ${two?'are the last two digits':'is the last digit'} of ${a}<sup>${e}</sup>? (Enter as a number ${two?'0–99':'0–9'}.)</p>`,'num',ans,{
      hint:`Work mod ${m}: powers of ${a} mod ${m} eventually cycle; or use successive squaring.`,
-     solution:`<p>The powers of ${a} mod ${m} are eventually periodic with period ${per}. Reducing the exponent accordingly (or by successive squaring), ${a}<sup>${e}</sup> ≡ <b>${ans}</b> (mod ${m}).</p>`,meta:{a,e,m}});}),
+     solution:`<p>Work mod ${m}. Powers of ${a}: ${seq.map((v,i)=>`${a}<sup>${i+1}</sup> ≡ ${v}`).join(', ')}, and ${a}<sup>${seq.length+1}</sup> ≡ ${x} = ${a}<sup>${mu}</sup> again, so from exponent ${mu} on the values repeat with period ${lam}.</p><p>${e} − ${mu} = ${e-mu} ≡ ${mod(e-mu,lam)} (mod ${lam}), so ${a}<sup>${e}</sup> ≡ ${a}<sup>${idx}</sup> ≡ <b>${ans}</b> (mod ${m}).</p>`,meta:{a,e,m}});}),
  gen('55-D-cong-arith',TD[1],r=>{const m=r.int(7,31);const a=r.int(1000,99999),b=r.int(1000,99999),c=r.int(2,50),k=r.int(10,60),d=r.int(100,9999);const ans=mod(mod(a,m)*mod(b,m)+powmod(c,k,m)-d,m);
    return Q(`<p>Compute (${a}·${b} + ${c}<sup>${k}</sup> − ${d}) mod ${m}.</p>`,'num',ans,{hint:'Reduce each piece mod m first: a ≡ a mod m, and (xy) mod m = ((x mod m)(y mod m)) mod m.',
      solution:`<p>${a} ≡ ${mod(a,m)}, ${b} ≡ ${mod(b,m)}, ${c}<sup>${k}</sup> ≡ ${powmod(c,k,m)}, ${d} ≡ ${mod(d,m)} (mod ${m}). So ${mod(a,m)}·${mod(b,m)} + ${powmod(c,k,m)} − ${mod(d,m)} ≡ <b>${ans}</b>.</p>`,meta:{m,a,b,c,k,d}});}),
@@ -571,7 +610,7 @@ G['55-D']=[
        solution:`<p>Horner: ${[...s].reduce((acc,c,i)=>{const v=acc.v*b+DIG.indexOf(c);acc.t.push(i?`${acc.v}·${b} + ${DIG.indexOf(c)} = ${v}`:`${v}`);acc.v=v;return acc;},{v:0,t:[]}).t.join('; ')}. Answer <b>${n}</b>.</p>`,meta:{t,s,b}});}
    const n=r.int(256,65535);const hx=toBase(n,16),bn=toBase(n,2);const dir=r.bool();
    if(dir)return Q(`<p>Convert (${hx})<sub>16</sub> directly to binary (no leading zeros).</p>`,'text',[bn],{hint:'Each hex digit is exactly 4 bits.',solution:`<p>${[...hx].map(c=>`${c} → ${toBase(DIG.indexOf(c),2).padStart(4,'0')}`).join(', ')}; drop leading zeros: <b>${bn}</b>.</p>`,meta:{t,dir,n}});
-   return Q(`<p>Convert (${bn})<sub>2</sub> directly to hexadecimal (digits 0–9, A–F).</p>`,'text',[hx,hx.toLowerCase()],{hint:'Group bits in fours from the right.',solution:`<p>Groups of 4 from the right → <b>${hx}</b>.</p>`,meta:{t,dir,n}});}),
+   return Q(`<p>Convert (${bn})<sub>2</sub> directly to hexadecimal (digits 0–9, A–F).</p>`,'text',[hx,hx.toLowerCase()],{hint:'Group bits in fours from the right.',solution:`<p>Groups of 4 bits from the right (pad the left with zeros): ${[...hx].map(c=>`${toBase(DIG.indexOf(c),2).padStart(4,'0')} = ${c}`).join(', ')} → <b>${hx}</b>.</p>`,meta:{t,dir,n}});}),
  gen('55-D-divides-multi',TD[4],r=>{const d=r.int(3,12);const exprs=[];const seen=new Set();
    while(exprs.length<6){const t=r.int(0,3);let e;if(t===0){const a=r.int(-6,6),b=r.int(-6,6),c=r.pick([0,0,r.int(-2*d,2*d)]);if(!a&&!b)continue;e={s:lin([[a,'x'],[b,'y'],[c,'']]),c0:c,js:`${a}*x+${b}*y+${c}`};}
      else if(t===1){const c=r.pick([0,d,-d,r.int(1,d-1),2*d]);e={s:lin([[1,'xy'],[c,'']]),c0:c,js:`x*y+${c}`};}
@@ -585,7 +624,8 @@ G['55-D']=[
  gen('55-D-count-divisible',TD[4],r=>{const m=r.int(5,21),a=r.int(-9,9),b=r.int(-20,20);const N=r.int(100,600);const cnt=range(1,N).filter(n=>mod(n*n+a*n+b,m)===0).length;const res=range(0,m-1).filter(s=>mod(s*s+a*s+b,m)===0);
    if(!res.length)return null;
    return Q(`<p>How many integers n with 1 ≤ n ≤ ${N} satisfy ${m} | ${quad(1,a,b,'n')}?</p>`,'num',cnt,{hint:`Divisibility by ${m} depends only on n mod ${m}: find the good residues, then count each in 1…${N}.`,
-     solution:`<p>Good residues mod ${m}: {${res.join(', ')}}. ${N} = ${m}·${Math.floor(N/m)} + ${N%m}; each residue class has ${Math.floor(N/m)} or ${Math.floor(N/m)+1} members in 1…${N}. Total <b>${cnt}</b>.</p>`,meta:{m,a,b,N}});}),
+     solution:(()=>{const q=Math.floor(N/m),rr=N%m;const per=res.map(s=>{const c=q+((s>=1&&s<=rr)?1:0);return [s,c];});
+       return `<p>Check residues s = 0…${m-1}: ${quad(1,a,b,'s')} ≡ 0 (mod ${m}) exactly for s ∈ {${res.join(', ')}}${res.length<=4?` (e.g. ${res.map(s=>`s = ${s}: ${s*s+a*s+b} = ${m}·${(s*s+a*s+b)/m}`).join('; ')})`:''}.</p><p>${N} = ${m}·${q} + ${rr}, so residues 1…${rr} occur ${q+1} times in 1…${N} and the others ${q} times: ${per.map(([s,c])=>`s = ${s}: ${c}`).join(', ')}. Total ${per.map(x=>x[1]).join(' + ')} = <b>${cnt}</b>.</p>`;})(),meta:{m,a,b,N}});}),
 ];
 
 // =========================================================
@@ -606,10 +646,10 @@ G['55-E']=[
    const [, x]=egcd(a,b);const s=mod(x,M);const t=(g-a*s)/b;
    return Q(`<p>Find Bézout coefficients for a = ${a}, b = ${b}: integers s, t with ${a}s + ${b}t = gcd(${a}, ${b}). To make the answer unique, take 0 ≤ s < ${M} (= b/gcd). Enter s, t.</p>`,'list',[s,t],{
      hint:'Run Euclid, then back-substitute (or use the extended-Euclid table). All solutions are s + k·b/g, t − k·a/g.',
-     solution:`<p>${euclidSteps(a,b).st.join('<br>')}</p><p>gcd = ${g}. Back-substituting gives s = ${x}, t = ${(g-a*x)/b}; shifting by multiples of b/g = ${M}: s = <b>${s}</b>, t = <b>${t}</b>. Check: ${a}·${s} + ${b}·(${t}) = ${g}.</p>`,meta:{a,b}});}),
+     solution:(()=>{const X=xgcdT(a,b);const k=(s-X.s)/M;return `<p>${euclidSteps(a,b).st.join('<br>')}</p>${X.html}<p>gcd = ${g}. All solutions: s = ${sn(X.s)} + ${M}k, t = ${sn(X.t)} − ${a/g}k. Taking k = ${sn(k)} puts s in 0…${M-1}: s = <b>${s}</b>, t = <b>${t}</b>. Check: ${a}·${s} + ${b}·(${sn(t)}) = ${g}.</p>`;})(),meta:{a,b}});}),
  gen('55-E-inverse',TE[2],r=>{const m=r.int(11,150),a=r.int(2,m-1);const g=gcd(a,m);if(g>1&&r.float()<0.75)return null;const [, x]=egcd(a,m);const inv=g===1?mod(x,m):0;
    return Q(`<p>Find the inverse of ${a} modulo ${m} as a number in 1…${m-1}. If no inverse exists, enter 0.</p>`,'num',inv,{hint:'An inverse exists iff gcd(a, m) = 1; then the Bézout coefficient of a, reduced mod m, is the inverse.',
-     solution:g===1?`<p>gcd(${a}, ${m}) = 1. Extended Euclid: ${a}·(${x}) + ${m}·(${(1-a*x)/m}) = 1, so ${a}⁻¹ ≡ ${x} ≡ <b>${inv}</b> (mod ${m}). Check ${a}·${inv} = ${a*inv} ≡ 1.</p>`:`<p>gcd(${a}, ${m}) = ${g} ≠ 1, so ${a}x ≡ 1 has no solution: every ${a}x − ${m}k is a multiple of ${g}. Answer <b>0</b>.</p>`,meta:{a,m}});}),
+     solution:g===1?(()=>{const X=xgcdT(m,a);return `<p>gcd(${a}, ${m}) = 1, so an inverse exists.</p>${X.html}<p>Reduce mod ${m}: ${a}·(${sn(X.t)}) ≡ 1, so ${a}⁻¹ ≡ ${X.t===inv?'':sn(X.t)+' ≡ '}<b>${inv}</b> (mod ${m}). Check ${a}·${inv} = ${a*inv} = ${Math.floor(a*inv/m)}·${m} + 1.</p>`;})():`<p>gcd(${a}, ${m}) = ${g} ≠ 1, so ${a}x ≡ 1 has no solution: every ${a}x − ${m}k is a multiple of ${g}. Answer <b>0</b>.</p>`,meta:{a,m}});}),
  gen('55-E-inverse-multi',TE[2],r=>{const m=r.pick([12,14,15,18,20,21,24,26,28,30,33,35,36,40,42,45]);const as=r.sample(range(2,m-1),6);const ans=as.map((a,i)=>gcd(a,m)===1?i:-1).filter(i=>i>=0);if(!ans.length||ans.length===6)return null;
    return Q(`<p>Modulo ${m}, which of these have a multiplicative inverse? Select all.</p>`,'multi',ans,{choices:as.map(String),hint:`a is invertible mod m ⇔ gcd(a, m) = 1. Here ${m} = ${fmtFact(factorize(m))}.`,
      solution:ul(as.map(a=>`gcd(${a}, ${m}) = ${gcd(a,m)} ${gcd(a,m)===1?`→ invertible (inverse ${range(1,m-1).find(x=>a*x%m===1)})`:'→ no inverse'}`)),meta:{m,as}});}),
@@ -624,7 +664,7 @@ G['55-E']=[
    const vals=[...new Set(range(0,D*3).map(n=>gcd(a*n+b,c*n+d)))].sort((x,y)=>x-y);if(vals.length<2)return null;
    return Q(`<p>As n ranges over all integers, which values can gcd(${lin([[a,'n'],[b,'']])}, ${lin([[c,'n'],[d,'']])}) take? List all (any order).</p>`,'list',vals,{unordered:true,
      hint:`Any common divisor divides ${c}·(${lin([[a,'n'],[b,'']])}) − ${a}·(${lin([[c,'n'],[d,'']])}) = ${sn(c*b-a*d)}; then check which divisors actually occur.`,
-     solution:`<p>If g divides both, g | ${c}(${lin([[a,'n'],[b,'']])}) − ${a}(${lin([[c,'n'],[d,'']])}) = ${sn(c*b-a*d)}, so g ∈ divisors of ${D}: {${divisors(D).join(', ')}}. Testing n mod ${D} shows the attained values are <b>{${vals.join(', ')}}</b>.</p>`,meta:{a,b,c,d}});}),
+     solution:`<p>If g divides both, g | ${c}(${lin([[a,'n'],[b,'']])}) − ${a}(${lin([[c,'n'],[d,'']])}) = ${sn(c*b-a*d)}, so g ∈ divisors of ${D}: {${divisors(D).join(', ')}}. Now test which divisors occur (witnesses): ${divisors(D).map(g=>{const n=range(0,D*3).find(n=>gcd(a*n+b,c*n+d)===g);return n===undefined?`${g}: never`:`${g}: n = ${n} gives gcd(${a*n+b}, ${c*n+d}) = ${g}`;}).join('; ')}. Attained values: <b>{${vals.join(', ')}}</b>.</p>`,meta:{a,b,c,d}});}),
  gen('55-E-lemma-tf',TE[4],r=>{const t=r.int(0,2);let s,v,why,meta;
    if(t===0){const m=r.int(6,60),a=r.int(2,60);v=gcd(a,m)===1;s=`For every integer x: if ${m} | ${a}x then ${m} | x.`;why=v?`gcd(${m}, ${a}) = 1, so by the generalized Euclid lemma ${m} | x.`:`gcd(${m}, ${a}) = ${gcd(a,m)} > 1: x = ${m/gcd(a,m)} gives ${m} | ${a*m/gcd(a,m)} but ${m} ∤ ${m/gcd(a,m)}.`;meta={t,m,a};}
    else if(t===1){const p=r.int(4,50),k=r.int(2,3);v=factorize(p).every(([q,e])=>e===1);s=`For every integer n: if ${p} | n${sup(k)} then ${p} | n.`;const rad=factorize(p).reduce((x,[q])=>x*q,1);
@@ -649,7 +689,7 @@ G['55-F']=[
  gen('55-F-crt',TFt[0],r=>{const k=r.pick([2,3,3]);const ms=[];while(ms.length<k){const m=r.int(3,k===2?40:19);if(ms.every(x=>gcd(x,m)===1))ms.push(m);}const as=ms.map(m=>r.int(0,m-1));
    const M=ms.reduce((a,b)=>a*b,1);let x=0;const parts=ms.map((m,i)=>{const Mi=M/m,yi=inv(Mi,m);x+=as[i]*Mi*yi;return `M${i+1} = ${Mi}, y${i+1} = ${Mi}⁻¹ mod ${m} = ${yi}`;});x=mod(x,M);
    return Q(`<p>Find the smallest nonnegative x with</p>${ul(ms.map((m,i)=>`x ≡ ${as[i]} (mod ${m})`))}`,'num',x,{hint:'Moduli are pairwise coprime ⇒ CRT: x = ∑ aᵢMᵢyᵢ mod M with Mᵢ = M/mᵢ and yᵢ = Mᵢ⁻¹ mod mᵢ (or back-substitute).',
-     solution:`<p>M = ${ms.join('·')} = ${M}. ${parts.join('; ')}. x = ∑ aᵢMᵢyᵢ mod ${M} = <b>${x}</b>.</p>`,meta:{ms,as}});}),
+     solution:(()=>{const terms=ms.map((m,i)=>{const Mi=M/m,yi=inv(Mi,m);return [as[i],Mi,yi];});const tot=sum(terms.map(([a,b,c])=>a*b*c));return `<p>The moduli are pairwise coprime. M = ${ms.join('·')} = ${M}. ${parts.join('; ')}.</p><p>x ≡ ${terms.map(([a,b,c])=>`${a}·${b}·${c}`).join(' + ')} = ${tot} ≡ <b>${x}</b> (mod ${M}). Check: ${ms.map((m,i)=>`${x} mod ${m} = ${x%m}`).join(', ')}.</p>`;})(),meta:{ms,as}});}),
  gen('55-F-crt-noncoprime',TFt[0],r=>{const g=r.int(2,6);const m1=g*r.int(2,9),m2=g*r.int(2,9);if(m1===m2||gcd(m1,m2)===1)return null;const a1=r.int(0,m1-1);const ok=r.bool();const a2=ok?mod(a1+gcd(m1,m2)*r.int(0,20),m2):r.int(0,m2-1);
    const L=lcm(m1,m2);const sol=range(0,L-1).find(x=>x%m1===a1&&x%m2===a2);const ans=sol===undefined?-1:sol;const d=gcd(m1,m2);
    return Q(`<p>Find the smallest nonnegative x with x ≡ ${a1} (mod ${m1}) and x ≡ ${a2} (mod ${m2}). If there is no solution, enter −1.</p>`,'num',ans,{hint:'The moduli are NOT coprime: a solution exists iff gcd(m₁, m₂) | a₁ − a₂; it is then unique mod lcm(m₁, m₂).',
@@ -657,25 +697,25 @@ G['55-F']=[
  gen('55-F-fermat-reduce',TFt[1],r=>{const p=r.pick(primesUpTo(60).filter(x=>x>5));const a=r.int(2,200);if(a%p===0)return null;const k=r.int(6,15),c=r.int(1,999);const E=10n**BigInt(k)+BigInt(c);
    const ans=Number(((()=>{let b=BigInt(a)%BigInt(p),e=E,res=1n;while(e>0n){if(e&1n)res=res*b%BigInt(p);b=b*b%BigInt(p);e>>=1n;}return res;})()));const red=Number(E%BigInt(p-1));
    return Q(`<p>Use Fermat's little theorem to compute ${a}<sup>10<sup>${k}</sup> + ${c}</sup> mod ${p}.</p>`,'num',ans,{hint:`${p} is prime and ${p} ∤ ${a}, so ${a}^${p-1} ≡ 1: reduce the exponent mod ${p-1}.`,
-     solution:`<p>10<sup>${k}</sup> + ${c} ≡ ${red} (mod ${p-1}) (note 10<sup>${k}</sup> mod ${p-1} = ${powmod(10,k,p-1)}). So ${a}<sup>…</sup> ≡ ${a%p}<sup>${red}</sup> ≡ <b>${ans}</b> (mod ${p}).</p>`,meta:{p,a,k,c}});}),
+     solution:`<p>${p} is prime and ${p} ∤ ${a}, so ${a}<sup>${p-1}</sup> ≡ 1 (mod ${p}) and only the exponent mod ${p-1} matters.</p><p>Powers of 10 mod ${p-1}: ${range(1,k).map(i=>`10<sup>${i}</sup> ≡ ${powmod(10,i,p-1)}`).join(', ')}. So 10<sup>${k}</sup> + ${c} ≡ ${powmod(10,k,p-1)} + ${c} ≡ ${red} (mod ${p-1}).</p><p>Hence ${a}<sup>10<sup>${k}</sup> + ${c}</sup> ≡ ${a%p}<sup>${red}</sup> (mod ${p}). ${red>1?powSteps(a%p,red,p):red===1?`${a%p}<sup>1</sup> = ${a%p}.`:'Anything to the 0 is 1.'} Answer <b>${ans}</b>.</p>`,meta:{p,a,k,c}});}),
  gen('55-F-fermat-inverse',TFt[1],r=>{const p=r.pick(primesUpTo(100).filter(x=>x>10));const a=r.int(2,p-1);const ans=powmod(a,p-2,p);
    return Q(`<p>${p} is prime. Using Fermat's little theorem, a<sup>−1</sup> ≡ a<sup>${p-2}</sup> (mod ${p}). Find the inverse of ${a} modulo ${p} (in 1…${p-1}).</p>`,'num',ans,{hint:`a^(p−1) ≡ 1 ⇒ a·a^(p−2) ≡ 1. Compute ${a}^${p-2} mod ${p} by successive squaring.`,
-     solution:`<p>${a}<sup>${p-2}</sup> mod ${p} = <b>${ans}</b>. Check: ${a}·${ans} = ${a*ans} ≡ ${a*ans%p} (mod ${p}).</p>`,meta:{p,a}});}),
+     solution:`<p>${powSteps(a,p-2,p)}</p><p>So ${a}⁻¹ ≡ <b>${ans}</b>. Check: ${a}·${ans} = ${a*ans} ≡ ${a*ans%p} (mod ${p}).</p>`,meta:{p,a}});}),
  gen('55-F-rsa-d',TFt[2],r=>{const ps=primesUpTo(97).filter(x=>x>10);const p=r.pick(ps);let q=r.pick(ps);if(p===q)return null;const ph=(p-1)*(q-1);const e=r.pick([3,5,7,11,13,17,19,23]);if(gcd(e,ph)!==1)return null;const d=inv(e,ph);
    return Q(`<p>RSA with p = ${p}, q = ${q}, public exponent e = ${e}. Compute the private exponent d (0 < d < φ(n)).</p>`,'num',d,{hint:'n = pq, φ(n) = (p−1)(q−1), d = e⁻¹ mod φ(n) via extended Euclid.',
-     solution:`<p>n = ${p*q}, φ(n) = ${p-1}·${q-1} = ${ph}. Extended Euclid on (${e}, ${ph}) gives ${e}·${d} = ${e*d} = ${Math.floor(e*d/ph)}·${ph} + 1, so d = <b>${d}</b>.</p>`,meta:{p,q,e}});}),
+     solution:(()=>{const X=xgcdT(ph,e);return `<p>n = ${p*q}, φ(n) = ${p-1}·${q-1} = ${ph}. We need d with ${e}d ≡ 1 (mod ${ph}).</p>${X.html}<p>So ${e}·(${sn(X.t)}) ≡ 1 (mod ${ph}), and d = ${sn(X.t)} mod ${ph} = <b>${d}</b>. Check: ${e}·${d} = ${e*d} = ${Math.floor(e*d/ph)}·${ph} + 1.</p>`;})(),meta:{p,q,e}});}),
  gen('55-F-rsa-crypt',TFt[2],r=>{const ps=primesUpTo(60).filter(x=>x>5);const p=r.pick(ps),q=r.pick(ps);if(p===q)return null;const n=p*q,ph=(p-1)*(q-1);const e=r.pick([3,5,7,11,13,17]);if(gcd(e,ph)!==1)return null;const d=inv(e,ph);
    const enc=r.bool();const M=r.int(2,n-1);const Cc=powmod(M,e,n);
-   if(enc)return Q(`<p>RSA public key (n, e) = (${n}, ${e}). Encrypt the message M = ${M}: give C = M<sup>e</sup> mod n.</p>`,'num',Cc,{hint:'Successive squaring mod n.',solution:`<p>C = ${M}<sup>${e}</sup> mod ${n} = <b>${Cc}</b>.</p>`,meta:{n,e,M,enc}});
+   if(enc)return Q(`<p>RSA public key (n, e) = (${n}, ${e}). Encrypt the message M = ${M}: give C = M<sup>e</sup> mod n.</p>`,'num',Cc,{hint:'Successive squaring mod n.',solution:`<p>C = ${M}<sup>${e}</sup> mod ${n}. ${powSteps(M,e,n)} So C = <b>${Cc}</b>.</p>`,meta:{n,e,M,enc}});
    return Q(`<p>RSA with p = ${p}, q = ${q}, e = ${e}. You receive ciphertext C = ${Cc}. Decrypt it (find M with 0 ≤ M < n).</p>`,'num',M,{hint:'Find d = e⁻¹ mod (p−1)(q−1), then M = C^d mod n. (Works because M^(ed) = M^(1 + kφ(n)) ≡ M by Fermat/Euler + CRT.)',
-     solution:`<p>n = ${n}, φ = ${ph}, d = ${d}. M = ${Cc}<sup>${d}</sup> mod ${n} = <b>${M}</b>. Check: ${M}<sup>${e}</sup> mod ${n} = ${Cc}.</p>`,meta:{n,e,C:Cc,enc,p,q}});}),
+     solution:(()=>{const X=xgcdT(ph,e);return `<p>n = ${p}·${q} = ${n}, φ(n) = ${p-1}·${q-1} = ${ph}. Private exponent d = ${e}⁻¹ mod ${ph}:</p>${X.html}<p>d = ${sn(X.t)} mod ${ph} = ${d} (check ${e}·${d} = ${e*d} ≡ 1). Decrypt: M = ${Cc}<sup>${d}</sup> mod ${n}. ${powSteps(Cc,d,n)}</p><p>M = <b>${M}</b>. Check: ${M}<sup>${e}</sup> mod ${n} = ${Cc}.</p>`;})(),meta:{n,e,C:Cc,enc,p,q}});}),
  ...(()=>{const PSP=[341,561,645,1105,1387,1729,1905,2047,2465,2701,2821,3277,4033,4369,4371,4681,5461,6601,8321,8481,91,217,15,85,703,1891];
    return [gen('55-F-fermat-test',TFt[3],r=>{const t=r.float();const n=t<0.6?r.pick(PSP):t<0.8?r.pick(primesUpTo(3000).filter(x=>x>100)):r.int(50,3000)|1;const b=r.int(2,12);if(n%b===0)return null;
      const passes=powmod(b,n-1,n)===1;const comp=!isPrime(n);const askPsp=r.bool();const v=askPsp?passes&&comp:passes;if(!v&&r.float()<0.3)return null;
      const fac=comp?fmtFact(factorize(n)):'prime';
      return Q(`<p>True or false: ${askPsp?`${n} is a <b>Fermat pseudoprime to base ${b}</b>`:`${n} <b>passes the Fermat test to base ${b}</b>, i.e. ${b}<sup>${n-1}</sup> ≡ 1 (mod ${n})`}.</p>`,'tf',v,{
        hint:'Compute b^(n−1) mod n by successive squaring (or reduce mod each prime factor and use CRT). A pseudoprime must be COMPOSITE and pass the test.',
-       solution:`<p>${b}<sup>${n-1}</sup> mod ${n} = ${powmod(b,n-1,n)} ⇒ ${passes?'passes':'fails'}. ${n} is ${comp?'composite ('+fac+')':'prime'}. So the statement is <b>${v}</b>.</p>`,meta:{n,b,askPsp}});}),
+       solution:`<p>${powSteps(b,n-1,n)} ⇒ ${passes?'passes':'fails'}. ${n} is ${comp?'composite ('+fac+')':'prime'}. So the statement is <b>${v}</b>.</p>`,meta:{n,b,askPsp}});}),
     gen('55-F-fermat-witness',TFt[3],r=>{const n=r.float()<0.7?r.pick(PSP):r.int(30,2000)|1;if(isPrime(n))return null;let b=2;while(powmod(b,n-1,n)===1)b++;if(b<3&&r.float()<0.6)return null;
      return Q(`<p>${n} is composite. What is the smallest base b ≥ 2 that is a <b>Fermat witness</b> for ${n}, i.e. b<sup>${n-1}</sup> ≢ 1 (mod ${n})?</p>`,'num',b,{hint:'Test b = 2, 3, … with successive squaring; any b sharing a factor with n is automatically a witness.',
       solution:`<p>${range(2,b).map(x=>`${x}<sup>${n-1}</sup> ≡ ${powmod(x,n-1,n)}`).join(', ')} (mod ${n}). First failure at b = <b>${b}</b>. (${n} = ${fmtFact(factorize(n))}.)</p>`,meta:{n}});})];})(),
@@ -698,20 +738,22 @@ G['55-G']=[
  gen('55-G-div-step',TG[0],r=>{const a=r.int(3,12),b=r.int(2,9);if(a===b)return null;const c=r.int(-4,6);if(c===0)return null;const d=gcd(Math.abs(a+c*b),Math.abs(c*(b-a)));if(d<3)return null;const M=c*(b-a);
    return Q(`<p>Claim: ${d} | ${a}<sup>n</sup> ${c<0?'−':'+'} ${Math.abs(c)===1?'':Math.abs(c)+'·'}${b}<sup>n</sup> for all n ≥ 1. In the inductive step one writes</p><p style="text-align:center">${a}<sup>k+1</sup> ${c<0?'−':'+'} ${Math.abs(c)===1?'':Math.abs(c)+'·'}${b}<sup>k+1</sup> = ${a}·(${a}<sup>k</sup> ${c<0?'−':'+'} ${Math.abs(c)===1?'':Math.abs(c)+'·'}${b}<sup>k</sup>) + M·${b}<sup>k</sup>.</p><p>Find the integer M (it must be a multiple of ${d} for the proof to work).</p>`,'num',M,{
      hint:`Expand ${a}·(${a}ᵏ + c·${b}ᵏ) and subtract it from the left side.`,solution:`<p>${a}·(${a}<sup>k</sup> + ${c}·${b}<sup>k</sup>) = ${a}<sup>k+1</sup> + ${c*a}·${b}<sup>k</sup>, and ${c}·${b}<sup>k+1</sup> = ${c*b}·${b}<sup>k</sup>. So M = ${c*b} − ${c*a} = <b>${M}</b> = ${d}·${M/d}. Base case n = 1: ${a+c*b} = ${d}·${(a+c*b)/d}.</p>`,meta:{a,b,c,d}});}),
- gen('55-G-ineq-base',TG[3],r=>{const t=r.int(0,2);let n0,s,fails;const B=BigInt;
-   if(t===0){const c=r.int(0,40),k=r.int(2,3);const P=n=>2n**B(n)>B(n)**B(k)+B(c);let last=-1;for(let n=0;n<=200;n++)if(!P(n))last=n;n0=last+1;s=`2<sup>n</sup> > n${sup(k)}${c?` + ${c}`:''}`;fails=last;}
-   else if(t===1){const a=r.int(2,6);const P=n=>{let f=1n;for(let i=2;i<=n;i++)f*=B(i);return f>B(a)**B(n);};let last=-1;for(let n=0;n<=100;n++)if(!P(n))last=n;n0=last+1;s=`n! > ${a}<sup>n</sup>`;fails=last;}
-   else{const c=r.int(1,5),k=r.int(2,4);const P=n=>3n**B(n)>B(c)*B(n)**B(k);let last=-1;for(let n=0;n<=200;n++)if(!P(n))last=n;n0=last+1;s=`3<sup>n</sup> > ${c===1?'':c}n${sup(k)}`;fails=last;}
+ gen('55-G-ineq-base',TG[3],r=>{const t=r.int(0,2);let n0,s,fails,LR;const B=BigInt;const fct=n=>{let f=1n;for(let i=2;i<=n;i++)f*=B(i);return f;};
+   if(t===0){const c=r.int(0,40),k=r.int(2,3);LR=n=>[`2<sup>${n}</sup> = ${2n**B(n)}`,2n**B(n),`${n}${sup(k)}${c?` + ${c}`:''} = ${B(n)**B(k)+B(c)}`,B(n)**B(k)+B(c)];s=`2<sup>n</sup> > n${sup(k)}${c?` + ${c}`:''}`;}
+   else if(t===1){const a=r.int(2,6);LR=n=>[`${n}! = ${fct(n)}`,fct(n),`${a}<sup>${n}</sup> = ${B(a)**B(n)}`,B(a)**B(n)];s=`n! > ${a}<sup>n</sup>`;}
+   else{const c=r.int(1,5),k=r.int(2,4);LR=n=>[`3<sup>${n}</sup> = ${3n**B(n)}`,3n**B(n),`${c===1?'':c+'·'}${n}${sup(k)} = ${B(c)*B(n)**B(k)}`,B(c)*B(n)**B(k)];s=`3<sup>n</sup> > ${c===1?'':c}n${sup(k)}`;}
+   let last=-1;for(let n=0;n<=200;n++){const v=LR(n);if(!(v[1]>v[3]))last=n;}n0=last+1;fails=last;
    if(n0<2)return null;
    return Q(`<p>We want to prove ${s} by induction for all n ≥ n₀. What is the smallest n₀ for which the statement is true for EVERY n ≥ n₀ (the base case to use)?</p>`,'num',n0,{hint:'Check small n directly; the inductive step typically works once n is moderately large, but the base case must be the first n after the LAST failure.',
-     solution:`<p>The statement fails at n = ${fails} and holds for all n ≥ ${n0} (the ratio of the two sides keeps growing from there, which is what the inductive step shows). Base case n₀ = <b>${n0}</b>.</p>`,meta:{t,s}});}),
+     solution:(()=>{const lo=Math.max(0,fails-2),hi=n0+1;return `<p>Compare both sides for n = ${lo}…${hi}: ${range(lo,hi).map(n=>{const v=LR(n);return `n = ${n}: ${v[0]} vs ${v[2]} (${v[1]>v[3]?'holds':'fails'})`;}).join('; ')}.</p><p>The last failure is n = ${fails}; from n = ${n0} on the inductive step works (going from k to k + 1 multiplies the left side by ${t===0?2:t===1?'k + 1':3}, more than the right side grows), so the base case is n₀ = <b>${n0}</b>.</p>`;})(),meta:{t,s}});}),
  gen('55-G-postage-frobenius',TG[1],r=>{const a=r.int(3,13),b=r.int(a+1,25);if(gcd(a,b)!==1)return null;const F=frob(a,b);
    return Q(`<p>Using only ${a}-cent and ${b}-cent stamps, what is the LARGEST postage amount that CANNOT be formed? (Every larger amount can — that is what the strong-induction proof shows.)</p>`,'num',F,{
      hint:'For coprime a, b the answer is ab − a − b (Sylvester); verify by finding a run of a consecutive formable amounts.',
      solution:`<p>gcd(${a}, ${b}) = 1, so the largest non-formable amount is ${a}·${b} − ${a} − ${b} = <b>${F}</b>. Amounts ${F+1} … ${F+a} are all formable, and adding ${a}-cent stamps covers everything above (strong induction with ${a} base cases).</p>`,meta:{st:[a,b]}});}),
  gen('55-G-postage-three',TG[1],r=>{const st=r.sample(range(4,20),3).sort((x,y)=>x-y);if(gcd(gcd(st[0],st[1]),st[2])!==1)return null;const ok=formable(600,st);let last=-1;for(let x=0;x<=600;x++)if(!ok[x])last=x;if(last<10||last>550)return null;
    return Q(`<p>Stamps come in ${st.join(', ')} cents. What is the largest amount that cannot be made?</p>`,'num',last,{hint:`List formable amounts in order until you find ${st[0]} consecutive ones; everything after follows by adding ${st[0]}-cent stamps.`,
-     solution:`<p>Building the table of formable amounts, ${last} is not formable while ${last+1} … ${last+st[0]} all are; adding ${st[0]}-cent stamps (strong induction) gives everything beyond. Answer <b>${last}</b>.</p>`,meta:{st}});}),
+     solution:(()=>{const rep=x=>{const o=[];const okk=formable(x,st);let y=x;while(y>0){const s=st.find(s=>y>=s&&okk[y-s]);o.push(s);y-=s;}return o.join(' + ');};const non=range(1,last).filter(x=>!ok[x]);
+       return `<p>Build the table of formable amounts (x is formable iff x − s is formable for some stamp s). Non-formable amounts: ${non.join(', ')}.</p><p>${last} is not formable, and the next ${st[0]} amounts are: ${range(last+1,last+st[0]).map(x=>`${x} = ${rep(x)}`).join('; ')}. Adding ${st[0]}-cent stamps (strong induction with these ${st[0]} base cases) gives every larger amount. Answer <b>${last}</b>.</p>`;})(),meta:{st}});}),
  gen('55-G-postage-base',TG[3],r=>{const a=r.int(3,11),b=r.int(a+1,22);if(gcd(a,b)!==1)return null;const n0=frob(a,b)+1;
    return Q(`<p>Prove by strong induction that every amount n ≥ n₀ can be made from ${a}- and ${b}-cent stamps, with the inductive step “P(k + 1 − ${a}) ⇒ P(k + 1)” (add a ${a}-cent stamp). Enter n₀ (the smallest possible) and the number of consecutive base cases n₀, n₀ + 1, … that must be checked.</p>`,'list',[n0,a],{
      hint:'n₀ is one more than the largest non-formable amount; the step reaches back a cents, so the base cases must cover a consecutive values.',
@@ -720,7 +762,7 @@ G['55-G']=[
    const names=['a','b','c'].slice(0,k),vars=['s','t','u'].slice(0,k);
    return Q(`<p>Well-ordering proof of Bézout: S = {${ns.map((n,i)=>`${n}${vars[i]}`).join(' + ')} : ${vars.join(', ')} ∈ ℤ} ∩ ℤ<sup>+</sup> is nonempty, so it has a least element d. What is d?</p>`,'num',G0,{
      hint:'The least positive integer combination is the gcd (d divides each number by the division-algorithm argument, and every common divisor divides d).',
-     solution:`<p>The WOP argument shows d divides each of ${ns.join(', ')} (otherwise a remainder would be a smaller positive element) and every common divisor divides d, so d = gcd(${ns.join(', ')}) = <b>${G0}</b>.</p>`,meta:{ns}});}),
+     solution:`<p>The WOP argument shows d divides each of ${ns.join(', ')} (if d ∤ n, the remainder n − qd is a smaller positive element of S) and every common divisor divides d, so d = gcd(${ns.join(', ')}).</p><p>Euclid: ${ns.slice(1).reduce((acc,n)=>{const st=euclidSteps(Math.max(acc.g,n),Math.min(acc.g,n));acc.lines.push(...st.st);acc.g=st.g;return acc;},{g:ns[0],lines:[]}).lines.join('; ')}. So d = <b>${G0}</b>.</p>`,meta:{ns}});}),
  gen('55-G-basecases-mc',TG[3],r=>{const n0=r.int(0,5);const offs=r.sample([1,2,3,4],r.int(1,2)).sort();const mx=Math.max(...offs);if(mx===1&&r.float()<0.7)return null;
    const cor=range(n0,n0+mx-1);const fmt=s=>`P(${s.join('), P(')})`;
    const cands=[range(n0,n0),range(n0,n0+mx),range(n0,n0+Math.max(0,mx-2)),range(n0,n0+offs[0]-1),range(n0+1,n0+mx),[...new Set([n0,n0+mx-1])],range(n0,n0+mx+1)].filter(s=>s.length);
@@ -728,12 +770,13 @@ G['55-G']=[
    return Q(`<p>A sequence is defined for n ≥ ${n0} and the inductive step for P(k + 1) uses ${offs.map(o=>o===1?'P(k)':`P(k + 1 − ${o})`).join(' and ')}. Which base cases are needed (and enough) for a correct strong-induction proof of P(n) for all n ≥ ${n0}?</p>`,'mc',m.answer,{choices:m.choices,
      hint:'The step for P(n) is valid only if every case it uses is ≥ n₀; the n where that fails must be base cases.',
      solution:`<p>The step for P(n) needs n − ${mx} ≥ ${n0}, i.e. n ≥ ${n0+mx}. So n = ${n0}, …, ${n0+mx-1} must be checked directly: <b>${fmt(cor)}</b>.</p>`,meta:{n0,offs,choices:m.choices}});}),
- gen('55-G-ih-mc',TG[3],r=>{const t=r.int(0,2);const n0=r.int(1,3);
-   const CH=['P(k)','P(k − 1) and P(k)','P(j) for all j with '+n0+' ≤ j ≤ k','P(k + 1)','P(j) for all j ≥ '+n0];let rec,cor,expl;
-   if(t===0){const c=r.int(2,5);rec=`a<sub>n</sub> = ${c}a<sub>n−1</sub> + ${r.int(1,9)}`;cor=0;expl='the step only uses a<sub>k</sub>, so ordinary induction with P(k) suffices';}
+ gen('55-G-ih-mc',TG[3],r=>{const t=r.int(0,3);const n0=r.int(1,3);
+   const CH=['P(k)','P(k − 1) and P(k)','P(j) for all j with '+n0+' ≤ j ≤ k','P(k + 1)','P(j) for all j ≥ '+n0,'P(k − 2), P(k − 1) and P(k)'];let rec,cor,expl;
+   if(t===3){rec=`a<sub>n</sub> = ${r.int(1,4)}a<sub>n−1</sub> + ${r.int(1,4)}a<sub>n−2</sub> + ${r.int(1,4)}a<sub>n−3</sub>`;cor=5;expl='the step uses the three previous terms, so the hypothesis must include P(k − 2), P(k − 1) and P(k)';}
+   else if(t===0){const c=r.int(2,5);rec=`a<sub>n</sub> = ${c}a<sub>n−1</sub> + ${r.int(1,9)}`;cor=0;expl='the step only uses a<sub>k</sub>, so ordinary induction with P(k) suffices';}
    else if(t===1){rec=`a<sub>n</sub> = ${r.int(1,5)}a<sub>n−1</sub> + ${r.int(1,5)}a<sub>n−2</sub>`;cor=1;expl='the step uses the two previous terms, so the hypothesis must include P(k − 1) and P(k)';}
    else{rec=`a<sub>n</sub> = ${r.pick(['2','3',''])}a<sub>⌊n/2⌋</sub> + ${r.pick(['n','1','n²'])}`;cor=2;expl='the step uses a<sub>⌊(k+1)/2⌋</sub>, which can be ANY earlier index, so strong induction is needed';}
-   const idx=r.shuffle([0,1,2,3,4]);
+   const idx=r.shuffle([cor].concat(r.sample([0,1,2,3,4,5].filter(i=>i!==cor),4)));
    return Q(`<p>To prove a property P(n) of the sequence ${rec} (n > ${n0}) for all n ≥ ${n0}, what is the WEAKEST inductive hypothesis that makes the step “⇒ P(k + 1)” work?</p>`,'mc',idx.indexOf(cor),{choices:idx.map(i=>CH[i]),
      hint:'Look at which earlier terms the recurrence for a_{k+1} uses. Never assume P(k+1) (circular) or P(j) for all j (that is the conclusion).',
      solution:`<p>Here ${expl}: <b>${CH[cor]}</b>. Assuming P(k + 1) or P(j) for all j assumes what we are proving.</p>`,meta:{t,choices:idx.map(i=>CH[i])}});}),
@@ -745,22 +788,25 @@ G['55-G']=[
      <p>${ask?'What is the smallest n ≥ '+n0+' for which a<sub>n</sub> ≠ '+c+'?':'For which value of k is the inductive step P('+n0+'), …, P(k) ⇒ P(k + 1) INVALID (the first one)?'}</p>`,'num',ans,{
      hint:'The step uses a_{k−1}; check whether k − 1 is covered by the hypothesis (k − 1 ≥ n₀) for the smallest k.',
      solution:`<p>For k = ${n0} the step uses a<sub>${n0-1}</sub> = ${sn(d)}, which is NOT covered by the hypothesis (only one base case was checked). Indeed a<sub>${n0+1}</sub> = ${p}·${c} ${q<0?'−':'+'} ${Math.abs(q)}·(${sn(d)}) = ${seq[n0+1]} ≠ ${c}. ${ask?`Smallest bad n = <b>${firstBad}</b>.`:`The invalid step is k = <b>${n0}</b>.`} (The fix would need base cases a<sub>${n0}</sub> and a<sub>${n0+1}</sub>, but a<sub>${n0+1}</sub> ≠ ${c}.)</p>`,meta:{n0,p,q,c,d,ask}});}),
- gen('55-G-least-counterexample',TG[2],r=>{const SETS=[['perfect squares (1, 4, 9, …)',n=>{const o=[];for(let i=1;i*i<=n;i++)o.push(i*i);return o;},[2,3]],['positive cubes (1, 8, 27, …)',n=>{const o=[];for(let i=1;i*i*i<=n;i++)o.push(i*i*i);return o;},[2,3,4,5,6,7,8]],
-     ['triangular numbers (1, 3, 6, 10, …)',n=>{const o=[];for(let i=1;i*(i+1)/2<=n;i++)o.push(i*(i+1)/2);return o;},[1,2]],['powers of 2 (1, 2, 4, 8, …)',n=>{const o=[];for(let p=1;p<=n;p*=2)o.push(p);return o;},[1,2,3,4,5,6,7]],
-     ['Fibonacci numbers (1, 2, 3, 5, 8, …)',n=>{const o=[1,2];while(o[o.length-1]+o[o.length-2]<=n)o.push(o[o.length-1]+o[o.length-2]);return o;},[1,2,3,4]],['numbers that are 1 or prime (1, 2, 3, 5, 7, …)',n=>[1].concat(primesUpTo(n)),[1,2]]];
-   const [nm,gen2,ks]=r.pick(SETS);const k=r.pick(ks);const LIM=3000;const S=gen2(LIM);const best=[0];let ans=-1;for(let n=1;n<=LIM;n++){let b=Infinity;for(const s of S){if(s>n)break;b=Math.min(b,best[n-s]+1);}best[n]=b;if(b>k&&ans<0)ans=n;}
-   if(ans<0)return null;
+ gen('55-G-least-counterexample',TG[2],r=>{const SETS=[['perfect squares (1, 4, 9, …)',n=>{const o=[];for(let i=1;i*i<=n;i++)o.push(i*i);return o;},[3]],['positive cubes (1, 8, 27, …)',n=>{const o=[];for(let i=1;i*i*i<=n;i++)o.push(i*i*i);return o;},[4,5,6,7,8]],
+     ['triangular numbers (1, 3, 6, 10, …)',n=>{const o=[];for(let i=1;i*(i+1)/2<=n;i++)o.push(i*(i+1)/2);return o;},[2]],['powers of 2 (1, 2, 4, 8, …)',n=>{const o=[];for(let p=1;p<=n;p*=2)o.push(p);return o;},[2,3,4,5,6,7]],
+     ['Fibonacci numbers (1, 2, 3, 5, 8, …)',n=>{const o=[1,2];while(o[o.length-1]+o[o.length-2]<=n)o.push(o[o.length-1]+o[o.length-2]);return o;},[2,3,4]],['numbers that are 1 or prime (1, 2, 3, 5, 7, …)',n=>[1].concat(primesUpTo(n)),[2]]];
+   const [nm,gen2,ks]=r.pick(SETS);const k=r.pick(ks);const LIM=3000;const S=gen2(LIM);const best=[0],arg=[0];let ans=-1;for(let n=1;n<=LIM;n++){let b=Infinity,bs=0;for(const s of S){if(s>n)break;if(best[n-s]+1<b){b=best[n-s]+1;bs=s;}}best[n]=b;arg[n]=bs;if(b>k&&ans<0)ans=n;}
+   if(ans<0||k<2||ans<5)return null;   // never ask a trivial instance (k = 1 or a tiny counterexample)
+   const dec=n=>{const o=[];while(n>0){o.push(arg[n]);n-=arg[n];}return o;};const below=S.filter(s=>s<=ans);
    return Q(`<p>Claim: “every positive integer is a sum of at most ${k} ${nm} (repetition allowed).” The claim is false; by the well-ordering principle the set of counterexamples has a LEAST element. Find it.</p>`,'num',ans,{
      hint:'Compute, for n = 1, 2, 3, …, the minimum number of terms needed (each n reuses the answers for n − s), and stop at the first n needing more than k.',
-     solution:`<p>Minimum number of terms for n = 1…${ans}: ${best.slice(1,ans+1).join(', ')}. The first n needing more than ${k} is <b>${ans}</b>.</p>`,meta:{nm,k}});}),
+     solution:`<p>Go up from n = 1, writing each n with as few terms as possible (best(n) = 1 + min over terms s ≤ n of best(n − s)):</p><p>${(ans<=40?range(1,ans-1):range(1,15).concat(range(ans-10,ans-1))).map(n=>`${n} = ${dec(n).join(' + ')}`).join('; ').replace(`${15} = ${dec(15).join(' + ')}; `,ans<=40?`${15} = ${dec(15).join(' + ')}; `:`${15} = ${dec(15).join(' + ')}; …; `)}: every n &lt; ${ans} uses at most ${k} terms.</p><p>For n = ${ans}: the usable terms are ${below.join(', ')}, and ${below.map(s=>`${ans} − ${s} = ${ans-s} needs ${best[ans-s]}`).join(', ')}; so ${ans} needs ${best[ans]} &gt; ${k} terms (${ans} = ${dec(ans).join(' + ')}). The least counterexample is <b>${ans}</b>.</p>`,meta:{nm,k}});}),
  gen('55-G-bogus-base',TG[4],r=>{const T=[{m:2,f:(t,d)=>[[1,2],[2*t+1,1],[d,0]],diff:(t)=>`2(n + ${t+1})`},{m:3,f:(t,d)=>[[1,3],[3*t-1,1],[d,0]],diff:t=>`3(n² + n ${t<0?'−':'+'} ${Math.abs(t)})`},{m:6,f:(t,d)=>[[1,3],[6*t-1,1],[d,0]],diff:t=>`3n(n + 1) ${t<0?'−':'+'} ${Math.abs(6*t)}, and n(n + 1) is even`},{m:5,f:(t,d)=>[[1,5],[5*t-1,1],[d,0]],diff:t=>`5(n⁴ + 2n³ + 2n² + n ${t<0?'−':'+'} ${Math.abs(t)})`}];
-   const tp=r.pick(T);const t=r.int(-3,3);if(tp.m===2&&t===-1)return null;const good=r.float()<0.35;const d=good?tp.m*r.int(-3,3):(()=>{let x;do{x=r.int(-9,9);}while(mod(x,tp.m)===0);return x;})();
-   const terms=tp.f(t,d);const fstr=terms.map(([c,e])=>[c,e===0?'':e===1?'n':`n${sup(e)}`]);const F=n=>terms.reduce((s,[c,e])=>s+c*Math.pow(n,e),0);
-   const CH=['The proof is correct and the statement is true','The base case is false, so the proof fails (in fact the statement is false for EVERY n ≥ 1)','The inductive step is invalid','The base case holds, but the statement fails for some larger n','The proof needs strong induction'];
-   const k=mod(F(1),tp.m)===0?0:1;const idx=r.shuffle([0,1,2,3,4]);
-   return Q(`<p>Claim: ${tp.m} | f(n) for all n ≥ 1, where f(n) = ${lin(fstr)}.</p><p><i>Proof. Base case: n = 1 is checked by computation. Inductive step: assume ${tp.m} | f(k). Then f(k + 1) − f(k) = ${tp.diff(t).replace(/\bn\b/g,'k')}, a multiple of ${tp.m}; so ${tp.m} | f(k + 1). ∎</i></p><p>Evaluate this argument.</p>`,'mc',idx.indexOf(k),{choices:idx.map(i=>CH[i]),
-     hint:'Verify the algebra of the step for yourself, then actually compute the base case f(1).',
-     solution:`<p>The step is valid: f(k+1) − f(k) is always a multiple of ${tp.m}, so f(n) mod ${tp.m} is the same for all n. f(1) = ${F(1)} ${k===0?`is divisible by ${tp.m}: the proof is <b>correct</b>.`:`≡ ${mod(F(1),tp.m)} (mod ${tp.m}) is NOT divisible: the base case fails, and since every f(n) ≡ f(1), the statement is false for every n.`}</p>`,meta:{m:tp.m,terms,choices:idx.map(i=>CH[i])}});}),
+   const tp=r.pick(T);const t=r.int(-3,3);if(tp.m===2&&t===-1)return null;const d=r.int(-9,9);
+   const stepBad=r.bool();const sh=stepBad?r.pick(range(1,tp.m-1))*r.pick([1,-1]):0;   // shift of the linear coefficient: the claimed difference is then wrong by sh
+   const terms=tp.f(t,d);terms[1][0]+=sh;if(terms[1][0]===0)return null;const fstr=terms.map(([c,e])=>[c,e===0?'':e===1?'n':`n${sup(e)}`]);const F=n=>terms.reduce((s,[c,e])=>s+c*Math.pow(n,e),0);
+   const CH=['The proof is correct, and the statement is true for every n ≥ 1','The base case is false (the step is fine), so the claim fails for every n','The base case holds, but the step’s algebra is wrong; the claim fails for some n','The base case is false, and the step’s algebra is wrong as well','The step is fine, but the proof needs strong induction instead'];
+   const baseOK=mod(F(1),tp.m)===0;const k=baseOK&&!stepBad?0:!baseOK&&!stepBad?1:baseOK?2:3;const idx=r.shuffle([0,1,2,3,4]);
+   const claimed=tp.diff(t).replace(/\bn\b/g,'k');const firstBad=range(1,12).find(n=>mod(F(n),tp.m)!==0);
+   return Q(`<p>Claim: ${tp.m} | f(n) for all n ≥ 1, where f(n) = ${lin(fstr)}.</p><p><i>Proof. Base case: n = 1 is checked by computation. Inductive step: assume ${tp.m} | f(k). Then f(k + 1) − f(k) = ${claimed}, a multiple of ${tp.m}; so ${tp.m} | f(k + 1). ∎</i></p><p>Evaluate this argument.</p>`,'mc',idx.indexOf(k),{choices:idx.map(i=>CH[i]),
+     hint:'Verify the algebra of the step for yourself (expand f(k + 1) − f(k)), then actually compute the base case f(1).',
+     solution:`<p><b>Step:</b> expanding, f(k + 1) − f(k) = ${stepBad?`(${claimed.split(',')[0]}) ${sh<0?'−':'+'} ${Math.abs(sh)}, which is ≡ ${mod(sh,tp.m)} (mod ${tp.m}), NOT a multiple of ${tp.m}: the step's algebra is wrong. In fact f(n) mod ${tp.m} changes by ${mod(sh,tp.m)} at every step.`:`${claimed.split(',')[0]} exactly, a multiple of ${tp.m}: the step is valid, so f(n) mod ${tp.m} is the same for all n.`}</p><p><b>Base case:</b> f(1) = ${F(1)} ${baseOK?`is divisible by ${tp.m}.`:`≡ ${mod(F(1),tp.m)} (mod ${tp.m}), not divisible.`}${k===2?` The claim first fails at n = ${firstBad}: f(${firstBad}) = ${F(firstBad)} ≡ ${mod(F(firstBad),tp.m)} (mod ${tp.m}).`:''}</p><p>So: <b>${CH[k]}</b>.</p>`,meta:{m:tp.m,terms,choices:idx.map(i=>CH[i])}});}),
 ];
 
 // =========================================================
@@ -826,14 +872,14 @@ G['55-H']=[
   if b == 0: return a
   return gcd(b, a mod b)</pre><p>How many calls (including the first call gcd(${a}, ${b})) are made?</p>`,'num',calls,{hint:'Trace the pairs (a, b) → (b, a mod b) until b = 0.',
      solution:`<p>${(()=>{const s=[];let x=a,y=b;while(true){s.push(`(${x}, ${y})`);if(y===0)break;[x,y]=[y,x%y];}return s.join(' → ');})()}: <b>${calls}</b> calls, returning ${x}.</p>`,meta:{t,a,b}});}),
- gen('55-H-alg-ih',TH[2],r=>{const t=r.int(0,3);const CH=['Alg is correct on input n − 1','Alg is correct on all inputs k with 1 ≤ k < n','Alg is correct on input n','Alg is correct on inputs n − 1 and n − 2','Alg is correct on all inputs k ≥ 1'];
+ gen('55-H-alg-ih',TH[2],r=>{const t=r.int(0,3);const CH=['Alg is correct on input n − 1','Alg is correct on all inputs k with 1 ≤ k < n','Alg is correct on input n','Alg is correct on inputs n − 1 and n − 2','Alg is correct on all inputs k ≥ 1','Alg is correct on input n − 2'];
    const algs=[[`fact(n): if n == 1 return 1; else return n · fact(n − 1)`,0],[`fib(n): if n ≤ 2 return 1; else return fib(n − 1) + fib(n − 2)`,3],
      [`bits(n): if n == 1 return 1; else return 1 + bits(⌊n/2⌋)`,1],[`mpow(b, n, m): if n == 1 return b mod m; if n even return mpow(b, n/2, m)² mod m; else return (mpow(b, ⌊n/2⌋, m)² · b) mod m`,1],
-     [`sumdigits(n): if n < 10 return n; else return (n mod 10) + sumdigits(⌊n/10⌋)`,1],[`tri(n): if n == 1 return 1; else return n + tri(n − 1)`,0],[`trib(n): if n ≤ 3 return 1; else return trib(n−1)+trib(n−2)+trib(n−3)`,-1]];
-   const al=r.pick(algs.filter(x=>x[1]>=0));const idx=r.shuffle([0,1,2,3,4]);
+     [`sumdigits(n): if n < 10 return n; else return (n mod 10) + sumdigits(⌊n/10⌋)`,1],[`tri(n): if n == 1 return 1; else return n + tri(n − 1)`,0],[`half(n): if n ≤ 2 return 1; else return 2 · half(n − 2)`,5],[`alt(n): if n ≤ 2 return n; else return alt(n − 2) + n`,5],[`trib(n): if n ≤ 3 return 1; else return trib(n−1)+trib(n−2)+trib(n−3)`,-1]];
+   const al=r.pick(algs.filter(x=>x[1]>=0));const idx=r.shuffle([al[1]].concat(r.sample([0,1,2,3,4,5].filter(i=>i!==al[1]),4)));
    return Q(`<p>To prove by induction that the recursive algorithm</p><pre class="code">${al[0]}</pre><p>is correct for every n ≥ 1, the inductive step for input n should assume which hypothesis (the weakest one that works)?</p>`,'mc',idx.indexOf(al[1]),{choices:idx.map(i=>CH[i]),
      hint:'Look at the argument(s) of the recursive call(s). If they can be any smaller value (like ⌊n/2⌋), you need strong induction.',
-     solution:`<p>The recursive call(s) use ${al[1]===0?'n − 1 only: ordinary induction':al[1]===3?'n − 1 and n − 2: both must be assumed (two base cases)':'⌊n/2⌋ or ⌊n/10⌋, which can be any smaller value: strong induction'} → <b>${CH[al[1]]}</b>. Assuming correctness on n itself or on all inputs is circular.</p>`,meta:{alg:al[0],choices:idx.map(i=>CH[i])}});}),
+     solution:`<p>The recursive call(s) use ${al[1]===0?'n − 1 only: ordinary induction':al[1]===3?'n − 1 and n − 2: both must be assumed (two base cases)':al[1]===5?'n − 2 only: assume correctness on n − 2 (with base cases n = 1 and n = 2)':'⌊n/2⌋ or ⌊n/10⌋, which can be any smaller value: strong induction'} → <b>${CH[al[1]]}</b>. Assuming correctness on n itself or on all inputs is circular.</p>`,meta:{alg:al[0],choices:idx.map(i=>CH[i])}});}),
 ];
 
 // =========================================================
@@ -847,7 +893,7 @@ G['55-I']=[
    else if(t===1){ans=k*Math.pow(k-1,n-1);desc=`have no two ADJACENT letters equal`;sol=`product rule: ${k} choices for the first letter, then ${k-1} for each next one: ${k}·${k-1}<sup>${n-1}</sup>`;}
    else{const h=Math.ceil(n/2);ans=v*Math.pow(k,n-1)+Math.pow(k,h)-v*Math.pow(k,h-1);desc=`start with a vowel OR are palindromes`;sol=`|start vowel| = ${v}·${k}<sup>${n-1}</sup>, |palindromes| = ${k}<sup>${h}</sup> (first ⌈n/2⌉ letters determine it), |both| = ${v}·${k}<sup>${h-1}</sup>; subtraction rule`;}
    return Q(`<p>Strings of length ${n} over the alphabet {${all.join(', ')}}, where the vowels are {${vow.join(', ')}}. How many strings ${desc}?</p>`,'num',ans,{hint:'Product rule for each piece; for “or”, add and subtract the overlap (subtraction rule).',
-     solution:`<p>${sol} = <b>${ans}</b>.</p>`,meta:{k,v,n,t}});}),
+     solution:`<p>${sol}${t===1?` = ${k}·${Math.pow(k-1,n-1)}`:t===0?` = ${v*Math.pow(k,n-1)} + ${v*Math.pow(k,n-1)} − ${v*v*Math.pow(k,n-2)}`:` = ${v*Math.pow(k,n-1)} + ${Math.pow(k,Math.ceil(n/2))} − ${v*Math.pow(k,Math.ceil(n/2)-1)}`} = <b>${ans}</b>.</p>`,meta:{k,v,n,t}});}),
  gen('55-I-circular',TI[0],r=>{const n=r.int(5,9);const t=r.int(0,4);let ans,desc,sol;
    if(t===0){ans=fact(n-1)-2*fact(n-2);desc=`if A and B refuse to sit next to each other`;sol=`Division rule: n!/n = (n−1)! = ${fact(n-1)} seatings. A, B together: glue them (${n-1} units around the table → (${n-2})!, times 2 orders) = ${2*fact(n-2)}. Answer ${fact(n-1)} − ${2*fact(n-2)}`;}
    else if(t===1){ans=fact(n-3)*6;desc=`if A, B and C must occupy three consecutive seats (in any order)`;sol=`Glue A, B, C into a block: ${n-2} units around the table → (${n-3})! = ${fact(n-3)}, times 3! = 6 internal orders`;}
@@ -887,14 +933,14 @@ G['55-I']=[
    else{ans=C(w+m-1,k)-C(w+m-2,k-1)+C(w+m-2,k-2);desc='if Ann will serve only if Bob also serves (Bob may serve without Ann)';sol=`no Ann: C(${w+m-1},${k}); Ann and Bob: C(${w+m-2},${k-2}). Total ${C(w+m-1,k)} + ${C(w+m-2,k-2)}`;ans=C(w+m-1,k)+C(w+m-2,k-2);}
    return Q(`<p>A committee of ${k} is chosen from ${w} women and ${m} men${t>=2?' (Ann and Bob are two of these people)':''}. How many committees are possible ${desc}?</p>`,'num',ans,{hint:'“At least” → complement. Pairs of people with conditions → split into cases by who is in.',solution:`<p>${sol} = <b>${ans}</b>.</p>`,meta:{w,m,k,t}});}),
  gen('55-I-complement',TI[3],r=>{const t=r.int(0,2);let ans,desc,sol,meta;
-   if(t===0){const k=r.int(4,7),n=r.int(3,Math.min(k,5));ans=Math.pow(k,n)-P(k,n);desc=`How many strings of length ${n} over a ${k}-letter alphabet have at least one repeated letter?`;sol=`all ${k}<sup>${n}</sup> minus all-distinct P(${k},${n}) = ${Math.pow(k,n)} − ${P(k,n)}`;meta={t,k,n};}
-   else if(t===1){const L=r.int(2,4),D=r.int(2,4),n=r.int(4,6);if(Math.pow(L+D,n)>50000)return null;ans=Math.pow(L+D,n)-Math.pow(L,n)-Math.pow(D,n);desc=`A password of length ${n} uses ${L} letters and ${D} digits (repetition allowed). How many contain at least one letter AND at least one digit?`;sol=`(${L+D})<sup>${n}</sup> − ${L}<sup>${n}</sup> − ${D}<sup>${n}</sup>`;meta={t,L,D,n};}
-   else{const n=r.int(6,12),k=r.int(2,3);let s=0;for(let j=0;j<k;j++)s+=C(n,j);ans=Math.pow(2,n)-s;desc=`How many bit strings of length ${n} contain at least ${k} ones?`;sol=`2<sup>${n}</sup> − ${range(0,k-1).map(j=>`C(${n},${j})`).join(' − ')}`;meta={t,n,k};}
+   if(t===0){const k=r.int(4,7),n=r.int(3,Math.min(k,5));ans=Math.pow(k,n)-P(k,n);desc=`How many strings of length ${n} over a ${k}-letter alphabet have at least one repeated letter?`;sol=`Complement of “at least one repeat” is “all letters distinct”. All strings: ${k}<sup>${n}</sup> = ${Math.pow(k,n)}; all distinct: P(${k},${n}) = ${range(k-n+1,k).reverse().join('·')} = ${P(k,n)}. Answer ${Math.pow(k,n)} − ${P(k,n)}`;meta={t,k,n};}
+   else if(t===1){const L=r.int(2,4),D=r.int(2,4),n=r.int(4,6);if(Math.pow(L+D,n)>50000)return null;ans=Math.pow(L+D,n)-Math.pow(L,n)-Math.pow(D,n);desc=`Passwords of length ${n} are made from an alphabet of ${L} letters and ${D} digits (${L+D} symbols in all, repetition allowed). How many passwords contain at least one letter AND at least one digit?`;sol=`All passwords: ${L+D}<sup>${n}</sup> = ${Math.pow(L+D,n)}. The complement (“no digit” or “no letter”) consists of the all-letter passwords, ${L}<sup>${n}</sup> = ${Math.pow(L,n)}, and the all-digit passwords, ${D}<sup>${n}</sup> = ${Math.pow(D,n)} (these two sets are disjoint). Answer ${Math.pow(L+D,n)} − ${Math.pow(L,n)} − ${Math.pow(D,n)}`;meta={t,L,D,n};}
+   else{const n=r.int(6,12),k=r.int(2,3);let s=0;for(let j=0;j<k;j++)s+=C(n,j);ans=Math.pow(2,n)-s;desc=`How many bit strings of length ${n} contain at least ${k} ones?`;sol=`Complement: fewer than ${k} ones. 2<sup>${n}</sup> − ${range(0,k-1).map(j=>`C(${n},${j})`).join(' − ')} = ${Math.pow(2,n)} − ${range(0,k-1).map(j=>C(n,j)).join(' − ')}`;meta={t,n,k};}
    return Q(`<p>${desc}</p>`,'num',ans,{hint:'Count the complement (“none”/“all distinct”/“fewer than k”) and subtract from the total.',solution:`<p>${sol} = <b>${ans}</b>.</p>`,meta});}),
  gen('55-I-complement2',TI[3],r=>{const t=r.int(0,2);let v,desc,sol,meta;
-   if(t===0){const n=r.int(7,13),k=r.int(3,5),j=r.int(2,4);v=C(n,k)-C(n-j,k);desc=`How many ${k}-element subsets of {1, …, ${n}} contain at least one of 1, …, ${j}?`;sol=`C(${n}, ${k}) − C(${n-j}, ${k})`;meta={t,n,k,j};}
+   if(t===0){const n=r.int(7,13),k=r.int(3,5),j=r.int(2,4);v=C(n,k)-C(n-j,k);desc=`How many ${k}-element subsets of {1, …, ${n}} contain at least one of 1, …, ${j}?`;sol=`Complement: subsets avoiding all of 1, …, ${j}, chosen from the other ${n-j} numbers. C(${n}, ${k}) − C(${n-j}, ${k}) = ${C(n,k)} − ${C(n-j,k)}`;meta={t,n,k,j};}
    else if(t===1){const m=r.int(3,5),n=r.int(m,7);if(Math.pow(n,m)>20000)return null;v=Math.pow(n,m)-P(n,m);desc=`How many functions from a ${m}-element set to a ${n}-element set are NOT one-to-one?`;sol=`${n}<sup>${m}</sup> − P(${n}, ${m}) = ${Math.pow(n,m)} − ${P(n,m)}`;meta={t,m,n};}
-   else{const n=r.int(4,8);v=fact(n)-2*fact(n-1)+fact(n-2);desc=`How many permutations of 1, 2, …, ${n} have 1 NOT in the first position AND ${n} NOT in the last position?`;sol=`complement + inclusion–exclusion: ${n}! − (${n-1})! − (${n-1})! + (${n-2})!`;meta={t,n};}
+   else{const n=r.int(4,8);v=fact(n)-2*fact(n-1)+fact(n-2);desc=`How many permutations of 1, 2, …, ${n} have 1 NOT in the first position AND ${n} NOT in the last position?`;sol=`Complement + inclusion–exclusion: total ${n}!, minus those with 1 first ((${n-1})!) and those with ${n} last ((${n-1})!), plus those with both ((${n-2})!): ${fact(n)} − ${fact(n-1)} − ${fact(n-1)} + ${fact(n-2)}`;meta={t,n};}
    return Q(`<p>${desc}</p>`,'num',v,{hint:'Count the complement (none of the special elements / injective / the bad positions) and subtract.',solution:`<p>${sol} = <b>${v}</b>.</p>`,meta});}),
 ];
 
@@ -945,7 +991,7 @@ G['55-J']=[
    if(t===0){const k=r.int(3,4),n=r.int(5,12);const v=C(n+k,k);return Q(`<p>How many solutions in nonnegative integers does x₁ + … + x<sub>${k}</sub> ≤ ${n} have?</p>`,'num',v,{hint:'Add a slack variable x₀ = n − (x₁+…+x_k) ≥ 0 to turn ≤ into =.',
      solution:`<p>Slack: x₁ + … + x<sub>${k}</sub> + s = ${n} with ${k+1} nonnegative variables: C(${n} + ${k}, ${k}) = <b>${v}</b>.</p>`,meta:{t,k,n}});}
    if(t===1){const kinds=r.int(3,6),n=r.int(4,10);const v=C(n+kinds-1,kinds-1);return Q(`<p>A bakery sells ${kinds} kinds of bagels. How many ways are there to choose ${n} bagels (order irrelevant, repetition allowed)?</p>`,'num',v,{hint:'Combinations with repetition: C(n + k − 1, k − 1).',
-     solution:`<p>C(${n} + ${kinds-1}, ${kinds-1}) = <b>${v}</b>.</p>`,meta:{t,k:kinds,n}});}
+     solution:`<p>A choice is x₁ + … + x<sub>${kinds}</sub> = ${n} with xᵢ ≥ 0 (xᵢ = number of bagels of kind i). Stars and bars: ${n} stars and ${kinds-1} bars in a row, choose the bar positions: C(${n} + ${kinds-1}, ${kinds-1}) = C(${n+kinds-1}, ${kinds-1}) = <b>${v}</b>.</p>`,meta:{t,k:kinds,n}});}
    const k=r.int(3,5),n=r.int(k+3,k+12);const v=C(n-1,k-1);return Q(`<p>In how many ways can ${n} identical coins be given to ${k} children so that every child gets at least one?</p>`,'num',v,{hint:'Give each child one coin first, then distribute the rest freely.',
      solution:`<p>${n-k} remaining coins, ${k} children: C(${n-k} + ${k-1}, ${k-1}) = C(${n-1}, ${k-1}) = <b>${v}</b>.</p>`,meta:{t,k,n}});}),
  ...(()=>{const WORDS=['BANANA','LETTER','COOKIE','PEPPER','BALLOON','ADDRESS','SUCCESS','COFFEE','GEESE','ASSESS','MAMMAL','PAPAYA','DEEDED','TATTOO','BOOKKEEP','CANCEL','ALFALFA','INNING','REFERRED','STATS'];
@@ -965,15 +1011,20 @@ G['55-J']=[
  gen('55-J-lattice',TJ[4],r=>{const a=r.int(4,8),b=r.int(3,7);const px=r.int(1,a-1),py=r.int(1,b-1);const t=r.int(0,2);let v,desc,sol;
    if(t===0){v=C(px+py,px)*C(a-px+b-py,a-px);desc=`pass through (${px}, ${py})`;sol=`C(${px+py}, ${px})·C(${a-px+b-py}, ${a-px}) = ${C(px+py,px)}·${C(a-px+b-py,a-px)}`;}
    else if(t===1){v=C(a+b,a)-C(px+py,px)*C(a-px+b-py,a-px);desc=`AVOID the point (${px}, ${py})`;sol=`C(${a+b}, ${a}) − C(${px+py}, ${px})·C(${a-px+b-py}, ${a-px}) = ${C(a+b,a)} − ${C(px+py,px)*C(a-px+b-py,a-px)}`;}
-   else{v=C(a+b,a)-C(px+py,px)*C(a-px-1+b-py,a-px-1);desc=`do NOT use the unit step from (${px}, ${py}) to (${px+1}, ${py})`;sol=`total minus paths through that edge: C(${a+b}, ${a}) − C(${px+py}, ${px})·C(${a-px-1+b-py}, ${a-px-1})`;}
-   return Q(`<p>Lattice paths from (0, 0) to (${a}, ${b}) use unit steps right (+1, 0) and up (0, +1). How many paths ${desc}?</p>`,'num',v,{hint:'Paths to (a, b): C(a + b, a). Through a point: multiply the two legs. Avoid: complement.',solution:`<p>${sol} = <b>${v}</b>.</p>`,meta:{a,b,px,py,t}});}),
+   else{v=C(a+b,a)-C(px+py,px)*C(a-px-1+b-py,a-px-1);desc=`do NOT use the unit step from (${px}, ${py}) to (${px+1}, ${py})`;sol=`total minus paths through that edge (reach (${px}, ${py}), take the step, then go from (${px+1}, ${py}) to (${a}, ${b})): C(${a+b}, ${a}) − C(${px+py}, ${px})·C(${a-px-1+b-py}, ${a-px-1}) = ${C(a+b,a)} − ${C(px+py,px)}·${C(a-px-1+b-py,a-px-1)}`;}
+   return Q(`<p>Lattice paths from (0, 0) to (${a}, ${b}) use unit steps right (+1, 0) and up (0, +1). How many paths ${desc}?</p>`,'num',v,{hint:'Paths to (a, b): C(a + b, a). Through a point: multiply the two legs. Avoid: complement.',solution:`<p>A path to (x, y) is a word with x R's and y U's: C(x + y, x) of them. ${sol} = <b>${v}</b>.</p>`,meta:{a,b,px,py,t}});}),
  gen('55-J-letters-sub',TJ[3],r=>{const W=['BANANA','LETTER','COOKIE','PEPPER','BALLOON','ADDRESS','SUCCESS','COFFEE','MAMMAL','PAPAYA','TATTOO','BOOKKEEP','ALFALFA','INNING','STATS','MISSISSIPPI','TENNESSEE','COMMITTEE'];
    const w=r.pick(W);const k=r.int(3,5);const cnt={};for(const ch of w)cnt[ch]=(cnt[ch]||0)+1;const letters=Object.keys(cnt);if(letters.length>6)return null;
    // EGF: k! [x^k] ∏ (∑_{i ≤ c} x^i / i!)
    let poly=[fr(1)];for(const L of letters){const c=cnt[L];const np=Array(poly.length+c).fill(null).map(()=>fr(0));poly.forEach((a,i)=>{for(let j=0;j<=c;j++)np[i+j]=np[i+j].add(a.mul(fr(1,fact(j))));});poly=np;}
    const v=Number(poly[k].mul(fact(k)).n);
    return Q(`<p>How many different strings of length ${k} can be formed from the letters of ${w}, using each letter at most as many times as it appears in ${w}?</p>`,'num',v,{hint:'Split into cases by the pattern of repeats (all different, one letter twice, …), counting choices of letters then arrangements n!/(n₁!n₂!…).',
-     solution:`<p>Letter supply: ${letters.map(L=>`${L}×${cnt[L]}`).join(', ')}. Summing over repeat patterns (equivalently k!·[x<sup>${k}</sup>] ∏<sub>letters</sub> ∑<sub>i≤cᵢ</sub> xⁱ/i!) gives <b>${v}</b>.</p>`,meta:{w,k}});}),
+     solution:(()=>{const parts=[];const rec=(rem,mx,cur)=>{if(rem===0){parts.push(cur.slice());return;}for(let x=Math.min(rem,mx);x>=1;x--){cur.push(x);rec(rem-x,x,cur);cur.pop();}};rec(k,k,[]);
+       let tot=0;const lines=parts.map(pt=>{const grp=[];pt.forEach(x=>{const g=grp.find(z=>z[0]===x);if(g)g[1]++;else grp.push([x,1]);});let used=0,sel=1;const fs2=grp.map(([x,mm])=>{const A=letters.filter(L=>cnt[L]>=x);const av=A.length-used;const f=C(av,mm);sel*=f;used+=mm;return `C(${av}, ${mm})`;});
+         const arr=fact(k)/pt.reduce((a,x)=>a*fact(x),1);tot+=sel*arr;const desc=grp.map(([x,mm])=>`${mm} letter${mm>1?'s':''} used ${x===1?'once':x===2?'twice':x+' times'}`).join(', ');
+         return `pattern ${pt.join('+')} (${desc}): choose the letters ${fs2.join('·')} = ${sel} way${sel===1?'':'s'}, arrange ${k}!/(${pt.map(x=>x+'!').join('·')}) = ${arr}: ${sel}·${arr} = ${sel*arr}`;});
+       if(tot!==v)throw new Error('letters-sub case split mismatch');
+       return `<p>Letter supply: ${letters.map(L=>`${L}×${cnt[L]}`).join(', ')}. Split by the repeat pattern of the ${k} letters (letters that may be used x times are those with supply ≥ x; choose them from the most-demanding part down):</p>${ul(lines)}<p>Total: ${parts.map(pt=>{let grp=[];pt.forEach(x=>{const g=grp.find(z=>z[0]===x);if(g)g[1]++;else grp.push([x,1]);});let used=0,sel=1;grp.forEach(([x,mm])=>{sel*=C(letters.filter(L=>cnt[L]>=x).length-used,mm);used+=mm;});return sel*fact(k)/pt.reduce((a,x)=>a*fact(x),1);}).join(' + ')} = <b>${v}</b>.</p>`;})(),meta:{w,k}});}),
 ];
 
 // =========================================================
@@ -999,7 +1050,9 @@ G['55-K']=[
  gen('55-K-union',TK[1],r=>{const t=r.int(0,2);let pr,desc,sol,meta;
    if(t===0){const k=r.int(2,5),s=r.pick([4,6,8]);if(Math.pow(s,k)>5000)return null;pr=fr(1).sub(fr(Math.pow(s-1,k),Math.pow(s,k)));desc=`Roll a fair ${s}-sided die ${k} times. What is the probability of at least one ${s}?`;sol=`1 − (${s-1}/${s})<sup>${k}</sup>`;meta={t,k,s};}
    else if(t===1){const N=r.int(50,300),a=r.int(2,9);let b=r.int(2,12);if(a===b)return null;const cnt=Math.floor(N/a)+Math.floor(N/b)-Math.floor(N/lcm(a,b));pr=fr(cnt,N);desc=`An integer is chosen uniformly from 1…${N}. What is the probability it is divisible by ${a} or ${b}?`;sol=`(⌊${N}/${a}⌋ + ⌊${N}/${b}⌋ − ⌊${N}/${lcm(a,b)}⌋)/${N} = (${Math.floor(N/a)} + ${Math.floor(N/b)} − ${Math.floor(N/lcm(a,b))})/${N} [lcm, not product!]`;meta={t,N,a,b};}
-   else{const n=r.int(5,10);desc=`A random bit string of length ${n}. What is the probability that it starts with 1 or ends with 00?`;pr=fr(Math.pow(2,n-1)+Math.pow(2,n-2)-Math.pow(2,n-3),Math.pow(2,n));sol=`P(start 1) + P(end 00) − P(both) = 1/2 + 1/4 − 1/8`;meta={t,n};}
+   else{const i=r.int(1,3),j=r.int(1,3);const n=r.int(Math.max(5,i+j),10);const A=range(1,i).map(()=>r.pick(['0','1'])).join(''),B=range(1,j).map(()=>r.pick(['0','1'])).join('');
+     desc=`A random bit string of length ${n} is chosen uniformly. What is the probability that it starts with ${A} or ends with ${B}?`;pr=fr(Math.pow(2,n-i)+Math.pow(2,n-j)-Math.pow(2,n-i-j),Math.pow(2,n));
+     sol=`P(starts with ${A}) = 1/2<sup>${i}</sup>, P(ends with ${B}) = 1/2<sup>${j}</sup>; these positions don't overlap (${i} + ${j} ≤ ${n}), so P(both) = 1/2<sup>${i+j}</sup>. Inclusion–exclusion: 1/${1<<i} + 1/${1<<j} − 1/${1<<(i+j)}`;meta={t,n,A,B};}
    return Q(`<p>${desc}</p>`,'num',pr.ans(),{hint:'Complement for “at least one”; inclusion–exclusion P(A∪B) = P(A) + P(B) − P(A∩B) for “or”.',solution:`<p>${sol} = <b>${pr.h()}</b>.</p>`,meta});}),
  gen('55-K-conditional',TK[2],r=>{const s=6;const t=r.int(0,2);const outs=[];for(let a=1;a<=s;a++)for(let b=1;b<=s;b++)outs.push([a,b]);let A,B,dA,dB,meta;
    const sv=r.int(5,10),d=r.int(1,6),m=r.int(3,6);
@@ -1022,7 +1075,7 @@ G['55-K']=[
    const term=j=>fr(CB(n,j)).mul(new Fr(BigInt(a)**BigInt(j),BigInt(b)**BigInt(j))).mul(new Fr(BigInt(b-a)**BigInt(n-j),BigInt(b)**BigInt(n-j)));
    if(t)pr=term(k);else for(let j=k;j<=n;j++)pr=pr.add(term(j));
    return Q(`<p>A biased coin shows heads with probability ${p.h()}. It is flipped ${n} times independently. Find the probability of ${t?`exactly ${k}`:`at least ${k}`} heads (exact fraction).</p>`,'num',pr.ans(),{hint:'Binomial: P(exactly j) = C(n, j)p^j(1−p)^(n−j); for “at least k” sum j = k…n (or use the complement).',
-     solution:`<p>${t?`C(${n}, ${k})(${p.h()})<sup>${k}</sup>(${q.h()})<sup>${n-k}</sup>`:`∑<sub>j=${k}</sub><sup>${n}</sup> C(${n}, j)(${p.h()})<sup>j</sup>(${q.h()})<sup>${n}−j</sup>`} = <b>${pr.h()}</b>.</p>`,meta:{n,a,b,k,t}});}),
+     solution:`<p>${t?`C(${n}, ${k})(${p.h()})<sup>${k}</sup>(${q.h()})<sup>${n-k}</sup> = ${CB(n,k)}·${BigInt(a)**BigInt(k)*BigInt(b-a)**BigInt(n-k)}/${BigInt(b)**BigInt(n)}`:`∑<sub>j=${k}</sub><sup>${n}</sup> C(${n}, j)(${p.h()})<sup>j</sup>(${q.h()})<sup>${n}−j</sup>. With denominator ${b}<sup>${n}</sup> = ${BigInt(b)**BigInt(n)}, the numerators are ${range(k,n).map(j=>`j = ${j}: ${CB(n,j)}·${a}<sup>${j}</sup>·${b-a}<sup>${n-j}</sup> = ${CB(n,j)*BigInt(a)**BigInt(j)*BigInt(b-a)**BigInt(n-j)}`).join('; ')}. Sum: ${range(k,n).reduce((s2,j)=>s2+CB(n,j)*BigInt(a)**BigInt(j)*BigInt(b-a)**BigInt(n-j),0n)}/${BigInt(b)**BigInt(n)}`} = <b>${pr.h()}</b>.</p>`,meta:{n,a,b,k,t}});}),
  gen('55-K-bayes',TK[4],r=>{const k=r.int(2,3);let pri=range(1,k).map(()=>r.int(1,8));const S=sum(pri);const rates=range(1,k).map(()=>r.int(1,12));const target=r.int(0,k-1);
    const pP=pri.map(x=>fr(x,S)),pD=rates.map(x=>fr(x,100));let tot=fr(0);pP.forEach((p,i)=>tot=tot.add(p.mul(pD[i])));const post=pP[target].mul(pD[target]).div(tot);
    const names=['A','B','C'];
@@ -1044,10 +1097,10 @@ G['55-K']=[
  gen('55-K-probmethod',TK[5],r=>{const t=r.int(0,2);
    if(t===0){const n=r.int(4,6),m=r.int(3,4);if(m>n)return null;const e=fr(C(n,m)).mul(new Fr(1n,1n<<BigInt(C(m,2)-1)));
      return Q(`<p>Probabilistic method: colour each edge of K<sub>${n}</sub> red or blue independently with probability 1/2. What is the expected number of monochromatic K<sub>${m}</sub>'s (copies of K<sub>${m}</sub> whose edges all have the same colour)? (If this is < 1, some colouring has none.)</p>`,'num',e.ans(),{
-       hint:'Linearity of expectation over the C(n, m) vertex sets; each is monochromatic with probability 2·2^(−C(m,2)).',solution:`<p>C(${n}, ${m})·2<sup>1−${C(m,2)}</sup> = ${C(n,m)}/${1<<(C(m,2)-1)} = <b>${e.h()}</b>.</p>`,meta:{t,n,m}});}
+       hint:'Linearity of expectation over the C(n, m) vertex sets; each is monochromatic with probability 2·2^(−C(m,2)).',solution:`<p>Let X = ∑ X<sub>S</sub> over the C(${n}, ${m}) = ${C(n,m)} sets S of ${m} vertices, X<sub>S</sub> = 1 if S spans a monochromatic K<sub>${m}</sub>. S has C(${m}, 2) = ${C(m,2)} edges, all red or all blue with probability 2·(1/2)<sup>${C(m,2)}</sup> = 1/${1<<(C(m,2)-1)}. By linearity, E(X) = ${C(n,m)}/${1<<(C(m,2)-1)} = <b>${e.h()}</b>.</p>`,meta:{t,n,m}});}
    if(t===1){const n=r.int(3,5);const e=fr(fact(n),1<<(n-1));
      return Q(`<p>A tournament on ${n} players is random: each game's winner is chosen by a fair coin. A Hamiltonian path is an ordering v₁, …, v<sub>${n}</sub> of all players where each vᵢ beats vᵢ₊₁. What is the expected number of Hamiltonian paths? (Hence some tournament has at least this many.)</p>`,'num',e.ans(),{
-       hint:'n! orderings, each a Hamiltonian path with probability (1/2)^(n−1).',solution:`<p>${n}!/2<sup>${n-1}</sup> = ${fact(n)}/${1<<(n-1)} = <b>${e.h()}</b>.</p>`,meta:{t,n}});}
+       hint:'n! orderings, each a Hamiltonian path with probability (1/2)^(n−1).',solution:`<p>Write X = ∑ X<sub>σ</sub> over the ${n}! = ${fact(n)} orderings σ. An ordering is a Hamiltonian path iff each of its ${n-1} consecutive games goes the right way: probability (1/2)<sup>${n-1}</sup> = 1/${1<<(n-1)} (different games are independent). By linearity, E(X) = ${fact(n)}/${1<<(n-1)} = <b>${e.h()}</b>.</p>`,meta:{t,n}});}
    const n=r.int(5,7),k=r.int(2,3);const E=randGraph(r,n,0.5);if(E.length<4)return null;const mono=r.bool();const e=mono?fr(E.length,k):fr(E.length*(k-1),k);
    return Q(`<p>The graph G has vertices 1…${n} and edges ${fmtE(E)}. Colour each VERTEX independently and uniformly with one of ${k} colours. What is the expected number of ${mono?'monochromatic':'bichromatic (endpoints coloured differently)'} edges? (${mono?'':`So G has a ${k}-colouring with at least this many bichromatic edges, e.g. a cut with ≥ |E|/2 edges when k = 2.`})</p>`,'num',e.ans(),{
      hint:'Indicator per edge: its endpoints get the same colour with probability 1/k.',solution:`<p>|E| = ${E.length}; each edge is ${mono?'monochromatic with probability 1/'+k:'bichromatic with probability '+(k-1)+'/'+k}. Expected value ${e.h()}.</p><p>Answer <b>${e.h()}</b>.</p>`,meta:{t,n,k,E,mono}});}),
@@ -1055,7 +1108,9 @@ G['55-K']=[
    const EV=[[`the first die shows at least ${x}`,o=>o[0]>=x],[`the sum is ${t}`,o=>o[0]+o[1]===t],[`the dice show the same number`,o=>o[0]===o[1]],[`at least one die shows ${d}`,o=>o[0]===d||o[1]===d],[`the product is even`,o=>(o[0]*o[1])%2===0],[`the dice differ by at least ${g}`,o=>Math.abs(o[0]-o[1])>=g]];
    const ids=r.sample(range(0,EV.length-1),3);let c=0;for(let a=1;a<=6;a++)for(let b=1;b<=6;b++)if(ids.some(i=>EV[i][1]([a,b])))c++;const pr=fr(c,36);
    return Q(`<p>Two fair dice are rolled. Find the probability that at least one of the following happens: (1) ${EV[ids[0]][0]}; (2) ${EV[ids[1]][0]}; (3) ${EV[ids[2]][0]}.</p>`,'num',pr.ans(),{hint:'Inclusion–exclusion P(E₁∪E₂∪E₃) = ΣP(Eᵢ) − ΣP(EᵢEⱼ) + P(E₁E₂E₃), or count the outcomes in the union directly (complement helps).',
-     solution:`<p>Counting outcomes in the union: ${c} of 36 ⇒ <b>${pr.h()}</b>.</p>`,meta:{ids,x,t,d,g}});}),
+     solution:(()=>{const cnt=f=>{let k=0;for(let a=1;a<=6;a++)for(let b=1;b<=6;b++)if(f([a,b]))k++;return k;};const E=ids.map(i=>EV[i][1]);
+       const s1=[0,1,2].map(i=>cnt(E[i])),s2=[[0,1],[0,2],[1,2]].map(([i,j])=>cnt(o=>E[i](o)&&E[j](o))),s3=cnt(o=>E[0](o)&&E[1](o)&&E[2](o));
+       return `<p>Count outcomes out of 36. |E₁| = ${s1[0]}, |E₂| = ${s1[1]}, |E₃| = ${s1[2]}; |E₁E₂| = ${s2[0]}, |E₁E₃| = ${s2[1]}, |E₂E₃| = ${s2[2]}; |E₁E₂E₃| = ${s3}.</p><p>Inclusion–exclusion: ${s1.join(' + ')} − ${s2.join(' − ')} + ${s3} = ${c}, so the probability is ${c}/36 = <b>${pr.h()}</b>.</p>`;})(),meta:{ids,x,t,d,g}});}),
  gen('55-K-geometric',TK[3],r=>{const [a,b]=r.pick([[1,6],[1,4],[1,10],[1,5],[2,7],[1,3],[3,10],[1,8],[2,9],[1,20]]);const p=fr(a,b),q=fr(b-a,b);const t=r.int(0,1);
    if(t===0){const k=r.int(2,7);const v=new Fr(BigInt(b-a)**BigInt(k-1)*BigInt(a),BigInt(b)**BigInt(k));
      return Q(`<p>Independent trials each succeed with probability ${p.h()}. What is the probability that the FIRST success happens on trial ${k}?</p>`,'num',v.ans(),{hint:'k − 1 failures then a success: (1 − p)^(k−1)·p.',solution:`<p>(${q.h()})<sup>${k-1}</sup>·${p.h()} = <b>${v.h()}</b>.</p>`,meta:{t,a,b,k}});}
@@ -1074,7 +1129,7 @@ G['55-L']=[
    const vals=[...cnt.keys()].sort((x,y)=>x-y);const full=vals.length<=6&&r.bool();
    if(full){const L=vals.map(v=>fr(cnt.get(v),s*s));return Q(`<p>Roll two fair ${s}-sided dice. X = ${nm}. X takes the values ${vals.join(', ')}. Enter P(X = v) for these values in that order (fractions).</p>`,'list',L.map(x=>x.ans()),{hint:`Tabulate all ${s*s} outcomes.`,
      solution:`<p>${vals.map((v,i)=>`P(X=${v}) = ${cnt.get(v)}/${s*s} = ${L[i].h()}`).join('; ')}.</p>`,meta:{s,ri,vals}});}
-   const v=r.pick(vals);const pr=fr(cnt.get(v),s*s);return Q(`<p>Roll two fair ${s}-sided dice. X = ${nm}. Find P(X = ${v}).</p>`,'num',pr.ans(),{hint:`Count outcomes in the ${s}×${s} table.`,solution:`<p>${cnt.get(v)} of ${s*s} outcomes: <b>${pr.h()}</b>.</p>`,meta:{s,ri,v}});}),
+   const v=r.pick(vals);const pr=fr(cnt.get(v),s*s);return Q(`<p>Roll two fair ${s}-sided dice. X = ${nm}. Find P(X = ${v}).</p>`,'num',pr.ans(),{hint:`Count outcomes in the ${s}×${s} table.`,solution:(()=>{const L=[];for(let a=1;a<=s;a++)for(let b=1;b<=s;b++)if(f(a,b)===v)L.push(`(${a},${b})`);return `<p>The ${s*s} ordered outcomes are equally likely. Those with X = ${v}: ${L.join(', ')}, which is ${L.length} outcomes. P(X = ${v}) = ${L.length}/${s*s} = <b>${pr.h()}</b>.</p>`;})(),meta:{s,ri,v}});}),
  gen('55-L-expect-def',TL[1],r=>{const t=r.int(0,1);
    if(t===0){const red=r.int(1,4),blue=r.int(2,6);const e=fr(red+blue+1,red+1);return Q(`<p>An urn has ${red} red and ${blue} blue balls. Balls are drawn one at a time WITHOUT replacement until the first red ball appears. Let X be the number of draws (including the red one). Find E(X).</p>`,'num',e.ans(),{
      hint:'Indicators: X = 1 + (number of blue balls drawn before the first red); each blue ball precedes all reds with probability 1/(r+1).',solution:`<p>E(X) = 1 + ${blue}·1/${red+1} = ${red+blue+1}/${red+1} = <b>${e.h()}</b>.</p>`,meta:{t,red,blue}});}
@@ -1085,10 +1140,13 @@ G['55-L']=[
    else if(t===1){const k=r.int(3,6),n=r.int(3,6);if(Math.pow(n,k)>20000)return null;e=fr(n).mul(fr(1).sub(new Fr(BigInt(n-1)**BigInt(k),BigInt(n)**BigInt(k))));desc=`A fair ${n}-sided die is rolled ${k} times. Find the expected number of DISTINCT values that appear.`;sol=`indicator for each face: P(appears) = 1 − ((${n}−1)/${n})<sup>${k}</sup>; E = ${n}·(1 − (${n-1}/${n})<sup>${k}</sup>)`;meta={t,k,n};}
    else{const n=r.int(4,8),a=r.int(2,4);if(Math.pow(a,n)>70000)return null;e=fr(n-1,a);desc=`A string of length ${n} has each letter chosen uniformly from an alphabet of ${a} letters. Find the expected number of positions i (1 ≤ i < ${n}) where letter i equals letter i + 1.`;sol=`${n-1} adjacent pairs, each equal with probability 1/${a}: E = ${n-1}/${a}`;meta={t,n,a};}
    return Q(`<p>${desc}</p>`,'num',e.ans(),{hint:'Write X as a sum of indicator variables and use linearity (no independence needed).',solution:`<p>${sol} = <b>${e.h()}</b>.</p>`,meta});}),
- gen('55-L-EXY',TL[2],r=>{const s=r.pick([4,6]);const [i,j]=r.sample([0,1,3,4,5],2);const fX=RV2[i],fY=RV2[j];const xs=[0,1].map(()=>null);
+ gen('55-L-EXY',TL[2],r=>{// choose the VALUE of E(XY) uniformly among those attainable, then a setting (s, X, Y) giving it
+   const combos=[];for(const s0 of [4,6])for(const i0 of [0,1,3,4,5])for(const j0 of [0,1,3,4,5]){if(i0===j0)continue;let e=fr(0);for(let a=1;a<=s0;a++)for(let b=1;b<=s0;b++)e=e.add(fr(RV2[i0][1](a,b)*RV2[j0][1](a,b),s0*s0));combos.push([s0,i0,j0,e.ans()]);}
+   const vals=[...new Set(combos.map(c=>String(c[3])))];const tv=r.pick(vals);const [s,i,j]=r.pick(combos.filter(c=>String(c[3])===tv));const fX=RV2[i],fY=RV2[j];const xs=[0,1].map(()=>null);
    let EX=fr(0),EY=fr(0),EXY=fr(0);const N=s*s;for(let a=1;a<=s;a++)for(let b=1;b<=s;b++){const x=fX[1](a,b),y=fY[1](a,b);EX=EX.add(fr(x,N));EY=EY.add(fr(y,N));EXY=EXY.add(fr(x*y,N));}
-   const ask=r.int(0,1);if(ask===0)return Q(`<p>Roll two fair ${s}-sided dice. X = ${fX[0]}, Y = ${fY[0]}. Compute E(XY).</p>`,'num',EXY.ans(),{hint:'E(XY) = ∑ x·y·P(outcome) over all outcomes; it equals E(X)E(Y) only if X, Y are uncorrelated (e.g. independent).',
-     solution:`<p>Summing xy over the ${N} outcomes and dividing by ${N}: E(XY) = <b>${EXY.h()}</b>. (Compare E(X)E(Y) = ${EX.h()}·${EY.h()} = ${EX.mul(EY).h()}.)</p>`,meta:{s,i,j,ask}});
+   const ask=0;if(ask===0)return Q(`<p>Roll two fair ${s}-sided dice. X = ${fX[0]}, Y = ${fY[0]}. Compute E(XY).</p>`,'num',EXY.ans(),{hint:'E(XY) = ∑ x·y·P(outcome) over all outcomes; it equals E(X)E(Y) only if X, Y are uncorrelated (e.g. independent).',
+     solution:(()=>{const rows=range(1,s).map(a=>{const terms=range(1,s).map(b=>fX[1](a,b)*fY[1](a,b));return [a,terms];});const tot=sum(rows.map(x=>sum(x[1])));
+       return `<p>E(XY) = (1/${N}) ∑ x(a,b)·y(a,b) over all ${N} outcomes (a, b). Row by row (first die a, values of xy for b = 1…${s}):</p>${ul(rows.map(([a,t])=>`a = ${a}: ${t.map(sn).join(', ')} (sum ${sn(sum(t))})`))}<p>Total ${sn(tot)}, so E(XY) = ${sn(tot)}/${N} = <b>${EXY.h()}</b>. (Compare E(X)E(Y) = ${EX.h()}·${EY.h()} = ${EX.mul(EY).h()}.)</p>`;})(),meta:{s,i,j,ask}});
    const v=EXY.eq(EX.mul(EY));return Q(`<p>Roll two fair ${s}-sided dice. X = ${fX[0]}, Y = ${fY[0]}. True or false: E(XY) = E(X)·E(Y)?</p>`,'tf',v,{hint:'Compute both sides exactly.',solution:`<p>E(XY) = ${EXY.h()}, E(X)E(Y) = ${EX.h()}·${EY.h()} = ${EX.mul(EY).h()}. So <b>${v}</b>.</p>`,meta:{s,i,j,ask}});}),
  gen('55-L-indep',TL[2],r=>{const s=r.pick([4,6]);const POOL=[['the first die',(a,b)=>a],['the second die',(a,b)=>b],['the sum',(a,b)=>a+b],['first die mod 2',(a,b)=>a%2],['the parity of the sum',(a,b)=>(a+b)%2],['the max',(a,b)=>Math.max(a,b)],['second die mod 2',(a,b)=>b%2],['1 if the dice are equal, else 0',(a,b)=>a===b?1:0]];
    const [i,j]=r.sample(range(0,POOL.length-1),2);const X=POOL[i][1],Y=POOL[j][1];const N=s*s;const joint=new Map(),px=new Map(),py=new Map();
@@ -1111,7 +1169,7 @@ G['55-L']=[
    const ans=ask?bound:ex;
    return Q(`<p>X = number of successes in ${n} independent trials with success probability ${pf.h()}. ${ask?`Give Chebyshev's upper bound on P(|X − E(X)| ≥ ${tt}).`:`Compute the EXACT value of P(|X − E(X)| ≥ ${tt}) (to compare with Chebyshev's bound ${bound.h()}).`}</p>`,'num',ans.ans(),{
      hint:'Chebyshev: P(|X − μ| ≥ t) ≤ V(X)/t² with μ = np, V = np(1−p). Exact: sum the binomial probabilities of the j with |j − μ| ≥ t.',
-     solution:`<p>μ = ${mu.h()}, V = ${Vr.h()}. Chebyshev bound: ${Vr.h()}/${tt*tt} = ${bound.h()}. Exact: sum over j with |j − ${mu.h()}| ≥ ${tt} of C(${n}, j)p<sup>j</sup>(1−p)<sup>${n}−j</sup> = ${ex.h()}. Answer <b>${ans.h()}</b>.</p>`,meta:{n,p,tt,ask}});}),
+     solution:`<p>μ = ${mu.h()}, V = ${Vr.h()}. Chebyshev bound: ${Vr.h()}/${tt*tt} = ${bound.h()}. Exact: the j with |j − ${mu.h()}| ≥ ${tt} are ${range(0,n).filter(j=>fr(j).sub(mu).cmp(tt)>=0||mu.sub(j).cmp(tt)>=0).join(', ')}; with denominator ${p[1]}<sup>${n}</sup> = ${BigInt(p[1])**BigInt(n)} their numerators C(${n}, j)·${p[0]}<sup>j</sup>·${p[1]-p[0]}<sup>${n}−j</sup> are ${range(0,n).filter(j=>fr(j).sub(mu).cmp(tt)>=0||mu.sub(j).cmp(tt)>=0).map(j=>`${CB(n,j)*BigInt(p[0])**BigInt(j)*BigInt(p[1]-p[0])**BigInt(n-j)}`).join(' + ')}, giving ${ex.h()}. Answer <b>${ans.h()}</b>.</p>`,meta:{n,p,tt,ask}});}),
  gen('55-L-binom-mv',TL[5],r=>{const n=r.int(5,40),a=r.int(1,5),b=r.int(2,9);if(a>=b)return null;const p=fr(a,b);const E=p.mul(n),Vr=p.mul(fr(b-a,b)).mul(n);const t=r.int(0,1);
    if(t===0)return Q(`<p>X ~ Binomial(n = ${n}, p = ${p.h()}). Enter E(X) and V(X).</p>`,'list',[E.ans(),Vr.ans()],{hint:'E = np, V = np(1 − p) (sum of n independent indicators).',solution:`<p>E = ${n}·${p.h()} = <b>${E.h()}</b>, V = ${n}·${p.h()}·${fr(b-a,b).h()} = <b>${Vr.h()}</b>.</p>`,meta:{n,a,b,t}});
    const E2=Vr.add(E.mul(E));return Q(`<p>X ~ Binomial(n = ${n}, p = ${p.h()}). Find E(X²).</p>`,'num',E2.ans(),{hint:'E(X²) = V(X) + E(X)².',solution:`<p>V = ${Vr.h()}, E = ${E.h()}: E(X²) = ${Vr.h()} + (${E.h()})² = <b>${E2.h()}</b>.</p>`,meta:{n,a,b,t}});}),
@@ -1133,15 +1191,15 @@ const iterRec=(cs,init,F,N)=>{const a=init.slice();for(let n=init.length;n<=N;n+
 const recStr=(cs,extra)=>'a<sub>n</sub> = '+lin(cs.map((c,i)=>[c,`a<sub>n−${i+1}</sub>`]))+(extra?` + ${extra}`:'');
 const BANNED_REC=new Set(['6,-11,6','6,-9','4,5']);
 G['55-M']=[
- gen('55-M-strings',TM[0],r=>{const t=r.int(0,3);const k=t===3?r.int(3,4):r.int(2,4);const n=r.int(5,k===2?14:k===3?9:7);let a,desc,rec;
+ gen('55-M-strings',TM[0],r=>{const t=r.int(0,3);const k=t===3?r.int(3,4):r.int(2,4);const n=r.int(5,k===2?14:k===3?9:7);let a,desc,rec,sq;
    // DP independent of enumeration
-   if(t===0){const A=[1,k];for(let i=2;i<=n;i++)A[i]=(k-1)*(A[i-1]+A[i-2]);a=A[n];desc=`strings of length ${n} over {0, …, ${k-1}} with NO two consecutive 0s`;rec=`a<sub>n</sub> = ${k-1}a<sub>n−1</sub> + ${k-1}a<sub>n−2</sub> (last symbol nonzero, or last two = x0 with x ≠ 0), a₀ = 1, a₁ = ${k}`;}
-   else if(t===1){const A=[1,k,k*k,k*k*k];for(let i=4;i<=n;i++)A[i]=(k-1)*(A[i-1]+A[i-2]+A[i-3]+A[i-4]);a=A[n];desc=`strings of length ${n} over {0, …, ${k-1}} that do NOT contain 0000 (four consecutive 0s)`;rec=`a<sub>n</sub> = ${k-1}(a<sub>n−1</sub> + a<sub>n−2</sub> + a<sub>n−3</sub> + a<sub>n−4</sub>) for n ≥ 4 (condition on the number 0–3 of trailing 0s before the last nonzero symbol), a₀…a₃ = 1, ${k}, ${k*k}, ${k*k*k}`;}
-   else if(t===2){const A=[1];for(let i=1;i<=n;i++)A[i]=(k-2)*A[i-1]+Math.pow(k,i-1);a=A[n];desc=`strings of length ${n} over {0, …, ${k-1}} containing an EVEN number of 0s`;rec=`a<sub>n</sub> = ${k-2}a<sub>n−1</sub> + ${k}<sup>n−1</sup> (append a nonzero symbol to a good string, or a 0 to a bad one: ${k}ⁿ⁻¹ − a<sub>n−1</sub>), a₀ = 1`;if(k===2)return null;}
-   else{const B=[1,k];for(let i=2;i<=n;i++)B[i]=(k-1)*B[i-1]+(k-2)*B[i-2];a=B[n];desc=`strings of length ${n} over {0, …, ${k-1}} containing neither 00 nor 11`;rec=`a<sub>n</sub> = ${k-1}a<sub>n−1</sub> + ${k-2}a<sub>n−2</sub> (split on whether the last symbol is ≥ 2 or a 0/1), a₀ = 1, a₁ = ${k}`;}
+   if(t===0){const A=[1,k];for(let i=2;i<=n;i++)A[i]=(k-1)*(A[i-1]+A[i-2]);a=A[n];sq=A;desc=`strings of length ${n} over {0, …, ${k-1}} with NO two consecutive 0s`;rec=`a<sub>n</sub> = ${k-1}a<sub>n−1</sub> + ${k-1}a<sub>n−2</sub> (last symbol nonzero, or last two = x0 with x ≠ 0), a₀ = 1, a₁ = ${k}`;}
+   else if(t===1){const A=[1,k,k*k,k*k*k];for(let i=4;i<=n;i++)A[i]=(k-1)*(A[i-1]+A[i-2]+A[i-3]+A[i-4]);a=A[n];sq=A;desc=`strings of length ${n} over {0, …, ${k-1}} that do NOT contain 0000 (four consecutive 0s)`;rec=`a<sub>n</sub> = ${k-1}(a<sub>n−1</sub> + a<sub>n−2</sub> + a<sub>n−3</sub> + a<sub>n−4</sub>) for n ≥ 4 (condition on the number 0–3 of trailing 0s before the last nonzero symbol), a₀…a₃ = 1, ${k}, ${k*k}, ${k*k*k}`;}
+   else if(t===2){const A=[1];for(let i=1;i<=n;i++)A[i]=(k-2)*A[i-1]+Math.pow(k,i-1);a=A[n];sq=A;desc=`strings of length ${n} over {0, …, ${k-1}} containing an EVEN number of 0s`;rec=`a<sub>n</sub> = ${k-2}a<sub>n−1</sub> + ${k}<sup>n−1</sup> (append a nonzero symbol to a good string, or a 0 to a bad one: ${k}ⁿ⁻¹ − a<sub>n−1</sub>), a₀ = 1`;if(k===2)return null;}
+   else{const B=[1,k];for(let i=2;i<=n;i++)B[i]=(k-1)*B[i-1]+(k-2)*B[i-2];a=B[n];sq=B;desc=`strings of length ${n} over {0, …, ${k-1}} containing neither 00 nor 11`;rec=`a<sub>n</sub> = ${k-1}a<sub>n−1</sub> + ${k-2}a<sub>n−2</sub> (split on whether the last symbol is ≥ 2 or a 0/1), a₀ = 1, a₁ = ${k}`;}
    if(Math.pow(k,n)>70000)return null;
    return Q(`<p>Let a<sub>n</sub> count the ${desc.replace(String(n),'n')}. Set up a recurrence and compute a<sub>${n}</sub>.</p>`,'num',a,{hint:'Condition on how the string ends (last symbol / last block) to get a recurrence; then iterate from the initial conditions.',
-     solution:`<p>${rec}. Iterating gives a<sub>${n}</sub> = <b>${a}</b>.</p>`,meta:{t,k,n}});}),
+     solution:`<p>${rec}.</p><p>Iterating: ${sq.slice(0,n+1).map((v,i)=>`a<sub>${i}</sub> = ${v}`).join(', ')}. So a<sub>${n}</sub> = <b>${a}</b>.</p>`,meta:{t,k,n}});}),
  gen('55-M-tiling',TM[0],r=>{const t=r.int(0,2);
    if(t===0){const c1=r.int(1,3),c2=r.int(1,3),c3=r.int(0,2),n=r.int(5,12);const A=[1];for(let i=1;i<=n;i++)A[i]=c1*A[i-1]+(i>=2?c2*A[i-2]:0)+(i>=3?c3*A[i-3]:0);
      return Q(`<p>Tile a 1 × n strip using 1 × 1 tiles (${c1} colour${c1>1?'s':''}), 1 × 2 tiles (${c2} colour${c2>1?'s':''})${c3?` and 1 × 3 tiles (${c3} colour${c3>1?'s':''})`:''}. Let a<sub>n</sub> be the number of tilings (a₀ = 1). Find a<sub>${n}</sub>.</p>`,'num',A[n],{
@@ -1164,9 +1222,10 @@ G['55-M']=[
    const co=[r.int(-3,3),r.int(-3,3),r.int(-3,3)];if(co.filter(v=>v).length<2)return null;const val=n=>co[0]*Math.pow(x,n)+co[1]*Math.pow(y,n)+co[2]*Math.pow(z,n);const init=[val(0),val(1),val(2)];const N=r.int(5,8);const ask=r.bool();
    const pr=`Consider ${recStr([c1,c2,c3])} with a₀ = ${sn(init[0])}, a₁ = ${sn(init[1])}, a₂ = ${sn(init[2])}.`;
    if(ask)return Q(`<p>${pr} Find the three roots of the characteristic equation (any order).</p>`,'list',rs,{unordered:true,hint:'r³ − c₁r² − c₂r − c₃ = 0; try small integer divisors of the constant term.',
-     solution:`<p>r³ ${lin([[-c1,'r²'],[-c2,'r'],[-c3,'']])} = (r − ${sn(x)})(r − ${sn(y)})(r − ${sn(z)}) ⇒ roots <b>${rs.join(', ')}</b>.</p>`,meta:{c:[c1,c2,c3],init,ask,rs}});
+     solution:(()=>{const pf=t=>t*t*t-c1*t*t-c2*t-c3;const cand=c3===0?[0,...range(1,5),...range(1,5).map(v=>-v)]:divisors(Math.abs(c3)).flatMap(d=>[d,-d]);
+       return `<p>Characteristic equation: r³ ${lin([[-c1,'r²'],[-c2,'r'],[-c3,'']])} = 0. Rational-root test: try divisors of the constant term ${sn(-c3)}: ${cand.map(t=>`p(${sn(t)}) = ${sn(pf(t))}`).join(', ')}.</p><p>The zeros give the factorization (r − ${sn(x)})(r − ${sn(y)})(r − ${sn(z)}) (check: sum of roots ${sn(x+y+z)} = ${sn(c1)}, product ${sn(x*y*z)} = ${sn(c3)}), so the roots are <b>${rs.join(', ')}</b>.</p>`;})(),meta:{c:[c1,c2,c3],init,ask,rs}});
    return Q(`<p>${pr} Find a closed form and use it (or iterate) to compute a<sub>${N}</sub>.</p>`,'num',val(N),{hint:'Roots of r³ − c₁r² − c₂r − c₃; solve a 3×3 system for the coefficients from a₀, a₁, a₂.',
-     solution:`<p>Roots ${rs.join(', ')}; a<sub>n</sub> = ${lin([[co[0],`(${sn(x)})ⁿ`],[co[1],`(${sn(y)})ⁿ`],[co[2],`(${sn(z)})ⁿ`]])}. a<sub>${N}</sub> = <b>${val(N)}</b>.</p>`,meta:{c:[c1,c2,c3],init,ask,N}});}),
+     solution:`<p>Characteristic equation r³ ${lin([[-c1,'r²'],[-c2,'r'],[-c3,'']])} = (r − ${sn(x)})(r − ${sn(y)})(r − ${sn(z)}) = 0, roots ${rs.join(', ')}. So a<sub>n</sub> = α(${sn(x)})ⁿ + β(${sn(y)})ⁿ + γ(${sn(z)})ⁿ with</p>${ul([`n = 0: α + β + γ = ${sn(init[0])}`,`n = 1: ${sn(x)}α + ${sn(y)}β + ${sn(z)}γ = ${sn(init[1])}`,`n = 2: ${x*x}α + ${y*y}β + ${z*z}γ = ${sn(init[2])}`])}<p>Solving: α = ${sn(co[0])}, β = ${sn(co[1])}, γ = ${sn(co[2])}. Then a<sub>${N}</sub> = ${sn(co[0])}·(${sn(x)})<sup>${N}</sup> + ${sn(co[1])}·(${sn(y)})<sup>${N}</sup> + ${sn(co[2])}·(${sn(z)})<sup>${N}</sup> = ${sn(co[0]*Math.pow(x,N))} + ${sn(co[1]*Math.pow(y,N))} + ${sn(co[2]*Math.pow(z,N))} = <b>${val(N)}</b>.</p>`,meta:{c:[c1,c2,c3],init,ask,N}});}),
  gen('55-M-particular-exp',TM[2],r=>{const r1=r.int(-3,5),r2=r.int(-3,4);if(r1===r2||!r1||!r2)return null;const c1=r1+r2,c2=-r1*r2;if(BANNED_REC.has(c1+','+c2))return null;const res=r.float()<0.5;const s=res?r.pick([r1,r2]):r.pick([2,3,4,5,-2].filter(v=>v!==r1&&v!==r2));const k=r.int(1,9);
    // a_n = c1 a_{n−1} + c2 a_{n−2} + k sⁿ; try A·n^m·sⁿ
    const m=res?1:0;const g=n=>Math.pow(n,m);// plug: A[g(n)sⁿ − c1 g(n−1)sⁿ⁻¹ − c2 g(n−2)sⁿ⁻²] = k sⁿ, at n = 2: divide by s^{n−2}
@@ -1223,7 +1282,7 @@ G['55-N']=[
  gen('55-N-exactly',TN[1],r=>{const N=r.int(100,1500);const ds=r.sample(range(2,12),3).sort((x,y)=>x-y);if(ds.some((d,i)=>ds.some((e,j)=>i!==j&&e%d===0)))return null;const t=r.int(0,2);const [x,y,z]=ds;const fl=d=>Math.floor(N/d);
    const S1=fl(x)+fl(y)+fl(z),S2=fl(lcm(x,y))+fl(lcm(x,z))+fl(lcm(y,z)),S3=fl(lcm(lcm(x,y),z));const ans=t===0?S1-2*S2+3*S3:t===1?S2-3*S3:S2-2*S3;const what=['exactly one','exactly two','at least two'][t];
    return Q(`<p>How many integers in {1, …, ${N}} are divisible by ${what} of ${x}, ${y}, ${z}?</p>`,'num',ans,{hint:'With S₁ = Σ|Aᵢ|, S₂ = Σ|Aᵢ∩Aⱼ|, S₃ = |A₁∩A₂∩A₃|: exactly one = S₁ − 2S₂ + 3S₃, exactly two = S₂ − 3S₃, at least two = S₂ − 2S₃.',
-     solution:`<p>S₁ = ${S1}, S₂ = ${fl(lcm(x,y))} + ${fl(lcm(x,z))} + ${fl(lcm(y,z))} = ${S2} (lcms ${lcm(x,y)}, ${lcm(x,z)}, ${lcm(y,z)}), S₃ = ${S3}. Answer <b>${ans}</b>.</p>`,meta:{N,ds,t}});}),
+     solution:`<p>S₁ = ⌊${N}/${x}⌋ + ⌊${N}/${y}⌋ + ⌊${N}/${z}⌋ = ${fl(x)} + ${fl(y)} + ${fl(z)} = ${S1}. S₂ uses the lcms ${lcm(x,y)}, ${lcm(x,z)}, ${lcm(y,z)} (not the products): ${fl(lcm(x,y))} + ${fl(lcm(x,z))} + ${fl(lcm(y,z))} = ${S2}. S₃ = ⌊${N}/${lcm(lcm(x,y),z)}⌋ = ${S3}.</p><p>${['Exactly one = S₁ − 2S₂ + 3S₃','Exactly two = S₂ − 3S₃','At least two = S₂ − 2S₃'][t]} = ${t===0?`${S1} − 2·${S2} + 3·${S3}`:t===1?`${S2} − 3·${S3}`:`${S2} − 2·${S3}`} = <b>${ans}</b>.</p>`,meta:{N,ds,t}});}),
  gen('55-N-bounded',TN[2],r=>{const k=r.int(3,4);const us=range(1,k).map(()=>r.int(2,8));const n=r.int(Math.max(...us)+1,sum(us)-2);if(k===4&&n===15)return null;
    let ans=0;const terms=[];for(let m=0;m<(1<<k);m++){let s=n,bits=0;for(let i=0;i<k;i++)if(m>>i&1){s-=us[i]+1;bits++;}if(s<0)continue;const v=C(s+k-1,k-1)*(bits%2?-1:1);ans+=v;if(v)terms.push((v<0?'− ':'+ ')+Math.abs(v));}
    return Q(`<p>How many integer solutions of x₁ + … + x<sub>${k}</sub> = ${n} satisfy ${us.map((u,i)=>`0 ≤ x${'₀₁₂₃₄'[i+1]} ≤ ${u}`).join(', ')}?</p>`,'num',ans,{hint:'Complement the upper bounds: subtract solutions with xᵢ ≥ uᵢ + 1 (substitute), add back pairs, …',
@@ -1239,10 +1298,10 @@ G['55-N']=[
  gen('55-N-partial-derange',TN[3],r=>{const n=r.int(5,9);const t=r.int(0,1);
    if(t===1){let ans=0;for(let j=0;j<n;j++)ans+=(j%2?-1:1)*C(n-1,j)*fact(n-j);
      return Q(`<p>How many permutations p of {1, 2, …, ${n}} satisfy p(i) ≠ i + 1 for every i = 1, …, ${n-1}?</p>`,'num',ans,{hint:'Inclusion–exclusion over the n − 1 forbidden assignments i ↦ i+1; any j of them can hold simultaneously (distinct inputs and outputs).',
-       solution:`<p>∑<sub>j</sub> (−1)ʲ C(${n-1}, j)(${n} − j)! = <b>${ans}</b>.</p>`,meta:{n,k:0,t}});}
+       solution:`<p>Let Aᵢ = {p : p(i) = i + 1}. Any j of these conditions fix j distinct inputs to j distinct outputs, leaving (${n} − j)! permutations. So the count is ∑<sub>j=0</sub><sup>${n-1}</sup> (−1)ʲ C(${n-1}, j)(${n} − j)! = ${range(0,n-1).map(j=>`${j%2?'−':'+'} ${C(n-1,j)*fact(n-j)}`).join(' ').replace(/^\+ /,'')} = <b>${ans}</b>.</p>`,meta:{n,k:0,t}});}
    const k=r.int(2,n-1);let ans=0;for(let j=0;j<=k;j++)ans+=(j%2?-1:1)*C(k,j)*fact(n-j);
    return Q(`<p>How many permutations of {1, 2, …, ${n}} leave NONE of the elements 1, 2, …, ${k} in its original position? (${k+1===n?`Element ${n} may`:`Elements ${k+1}…${n} may`} or may not move.)</p>`,'num',ans,{hint:'Inclusion–exclusion on the k “forbidden fixed points”: ∑ (−1)ʲ C(k, j)(n − j)!.',
-     solution:`<p>${range(0,k).map(j=>`${j%2?'−':'+'} C(${k},${j})·${n-j}!`).join(' ').replace(/^\+ /,'')} = <b>${ans}</b>.</p>`,meta:{n,k,t}});}),
+     solution:`<p>Aᵢ = permutations fixing i (i ≤ ${k}); fixing j chosen elements leaves (${n} − j)! permutations. ${range(0,k).map(j=>`${j%2?'−':'+'} C(${k},${j})·${n-j}!`).join(' ').replace(/^\+ /,'')} = ${range(0,k).map(j=>`${j%2?'−':'+'} ${C(k,j)*fact(n-j)}`).join(' ').replace(/^\+ /,'')} = <b>${ans}</b>.</p>`,meta:{n,k,t}});}),
  gen('55-N-couples',TN[3],r=>{const t=r.int(0,2);const n=r.int(2,t===0?4:t===1?4:5);const s=r.int(0,2);const N=2*n+s;if(t===0&&N>8||t===1&&(N>9||N<4)||t===2&&N>10)return null;let ans=0;const terms=[];
    for(let j=0;j<=n;j++){const v=t===0?C(n,j)*Math.pow(2,j)*fact(N-j):t===1?C(n,j)*Math.pow(2,j)*fact(N-j-1):C(n,j)*fact(N-j)/Math.pow(2,n-j);ans+=(j%2?-1:1)*v;terms.push(`${j%2?'−':'+'} ${v}`);}
    let pr,hint;if(t===0){pr=`${n} married couples${s?` and ${s} single ${s>1?'people':'person'}`:''} (${N} people) sit in a row of ${N} chairs. In how many arrangements does NO couple sit next to each other?`;hint='Aᵢ = couple i adjacent; glue j couples: 2ʲ(N − j)! arrangements.';}
@@ -1252,11 +1311,13 @@ G['55-N']=[
  gen('55-N-phi',TN[4],r=>{const t=r.int(0,1);
    if(t===0){const ps=r.sample([2,3,5,7,11,13],r.int(2,3));const n=ps.reduce((a,p)=>a*Math.pow(p,r.int(1,2)),1);if(n>20000)return null;const ph=phi(n);
      return Q(`<p>Use inclusion–exclusion to compute φ(${n}), the number of integers in {1, …, ${n}} relatively prime to ${n}.</p>`,'num',ph,{hint:'Remove multiples of each prime factor, add back multiples of products of two, …: φ(n) = n∏(1 − 1/p).',
-       solution:`<p>${n} = ${fmtFact(factorize(n))}. φ = ${n}${factorize(n).map(([p])=>`(1 − 1/${p})`).join('')} = <b>${ph}</b>.</p>`,meta:{t,n}});}
+       solution:(()=>{const pr=factorize(n).map(f=>f[0]);const terms=[];for(let m=0;m<(1<<pr.length);m++){let d=1,b=0;pr.forEach((p,i)=>{if(m>>i&1){d*=p;b++;}});terms.push([b,d]);}
+         return `<p>${n} = ${fmtFact(factorize(n))}. Remove the multiples of each prime, add back multiples of products of two, …: ${terms.map(([b,d])=>`${b%2?'−':'+'} ${n}/${d}`).join(' ').replace(/^\+ /,'')} = ${terms.map(([b,d])=>`${b%2?'−':'+'} ${n/d}`).join(' ').replace(/^\+ /,'')} = <b>${ph}</b> (same as ${n}${pr.map(p=>`(1 − 1/${p})`).join('')}).</p>`;})(),meta:{t,n}});}
    const ps=r.sample([2,3,5,7],r.int(2,3));const M=ps.reduce((a,b)=>a*b,1);const N=r.int(50,500);if(N%M===0)return null;let ans=0;
    for(let m=0;m<(1<<ps.length);m++){let d=1,b=0;ps.forEach((p,i)=>{if(m>>i&1){d*=p;b++;}});ans+=(b%2?-1:1)*Math.floor(N/d);}
    return Q(`<p>How many integers in {1, …, ${N}} are relatively prime to ${M}?</p>`,'num',ans,{hint:`${M} = ${ps.join('·')}; inclusion–exclusion over the primes with ⌊N/d⌋ (N is not a multiple of ${M}, so the φ shortcut does not apply directly).`,
-     solution:`<p>∑<sub>d | ${M}</sub> μ(d)⌊${N}/d⌋ = <b>${ans}</b>.</p>`,meta:{t,N,M}});}),
+     solution:(()=>{const terms=[];for(let m=0;m<(1<<ps.length);m++){let d=1,b=0;ps.forEach((p,i)=>{if(m>>i&1){d*=p;b++;}});terms.push([b,d]);}
+       return `<p>Count the integers divisible by none of ${ps.join(', ')} by inclusion–exclusion: ${terms.map(([b,d])=>`${b%2?'−':'+'} ⌊${N}/${d}⌋`).join(' ').replace(/^\+ /,'')} = ${terms.map(([b,d])=>`${b%2?'−':'+'} ${Math.floor(N/d)}`).join(' ').replace(/^\+ /,'')} = <b>${ans}</b>.</p>`;})(),meta:{t,N,M}});}),
  gen('55-N-strings',TN[0],r=>{const k=r.int(3,5),n=r.int(4,7);if(Math.pow(k,n)>50000)return null;const j=r.int(2,Math.min(3,k));let v=0;for(let i=0;i<=j;i++)v+=(i%2?-1:1)*C(j,i)*Math.pow(k-i,n);const L='abcde'.slice(0,k).split('');
    return Q(`<p>How many strings of length ${n} over {${L.join(', ')}} contain each of ${L.slice(0,j).join(', ')} at least once?</p>`,'num',v,{hint:'Aᵢ = strings missing letter i; inclusion–exclusion over the required letters.',
      solution:`<p>∑<sub>i=0</sub><sup>${j}</sup> (−1)ⁱ C(${j}, i)(${k} − i)<sup>${n}</sup> = ${range(0,j).map(i=>`${i%2?'−':'+'} ${C(j,i)}·${Math.pow(k-i,n)}`).join(' ').replace(/^\+ /,'')} = <b>${v}</b>.</p>`,meta:{k,n,j}});}),
@@ -1270,6 +1331,13 @@ G['55-N']=[
 // =========================================================
 const TO=['Decide reflexive/symmetric/antisymmetric/transitive (on ℤ, ℝ, sets, finite lists)','Count relations with given properties','Composition and powers of relations','Reflexive, symmetric and transitive closures (paths / Warshall)','Equivalence relations: prove, list classes, count, partitions','Partial orders: prove, Hasse diagrams, maximal/minimal/greatest/least, bounds, lub/glb, lattices, topological sort'];
 const PROPS=['reflexive','irreflexive','symmetric','antisymmetric','transitive'];
+function propWhy(M,n){const o=[];const P=(a,b)=>`(${a+1}, ${b+1})`;let w;
+  w=range(0,n-1).find(a=>!M[a][a]);o.push(w===undefined?`reflexive: yes, (a, a) ∈ R for all a`:`reflexive: no, ${P(w,w)} ∉ R`);
+  w=range(0,n-1).find(a=>M[a][a]);o.push(w===undefined?`irreflexive: yes, no (a, a) is in R`:`irreflexive: no, ${P(w,w)} ∈ R`);
+  let sw=null,aw=null,tw=null;for(let a=0;a<n;a++)for(let b=0;b<n;b++){if(M[a][b]&&!M[b][a]&&!sw)sw=[a,b];if(a!==b&&M[a][b]&&M[b][a]&&!aw)aw=[a,b];for(let c=0;c<n;c++)if(M[a][b]&&M[b][c]&&!M[a][c]&&!tw)tw=[a,b,c];}
+  o.push(sw?`symmetric: no, ${P(sw[0],sw[1])} ∈ R but ${P(sw[1],sw[0])} ∉ R`:`symmetric: yes, every pair's reverse is in R`);
+  o.push(aw?`antisymmetric: no, ${P(aw[0],aw[1])} and ${P(aw[1],aw[0])} are both in R with ${aw[0]+1} ≠ ${aw[1]+1}`:`antisymmetric: yes, no two distinct a, b have both (a, b) and (b, a)`);
+  o.push(tw?`transitive: no, ${P(tw[0],tw[1])} and ${P(tw[1],tw[2])} ∈ R but ${P(tw[0],tw[2])} ∉ R`:`transitive: yes, for every (a, b), (b, c) ∈ R the pair (a, c) is in R`);return o;}
 function relProps(M,n){const R=(a,b)=>M[a][b];let ref=true,irr=true,sym=true,anti=true,tr=true;
   for(let a=0;a<n;a++){if(!R(a,a))ref=false;else irr=false;for(let b=0;b<n;b++){if(R(a,b)&&!R(b,a))sym=false;if(a!==b&&R(a,b)&&R(b,a))anti=false;for(let c=0;c<n;c++)if(R(a,b)&&R(b,c)&&!R(a,c))tr=false;}}
   return [ref,irr,sym,anti,tr];}
@@ -1285,6 +1353,8 @@ function randRel(r,n){const t=r.int(0,4);let M=zeroM(n);
   const flips=r.pick([0,0,1,1,2]);for(let i=0;i<flips;i++){const a=r.int(0,n-1),b=r.int(0,n-1);M[a][b]=!M[a][b];}return M;}
 const boolMul=(A,B,n)=>{const C2=zeroM(n);for(let a=0;a<n;a++)for(let b=0;b<n;b++)if(A[a][b])for(let c=0;c<n;c++)if(B[b][c])C2[a][c]=true;return C2;};
 const countM=M=>M.reduce((s,row)=>s+row.filter(Boolean).length,0);
+function closureWhy(M,res,n){const add=[];for(let a=0;a<n;a++){const par=Array(n).fill(-2);par[a]=-1;const q=[a];while(q.length){const x=q.shift();for(let y=0;y<n;y++)if(M[x][y]&&par[y]===-2){par[y]=x;q.push(y);}}
+    for(let b=0;b<n;b++)if(res[a][b]&&!M[a][b]&&par[b]!==-2){const p=[];let y=b;while(y!==-1&&!(y===a&&p.length)){p.push(y+1);if(y===a)break;y=par[y];}if(p[p.length-1]!==a+1)p.push(a+1);add.push(`(${a+1}, ${b+1}) via ${p.reverse().join(' → ')}`);}}return add;}
 const warshall=(M,n)=>{const W=M.map(r=>r.slice());for(let k=0;k<n;k++)for(let a=0;a<n;a++)for(let b=0;b<n;b++)if(W[a][k]&&W[k][b])W[a][b]=true;return W;};
 const matHTML=M=>mat(M.map(r=>r.map(x=>x?1:0)));
 const linExt=(n,less)=>{// DP over subsets: number of linear extensions
@@ -1294,13 +1364,13 @@ G['55-O']=[
    const ex=[];if(!pr[0])ex.push(`not reflexive: (${M.findIndex((row,i)=>!row[i])+1}, ${M.findIndex((row,i)=>!row[i])+1}) ∉ R`);
    return Q(`<p>R is a relation on {1, …, ${n}} ${asMat?'with matrix (row a, column b is 1 iff (a, b) ∈ R):':'given by'}</p>${asMat?matHTML(M):`<p>R = ${fmtPairs(pairsOf(M,n))}</p>`}<p>Select ALL properties R has.</p>`,'multi',pr.map((x,i)=>x?i:-1).filter(i=>i>=0),{choices:PROPS,
      hint:'Reflexive: all (a,a). Irreflexive: no (a,a). Symmetric: (a,b) ⇒ (b,a). Antisymmetric: (a,b),(b,a) ⇒ a = b. Transitive: (a,b),(b,c) ⇒ (a,c) — check every pair of chained pairs.',
-     solution:`<p>${PROPS.map((p,i)=>`${p}: <b>${pr[i]?'yes':'no'}</b>`).join('; ')}.</p>${(()=>{const w=[];for(let a=0;a<n;a++)for(let b=0;b<n;b++)for(let c=0;c<n;c++)if(M[a][b]&&M[b][c]&&!M[a][c]&&!w.length)w.push(`(${a+1},${b+1}),(${b+1},${c+1}) ∈ R but (${a+1},${c+1}) ∉ R ⇒ not transitive.`);for(let a=0;a<n;a++)for(let b=0;b<n;b++)if(M[a][b]&&!M[b][a]&&w.length<2)w.push(`(${a+1},${b+1}) ∈ R, (${b+1},${a+1}) ∉ R ⇒ not symmetric.`);return w.length?'<p>'+w.join(' ')+'</p>':'';})()}`,meta:{M,n}});}),
+     solution:ul(propWhy(M,n))+`<p>So R is: <b>${PROPS.filter((p,i)=>pr[i]).join(', ')||'none of these'}</b>.</p>`,meta:{M,n}});}),
  gen('55-O-props-formula',TO[0],r=>{const k=r.int(2,4),c=r.int(5,12);const n=r.int(6,9);
    const POOL=[[`a | b`,'b%a===0'],[`a + b is even`,'(a+b)%2===0'],[`|a − b| ≤ 1`,'Math.abs(a-b)<=1'],[`a ≤ b + 1`,'a<=b+1'],[`a < b`,'a<b'],[`gcd(a, b) = 1`,'g(a,b)===1'],[`a ≡ b (mod ${k})`,`(a-b)%${k}===0`],
      [`⌊a/${k}⌋ = ⌊b/${k}⌋`,`Math.floor(a/${k})===Math.floor(b/${k})`],[`a + b ≤ ${c}`,`a+b<=${c}`],[`a − b ∈ {0, ${k}}`,`a-b===0||a-b===${k}`],[`ab is a perfect square`,'Number.isInteger(Math.sqrt(a*b))'],[`a = b or a + b = ${c}`,`a===b||a+b===${c}`],[`a² ≥ b`,'a*a>=b'],[`max(a, b) ≥ ${Math.ceil(n/2)}`,`Math.max(a,b)>=${Math.ceil(n/2)}`]];
    const [txt,js]=r.pick(POOL);const g2=gcd;const f=new Function('a','b','g','return '+js);const M=zeroM(n);for(let a=0;a<n;a++)for(let b=0;b<n;b++)M[a][b]=!!f(a+1,b+1,g2);const pr=relProps(M,n);
    return Q(`<p>On A = {1, 2, …, ${n}} define a R b ⇔ ${txt}. Select ALL properties of R.</p>`,'multi',pr.map((x,i)=>x?i:-1).filter(i=>i>=0),{choices:PROPS,hint:'Test each property; to refute one, give a concrete counterexample from A.',
-     solution:`<p>${PROPS.map((p,i)=>`${p}: <b>${pr[i]?'yes':'no'}</b>`).join('; ')}.</p><p>R = ${fmtPairs(pairsOf(M,n)).slice(0,600)}${fmtPairs(pairsOf(M,n)).length>600?'…':''}</p>`,meta:{js,n}});}),
+     solution:ul(propWhy(M,n))+`<p>So R is: <b>${PROPS.filter((p,i)=>pr[i]).join(', ')||'none of these'}</b>.</p>`,meta:{js,n}});}),
  gen('55-O-count-rel',TO[1],r=>{const n=r.int(2,4);const bell=k=>sum(range(0,k).map(j=>stirling2(k,j)));
    const T=[['reflexive',Math.pow(2,n*(n-1)),'diagonal forced 1, other n(n−1) entries free: 2<sup>n(n−1)</sup>'],['symmetric',Math.pow(2,n*(n+1)/2),'diagonal free, each off-diagonal pair both-or-none: 2<sup>n(n+1)/2</sup>'],
      ['antisymmetric',Math.pow(2,n)*Math.pow(3,n*(n-1)/2),'diagonal free, each pair one of 3 states (not both): 2ⁿ·3<sup>C(n,2)</sup>'],['both reflexive and symmetric',Math.pow(2,n*(n-1)/2),'diagonal forced, each pair 2 states: 2<sup>C(n,2)</sup>'],
@@ -1323,10 +1393,12 @@ G['55-O']=[
    if(t===0){res=warshall(M,n);desc='the transitive closure R*';}else if(t===1){res=M.map((row,a)=>row.map((x,b)=>x||M[b][a]));desc='the symmetric closure of R';}
    else if(t===2){const S=M.map((row,a)=>row.map((x,b)=>x||M[b][a]||a===b));res=warshall(S,n);desc='the smallest equivalence relation containing R';}
    else{res=warshall(M,n);const v0=countM(res)-countM(M);if(!v0)return null;return Q(`<p>On {1, …, ${n}}, R = ${fmtPairs(pairsOf(M,n))}. How many pairs does the transitive closure ADD to R (|R*| − |R|)?</p>`,'num',v0,{hint:'R* contains (a, b) iff there is a path a → … → b in the digraph of R (Warshall).',
-     solution:`<p>R* = ${fmtPairs(pairsOf(res,n))} has ${countM(res)} pairs; R has ${countM(M)}. Added: <b>${v0}</b>.</p>`,meta:{n,M,t}});}
+     solution:`<p>R* adds every (a, b) joined by a path of length ≥ 2 in the digraph of R. New pairs: ${closureWhy(M,res,n).join('; ')}.</p><p>R* = ${fmtPairs(pairsOf(res,n))} has ${countM(res)} pairs; R has ${countM(M)}. Added: <b>${v0}</b>.</p>`,meta:{n,M,t}});}
    const v=countM(res);
    return Q(`<p>On {1, …, ${n}}, R = ${fmtPairs(pairsOf(M,n))}. How many ordered pairs are in ${desc}?</p>`,'num',v,{hint:'Transitive closure: all (a, b) with a path from a to b. Equivalence closure: reflexive + symmetric first, then transitive (connected components).',
-     solution:`<p>${desc} = ${fmtPairs(pairsOf(res,n))}: <b>${v}</b> pairs.</p>`,meta:{n,M,t}});}),
+     solution:(()=>{let how;if(t===0)how=`Add every (a, b) joined by a path in the digraph of R: ${closureWhy(M,res,n).join('; ')||'nothing new'}.`;else if(t===1)how=`Add the reverse of every pair: ${pairsOf(M,n).filter(([a,b])=>!M[b-1][a-1]).map(([a,b])=>`(${b}, ${a})`).join(', ')||'nothing new'}.`;
+       else{const cl=[];const seen=Array(n).fill(false);for(let a=0;a<n;a++){if(seen[a])continue;const c=range(0,n-1).filter(b=>res[a][b]);c.forEach(b=>seen[b]=true);cl.push(c.map(x=>x+1));}how=`Make R reflexive and symmetric, then take paths: the classes are the connected components ${cl.map(c=>'{'+c.join(', ')+'}').join(', ')}, giving ${cl.map(c=>c.length+'²').join(' + ')} pairs.`;}
+       return `<p>${how}</p><p>${desc} = ${fmtPairs(pairsOf(res,n))}: <b>${v}</b> pairs.</p>`;})(),meta:{n,M,t}});}),
  gen('55-O-eqclasses',TO[4],r=>{const N=r.int(12,40);const m=r.int(3,11),k=r.int(2,6);
    const POOL=[[`a² ≡ b² (mod ${m})`,a=>a*a%m],[`a and b have the same digit sum`,a=>sum(String(a).split('').map(Number))],[`⌊a/${k}⌋ = ⌊b/${k}⌋`,a=>Math.floor(a/k)],[`a and b have the same number of 1s in binary`,a=>a.toString(2).split('').filter(x=>x==='1').length],
      [`a³ ≡ b³ (mod ${m})`,a=>a*a*a%m],[`gcd(a, ${m*2}) = gcd(b, ${m*2})`,a=>gcd(a,m*2)],[`a and b have the same largest prime factor`,a=>a===1?1:factorize(a).slice(-1)[0][0]]];
@@ -1340,8 +1412,11 @@ G['55-O']=[
    else if(t===1){const k=r.int(2,n-1);v=stirling2(n,k);desc=`equivalence relations on a ${n}-element set with exactly ${k} equivalence classes`;sol=`Stirling number S(${n}, ${k})`;}
    else if(t===2){v=bell(n-1);desc=`equivalence relations on {1, …, ${n}} in which 1 ~ 2`;sol=`merge 1 and 2 into one element: B<sub>${n-1}</sub>`;}
    else{const nos=m=>{let s=0;for(let j=0;j<=m;j++)s+=(j%2?-1:1)*C(m,j)*bell(m-j);return s;};v=nos(n);desc=`partitions of a ${n}-element set with NO singleton block`;sol=`inclusion–exclusion on singletons: ∑ (−1)ʲ C(${n}, j) B<sub>${n}−j</sub>`;}
-   return Q(`<p>How many ${desc} are there?</p>`,'num',v,{hint:'Equivalence relations ↔ partitions. S(n, k) = kS(n−1, k) + S(n−1, k−1); B_n = ∑ₖ S(n, k).',solution:`<p>${sol} = <b>${v}</b>.</p>`,meta:{n,t,k:+(desc.match(/exactly (\d+)/)||[0,0])[1]}});}),
- gen('55-O-poset-extremal',TO[5],r=>{const S=r.sample(range(2,60),r.int(6,9)).sort((a,b)=>a-b);const lt=(a,b)=>a!==b&&b%a===0;const t=r.int(0,3);
+   const row=m=>range(1,m).map(k=>stirling2(m,k));const extra=t===0?` = ${row(n).join(' + ')}`:t===1?(()=>{const k=+desc.match(/exactly (\d+)/)[1];return ` = ${k}·S(${n-1}, ${k}) + S(${n-1}, ${k-1}) = ${k}·${stirling2(n-1,k)} + ${stirling2(n-1,k-1)}`;})():t===2?` = ${row(n-1).join(' + ')}`:` = ${range(0,n).map(j=>`${j%2?'−':'+'} ${C(n,j)}·${bell(n-j)}`).join(' ').replace(/^\+ /,'')}`;
+   return Q(`<p>How many ${desc} are there?</p>`,'num',v,{hint:'Equivalence relations ↔ partitions. S(n, k) = kS(n−1, k) + S(n−1, k−1); B_n = ∑ₖ S(n, k).',solution:`<p>Equivalence relations correspond to partitions into classes. Stirling numbers from S(m, k) = kS(m−1, k) + S(m−1, k−1): row ${n-1}: ${row(n-1).join(', ')}; row ${n}: ${row(n).join(', ')}.</p><p>${sol}${extra} = <b>${v}</b>.</p>`,meta:{n,t,k:+(desc.match(/exactly (\d+)/)||[0,0])[1]}});}),
+ gen('55-O-poset-extremal',TO[5],r=>{let S=r.sample(range(2,60),r.int(6,9)).sort((a,b)=>a-b);
+   if(r.float()<0.3){if(r.bool()){const g=r.int(2,6);S=[g].concat(r.sample(range(2,Math.floor(60/g)).map(x=>x*g),r.int(5,8))).sort((a,b)=>a-b);}else{const N=r.pick([36,48,60,72,90]);S=r.sample(divisors(N).filter(x=>x>1&&x<N),r.int(5,7)).concat([N]).sort((a,b)=>a-b);}}   /* sets that DO have a least / greatest element */
+   const lt=(a,b)=>a!==b&&b%a===0;const t=r.int(0,3);
    const maxi=S.filter(x=>!S.some(y=>lt(x,y))),mini=S.filter(x=>!S.some(y=>lt(y,x)));
    if(t<=1){const L=t===0?maxi:mini;return Q(`<p>In the poset (S, |) with S = {${S.join(', ')}} (divisibility), list all ${t===0?'MAXIMAL':'MINIMAL'} elements (any order).</p>`,'list',L,{unordered:true,
      hint:t===0?'x is maximal if no OTHER element of S is a multiple of x.':'x is minimal if no OTHER element of S divides x.',solution:`<p>${t===0?'Maximal':'Minimal'} elements: <b>${L.join(', ')}</b>. (Maximal: ${maxi.join(', ')}; minimal: ${mini.join(', ')}.)</p>`,meta:{S,t}});}
@@ -1361,7 +1436,10 @@ G['55-O']=[
  gen('55-O-topsort',TO[5],r=>{const S=r.sample(range(1,30),r.int(5,7)).sort((a,b)=>a-b);const lt=(i,j)=>i!==j&&S[j]%S[i]===0;let rel=0;for(let i=0;i<S.length;i++)for(let j=0;j<S.length;j++)if(lt(i,j))rel++;if(rel<3)return null;
    const v=linExt(S.length,lt);
    return Q(`<p>How many topological sorts (linear orders compatible with divisibility) does the poset ({${S.join(', ')}}, |) have?</p>`,'num',v,{hint:'Repeatedly choose a minimal element of what remains; count the choices along all branches (or count by placing elements of chains).',
-     solution:`<p>Counting compatible orderings (choose a remaining minimal element at each step and sum over choices) gives <b>${v}</b>.</p>`,meta:{S}});}),
+     solution:(()=>{const k=S.length;const memo=new Map();const f=mask=>{if(mask===0)return 1;if(memo.has(mask))return memo.get(mask);let c=0;for(let i=0;i<k;i++)if(mask>>i&1){let ok=true;for(let j=0;j<k;j++)if(j!==i&&(mask>>j&1)&&lt(j,i))ok=false;if(ok)c+=f(mask&~(1<<i));}memo.set(mask,c);return c;};
+       const full=(1<<k)-1;const mins=range(0,k-1).filter(i=>range(0,k-1).every(j=>!lt(j,i)));const cov=[];for(let i=0;i<k;i++)for(let j=0;j<k;j++)if(lt(i,j)&&!range(0,k-1).some(m=>lt(i,m)&&lt(m,j)))cov.push(`${S[i]} | ${S[j]}`);
+       if(f(full)!==v)throw new Error('topsort mismatch');
+       return `<p>Covering relations (Hasse edges): ${cov.join(', ')}. A topological sort must start with a minimal element: ${mins.map(i=>S[i]).join(', ')}.</p><p>Let f(T) = number of sorts of the remaining set T = ∑ over minimal m of T of f(T − m). First step: ${mins.map(i=>`start with ${S[i]}: ${f(full&~(1<<i))}`).join('; ')}.</p><p>Total ${mins.map(i=>f(full&~(1<<i))).join(' + ')} = <b>${v}</b>.</p>`;})(),meta:{S}});}),
  gen('55-O-lattice-tf',TO[5],r=>{const useD=r.float()<0.35;const S=useD?divisors(r.pick([12,18,20,28,30,36,45,50])):r.sample(range(1,36),r.int(5,8)).sort((a,b)=>a-b);const le=(a,b)=>b%a===0;
    let isL=true,wit=null;for(const a of S)for(const b of S){const ub=S.filter(x=>le(a,x)&&le(b,x)),lb=S.filter(x=>le(x,a)&&le(x,b));const lu=ub.find(x=>ub.every(y=>le(x,y))),gl=lb.find(x=>lb.every(y=>le(y,x)));if(lu===undefined||gl===undefined){isL=false;wit=wit||[a,b,lu===undefined?'lub':'glb'];}}
    if(!isL&&r.float()<0.4)return null;
@@ -1369,7 +1447,7 @@ G['55-O']=[
      solution:isL?`<p><b>True</b>: every pair has a lub and glb in the set${useD?' (lcm and gcd of divisors are divisors)':''}.</p>`:`<p><b>False</b>: ${wit[0]} and ${wit[1]} have no ${wit[2]} in the set.</p>`,meta:{S}});}),
  gen('55-O-count-functions',TO[1],r=>{const n=r.int(2,4);const T=[['functions (each a is related to exactly one b)',Math.pow(n,n),'nⁿ'],['partial functions (each a is related to at most one b)',Math.pow(n+1,n),'(n+1)ⁿ'],
      ['bijections (each a related to exactly one b and each b to exactly one a)',fact(n),'n!'],['left-total (every a is related to at least one b)',Math.pow(Math.pow(2,n)-1,n),'(2ⁿ − 1)ⁿ: each row nonzero']];const i=r.int(0,3);
-   return Q(`<p>How many relations R on {1, …, ${n}} are ${T[i][0]}?</p>`,'num',T[i][1],{hint:'Work row by row in the relation matrix: each row (the set of b related to a) is chosen independently.',solution:`<p>${T[i][2]} = <b>${T[i][1]}</b>.</p>`,meta:{n,i}});}),
+   return Q(`<p>How many relations R on {1, …, ${n}} are ${T[i][0]}?</p>`,'num',T[i][1],{hint:'Work row by row in the relation matrix: each row (the set of b related to a) is chosen independently.',solution:`<p>Row a of the relation matrix lists the b with (a, b) ∈ R; the ${n} rows are chosen independently. ${['Exactly one 1 per row: '+n+' choices per row','At most one 1 per row: '+(n+1)+' choices per row (none, or one of '+n+')','Exactly one 1 in each row and column: a permutation, '+n+'! = '+range(1,n).join('·'),'Any nonempty row: '+(Math.pow(2,n)-1)+' choices per row'][i]}. ${T[i][2]} = <b>${T[i][1]}</b>.</p>`,meta:{n,i}});}),
  gen('55-O-compose-tf',TO[2],r=>{const n=4;const A=randRel(r,n),B=randRel(r,n);const SR=boolMul(A,B,n),RS=boolMul(B,A,n);const cand=[];for(let a=0;a<n;a++)for(let c=0;c<n;c++)if(SR[a][c]!==RS[a][c])cand.push([a,c]);
    let a,c;if(cand.length&&r.float()<0.7)[a,c]=r.pick(cand);else{a=r.int(0,n-1);c=r.int(0,n-1);}const v=SR[a][c];
    return Q(`<p>On {1, 2, 3, 4}: R = ${fmtPairs(pairsOf(A,n))}, S = ${fmtPairs(pairsOf(B,n))}. Using Rosen's convention S ∘ R = {(a, c) : ∃b, (a, b) ∈ R and (b, c) ∈ S}, true or false: (${a+1}, ${c+1}) ∈ S ∘ R?</p>`,'tf',v,{hint:'Apply R FIRST, then S (like function composition). Look for b with (a,b) ∈ R and (b,c) ∈ S.',
@@ -1407,12 +1485,12 @@ G['55-P']=[
    return Q(`<p>A simple graph has ${e} edges. Every vertex has degree ${a} or ${b}, and exactly ${x} vertices have degree ${a}. How many vertices does the graph have?</p>`,'num',x+y,{hint:'2|E| = ∑ deg: solve for the number of degree-'+b+' vertices.',
      solution:`<p>2·${e} = ${2*e} = ${a}·${x} + ${b}·y ⇒ y = ${y}. Total vertices ${x} + ${y} = <b>${x+y}</b>.</p>`,meta:{t,e,a,b,x}});}),
  gen('55-P-special-edges',TP[1],r=>{const t=r.int(0,5);let v,desc,sol,meta;
-   if(t===0){const n=r.int(5,30);v=n*(n-1)/2;desc=`K<sub>${n}</sub>`;sol=`C(${n}, 2)`;meta={g:'K',n};}
-   else if(t===1){const n=r.int(4,30);v=2*(n-1);desc=`W<sub>${n-1}</sub> (the wheel: C<sub>${n-1}</sub> plus a hub)`;sol=`${n-1} rim edges + ${n-1} spokes`;meta={g:'W',n:n-1};}
-   else if(t===2){const n=r.int(2,8);v=n*Math.pow(2,n-1);desc=`Q<sub>${n}</sub>`;sol=`2<sup>${n}</sup> vertices of degree ${n}: ${n}·2<sup>${n}</sup>/2`;meta={g:'Q',n};}
-   else if(t===3){const m=r.int(2,12),n=r.int(2,12);v=m*n;desc=`K<sub>${m},${n}</sub>`;sol=`${m}·${n}`;meta={g:'KB',m,n};}
-   else if(t===4){const n=r.int(3,9);v=C(Math.pow(2,n),2)-n*Math.pow(2,n-1);desc=`the complement of Q<sub>${n}</sub>`;sol=`C(2<sup>${n}</sup>, 2) − ${n}·2<sup>${n-1}</sup>`;meta={g:'Qc',n};if(n>6)return null;}
-   else{const m=r.int(2,9),n=r.int(2,9);v=C(m,2)+C(n,2);desc=`the complement of K<sub>${m},${n}</sub>`;sol=`C(${m}, 2) + C(${n}, 2) (the complement is K<sub>${m}</sub> ∪ K<sub>${n}</sub>)`;meta={g:'KBc',m,n};}
+   if(t===0){const n=r.int(5,30);v=n*(n-1)/2;desc=`K<sub>${n}</sub>`;sol=`every pair of the ${n} vertices is an edge: C(${n}, 2) = ${n}·${n-1}/2`;meta={g:'K',n};}
+   else if(t===1){const n=r.int(4,30);v=2*(n-1);desc=`W<sub>${n-1}</sub> (the wheel: C<sub>${n-1}</sub> plus a hub)`;sol=`${n-1} rim edges + ${n-1} spokes = ${n-1} + ${n-1}`;meta={g:'W',n:n-1};}
+   else if(t===2){const n=r.int(2,8);v=n*Math.pow(2,n-1);desc=`Q<sub>${n}</sub>`;sol=`2<sup>${n}</sup> = ${1<<n} vertices (bit strings of length ${n}), each of degree ${n} (flip one bit); handshaking: ${n}·${1<<n}/2`;meta={g:'Q',n};}
+   else if(t===3){const m=r.int(2,12),n=r.int(2,12);v=m*n;desc=`K<sub>${m},${n}</sub>`;sol=`each of the ${m} vertices on one side is adjacent to all ${n} on the other side, and there are no other edges: ${m}·${n}`;meta={g:'KB',m,n};}
+   else if(t===4){const n=r.int(3,9);v=C(Math.pow(2,n),2)-n*Math.pow(2,n-1);desc=`the complement of Q<sub>${n}</sub>`;sol=`all pairs minus the edges of Q<sub>${n}</sub>: C(2<sup>${n}</sup>, 2) − ${n}·2<sup>${n-1}</sup> = ${C(1<<n,2)} − ${n*(1<<(n-1))}`;meta={g:'Qc',n};if(n>6)return null;}
+   else{const m=r.int(2,9),n=r.int(2,9);v=C(m,2)+C(n,2);desc=`the complement of K<sub>${m},${n}</sub>`;sol=`the complement is K<sub>${m}</sub> ∪ K<sub>${n}</sub> (exactly the pairs inside one side): C(${m}, 2) + C(${n}, 2) = ${C(m,2)} + ${C(n,2)}`;meta={g:'KBc',m,n};}
    return Q(`<p>How many edges does ${desc} have?</p>`,'num',v,{hint:'Use handshaking: (number of vertices × common degree)/2, or count directly.',solution:`<p>${sol} = <b>${v}</b>.</p>`,meta});}),
  gen('55-P-special-bip',TP[1],r=>{const mk=[()=>{const n=r.int(2,7);return {s:`K<sub>${n}</sub>`,g:{g:'K',n},b:n<=2};},()=>{const n=r.int(3,10);return {s:`C<sub>${n}</sub>`,g:{g:'C',n},b:n%2===0};},()=>{const n=r.int(3,8);return {s:`W<sub>${n}</sub>`,g:{g:'W',n},b:false};},
    ()=>{const n=r.int(1,4);return {s:`Q<sub>${n}</sub>`,g:{g:'Q',n},b:true};},()=>{const m=r.int(1,5),n=r.int(1,5);return {s:`K<sub>${m},${n}</sub>`,g:{g:'KB',m,n},b:true};},()=>{const n=r.int(4,9);return {s:`P<sub>${n}</sub> (path on ${n} vertices)`,g:{g:'P',n},b:true};}];
@@ -1440,17 +1518,21 @@ G['55-P']=[
    const A=Array.from({length:n},()=>Array(n).fill(0));E.forEach(([a,b])=>{A[a][b]=A[b][a]=1;});const tri=triangles(n,E);
    return Q(`<p>A simple graph has adjacency matrix</p>${mat(A)}<p>How many triangles (3-cycles, as vertex sets) does it contain? (Hint: trace(A³) = 6 × #triangles.)</p>`,'num',tri,{hint:'Count closed walks of length 3: each triangle gives 6 (3 starting points × 2 directions).',
      solution:`<p>Triangles: ${tri}. (trace(A³) = ${6*tri}.) Answer <b>${tri}</b>.</p>`,meta:{t,A}});}),
- gen('55-P-iso',TP[4],r=>{const n=r.int(5,6);const E1=randGraph(r,n,0.45);if(E1.length<4)return null;let E2;const iso=r.float()<0.35;
-   if(iso){const p=r.shuffle(range(0,n-1));E2=E1.map(([a,b])=>[Math.min(p[a],p[b]),Math.max(p[a],p[b])]);}
-   else{if(r.bool()){E2=E1.map(e=>e.slice());// rewire one edge keeping edge count
-       const i=r.int(0,E2.length-1);let a,b;do{a=r.int(0,n-1);b=r.int(0,n-1);}while(a===b||E2.some(e=>e[0]===Math.min(a,b)&&e[1]===Math.max(a,b)));E2[i]=[Math.min(a,b),Math.max(a,b)];const p=r.shuffle(range(0,n-1));E2=E2.map(([a,b])=>[Math.min(p[a],p[b]),Math.max(p[a],p[b])]);}
+ gen('55-P-iso',TP[4],r=>{const kT=r.int(0,4);let n,E1,E2;const relab=(E,n)=>{const p=r.shuffle(range(0,n-1));return E.map(([a,b])=>[Math.min(p[a],p[b]),Math.max(p[a],p[b])]).sort((x,y)=>x[0]-y[0]||x[1]-y[1]);};
+   const TPL={2:[[5,[[0,1],[0,2],[1,3],[1,4],[3,4]],[[0,1],[0,4],[1,3],[2,4],[3,4]]],[5,[[0,2],[0,3],[1,2],[1,4],[2,4],[3,4]],[[0,1],[0,3],[0,4],[1,2],[2,3],[2,4]]],[5,[[0,2],[1,3],[1,4],[2,4]],[[0,1],[0,4],[1,4],[2,3]]],[5,[[0,1],[0,2],[1,4],[2,4],[3,4]],[[0,1],[0,3],[1,3],[2,3],[2,4]]]],
+     3:[[6,[[0,2],[0,3],[1,2],[1,3],[4,5]],[[0,2],[1,2],[1,4],[3,5],[4,5]]],[6,[[0,2],[0,5],[1,2],[1,4],[3,4]],[[0,2],[0,3],[1,4],[2,5],[3,5]]],[6,[[0,4],[0,5],[1,2],[1,4],[2,3]],[[0,1],[0,3],[1,5],[2,4],[3,5]]],[6,[[0,5],[1,2],[1,4],[2,3],[3,5]],[[0,2],[1,4],[1,5],[3,4],[3,5]]]],
+     4:[[6,[[0,2],[0,3],[1,2],[1,4],[2,5],[3,5]],[[0,1],[0,2],[1,3],[2,4],[2,5],[3,4]]],[6,[[0,1],[0,5],[1,2],[2,3],[3,5],[4,5]],[[0,4],[0,5],[1,3],[2,3],[2,4],[2,5]]],[6,[[0,2],[0,3],[1,2],[1,4],[1,5],[3,4]],[[0,2],[0,5],[1,3],[1,5],[3,4],[4,5]]],[6,[[0,1],[0,4],[1,3],[1,5],[2,4],[2,5]],[[0,5],[1,3],[1,4],[2,3],[2,4],[2,5]]]]};
+   if(kT>=2&&r.float()<(kT===2?0.5:1)){const tp=r.pick(TPL[kT]);n=tp[0];E1=relab(tp[1],n);E2=relab(tp[2],n);if(r.bool())[E1,E2]=[E2,E1];}
+   else{n=r.int(5,6);E1=randGraph(r,n,0.45);if(E1.length<4||E1.length>=n*(n-1)/2)return null;   // a complete graph cannot be rewired
+     if(kT===0)E2=relab(E1,n);
+     else if(r.bool()){E2=E1.map(e=>e.slice());const i=r.int(0,E2.length-1);let a,b;do{a=r.int(0,n-1);b=r.int(0,n-1);}while(a===b||E2.some(e=>e[0]===Math.min(a,b)&&e[1]===Math.max(a,b)));E2[i]=[Math.min(a,b),Math.max(a,b)];E2=relab(E2,n);}
      else E2=randGraph(r,n,0.45);}
-   E2.sort((x,y)=>x[0]-y[0]||x[1]-y[1]);if(E2.length!==E1.length)return null;
+   E1.sort((x,y)=>x[0]-y[0]||x[1]-y[1]);E2.sort((x,y)=>x[0]-y[0]||x[1]-y[1]);if(E2.length!==E1.length)return null;
    const inv=E=>{const d=degSeq(n,E).sort((a,b)=>b-a).join(',');return [d,triangles(n,E),comps(n,E,-1),!!twoColor(n,E)];};const i1=inv(E1),i2=inv(E2);
    // brute isomorphism
    const key=E=>E.map(e=>e.join('-')).sort().join('|');const k1=key(E1);let isIso=false;for(const p of (function*(){const a=range(0,n-1);const rec=function*(i){if(i===n){yield a.slice();return;}for(let j=i;j<n;j++){[a[i],a[j]]=[a[j],a[i]];yield* rec(i+1);[a[i],a[j]]=[a[j],a[i]];}};yield* rec(0);})()){if(key(E2.map(([x,y])=>[Math.min(p[x],p[y]),Math.max(p[x],p[y])]))===k1){isIso=true;break;}}
    const CH=['Isomorphic','Not isomorphic: the degree sequences differ','Not isomorphic: same degree sequence, but different numbers of triangles','Not isomorphic: same degree sequence and triangle count, but different numbers of connected components','Not isomorphic: same degree sequence, triangles and components, but only one of them is bipartite'];
-   let k;if(isIso)k=0;else if(i1[0]!==i2[0])k=1;else if(i1[1]!==i2[1])k=2;else if(i1[2]!==i2[2])k=3;else if(i1[3]!==i2[3])k=4;else return null;
+   let k;if(isIso)k=0;else if(i1[0]!==i2[0])k=1;else if(i1[1]!==i2[1])k=2;else if(i1[2]!==i2[2])k=3;else if(i1[3]!==i2[3])k=4;else return null;if(k!==kT)return null;
    const idx=r.shuffle([0,1,2,3,4]);
    return Q(`<p>G has vertices 1…${n} and edges ${fmtE(E1)}.<br>H has vertices 1…${n} and edges ${fmtE(E2)}.<br>Are G and H isomorphic? Choose the correct statement (the first invariant in the list that differs, if any).</p>`,'mc',idx.indexOf(k),{choices:idx.map(i=>CH[i]),
      hint:'Compare invariants in order: degree sequence, triangles, components, bipartiteness; if all agree, try to build a bijection matching degrees and neighbourhoods.',
@@ -1459,11 +1541,14 @@ G['55-P']=[
    return Q(`<p>A graph has vertices 1…${n} and edges ${E.length?fmtE(E):'(none)'}. How many connected components does it have?</p>`,'num',c,{hint:'Explore from each unvisited vertex (BFS/DFS); isolated vertices count as components.',
      solution:`<p>Components: ${(()=>{const A=adjL(n,E);const seen=Array(n).fill(false);const out=[];for(let s=0;s<n;s++){if(seen[s])continue;const cc=[];const st=[s];seen[s]=true;while(st.length){const x=st.pop();cc.push(x+1);for(const y of A[x])if(!seen[y]){seen[y]=true;st.push(y);}}out.push('{'+cc.sort((a,b)=>a-b).join(', ')+'}');}return out.join(', ');})()}: <b>${c}</b>.</p>`,meta:{n,E}});}),
  gen('55-P-cut',TP[5],r=>{const n=r.int(6,9);const E=randGraph(r,n,2.2/n);if(comps(n,E,-1)!==1)return null;const {cut,bridges}=tarjan(n,E);const t=r.int(0,2);
+   const compsOf=(Es,skip)=>{const A=adjL(n,Es);const seen=Array(n).fill(false);const out=[];for(let s=0;s<n;s++){if(seen[s]||s===skip)continue;const c=[s];seen[s]=true;const st=[s];while(st.length){const x=st.pop();for(const y of A[x])if(!seen[y]&&y!==skip){seen[y]=true;c.push(y);st.push(y);}}out.push(c.map(x=>x+1).sort((a,b)=>a-b));}return out;};
+   const cutWhy=()=>`Remove each vertex and look at what is left: ${range(0,n-1).map(v=>{const cs=compsOf(E,v);return `without ${v+1}: ${cs.length} component${cs.length>1?'s':''}${cs.length>1?' '+cs.map(c=>'{'+c.join(', ')+'}').join(' '):''}`;}).join('; ')}. Cut vertices are those leaving ≥ 2 components.`;
+   const brList=E.filter((e,i)=>compsOf(E.filter((_,j)=>j!==i),-1).length>1);
    if(t===0){if(!cut.length)return null;return Q(`<p>The connected graph with vertices 1…${n} and edges ${fmtE(E)}. List all cut vertices (vertices whose removal disconnects the graph), any order.</p>`,'list',cut.map(x=>x+1),{unordered:true,
-     hint:'Remove each vertex in turn and check connectivity — or use DFS low-points.',solution:`<p>Cut vertices: <b>${cut.map(x=>x+1).join(', ')}</b>.</p>`,meta:{n,E,t}});}
+     hint:'Remove each vertex in turn and check connectivity — or use DFS low-points.',solution:`<p>${cutWhy()}</p><p>Cut vertices: <b>${cut.map(x=>x+1).join(', ')}</b>.</p>`,meta:{n,E,t}});}
    if(t===1)return Q(`<p>The connected graph with vertices 1…${n} and edges ${fmtE(E)}. How many cut vertices does it have?</p>`,'num',cut.length,{hint:'A vertex is a cut vertex iff removing it increases the number of components.',
-     solution:`<p>Cut vertices: ${cut.length?cut.map(x=>x+1).join(', '):'none'} → <b>${cut.length}</b>.</p>`,meta:{n,E,t}});
-   return Q(`<p>The connected graph with vertices 1…${n} and edges ${fmtE(E)}. How many cut edges (bridges) does it have?</p>`,'num',bridges,{hint:'An edge is a bridge iff it lies on no cycle.',solution:`<p>Bridges (edges on no cycle): <b>${bridges}</b>.</p>`,meta:{n,E,t}});}),
+     solution:`<p>${cutWhy()}</p><p>Cut vertices: ${cut.length?cut.map(x=>x+1).join(', '):'none'} → <b>${cut.length}</b>.</p>`,meta:{n,E,t}});
+   return Q(`<p>The connected graph with vertices 1…${n} and edges ${fmtE(E)}. How many cut edges (bridges) does it have?</p>`,'num',bridges,{hint:'An edge is a bridge iff it lies on no cycle.',solution:`<p>An edge is a bridge iff deleting it disconnects the graph (it lies on no cycle). Deleting each edge in turn, the ones that disconnect are: ${brList.length?fmtE(brList):'none'} (every other edge lies on a cycle).</p><p>Bridges: <b>${bridges}</b>.</p>`,meta:{n,E,t}});}),
  gen('55-P-bip-parts',TP[2],r=>{const n=r.int(6,10);const side=range(0,n-1).map(()=>r.int(0,1));const E=[];for(let i=0;i<n;i++)for(let j=i+1;j<n;j++)if(side[i]!==side[j]&&r.float()<0.45)E.push([i,j]);if(comps(n,E,-1)!==1)return null;
    const col=twoColor(n,E);const s0=col.filter(c=>c===0).length;const v=Math.max(s0,n-s0);
    return Q(`<p>The connected graph with vertices 1…${n} and edges ${fmtE(E)} is bipartite. How many vertices are in the LARGER part of its (unique) bipartition?</p>`,'num',v,{hint:'2-colour by BFS from vertex 1; a connected bipartite graph has exactly one bipartition.',
@@ -1475,10 +1560,60 @@ G['55-P']=[
    else{v=sum(range(0,n-1).map(i=>A2[i][i]));desc='the trace of A²';sol=`(A²)<sub>ii</sub> = deg(i), so trace = ∑ deg = 2|E| = ${2*E.length}`;}
    return Q(`<p>A simple graph has adjacency matrix A =</p>${mat(A)}<p>Find ${desc}.</p>`,'num',v,{hint:'(A²)ᵢⱼ counts walks of length 2 from i to j, i.e. common neighbours (and deg(i) on the diagonal).',solution:`<p>${sol} ⇒ <b>${v}</b>.</p>`,meta:{A,t,desc}});}),
  gen('55-P-automorphisms',TP[4],r=>{const n=r.int(4,6);const E=randGraph(r,n,0.5);const Adj=Array.from({length:n},()=>Array(n).fill(false));E.forEach(([a,b])=>{Adj[a][b]=Adj[b][a]=true;});const d=degSeq(n,E);
-   let cnt=0;const p=Array(n).fill(-1),used=Array(n).fill(false);const rec=i=>{if(i===n){cnt++;return;}for(let v=0;v<n;v++){if(used[v]||d[v]!==d[i])continue;let ok=true;for(let j=0;j<i;j++)if(Adj[i][j]!==Adj[v][p[j]]){ok=false;break;}if(!ok)continue;used[v]=true;p[i]=v;rec(i+1);used[v]=false;}};rec(0);
+   let cnt=0;const found=[];const p=Array(n).fill(-1),used=Array(n).fill(false);const rec=i=>{if(i===n){cnt++;if(found.length<24)found.push(p.slice());return;}for(let v=0;v<n;v++){if(used[v]||d[v]!==d[i])continue;let ok=true;for(let j=0;j<i;j++)if(Adj[i][j]!==Adj[v][p[j]]){ok=false;break;}if(!ok)continue;used[v]=true;p[i]=v;rec(i+1);used[v]=false;}};rec(0);
    if(cnt===fact(n)&&r.float()<0.8)return null;
    return Q(`<p>How many automorphisms (isomorphisms from the graph to itself, including the identity) does the graph with vertices 1…${n} and edges ${E.length?fmtE(E):'(none)'} have?</p>`,'num',cnt,{
-     hint:'An automorphism must map each vertex to one of the same degree and preserve adjacency; build it vertex by vertex.',solution:`<p>Degrees: ${d.join(', ')}. Counting adjacency-preserving bijections (degree classes restrict the choices) gives <b>${cnt}</b>.</p>`,meta:{n,E}});}),
+     hint:'An automorphism must map each vertex to one of the same degree and preserve adjacency; build it vertex by vertex.',solution:(()=>{const cls=[...new Set(d)].sort((a,b)=>a-b).map(k=>[k,range(0,n-1).filter(v=>d[v]===k).map(v=>v+1)]);const cand=cls.reduce((a,[,vs])=>a*fact(vs.length),1);
+       const fixed=cls.filter(([,vs])=>vs.length===1).map(([,vs])=>vs[0]);const nbr=v=>range(0,n-1).filter(u=>Adj[v][u]).map(u=>u+1);
+       return `<p>An automorphism maps every vertex to a vertex of the same degree and must send edges to edges. Degree classes: ${cls.map(([k,vs])=>`degree ${k}: {${vs.join(', ')}}`).join('; ')}. ${fixed.length?`Vertices alone in their class are forced to be fixed: ${fixed.join(', ')}. `:''}That leaves at most ${cls.map(([,vs])=>vs.length+'!').join('·')} = ${cand} degree-preserving bijections to check.</p><p>Neighbourhoods: ${range(0,n-1).map(v=>`N(${v+1}) = {${nbr(v).join(', ')}}`).join(', ')}. Checking each candidate against every edge, the ones that preserve adjacency are ${cnt<=24?found.map(q=>'('+q.map((x,i)=>`${i+1}→${x+1}`).join(', ')+')').join('; '):`${cnt} maps (too many to list)`}.</p><p>Number of automorphisms: <b>${cnt}</b>.</p>`;})(),meta:{n,E}});}),
 ];
+
+
+// ---------- answer balancing table (class chosen uniformly first; see balanced()) ----------
+const BAL={
+  "55-B-bogus-step":{key:q=>stripT(q.choices[q.answer]),classes:["Step 2: x² > y²","Step 3: (−k)2/2 = ((−k)²)1/2","Step 4: n − a = a − n","Step 5: a + b = b","Step 5: m − s = n − s","Step 2: ct &lt; (c + 1)t"]},
+  "55-O-eqclasses":{key:kAns,classes:["1","2","3","4","5","6","7","8","9","10","11","12","13"]},
+  "55-P-walks":{key:kAns,classes:["0","1","2","3","4","5","6","7","8","9"]},
+  "55-P-iso":{key:q=>{const c=stripT(q.choices[q.answer]);return /^Isomorphic/.test(c)?"iso":/degree sequences differ/.test(c)?"deg":/different numbers of triangles/.test(c)?"tri":/connected components/.test(c)?"comp":"bip";},classes:["iso","deg","tri","comp","bip"]},
+  "55-A-quant-tf":{key:kAns,classes:["true", "false"]},
+  "55-B-iff-tf":{key:kAns,classes:["true", "false"]},
+  "55-B-unique-tf":{key:kAns,classes:["true", "false"]},
+  "55-B-contra-tf":{key:kAns,classes:["true", "false"]},
+  "55-E-lemma-tf":{key:kAns,classes:["true", "false"]},
+  "55-P-graphic":{key:kAns,classes:["true", "false"]},
+  "55-A-rowcount":{key:kAns,classes:["2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14"]},
+  "55-B-direct-mod":{key:kAns,classes:["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12"]},
+  "55-E-lincong-count":{key:kAns,classes:["0", "1", "2", "3", "4", "5"]},
+  "55-F-fermat-witness":{key:kAns,classes:["2", "3", "5", "7"]},
+  "55-G-ineq-base":{key:kAns,classes:["4", "5", "6", "7", "8", "9", "10", "11", "12", "14"]},
+  "55-G-least-counterexample":{key:kAns,classes:["5", "6", "7", "12", "15", "23", "27", "31", "33", "63", "88", "127", "255"]},
+  "55-H-alg-calls":{key:kAns,classes:["4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19"]},
+  "55-J-stars-lower":{key:kAns,classes:["35", "210", "10", "84", "715", "36", "495", "28", "126", "165", "55", "330", "45", "220", "21", "70", "20", "120", "56", "15"]},
+  "55-N-onto":{key:kAns,classes:["14", "36", "126", "8400", "540", "126000", "5796", "1806", "240", "1560", "254", "150", "1800", "62", "30", "16800", "40824", "120", "24"]},
+  "55-N-couples":{key:kAns,classes:["1968", "240", "13824", "48", "8", "2", "336", "17760", "1488", "32", "12", "246", "84", "30", "39480", "8760", "2220", "96480", "864"]},
+  "55-O-hasse":{key:kAns,classes:["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "12", "13", "16", "17", "20", "28"]},
+  "55-O-count-functions":{key:kAns,classes:["9", "64", "256", "6", "4", "625", "2", "50625", "27", "343", "24"]},
+  "55-O-warshall":{key:kAns,classes:["4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14"]},
+  "55-P-components":{key:kAns,classes:["2", "3", "4", "5", "6", "7", "8"]},
+  "55-P-bip-parts":{key:kAns,classes:["3", "4", "5", "6", "7"]},
+  "55-P-automorphisms":{key:kAns,classes:["1", "2", "4", "6", "8", "12"]},
+  "55-B-euclid-primes":{key:q=>{const a=q.answer;return a<=7?String(a):"big";},classes:["2", "3", "5", "7", "big"]},
+  "55-B-counterexample":{key:q=>{const a=q.answer;return a<=5?String(a):a<=12?"6-12":"13+";},classes:["3", "4", "5", "6-12", "13+"]},
+  "55-E-diophantine":{key:q=>{const a=q.answer;return a<=2?String(a):a<=5?"3-5":"6+";},classes:["0", "1", "2", "3-5", "6+"]},
+  "55-F-crt-noncoprime":{key:q=>q.answer<0?"none":String(q.answer%3),classes:["none", "0", "1", "2"]},
+  "55-O-poset-extremal":{key:q=>Array.isArray(q.answer)?"list":q.answer===0?"none":"num",classes:["list", "none", "num"]},
+  "55-O-lubglb":{key:q=>q.answer===0?"0":q.answer===1?"1":q.answer<10?"2-9":"10+",classes:["0","1","2-9","10+"]},
+  "55-A-classify":{key:kMC,classes:["Contingency, true in at least two rows a", "Tautology", "Contradiction", "Contingency, false in exactly one row", "Contingency, true in exactly one row"]},
+  "55-C-func-class":{key:kMC,classes:["neither injective nor surjective", "bijective", "injective but not surjective", "surjective but not injective"]},
+  "55-G-ih-mc":{key:q=>{const c=stripT(q.choices[q.answer]);return /^P\(j\)/.test(c)?"strong":c;},classes:["P(k)", "P(k − 1) and P(k)", "strong", "P(k − 2), P(k − 1) and P(k)"]},
+  "55-H-alg-ih":{key:q=>{const c=stripT(q.choices[q.answer]);return /all inputs k with/.test(c)?"strong":c;},classes:["Alg is correct on input n − 1","strong","Alg is correct on inputs n − 1 and n − 2","Alg is correct on input n − 2"]},
+  "55-B-iff-direction":{key:kMC,classes:["Both directions hold (the ⟺ is true)", "Only ⇒ holds", "Only ⇐ holds", "Neither direction holds"]},
+  "55-G-bogus-base":{key:q=>{const c=stripT(q.choices[q.answer]);return /proof is correct/.test(c)?"ok":/false \(the step/.test(c)?"base":/base case holds/.test(c)?"step":/as well/.test(c)?"both":"other";},classes:["ok","base","step","both"]},
+  "55-A-quant-multi":{key:kMulti,classes:["∃x ∃y φ(x, y)", "∀x ∃y φ(x, y) | ∀y ∃x φ(x, y) | ∃x ∃y φ(x, y)", "∀y ∃x φ(x, y) | ∃x ∃y φ(x, y)", "∀x ∃y φ(x, y) | ∃x ∃y φ(x, y)", "∀x ∃y φ(x, y) | ∀y ∃x φ(x, y)", "∀x ∃y φ(x, y) | ∀y ∃x φ(x, y) | ∃x ∀y φ(x, y) | ∃y ∀x φ(x, y)", "∀x ∃y φ(x, y) | ∀y ∃x φ(x, y) | ∃x ∀y φ(x, y) | ∃x ∃y φ(x, y)", "∀x ∃y φ(x, y) | ∀y ∃x φ(x, y) | ∃x ∃y φ(x, y) | ∃y ∀x φ(x, y)", "∀x ∃y φ(x, y) | ∃x ∀y φ(x, y) | ∃x ∃y φ(x, y) | ∃y ∀x φ(x, y)", "∀y ∃x φ(x, y) | ∃x ∀y φ(x, y) | ∃x ∃y φ(x, y)", "∀y ∃x φ(x, y) | ∃x ∀y φ(x, y) | ∃x ∃y φ(x, y) | ∃y ∀x φ(x, y)", "∀y ∃x φ(x, y) | ∃x ∀y φ(x, y)", "∀x ∃y φ(x, y) | ∃x ∃y φ(x, y) | ∃y ∀x φ(x, y)", "∃x ∀y φ(x, y) | ∃x ∃y φ(x, y)"]},
+  "55-K-independence":{key:kMulti,classes:["E₁ and E₂ are independent | E₁ and E₃ are independent | E₁, E₂, E₃ are mutually independent | E₂ and E₃ are independent", "E₁ and E₃ are independent", "E₁ and E₂ are independent", "E₁ and E₂ are independent | E₁ and E₃ are independent | E₂ and E₃ are independent", "E₂ and E₃ are independent", "E₁ and E₂ are independent | E₁ and E₃ are independent", "E₁ and E₂ are independent | E₂ and E₃ are independent", "E₁ and E₃ are independent | E₂ and E₃ are independent", "(none)"]},
+  "55-O-props-matrix":{key:kMulti,classes:["(none)", "irreflexive", "antisymmetric | reflexive | transitive", "reflexive", "symmetric", "reflexive | symmetric | transitive", "antisymmetric | transitive", "antisymmetric", "antisymmetric | irreflexive", "antisymmetric | irreflexive | transitive", "antisymmetric | reflexive", "reflexive | transitive"]},
+  "55-O-props-formula":{key:kMulti,classes:["reflexive | symmetric | transitive", "symmetric", "reflexive", "antisymmetric | reflexive | transitive", "reflexive | symmetric", "antisymmetric | irreflexive | transitive", "antisymmetric | reflexive"]},
+};
+for(const u of Object.keys(G))if(u.startsWith('55-'))G[u]=G[u].map(g=>BAL[g.id]?Object.assign({},g,{make:balanced(g._f,BAL[g.id])}):g);
 
 })();
