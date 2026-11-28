@@ -137,13 +137,14 @@ const DEF={done:{},doneDay:{},start:{},active:{},check:{},err:[],notes:[],q:null
 for(const [k,v] of Object.entries(DEF)) if(S[k]==null) S[k]=JSON.parse(JSON.stringify(v));
 // one-time import of finished tasks from the earlier app
 if(!S.imported&&!TEST){ try{ const o=JSON.parse(localStorage.getItem('finals-app-v2')||'{}'); for(const k in (o.done||{})) if(/^[LH]:/.test(k)){ S.done[k]=o.done[k]; } if(Array.isArray(o.err)) S.err=o.err.filter(e=>e&&e.gen); }catch(e){} S.imported=1; }
-let DEAD=false;
-const save=()=>{ if(DEAD) return; try{ localStorage.setItem(KEY,JSON.stringify(S)); }catch(e){} };
+let DEAD=false; const TAB0=Date.now()+Math.random();
+const LOADED=Date.now();
+const save=()=>{ if(DEAD) return; S.tab=TAB0; S.savedAt=Date.now(); try{ localStorage.setItem(KEY,JSON.stringify(S)); }catch(e){} };
 // Only one tab may run the app: a newer tab takes over and older tabs stop (no answer-peeking across tabs).
-const TAB=Date.now()+Math.random();
+const TAB=TAB0;
 function goDead(){ if(DEAD) return; DEAD=true; CUR=null; document.body.innerHTML='<main style="max-width:520px;margin:20vh auto;padding:16px;font-family:system-ui;text-align:center"><h1>Open in another tab</h1><p>Finals Prep runs in one tab at a time so nothing gets lost. Use the other tab, or reload this one to continue here.</p><button onclick="location.reload()" style="min-height:48px;padding:0 18px;border-radius:12px;border:0;background:#1f4cc9;color:#fff;font-weight:700">Use this tab instead</button></main>'; }
 try{ const bc=new BroadcastChannel('finals-prep-'+KEY); bc.onmessage=e=>{ if(e.data&&e.data.hello&&e.data.tab!==TAB) goDead(); }; bc.postMessage({hello:1,tab:TAB}); }catch(e){}
-addEventListener('storage',e=>{ if(e.key===KEY) goDead(); });
+addEventListener('storage',e=>{ if(e.key!==KEY||!e.newValue) return; try{ const o=JSON.parse(e.newValue); if(o.tab!==TAB0&&o.savedAt>LOADED+1000) goDead(); }catch(x){} });
 const $=id=>document.getElementById(id);
 const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const CN={'54':'Math 54','55':'Math 55','B':'CS 61B','A':'All courses'};
