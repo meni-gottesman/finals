@@ -1,0 +1,1690 @@
+{
+ "id": "55-P",
+ "course": "55",
+ "title": "Graphs: terminology, special graphs, isomorphism, connectivity",
+ "source": "Rosen 10.1–10.4",
+ "summary": "Graph vocabulary, the handshaking theorem, the standard families Kₙ, Cₙ, Wₙ, Qₙ and Kₘ,ₙ, bipartite graphs, matrix representations, isomorphism and invariants, and connectivity including cut vertices, strong components and counting paths with Aʳ. Final questions test degree sequences, bipartite and isomorphism decisions, and walk counts.",
+ "lesson": [
+  {
+   "title": "Graph vocabulary",
+   "blocks": [
+    {
+     "type": "formula",
+     "text": "graph G = (V, E): a nonempty set V of <b>vertices</b> and a set E of <b>edges</b>, each edge joining one or two vertices (its <b>endpoints</b>)"
+    },
+    {
+     "type": "table",
+     "head": [
+      "Type",
+      "Edges",
+      "Multi-edges",
+      "Loops"
+     ],
+     "rows": [
+      [
+       "simple graph",
+       "undir.",
+       "no",
+       "no"
+      ],
+      [
+       "multigraph",
+       "undir.",
+       "yes",
+       "no"
+      ],
+      [
+       "pseudograph",
+       "undir.",
+       "yes",
+       "yes"
+      ],
+      [
+       "simple digraph",
+       "directed",
+       "no",
+       "yes"
+      ],
+      [
+       "directed multigraph",
+       "directed",
+       "yes",
+       "yes"
+      ]
+     ]
+    },
+    {
+     "type": "p",
+     "text": "In a <b>simple graph</b>, an edge is just an unordered pair {u, v} with u ≠ v. That’s a symmetric, irreflexive relation on V. A <b>directed graph</b> (digraph) has edges (u, v) with a direction: exactly a relation on V."
+    },
+    {
+     "type": "list",
+     "items": [
+      "u and v are <b>adjacent</b> (neighbors) if an edge joins them; that edge is <b>incident</b> with u and v.",
+      "The <b>neighborhood</b> N(v) is the set of neighbors of v.",
+      "In a digraph, edge (u, v) has <b>initial vertex</b> u and <b>terminal vertex</b> v."
+     ]
+    },
+    {
+     "type": "warn",
+     "text": "On the final, “graph” usually means simple graph unless loops or multiple edges are mentioned. Read the problem for which kind it means."
+    },
+    {
+     "type": "example",
+     "title": "Counting labeled graphs",
+     "prompt": "How many different simple graphs have vertex set {1, 2, 3, 4}? How many are there up to isomorphism?",
+     "steps": [
+      "A simple graph is decided by which of the C(4, 2) = 6 possible edges are present.",
+      "Each edge is in or out: 2⁶ = 64 labeled graphs; in general 2<sup>C(n,2)</sup>.",
+      "Up to isomorphism (ignoring labels) there are only 11; for 3 vertices there are 4 (0, 1, 2 or 3 edges)."
+     ],
+     "answer": "64 labeled; 11 up to isomorphism"
+    }
+   ]
+  },
+  {
+   "title": "Degrees and the handshaking theorem",
+   "blocks": [
+    {
+     "type": "formula",
+     "text": "deg(v) = number of edges incident with v, a loop counting <b>twice</b>"
+    },
+    {
+     "type": "p",
+     "text": "deg 0: <b>isolated</b> vertex. deg 1: <b>pendant</b> vertex."
+    },
+    {
+     "type": "formula",
+     "text": "Handshaking theorem: Σ<sub>v ∈ V</sub> deg(v) = 2|E|"
+    },
+    {
+     "type": "thm",
+     "name": "Handshaking theorem",
+     "text": "In any undirected graph, Σ<sub>v∈V</sub> deg(v) = 2|E|.",
+     "proof": [
+      {
+       "type": "p",
+       "text": "Count “edge-ends”. Every edge has two ends, so there are 2|E| ends in total. Each end sits at a vertex, and deg(v) is exactly the number of ends at v (a loop puts both of its ends at the same vertex, which is why it counts twice). Summing deg(v) over all vertices counts every end once. ∎"
+      }
+     ]
+    },
+    {
+     "type": "thm",
+     "name": "Odd-degree vertices come in pairs",
+     "text": "Every graph has an even number of vertices of odd degree.",
+     "proof": [
+      {
+       "type": "p",
+       "text": "Split the degree sum into the even-degree vertices and the odd-degree vertices. The total 2|E| is even and the first part is even, so the second part is even. A sum of odd numbers is even only when there are evenly many of them. ∎"
+      }
+     ]
+    },
+    {
+     "type": "example",
+     "title": "Handshaking in action",
+     "prompt": "Find |E| when the degrees are 3, 3, 2, 2, 2; when 9 vertices all have degree 4. Can 11 people each shake hands with exactly 3 others?",
+     "steps": [
+      "Degrees 3, 3, 2, 2, 2: sum 12, so |E| = 6.",
+      "A graph where 9 vertices all have degree 4: |E| = 36/2 = 18.",
+      "Can 11 people each shake hands with exactly 3 others? Degree sum 33 is odd. <b>Impossible.</b>"
+     ],
+     "answer": "6 edges; 18 edges; impossible (degree sum 33 is odd)"
+    },
+    {
+     "type": "warn",
+     "text": "Is there a simple graph with degrees 5, 5, 4, 3, 2, 1? The sum (20) is even, but <b>no</b>: with 6 vertices, degree 5 means adjacent to all others. Two such vertices make every vertex’s degree at least 2, but one vertex has degree 1. Always also check simple-graph limits (degree ≤ n − 1)."
+    },
+    {
+     "type": "steps",
+     "title": "Havel–Hakimi test for a degree sequence",
+     "items": [
+      "Sort the degrees in decreasing order. If the sum is odd or some degree is ≥ n, stop: impossible.",
+      "Remove the largest degree d and subtract 1 from the next d degrees (that vertex is joined to the d vertices of highest degree).",
+      "Re-sort and repeat. The sequence is graphical exactly when you reach all zeros without a negative number."
+     ]
+    },
+    {
+     "type": "example",
+     "title": "Possible and impossible degree sequences",
+     "prompt": "Is there a simple graph with degree sequence (a) 3, 3, 2, 2, 1, 1; (b) 4, 4, 4, 1, 1; (c) 3, 3, 3, 3, 3?",
+     "steps": [
+      "(c) Degree sum 15 is odd, so no graph exists (handshaking).",
+      "(b) Sum 14 is even, but with 5 vertices a degree-4 vertex is adjacent to all others. Three of them make each degree-1 vertex adjacent to at least 3 vertices. No.",
+      "(a) Havel–Hakimi: 3,3,2,2,1,1 → remove 3, subtract from 3,2,2: 2,1,1,1,1 → remove 2: 0,0,1,1 → 1,1,0,0 → 0,0,0. Yes.",
+      "A graph for (a): vertices a–f with edges ab, ac, ae, bd, bf, cd gives degrees a 3, b 3, c 2, d 2, e 1, f 1."
+     ],
+     "answer": "(a) yes (b) no (c) no"
+    },
+    {
+     "type": "formula",
+     "text": "deg<sup>−</sup>(v) = in-degree (edges ending at v), deg<sup>+</sup>(v) = out-degree (edges starting at v)"
+    },
+    {
+     "type": "formula",
+     "text": "Σ deg<sup>−</sup>(v) = Σ deg<sup>+</sup>(v) = |E|"
+    },
+    {
+     "type": "p",
+     "text": "Each directed edge has exactly one start and one end. A loop adds 1 to both the in- and out-degree of its vertex."
+    },
+    {
+     "type": "example",
+     "title": "In- and out-degrees",
+     "prompt": "A digraph has edges (1,2), (1,3), (2,3), (3,1), (3,4), (4,4). Find every in- and out-degree and check the degree-sum formula.",
+     "steps": [
+      "Out-degrees (edges leaving): 1: 2, 2: 1, 3: 2, 4: 1 (the loop counts once as leaving).",
+      "In-degrees (edges arriving): 1: 1, 2: 1, 3: 2, 4: 2 (the loop counts once as arriving).",
+      "Both sums are 6 = |E|."
+     ],
+     "answer": "out 2, 1, 2, 1; in 1, 1, 2, 2; both sum to 6"
+    },
+    {
+     "type": "p",
+     "text": "The <b>underlying undirected graph</b> forgets the directions."
+    }
+   ]
+  },
+  {
+   "title": "Special graphs: Kₙ, Cₙ, Wₙ, Qₙ, Kₘ,ₙ",
+   "blocks": [
+    {
+     "type": "table",
+     "head": [
+      "Graph",
+      "What it is",
+      "|V|",
+      "|E|"
+     ],
+     "rows": [
+      [
+       "K<sub>n</sub> complete",
+       "every pair adjacent",
+       "n",
+       "C(n, 2) = n(n−1)/2"
+      ],
+      [
+       "C<sub>n</sub> cycle (n ≥ 3)",
+       "v<sub>1</sub>–v<sub>2</sub>–⋯–v<sub>n</sub>–v<sub>1</sub>",
+       "n",
+       "n"
+      ],
+      [
+       "W<sub>n</sub> wheel (n ≥ 3)",
+       "C<sub>n</sub> plus a hub joined to all n",
+       "n + 1",
+       "2n"
+      ],
+      [
+       "Q<sub>n</sub> n-cube",
+       "bit strings of length n; adjacent if they differ in one bit",
+       "2<sup>n</sup>",
+       "n·2<sup>n−1</sup>"
+      ],
+      [
+       "K<sub>m,n</sub> complete bipartite",
+       "m + n vertices in two sides; every cross pair adjacent, nothing within a side",
+       "m + n",
+       "mn"
+      ]
+     ]
+    },
+    {
+     "type": "list",
+     "items": [
+      "K<sub>n</sub>: n vertices of degree n − 1, so |E| = n(n − 1)/2.",
+      "W<sub>n</sub>: n rim edges + n spokes = 2n.",
+      "Q<sub>n</sub>: each of the 2<sup>n</sup> strings has n neighbors (flip one bit), so |E| = n·2<sup>n</sup>/2 = n·2<sup>n−1</sup>. Q<sub>3</sub>: 12; Q<sub>4</sub>: 32.",
+      "K<sub>m,n</sub>: m vertices of degree n and n of degree m: (mn + nm)/2 = mn."
+     ]
+    },
+    {
+     "type": "warn",
+     "text": "W<sub>n</sub> has <b>n + 1</b> vertices, not n. And Q<sub>n</sub> has 2<sup>n</sup> vertices, not n."
+    },
+    {
+     "type": "example",
+     "title": "Edge counts of special graphs",
+     "prompt": "How many edges do K₇, W₆, Q₅ and K₄,₆ have? What is the degree sequence of K₃,₄?",
+     "steps": [
+      "K₇: C(7, 2) = 21.",
+      "W₆: 6 rim edges + 6 spokes = 12 (on 7 vertices).",
+      "Q₅: 5 · 2⁴ = 80 (32 vertices of degree 5, halved).",
+      "K₄,₆: 4 · 6 = 24.",
+      "K₃,₄: the 3 vertices on one side have degree 4, the 4 on the other have degree 3: 4, 4, 4, 3, 3, 3, 3 (sum 24 = 2 · 12)."
+     ],
+     "answer": "21, 12, 80, 24; K₃,₄ has degrees 4, 4, 4, 3, 3, 3, 3"
+    }
+   ]
+  },
+  {
+   "title": "Bipartite graphs",
+   "blocks": [
+    {
+     "type": "formula",
+     "text": "G is <b>bipartite</b> if V = V<sub>1</sub> ∪ V<sub>2</sub> (disjoint) with every edge joining V<sub>1</sub> to V<sub>2</sub>"
+    },
+    {
+     "type": "p",
+     "text": "No edge inside V<sub>1</sub>, none inside V<sub>2</sub>. Equivalently: you can color the vertices with 2 colors so every edge joins different colors (a proper 2-coloring)."
+    },
+    {
+     "type": "thm",
+     "name": "Odd-cycle criterion",
+     "text": "A graph is bipartite if and only if it has no cycle of odd length.",
+     "proof": [
+      {
+       "type": "p",
+       "text": "<b>(⇒)</b> Along any cycle the two colours alternate, because every edge joins the two parts. Getting back to the starting colour takes an even number of steps."
+      },
+      {
+       "type": "p",
+       "text": "<b>Lemma.</b> Every closed walk of odd length contains an odd cycle. (Strong induction on the length: if no vertex repeats in the middle it is a cycle; otherwise split it at a repeated vertex into two shorter closed walks, one of which has odd length.)"
+      },
+      {
+       "type": "p",
+       "text": "<b>(⇐)</b> Work in one connected component and fix a vertex v. Colour u red if its distance from v is even, blue if odd. If an edge xy joined two vertices of the same colour, then a shortest path v→x, the edge xy, and a shortest path y→v would form a closed walk of odd length d(v,x) + 1 + d(v,y), which contains an odd cycle by the lemma. Contradiction, so the colouring is proper. ∎"
+      }
+     ]
+    },
+    {
+     "type": "steps",
+     "title": "Recipe: 2-colour greedily",
+     "items": [
+      "Color any vertex red. Color all its neighbors blue, all their uncolored neighbors red, and so on.",
+      "If you ever need to give a vertex the color it already conflicts with, you’ve found an odd cycle: <b>not bipartite</b>. If everything gets colored, the colors are the two sides."
+     ]
+    },
+    {
+     "type": "example",
+     "title": "Which special graphs are bipartite?",
+     "prompt": "Which special graphs are bipartite?",
+     "steps": [
+      "C<sub>n</sub>: bipartite exactly when n is <b>even</b>.",
+      "K<sub>n</sub>: only for n ≤ 2 (K<sub>3</sub> is a triangle).",
+      "W<sub>n</sub>: never (hub + two adjacent rim vertices form a triangle).",
+      "Q<sub>n</sub>: always. Sides: strings with an even number of 1s vs. odd. Flipping one bit changes the parity.",
+      "K<sub>m,n</sub>: always, by definition."
+     ],
+     "answer": "Cₙ iff n even; Kₙ iff n ≤ 2; Wₙ never; Qₙ and Kₘ,ₙ always"
+    },
+    {
+     "type": "warn",
+     "text": "Adding a diagonal to C<sub>6</sub> between <b>opposite</b> vertices keeps it bipartite (it closes two 4-cycles). A diagonal between vertices two apart creates a triangle and breaks it. Check parity, not looks."
+    },
+    {
+     "type": "example",
+     "title": "2-colouring by hand",
+     "prompt": "G has vertices 1–7 and edges 12, 23, 34, 45, 56, 61, 14, 37, 75. Is G bipartite? What if the edge 26 is added?",
+     "steps": [
+      "Colour 1 red. Its neighbours 2, 6, 4 are blue.",
+      "Neighbours of 2: 3 is red. Neighbours of 4: 3 (red, fine), 5 red. Neighbours of 6: 5 (red, fine).",
+      "7 is adjacent to 3 and 5, both red, so 7 is blue.",
+      "Every edge joins red {1, 3, 5} to blue {2, 4, 6, 7}: bipartite.",
+      "Adding 26 joins two blue vertices; 1–2–6–1 is then a triangle (odd cycle), so the new graph is not bipartite."
+     ],
+     "answer": "Bipartite with sides {1, 3, 5} and {2, 4, 6, 7}; adding 26 creates the triangle 1–2–6, so not bipartite"
+    },
+    {
+     "type": "p",
+     "text": "A <b>matching</b> is a set of edges with no shared endpoints. In a bipartite graph with sides V<sub>1</sub>, V<sub>2</sub>, a <b>complete matching from V<sub>1</sub></b> matches every vertex of V<sub>1</sub>. <b>Hall’s theorem:</b> one exists if and only if |N(A)| ≥ |A| for every subset A ⊆ V<sub>1</sub>. The “only if” is easy: the matched partners of A are |A| different neighbors of A."
+    }
+   ]
+  },
+  {
+   "title": "Subgraphs, unions, complements",
+   "blocks": [
+    {
+     "type": "list",
+     "items": [
+      "<b>Subgraph</b> H = (W, F) of G = (V, E): W ⊆ V and F ⊆ E (each edge of F with both endpoints in W). <b>Proper</b> if H ≠ G.",
+      "<b>Induced subgraph</b> on W: keep the vertices W and <b>every</b> edge of G between them.",
+      "<b>Removing an edge</b> e: G − e keeps all vertices. <b>Removing a vertex</b> v: G − v also deletes every edge at v.",
+      "<b>Union</b> G<sub>1</sub> ∪ G<sub>2</sub>: vertex set V<sub>1</sub> ∪ V<sub>2</sub>, edge set E<sub>1</sub> ∪ E<sub>2</sub>.",
+      "<b>Complement</b> Ḡ of a simple graph: same vertices, and uv is an edge exactly when it is <b>not</b> an edge of G. So |E(G)| + |E(Ḡ)| = C(n, 2)."
+     ]
+    },
+    {
+     "type": "example",
+     "title": "Subgraphs and complements",
+     "prompt": "What is W₅ minus its hub? How many edges does K₄ minus one edge have? How many edges does the complement of C₆ have?",
+     "steps": [
+      "Removing the hub of W₅ deletes the 5 spokes and leaves the rim: C₅.",
+      "K₄ has 6 edges, so K₄ − e has 5.",
+      "|E(C₆)| + |E(complement)| = C(6, 2) = 15, so the complement has 15 − 6 = 9 edges."
+     ],
+     "answer": "C₅; 5 edges; 9 edges"
+    },
+    {
+     "type": "warn",
+     "text": "“Subgraph” doesn’t require keeping all edges between the chosen vertices; “induced subgraph” does. C<sub>4</sub> is a subgraph of K<sub>4</sub>, but not an induced one."
+    }
+   ]
+  },
+  {
+   "title": "Adjacency and incidence matrices",
+   "blocks": [
+    {
+     "type": "p",
+     "text": "Running graph G: the square 1–2–3–4–1 with the diagonal 1–3."
+    },
+    {
+     "type": "table",
+     "head": [
+      "Vertex",
+      "Adjacency list"
+     ],
+     "rows": [
+      [
+       "1",
+       "2, 3, 4"
+      ],
+      [
+       "2",
+       "1, 3"
+      ],
+      [
+       "3",
+       "1, 2, 4"
+      ],
+      [
+       "4",
+       "1, 3"
+      ]
+     ]
+    },
+    {
+     "type": "p",
+     "text": "<b>Adjacency matrix</b> A (vertices in a fixed order): a<sub>ij</sub> = 1 if v<sub>i</sub>v<sub>j</sub> is an edge, else 0."
+    },
+    {
+     "type": "matrix",
+     "rows": [
+      [
+       "0",
+       "1",
+       "1",
+       "1"
+      ],
+      [
+       "1",
+       "0",
+       "1",
+       "0"
+      ],
+      [
+       "1",
+       "1",
+       "0",
+       "1"
+      ],
+      [
+       "1",
+       "0",
+       "1",
+       "0"
+      ]
+     ]
+    },
+    {
+     "type": "list",
+     "items": [
+      "Undirected ⇒ A is <b>symmetric</b>. Simple ⇒ zero diagonal. Row sum = degree.",
+      "Multigraphs: a<sub>ij</sub> = number of edges between v<sub>i</sub> and v<sub>j</sub>; a loop puts 1 on the diagonal.",
+      "Digraphs: a<sub>ij</sub> = 1 if there’s an edge v<sub>i</sub> → v<sub>j</sub>. Not symmetric in general. Row sum = out-degree, column sum = in-degree.",
+      "The matrix depends on the vertex order; reordering vertices permutes rows and columns together."
+     ]
+    },
+    {
+     "type": "p",
+     "text": "<b>Incidence matrix</b> M: rows = vertices, columns = edges; m<sub>ij</sub> = 1 if edge e<sub>j</sub> is incident with v<sub>i</sub>. Each column has two 1s (one for a loop). For G above with e<sub>1</sub> = 12, e<sub>2</sub> = 23, e<sub>3</sub> = 34, e<sub>4</sub> = 41, e<sub>5</sub> = 13:"
+    },
+    {
+     "type": "matrix",
+     "rows": [
+      [
+       "1",
+       "0",
+       "0",
+       "1",
+       "1"
+      ],
+      [
+       "1",
+       "1",
+       "0",
+       "0",
+       "0"
+      ],
+      [
+       "0",
+       "1",
+       "1",
+       "0",
+       "1"
+      ],
+      [
+       "0",
+       "0",
+       "1",
+       "1",
+       "0"
+      ]
+     ]
+    },
+    {
+     "type": "warn",
+     "text": "Adjacency matrix: n × n. Incidence matrix: n × |E|. Don’t mix them up, and in an adjacency matrix a loop counts 1 (on the diagonal) even though it adds 2 to the degree."
+    },
+    {
+     "type": "example",
+     "title": "Reading a graph off its adjacency matrix",
+     "prompt": "A simple graph on vertices 1–5 has adjacency matrix with rows (0,1,0,1,1), (1,0,1,0,0), (0,1,0,1,0), (1,0,1,0,1), (1,0,0,1,0). List the edges and degrees. Is it bipartite?",
+     "steps": [
+      "The matrix is symmetric with zero diagonal, so read only the upper triangle.",
+      "Edges: 12, 14, 15, 23, 34, 45: six edges.",
+      "Degrees are the row sums: 3, 2, 2, 3, 2 (sum 12 = 2 · 6).",
+      "1, 4, 5 are pairwise adjacent: a triangle, so it is not bipartite."
+     ],
+     "answer": "Edges 12, 14, 15, 23, 34, 45; degrees 3, 2, 2, 3, 2; not bipartite (triangle 1–4–5)"
+    }
+   ]
+  },
+  {
+   "title": "Isomorphism and invariants",
+   "blocks": [
+    {
+     "type": "formula",
+     "text": "G<sub>1</sub> ≅ G<sub>2</sub> if there is a bijection f : V<sub>1</sub> → V<sub>2</sub> with"
+    },
+    {
+     "type": "formula",
+     "text": "u, v adjacent in G<sub>1</sub> ⟺ f(u), f(v) adjacent in G<sub>2</sub>"
+    },
+    {
+     "type": "p",
+     "text": "f is an <b>isomorphism</b>: a renaming of the vertices that turns one edge set exactly into the other. Same graph, different labels or drawing."
+    },
+    {
+     "type": "tip",
+     "text": "Drawings lie. Two pictures that look nothing alike can be the same graph, and two that look similar can differ. Decide using the definition and invariants, not the picture."
+    },
+    {
+     "type": "p",
+     "text": "The pentagram is just a 5-cycle traced in a different order (every other point), so it’s isomorphic to the pentagon: both are C<sub>5</sub>."
+    },
+    {
+     "type": "steps",
+     "title": "Method",
+     "items": [
+      "Check the easy invariants match (vertex count, edge count, degree sequence). If not, stop: not isomorphic.",
+      "Match up vertices with special features first: unique degrees, the neighbors of those, vertices on triangles…",
+      "Write the bijection f explicitly.",
+      "<b>Verify every edge</b>: each edge uv of G<sub>1</sub> maps to an edge f(u)f(v) of G<sub>2</sub>. Same number of edges ⇒ that’s enough."
+     ]
+    },
+    {
+     "type": "example",
+     "title": "Finding an isomorphism",
+     "prompt": "G₁: vertices a, b, c, d, e; edges ab, bc, cd, da, ae (a square with a pendant at a). G₂: vertices 1–5; edges 13, 35, 52, 21, 42. Are they isomorphic?",
+     "steps": [
+      "Degrees in G<sub>1</sub>: a 3, b 2, c 2, d 2, e 1. In G<sub>2</sub>: 2 has degree 3 (neighbors 5, 1, 4), 1, 3, 5 have degree 2, 4 has degree 1. Same sequence.",
+      "Forced: a ↦ 2 (only degree 3) and e ↦ 4 (only degree 1). a’s other neighbors b, d must go to 2’s other neighbors 1, 5; c (opposite a on the square) goes to 3.",
+      "Try f: a↦2, b↦1, c↦3, d↦5, e↦4.",
+      "Check: ab→21 ✓, bc→13 ✓, cd→35 ✓, da→52 ✓, ae→24 ✓. All 5 edges land on edges, so <b>G<sub>1</sub> ≅ G<sub>2</sub></b>."
+     ],
+     "answer": "Yes: a↦2, b↦1, c↦3, d↦5, e↦4"
+    },
+    {
+     "type": "warn",
+     "text": "Matching degree sequences does <b>not</b> prove isomorphism. You must give the bijection and check edges (or find an invariant that differs)."
+    },
+    {
+     "type": "formula",
+     "text": "invariant: a property every isomorphism preserves"
+    },
+    {
+     "type": "p",
+     "text": "If G<sub>1</sub> and G<sub>2</sub> differ in <b>any</b> invariant, they’re not isomorphic. Finding one is all you need."
+    },
+    {
+     "type": "table",
+     "head": [
+      "Invariant",
+      "Why preserved"
+     ],
+     "rows": [
+      [
+       "number of vertices, edges",
+       "f is a bijection on vertices and on edges"
+      ],
+      [
+       "degree sequence",
+       "f sends the neighbors of v onto the neighbors of f(v)"
+      ],
+      [
+       "number of cycles of length k (triangles, 4-cycles…)",
+       "a cycle maps to a cycle of the same length"
+      ],
+      [
+       "connected? number of components",
+       "paths map to paths"
+      ],
+      [
+       "bipartite?",
+       "a 2-coloring transfers through f"
+      ],
+      [
+       "degrees of neighbors (e.g. “the degree-3 vertices are adjacent”)",
+       "adjacency and degree both preserved"
+      ]
+     ]
+    },
+    {
+     "type": "example",
+     "title": "K₃,₃ vs the triangular prism",
+     "prompt": "K₃,₃ and the triangular prism (two triangles joined by three parallel edges): isomorphic?",
+     "steps": [
+      "Both: 6 vertices, 9 edges, every degree 3. The easy invariants all agree.",
+      "The prism has a <b>triangle</b>. K<sub>3,3</sub> is bipartite, so it has no odd cycles, in particular no triangle.",
+      "So they are <b>not isomorphic</b>."
+     ],
+     "answer": "Not isomorphic: the prism has a triangle, K₃,₃ has none"
+    },
+    {
+     "type": "example",
+     "title": "Same degrees, different graphs",
+     "prompt": "Are C₆ and two disjoint triangles isomorphic? Are H₁ = hexagon 1–2–3–4–5–6–1 plus the long diagonal 1–4 and H₂ = the same hexagon plus the short diagonal 1–3 isomorphic?",
+     "steps": [
+      "C₆ vs 2K₃: both have 6 vertices, 6 edges, all degrees 2. But C₆ is connected and 2K₃ has two components. Not isomorphic.",
+      "H₁, H₂: both have 6 vertices, 7 edges, degrees 3, 3, 2, 2, 2, 2.",
+      "H₂ contains the triangle 1–2–3. H₁ has none (its cycles are the hexagon and two 4-cycles), and in fact H₁ is bipartite.",
+      "Triangle counts differ, so H₁ ≇ H₂."
+     ],
+     "answer": "Neither pair is isomorphic"
+    },
+    {
+     "type": "warn",
+     "text": "“I tried a few bijections and none worked” is <b>not</b> a proof of non-isomorphism (there are n! bijections). Name an invariant that differs."
+    }
+   ]
+  },
+  {
+   "title": "Connectivity, components, cut vertices and edges",
+   "blocks": [
+    {
+     "type": "formula",
+     "text": "path of length n from u to v: a sequence of n edges e<sub>1</sub>, …, e<sub>n</sub> leading u = x<sub>0</sub> – x<sub>1</sub> – ⋯ – x<sub>n</sub> = v"
+    },
+    {
+     "type": "p",
+     "text": "<b>Circuit</b>: a path of length ≥ 1 that ends where it starts. <b>Simple</b>: no edge repeated. (Rosen’s “path” may repeat vertices and edges; some books call that a walk.)"
+    },
+    {
+     "type": "list",
+     "items": [
+      "An undirected graph is <b>connected</b> if every two vertices have a path between them.",
+      "<b>Theorem:</b> in a connected graph, any two distinct vertices have a <b>simple</b> path between them. (Take a shortest path; if it repeated a vertex, you could cut out the loop and get a shorter one.)",
+      "A <b>connected component</b> is a maximal connected subgraph: a piece you can’t enlarge and stay connected. Every graph is the disjoint union of its components."
+     ]
+    },
+    {
+     "type": "tip",
+     "text": "“u = v or there is a path from u to v” is an equivalence relation on V (reflexive by fiat; reverse a path for symmetry; glue paths for transitivity). Its classes are the vertex sets of the components."
+    },
+    {
+     "type": "warn",
+     "text": "A single vertex with no edges is a component by itself. Count isolated vertices when asked for the number of components."
+    },
+    {
+     "type": "formula",
+     "text": "<b>cut vertex</b>: removing it (and its edges) increases the number of components"
+    },
+    {
+     "type": "formula",
+     "text": "<b>cut edge</b> (bridge): removing it increases the number of components"
+    },
+    {
+     "type": "example",
+     "title": "Cut vertices and cut edges",
+     "prompt": "G is two triangles 1–2–3 and 4–5–6 joined by the edge 3–4. Find all cut vertices and cut edges.",
+     "steps": [
+      "Remove 3: {1, 2} is cut off from {4, 5, 6}. Cut vertex. Same for 4.",
+      "Remove 1: the rest stays connected (2–3 still there). Not a cut vertex.",
+      "Remove edge 3–4: two triangles, disconnected. Cut edge. Removing a triangle edge, say 1–2, leaves 1–3–2, still connected."
+     ],
+     "answer": "Cut vertices 3 and 4; the only cut edge is 3–4"
+    },
+    {
+     "type": "tip",
+     "text": "An edge is a cut edge exactly when it lies on <b>no circuit</b> (no simple cycle). If it’s on a cycle, the rest of the cycle is a detour around it."
+    },
+    {
+     "type": "p",
+     "text": "<b>Connectivity numbers:</b> κ(G), the vertex connectivity, is the fewest vertices whose removal disconnects G (or leaves one vertex); λ(G), the edge connectivity, is the fewest edges whose removal disconnects G. κ(K<sub>n</sub>) = λ(K<sub>n</sub>) = n − 1. In general κ(G) ≤ λ(G) ≤ min degree."
+    },
+    {
+     "type": "warn",
+     "text": "The endpoint of a cut edge is not always a cut vertex: in a path a–b, removing a leaves just b, still connected. A pendant vertex is never a cut vertex."
+    },
+    {
+     "type": "formula",
+     "text": "<b>strongly connected</b>: a directed path u → v and v → u for every u, v"
+    },
+    {
+     "type": "formula",
+     "text": "<b>weakly connected</b>: the underlying undirected graph is connected"
+    },
+    {
+     "type": "p",
+     "text": "Strongly ⇒ weakly, but not conversely. The <b>strongly connected components</b> are the maximal strongly connected subgraphs; they partition the vertices (mutual reachability is an equivalence relation)."
+    },
+    {
+     "type": "example",
+     "title": "Strong components",
+     "prompt": "A digraph has edges 1→2, 2→3, 3→1, 3→4. Find its strongly connected components. Is it weakly connected?",
+     "steps": [
+      "1, 2, 3 reach each other around the cycle 1→2→3→1.",
+      "4 is reachable from 3 but no edge leaves 4, so 4 cannot get back.",
+      "Ignoring directions, every vertex is joined to the rest."
+     ],
+     "answer": "Strong components {1, 2, 3} and {4}; weakly connected"
+    },
+    {
+     "type": "example",
+     "title": "Counting components",
+     "prompt": "A graph on vertices 1–9 has edges 12, 23, 31, 45, 67. How many connected components does it have?",
+     "steps": [
+      "Follow edges from each unvisited vertex: {1, 2, 3}, {4, 5}, {6, 7}.",
+      "Vertices 8 and 9 have no edges; each is a component by itself."
+     ],
+     "answer": "5 components"
+    }
+   ]
+  },
+  {
+   "title": "Counting paths with powers of A",
+   "blocks": [
+    {
+     "type": "formula",
+     "text": "(A<sup>r</sup>)<sub>ij</sub> = number of paths of length r from v<sub>i</sub> to v<sub>j</sub>"
+    },
+    {
+     "type": "p",
+     "text": "A = adjacency matrix (ordinary multiplication, not Boolean). Works for directed graphs and multigraphs too. “Paths” here may repeat vertices and edges."
+    },
+    {
+     "type": "thm",
+     "name": "Aʳ counts paths",
+     "text": "If A is the adjacency matrix, (Aʳ)<sub>ij</sub> is the number of paths (walks) of length r from vᵢ to vⱼ.",
+     "proof": [
+      {
+       "type": "p",
+       "text": "r = 1: (A)<sub>ij</sub> is the number of edges from v<sub>i</sub> to v<sub>j</sub>, i.e. paths of length 1."
+      },
+      {
+       "type": "p",
+       "text": "Step: a path of length r + 1 from v<sub>i</sub> to v<sub>j</sub> is a path of length r from v<sub>i</sub> to some v<sub>k</sub>, followed by an edge v<sub>k</sub>v<sub>j</sub>. Group by k: the count is Σ<sub>k</sub> (A<sup>r</sup>)<sub>ik</sub>·a<sub>kj</sub>, which is exactly (A<sup>r</sup>·A)<sub>ij</sub> = (A<sup>r+1</sup>)<sub>ij</sub>. ∎"
+      }
+     ]
+    },
+    {
+     "type": "example",
+     "title": "Paths and triangles from powers of A",
+     "prompt": "G is the square 1–2–3–4–1 with diagonal 1–3. Use A² and A³ (below) to count length-2 paths from 2 to 4, length-3 paths from 1 to 3, and triangles.",
+     "steps": [
+      "(A²)<sub>24</sub> = 2: the length-2 paths 2–1–4 and 2–3–4. ✓",
+      "Diagonal of A² = degrees (3, 2, 3, 2): a closed length-2 path goes out along an edge and straight back.",
+      "(A³)<sub>13</sub> = row 1 of A² · column 3 of A = 3·1 + 1·1 + 2·0 + 1·1 = 5. By hand: 1–2–1–3, 1–4–1–3, 1–3–1–3, 1–3–2–3, 1–3–4–3. ✓",
+      "trace(A³) = 4 + 2 + 4 + 2 = 12. Each triangle gives 6 closed length-3 paths (3 starting points × 2 directions), so there are 12/6 = <b>2 triangles</b> (123 and 134). ✓"
+     ],
+     "answer": "2 paths; 5 paths; 2 triangles"
+    },
+    {
+     "type": "p",
+     "text": "A² and A³ for the square-plus-diagonal graph:"
+    },
+    {
+     "type": "matrix",
+     "rows": [
+      [
+       "3",
+       "1",
+       "2",
+       "1"
+      ],
+      [
+       "1",
+       "2",
+       "1",
+       "2"
+      ],
+      [
+       "2",
+       "1",
+       "3",
+       "1"
+      ],
+      [
+       "1",
+       "2",
+       "1",
+       "2"
+      ]
+     ]
+    },
+    {
+     "type": "matrix",
+     "rows": [
+      [
+       "4",
+       "5",
+       "5",
+       "5"
+      ],
+      [
+       "5",
+       "2",
+       "5",
+       "2"
+      ],
+      [
+       "5",
+       "5",
+       "4",
+       "5"
+      ],
+      [
+       "5",
+       "2",
+       "5",
+       "2"
+      ]
+     ]
+    },
+    {
+     "type": "warn",
+     "text": "A<sup>r</sup> counts paths that may repeat vertices (1–3–1–3 counts). If a problem asks for <b>simple</b> paths, A<sup>r</sup> overcounts; list them by hand instead."
+    },
+    {
+     "type": "thm",
+     "name": "Triangles from the trace",
+     "text": "For a simple graph, trace(A³) = 6 · (number of triangles).",
+     "proof": [
+      {
+       "type": "p",
+       "text": "(A³)<sub>ii</sub> counts closed walks i → j → k → i; with no loops, i, j, k are distinct and form a triangle. Each triangle is counted from each of its 3 vertices in 2 directions. ∎"
+      }
+     ]
+    },
+    {
+     "type": "example",
+     "title": "Walks in K₄",
+     "prompt": "In K₄, how many walks of length 2 join two different vertices? Of length 3? How many closed walks of length 3 start at a given vertex?",
+     "steps": [
+      "A² has 3 on the diagonal (go out and back along any of 3 edges) and 2 off it (through either of the other two vertices).",
+      "A³ = A² · A: off-diagonal entries 3 + 2 + 2 = 7, diagonal entries 2 + 2 + 2 = 6.",
+      "Check the diagonal: u lies on 3 triangles, each traversed 2 ways: 6."
+     ],
+     "answer": "2; 7; 6"
+    }
+   ]
+  }
+ ],
+ "cards": [
+  {
+   "front": "What is a graph? Simple graph vs multigraph vs pseudograph vs directed graph?",
+   "back": [
+    {
+     "type": "formula",
+     "text": "G = (V, E): vertices and edges"
+    },
+    {
+     "type": "list",
+     "items": [
+      "<b>Simple:</b> undirected, no loops, no multiple edges.",
+      "<b>Multigraph:</b> multiple edges allowed, no loops.",
+      "<b>Pseudograph:</b> loops and multiple edges.",
+      "<b>Directed:</b> edges (u, v) have a direction; a simple digraph is exactly a relation on V."
+     ]
+    },
+    {
+     "type": "warn",
+     "text": "“Graph” on an exam usually means simple unless stated."
+    }
+   ]
+  },
+  {
+   "front": "How many labeled simple graphs are there on n vertices?",
+   "back": [
+    {
+     "type": "formula",
+     "text": "2<sup>C(n,2)</sup>"
+    },
+    {
+     "type": "p",
+     "text": "Each of the C(n, 2) possible edges is in or out."
+    },
+    {
+     "type": "p",
+     "text": "n = 4: 2⁶ = 64. Up to isomorphism only 11 (and 4 for n = 3)."
+    }
+   ]
+  },
+  {
+   "front": "What is the degree of a vertex? Isolated? Pendant?",
+   "back": [
+    {
+     "type": "p",
+     "text": "deg(v) = number of edges at v, with a <b>loop counting twice</b>. deg 0: isolated. deg 1: pendant. N(v) = set of neighbors."
+    }
+   ]
+  },
+  {
+   "front": "State and prove the handshaking theorem.",
+   "back": [
+    {
+     "type": "formula",
+     "text": "Σ deg(v) = 2|E|"
+    },
+    {
+     "type": "p",
+     "text": "Count edge-ends. Each edge has 2 ends, so 2|E| ends. deg(v) counts the ends at v (a loop puts both ends at v). Summing over v counts each end once. ∎"
+    },
+    {
+     "type": "p",
+     "text": "Degrees 3, 3, 2, 2, 2 → 6 edges. 9 vertices of degree 4 → 18 edges."
+    }
+   ]
+  },
+  {
+   "front": "Why does every graph have an even number of odd-degree vertices?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Σ deg = 2|E| is even. The even degrees add to something even, so the odd degrees must add to something even. A sum of odd numbers is even only when there are evenly many of them. ∎"
+    },
+    {
+     "type": "p",
+     "text": "11 people each shaking hands with exactly 3 others: sum 33 is odd, impossible."
+    }
+   ]
+  },
+  {
+   "front": "Is there a simple graph with degrees 5, 5, 4, 3, 2, 1?",
+   "back": [
+    {
+     "type": "p",
+     "text": "<b>No</b>, even though the sum 20 is even. With 6 vertices, degree 5 means adjacent to everyone. Two such vertices give every vertex degree ≥ 2, contradicting the 1."
+    },
+    {
+     "type": "warn",
+     "text": "Even sum is necessary, not sufficient. Also check degree ≤ n − 1 and what full-degree vertices force."
+    }
+   ]
+  },
+  {
+   "front": "Is there a simple graph with degrees 3, 3, 3, 1?",
+   "back": [
+    {
+     "type": "p",
+     "text": "<b>No.</b> Sum 10 is even, but on 4 vertices degree 3 means adjacent to all others. Three such vertices are each adjacent to the fourth, giving it degree 3, not 1."
+    }
+   ]
+  },
+  {
+   "front": "A simple graph: 10 vertices, 4 of degree 4, the rest of degree d, 17 edges. Find d.",
+   "back": [
+    {
+     "type": "formula",
+     "text": "2·17 = 4·4 + 6d"
+    },
+    {
+     "type": "p",
+     "text": "34 = 16 + 6d, so <b>d = 3</b>."
+    }
+   ]
+  },
+  {
+   "front": "What are in-degree and out-degree, and what do they sum to?",
+   "back": [
+    {
+     "type": "formula",
+     "text": "Σ deg⁻(v) = Σ deg⁺(v) = |E|"
+    },
+    {
+     "type": "p",
+     "text": "deg⁻ counts edges ending at v; deg⁺ counts edges starting at v. Each edge has one start and one end. A loop adds 1 to each."
+    },
+    {
+     "type": "p",
+     "text": "Edges (1,2), (1,3), (2,3), (3,1), (3,4), (4,4): out 2, 1, 2, 1; in 1, 1, 2, 2; both sum to 6."
+    }
+   ]
+  },
+  {
+   "front": "Vertices and edges of Kₙ, Cₙ, Wₙ, Qₙ, Kₘ,ₙ?",
+   "back": [
+    {
+     "type": "list",
+     "items": [
+      "Kₙ: n vertices, n(n−1)/2 edges.",
+      "Cₙ (n ≥ 3): n, n.",
+      "Wₙ: <b>n + 1</b> vertices (hub), 2n edges.",
+      "Qₙ: 2ⁿ vertices, n·2ⁿ⁻¹ edges.",
+      "Kₘ,ₙ: m + n vertices, mn edges."
+     ]
+    },
+    {
+     "type": "p",
+     "text": "K₇: 21. W₆: 12. Q₄: 32. Q₅: 80. K₄,₆: 24."
+    }
+   ]
+  },
+  {
+   "front": "What is the degree sequence of K₃,₄? Check handshaking.",
+   "back": [
+    {
+     "type": "p",
+     "text": "The 3 vertices on one side have degree 4; the 4 on the other have degree 3: 4, 4, 4, 3, 3, 3, 3."
+    },
+    {
+     "type": "formula",
+     "text": "sum 24 = 2 · 12 = 2 · (3 · 4)"
+    }
+   ]
+  },
+  {
+   "front": "What is the n-cube Qₙ, and why does it have n·2ⁿ⁻¹ edges?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Vertices: bit strings of length n. Edges: strings differing in exactly one bit."
+    },
+    {
+     "type": "p",
+     "text": "Each of the 2ⁿ vertices has n neighbors (flip one of n bits). Handshaking: |E| = n·2ⁿ / 2 = n·2ⁿ⁻¹."
+    },
+    {
+     "type": "p",
+     "text": "Q₃ is the cube: 8 vertices, 12 edges."
+    }
+   ]
+  },
+  {
+   "front": "What does bipartite mean? How is it related to coloring?",
+   "back": [
+    {
+     "type": "formula",
+     "text": "V = V₁ ∪ V₂, every edge joins V₁ to V₂"
+    },
+    {
+     "type": "p",
+     "text": "Equivalently: color vertices with 2 colors so every edge joins different colors."
+    },
+    {
+     "type": "p",
+     "text": "Kₘ,ₙ, Qₙ (even vs odd number of 1s), even cycles."
+    }
+   ]
+  },
+  {
+   "front": "State and justify the odd-cycle test for bipartite graphs.",
+   "back": [
+    {
+     "type": "formula",
+     "text": "bipartite ⟺ no cycle of odd length"
+    },
+    {
+     "type": "p",
+     "text": "<b>⇒</b> Colors alternate around a cycle, so returning to the start takes an even number of steps."
+    },
+    {
+     "type": "p",
+     "text": "<b>⇐</b> In each component, color by parity of distance from a fixed vertex v. A same-color edge xy would close an odd walk v→x→y→v, which contains an odd cycle."
+    }
+   ]
+  },
+  {
+   "front": "Which of Cₙ, Kₙ, Wₙ, Qₙ are bipartite?",
+   "back": [
+    {
+     "type": "list",
+     "items": [
+      "Cₙ: iff n is even.",
+      "Kₙ: iff n ≤ 2.",
+      "Wₙ: never (hub + two neighboring rim vertices = triangle).",
+      "Qₙ: always (parity of number of 1s)."
+     ]
+    },
+    {
+     "type": "warn",
+     "text": "A chord joining opposite vertices of C₆ keeps it bipartite; a chord joining vertices two apart makes a triangle."
+    }
+   ]
+  },
+  {
+   "front": "How do you test whether a graph is bipartite by hand?",
+   "back": [
+    {
+     "type": "list",
+     "items": [
+      "Color one vertex red; its neighbors blue; their neighbors red; and so on.",
+      "A conflict (an edge between same colors) exhibits an odd cycle: not bipartite.",
+      "No conflict: the colors are the two sides."
+     ]
+    },
+    {
+     "type": "p",
+     "text": "Max edges in a bipartite graph on 10 vertices: m(10 − m) ≤ 25, so 25 (K₅,₅)."
+    }
+   ]
+  },
+  {
+   "front": "What certificate proves a graph IS bipartite, and what proves it is NOT?",
+   "back": [
+    {
+     "type": "list",
+     "items": [
+      "<b>Is:</b> exhibit the two sides (a 2-coloring) and note every edge crosses.",
+      "<b>Is not:</b> exhibit one odd cycle."
+     ]
+    },
+    {
+     "type": "p",
+     "text": "Möbius ladder (8-cycle 0–7 plus edges i–(i+4)): 0–1–2–3–4–0 is a 5-cycle, so not bipartite."
+    }
+   ]
+  },
+  {
+   "front": "What is a complete matching, and what does Hall’s theorem say?",
+   "back": [
+    {
+     "type": "p",
+     "text": "A matching is a set of edges with no shared endpoints. In a bipartite graph, a complete matching from V₁ matches every vertex of V₁."
+    },
+    {
+     "type": "formula",
+     "text": "exists ⟺ |N(A)| ≥ |A| for every A ⊆ V₁"
+    },
+    {
+     "type": "p",
+     "text": "“Only if”: A’s matched partners are |A| distinct neighbors of A."
+    }
+   ]
+  },
+  {
+   "front": "Subgraph vs induced subgraph; G − e vs G − v; union; complement?",
+   "back": [
+    {
+     "type": "list",
+     "items": [
+      "<b>Subgraph:</b> some vertices and some edges among them. <b>Induced:</b> chosen vertices with <b>all</b> edges between them.",
+      "G − e keeps all vertices; G − v also deletes v’s edges.",
+      "G₁ ∪ G₂: union of vertex sets and of edge sets.",
+      "Complement Ḡ: same vertices, exactly the non-edges. |E(G)| + |E(Ḡ)| = C(n, 2)."
+     ]
+    },
+    {
+     "type": "p",
+     "text": "Complement of C₆ has 15 − 6 = 9 edges. Wₙ − hub = Cₙ."
+    }
+   ]
+  },
+  {
+   "front": "Adjacency list vs adjacency matrix vs incidence matrix?",
+   "back": [
+    {
+     "type": "list",
+     "items": [
+      "<b>Adjacency list:</b> each vertex with its neighbors.",
+      "<b>Adjacency matrix:</b> n × n, aᵢⱼ = number of edges vᵢ–vⱼ. Symmetric for undirected; row sum = degree (loops: 1 on the diagonal).",
+      "<b>Incidence matrix:</b> n × |E|, entry 1 if edge eⱼ touches vᵢ; each column has two 1s."
+     ]
+    },
+    {
+     "type": "warn",
+     "text": "For digraphs aᵢⱼ = 1 means vᵢ → vⱼ; row sums are out-degrees, column sums in-degrees."
+    }
+   ]
+  },
+  {
+   "front": "When are two graphs isomorphic?",
+   "back": [
+    {
+     "type": "formula",
+     "text": "bijection f : V₁ → V₂ with uv ∈ E₁ ⟺ f(u)f(v) ∈ E₂"
+    },
+    {
+     "type": "p",
+     "text": "A renaming of vertices that turns one edge set exactly into the other. Drawings can be misleading: a pentagram is C₅."
+    }
+   ]
+  },
+  {
+   "front": "How do you prove two graphs ARE isomorphic?",
+   "back": [
+    {
+     "type": "list",
+     "items": [
+      "Check vertex count, edge count, degree sequence agree.",
+      "Match special vertices first (unique degrees, their neighbors).",
+      "Write f explicitly.",
+      "Check every edge maps to an edge (equal edge counts then finish it)."
+     ]
+    },
+    {
+     "type": "p",
+     "text": "Square abcd + pendant ae vs edges 13, 35, 52, 21, 42: a↦2, e↦4, b↦1, c↦3, d↦5 works."
+    },
+    {
+     "type": "warn",
+     "text": "Equal degree sequences alone prove nothing."
+    }
+   ]
+  },
+  {
+   "front": "How do you prove two graphs are NOT isomorphic? List useful invariants.",
+   "back": [
+    {
+     "type": "p",
+     "text": "Find one invariant that differs."
+    },
+    {
+     "type": "list",
+     "items": [
+      "# vertices, # edges, degree sequence",
+      "# cycles of each length (triangles!)",
+      "connected / # components",
+      "bipartite or not",
+      "degrees of adjacent vertices"
+     ]
+    },
+    {
+     "type": "warn",
+     "text": "“No bijection I tried worked” is not a proof."
+    }
+   ]
+  },
+  {
+   "front": "Are K₃,₃ and the triangular prism isomorphic?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Both have 6 vertices, 9 edges, all degrees 3. But the prism has a triangle and K₃,₃ is bipartite (no odd cycles). <b>Not isomorphic.</b>"
+    },
+    {
+     "type": "p",
+     "text": "Likewise C₆ vs two disjoint triangles: same degrees, but connected vs 2 components."
+    }
+   ]
+  },
+  {
+   "front": "What is a path, circuit, simple path? When is a graph connected?",
+   "back": [
+    {
+     "type": "list",
+     "items": [
+      "<b>Path</b> of length n: n edges leading x₀ – x₁ – ⋯ – xₙ (vertices and edges may repeat).",
+      "<b>Circuit:</b> a path of length ≥ 1 ending where it started.",
+      "<b>Simple:</b> no repeated edge.",
+      "<b>Connected:</b> a path between every two vertices."
+     ]
+    },
+    {
+     "type": "p",
+     "text": "In a connected graph, a shortest path between two vertices is automatically simple."
+    }
+   ]
+  },
+  {
+   "front": "What are connected components, and why are they equivalence classes?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Components are the maximal connected subgraphs. “u = v or there is a path u to v” is reflexive, symmetric (reverse the path) and transitive (glue paths), so its classes partition V: those are the components."
+    },
+    {
+     "type": "warn",
+     "text": "An isolated vertex is a component by itself."
+    }
+   ]
+  },
+  {
+   "front": "What are cut vertices and cut edges? When is an edge a cut edge?",
+   "back": [
+    {
+     "type": "p",
+     "text": "<b>Cut vertex / cut edge:</b> removing it increases the number of components."
+    },
+    {
+     "type": "formula",
+     "text": "e is a cut edge ⟺ e lies on no cycle"
+    },
+    {
+     "type": "p",
+     "text": "Two triangles 1-2-3 and 4-5-6 joined by edge 3–4: cut vertices 3, 4; cut edge 3–4. Star K₁,₄: cut vertex = center; all 4 edges are cut edges."
+    },
+    {
+     "type": "warn",
+     "text": "A pendant vertex is never a cut vertex, even though its edge is a cut edge."
+    }
+   ]
+  },
+  {
+   "front": "What are vertex connectivity κ(G) and edge connectivity λ(G)?",
+   "back": [
+    {
+     "type": "p",
+     "text": "κ(G): fewest vertices whose removal disconnects G (or leaves a single vertex). λ(G): fewest edges whose removal disconnects G."
+    },
+    {
+     "type": "formula",
+     "text": "κ(G) ≤ λ(G) ≤ min degree; κ(Kₙ) = λ(Kₙ) = n − 1"
+    }
+   ]
+  },
+  {
+   "front": "Strongly vs weakly connected digraphs? Strong components?",
+   "back": [
+    {
+     "type": "list",
+     "items": [
+      "<b>Strongly:</b> directed paths both ways between every pair.",
+      "<b>Weakly:</b> the underlying undirected graph is connected."
+     ]
+    },
+    {
+     "type": "p",
+     "text": "Strong components: classes of mutual reachability."
+    },
+    {
+     "type": "p",
+     "text": "1→2→3→1, 3→4: strong components {1, 2, 3}, {4}; weakly connected."
+    }
+   ]
+  },
+  {
+   "front": "Digraph on {1,…,5}: 1→2, 2→3, 3→4, 4→2, 5→4, 5→1. Strong components? Weakly connected?",
+   "back": [
+    {
+     "type": "p",
+     "text": "2→3→4→2 is a cycle, so {2, 3, 4} is one strong component. Nothing returns to 1 or 5: {1} and {5} are components by themselves."
+    },
+    {
+     "type": "p",
+     "text": "Weakly connected: <b>yes</b>, ignoring directions everything is joined."
+    }
+   ]
+  },
+  {
+   "front": "How does the adjacency matrix count paths? Why?",
+   "back": [
+    {
+     "type": "formula",
+     "text": "(Aʳ)ᵢⱼ = # paths of length r from vᵢ to vⱼ"
+    },
+    {
+     "type": "p",
+     "text": "Induction: a path of length r + 1 is a length-r path to some vₖ plus an edge vₖ vⱼ, so the count is Σₖ (Aʳ)ᵢₖ aₖⱼ = (Aʳ⁺¹)ᵢⱼ."
+    },
+    {
+     "type": "warn",
+     "text": "These paths may repeat vertices; Aʳ overcounts simple paths. Use ordinary (not Boolean) multiplication."
+    }
+   ]
+  },
+  {
+   "front": "Square 1–2–3–4–1 plus diagonal 1–3: paths of length 2 from 2 to 4? Number of triangles from A³?",
+   "back": [
+    {
+     "type": "p",
+     "text": "(A²)₂₄ = 2: 2–1–4 and 2–3–4. Diagonal of A² = degrees 3, 2, 3, 2."
+    },
+    {
+     "type": "formula",
+     "text": "# triangles = trace(A³) / 6"
+    },
+    {
+     "type": "p",
+     "text": "trace(A³) = 4 + 2 + 4 + 2 = 12, so 2 triangles (123, 134). Each triangle gives 6 closed walks: 3 starts × 2 directions."
+    },
+    {
+     "type": "p",
+     "text": "K₄: (A³)ᵤᵥ = 7 for u ≠ v, 6 on the diagonal."
+    }
+   ]
+  }
+ ],
+ "hard": [
+  {
+   "title": "Five degree sequences: graphical or not?",
+   "level": "hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "Does a simple graph exist with each degree sequence? Prove your answer each time."
+    },
+    {
+     "type": "list",
+     "items": [
+      "(a) 5, 5, 4, 3, 3, 2",
+      "(b) 4, 4, 4, 1, 1",
+      "(c) 5, 4, 3, 2, 1, 1",
+      "(d) 3, 3, 3, 3, 3",
+      "(e) 6, 5, 5, 4, 3, 3, 2"
+     ]
+    },
+    {
+     "type": "p",
+     "text": "Also: a 4-regular simple graph has 10 edges. How many vertices does it have?"
+    }
+   ],
+   "answer": "(a) yes (b) no (c) no (d) no (odd sum) (e) yes; 4-regular with 10 edges has 5 vertices (K₅)",
+   "solution": [
+    {
+     "type": "p",
+     "text": "Method (Havel–Hakimi): remove the largest degree d, subtract 1 from the next d degrees, and repeat. The sequence is graphical iff this reaches all zeros without a negative number or running short."
+    },
+    {
+     "type": "list",
+     "items": [
+      "(a) <b>Yes.</b> 5,5,4,3,3,2 → 4,3,2,2,1 → 2,1,1,0 → 0,0,0.",
+      "(b) <b>No.</b> With 5 vertices, a degree-4 vertex is adjacent to everyone. Three of them make each degree-1 vertex adjacent to at least 3 vertices.",
+      "(c) <b>No.</b> The degree-5 vertex is adjacent to all others. Removing it leaves 3,2,1,0,0, and the 3 needs three neighbors with positive degree but only two exist.",
+      "(d) <b>No.</b> The degree sum 15 is odd (handshaking).",
+      "(e) <b>Yes.</b> → 4,4,3,2,2,1 → 3,2,1,1,1 → 1,0,0,1 → 0,0,0."
+     ]
+    },
+    {
+     "type": "p",
+     "text": "4-regular with 10 edges: 2·10 = 4n, so <b>n = 5</b> (it is K<sub>5</sub>)."
+    },
+    {
+     "type": "tip",
+     "text": "<b>Tests:</b> even degree sum is necessary but not sufficient. <b>Common mistake:</b> answering “yes” for (b) and (c) because their sums are even."
+    }
+   ]
+  },
+  {
+   "title": "Edge counts, bipartiteness and the n²/4 bound",
+   "level": "hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "Give the number of edges of K<sub>n</sub>, C<sub>n</sub>, W<sub>n</sub>, Q<sub>n</sub>, K<sub>m,n</sub>, and decide which of them are bipartite. Prove that Q<sub>n</sub> is bipartite, and that a bipartite graph on n vertices has at most ⌊n²/4⌋ edges."
+    }
+   ],
+   "answer": "Kₙ: n(n−1)/2, iff n ≤ 2; Cₙ: n, iff n even; Wₙ: 2n, never; Qₙ: n·2ⁿ⁻¹, always (parity of 1s); Kₘ,ₙ: mn, always; bipartite ⇒ ≤ a(n−a) ≤ ⌊n²/4⌋ edges",
+   "solution": [
+    {
+     "type": "table",
+     "head": [
+      "Graph",
+      "edges",
+      "bipartite?"
+     ],
+     "rows": [
+      [
+       "K<sub>n</sub>",
+       "n(n−1)/2",
+       "iff n ≤ 2"
+      ],
+      [
+       "C<sub>n</sub>",
+       "n",
+       "iff n even"
+      ],
+      [
+       "W<sub>n</sub> (n+1 vertices)",
+       "2n",
+       "never (it has triangles)"
+      ],
+      [
+       "Q<sub>n</sub>",
+       "n·2<sup>n−1</sup>",
+       "always"
+      ],
+      [
+       "K<sub>m,n</sub>",
+       "mn",
+       "always"
+      ]
+     ]
+    },
+    {
+     "type": "p",
+     "text": "<b>Q<sub>n</sub>.</b> Each of the 2<sup>n</sup> vertices has degree n, so by handshaking there are n2<sup>n</sup>/2 edges. Split the vertices by the parity of their number of 1s. Adjacent strings differ in exactly one bit, so they have opposite parity. (Q<sub>4</sub> has 32 edges.)"
+    },
+    {
+     "type": "p",
+     "text": "<b>Bound.</b> If the parts have sizes a and n − a, there are at most a(n − a) ≤ n²/4 edges (AM–GM, or complete the square). The edge count is an integer, so it is ≤ ⌊n²/4⌋, and K<sub>⌊n/2⌋,⌈n/2⌉</sub> attains it."
+    },
+    {
+     "type": "tip",
+     "text": "<b>Tests:</b> handshaking to count edges, and finding an explicit 2-coloring. <b>Common mistake:</b> W<sub>n</sub> has n + 1 vertices in Rosen, and 2n edges, not 2(n + 1)."
+    }
+   ]
+  },
+  {
+   "title": "Prism vs K₃,₃, self-complementary C₅, graphs on 4 vertices",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "list",
+     "items": [
+      "(a) K<sub>3,3</sub> and the triangular prism (two triangles joined by three parallel edges) both have 6 vertices, 9 edges and every degree equal to 3. Are they isomorphic?",
+      "(b) Prove that the complement of C<sub>5</sub> is isomorphic to C<sub>5</sub> by giving an explicit isomorphism.",
+      "(c) How many simple graphs on 4 vertices are there up to isomorphism?"
+     ]
+    }
+   ],
+   "answer": "(a) not isomorphic (prism has a triangle) (b) f(i) = 2i mod 5 (c) 11",
+   "solution": [
+    {
+     "type": "p",
+     "text": "(a) <b>No.</b> The prism contains a triangle, a cycle of length 3. K<sub>3,3</sub> is bipartite, so it has no odd cycles. Isomorphisms preserve cycles of each length."
+    },
+    {
+     "type": "p",
+     "text": "(b) C<sub>5</sub> has edges {i, i+1} (mod 5), and its complement has edges {i, i+2}. Let f(i) = 2i mod 5, which is a bijection since 2 is invertible mod 5. f sends the edge {i, i+1} to {2i, 2i+2}, a pair differing by 2, which is an edge of the complement. Both graphs have 5 edges and f is injective on edges, so it is an isomorphism."
+    },
+    {
+     "type": "p",
+     "text": "(c) By number of edges: 0:1, 1:1, 2:2 (sharing a vertex, or disjoint), 3:3 (triangle, path P<sub>4</sub>, star K<sub>1,3</sub>), 4:2 (C<sub>4</sub>, triangle plus a pendant edge), 5:1, 6:1. The counts for 4–6 edges follow from 2–0 by taking complements. <b>11</b>."
+    },
+    {
+     "type": "tip",
+     "text": "<b>Tests:</b> finding an invariant that tells graphs apart, or an explicit map that matches them. <b>Common mistake:</b> “same degree sequence, so isomorphic”. Part (a) refutes it."
+    }
+   ]
+  },
+  {
+   "title": "Walk recurrences in Kₘ and walks in C₆",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "list",
+     "items": [
+      "(a) In K<sub>m</sub>, let s<sub>k</sub> be the number of walks of length k from a vertex u back to u, and w<sub>k</sub> the number from u to a fixed v ≠ u. Find recurrences for them, and prove w<sub>k</sub> = ((m−1)<sup>k</sup> − (−1)<sup>k</sup>)/m and s<sub>k</sub> = ((m−1)<sup>k</sup> + (m−1)(−1)<sup>k</sup>)/m. Evaluate both for K<sub>4</sub> with k = 5.",
+      "(b) In C<sub>6</sub> (vertices 0–5), how many walks of length 6 go from 0 to 3? From 0 to 0?"
+     ]
+    }
+   ],
+   "answer": "(a) K₄, k = 5: w = 61, s = 60 (b) 0 walks 0→3; 22 walks 0→0",
+   "solution": [
+    {
+     "type": "p",
+     "text": "(a) Classify walks by their second-to-last vertex. A walk ending at u comes from one of the m − 1 other vertices: s<sub>k+1</sub> = (m − 1)w<sub>k</sub>. A walk ending at v comes from u or from one of the other m − 2 vertices: w<sub>k+1</sub> = s<sub>k</sub> + (m − 2)w<sub>k</sub>. Bases: s<sub>0</sub> = 1, w<sub>0</sub> = 0, and the formulas give (1 + m − 1)/m = 1 and 0. ✓"
+    },
+    {
+     "type": "p",
+     "text": "Induction step: (m−1)w<sub>k</sub> = ((m−1)<sup>k+1</sup> + (m−1)(−1)<sup>k+1</sup>)/m ✓, and s<sub>k</sub> + (m−2)w<sub>k</sub> = [(m−1)<sup>k</sup>(1 + m − 2) + (−1)<sup>k</sup>(m − 1 − m + 2)]/m = ((m−1)<sup>k+1</sup> + (−1)<sup>k</sup>)/m ✓."
+    },
+    {
+     "type": "p",
+     "text": "K<sub>4</sub>, k = 5: <b>w = (243 + 1)/4 = 61</b> and <b>s = (243 − 3)/4 = 60</b>. These are the entries of A⁵."
+    },
+    {
+     "type": "p",
+     "text": "(b) 0 → 3: <b>0</b>. C<sub>6</sub> is bipartite, so every step changes the parity of the vertex, and after 6 steps you are at an even vertex. 0 → 0: each step is ±1, and the total must be ≡ 0 (mod 6). That happens with three +1s and three −1s (C(6,3) = 20) or six steps in the same direction (2). <b>22</b>."
+    },
+    {
+     "type": "tip",
+     "text": "<b>Tests:</b> (Aᵏ)<sub>uv</sub> counts walks, and you can find it by a recurrence instead of multiplying matrices. <b>Common mistake:</b> counting paths (no repeated vertices) instead of walks."
+    }
+   ]
+  },
+  {
+   "title": "Triangles from trace(A³)",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "Prove that for a simple graph with adjacency matrix A, trace(A³) = 6 × (number of triangles). Use this to count the triangles in W<sub>5</sub>, given trace(A³) = 30, and in K<sub>4</sub>."
+    }
+   ],
+   "answer": "trace(A³) = 6T; W₅ has 5 triangles, K₄ has 4",
+   "solution": [
+    {
+     "type": "p",
+     "text": "(A³)<sub>ii</sub> counts closed walks of length 3 starting at i: i → j → k → i. There are no loops, so j ≠ i and k ≠ j, k ≠ i. So {i, j, k} is a triangle. Each triangle through i gives exactly 2 such walks (the two directions). Summing over i, each triangle is counted for each of its 3 vertices, twice each: trace(A³) = 6T. ∎"
+    },
+    {
+     "type": "p",
+     "text": "W<sub>5</sub>: T = 30/6 = <b>5</b> (the hub with each rim edge). K<sub>4</sub>: trace(A³) = 4·6 = 24, so T = 4 = C(4,3)."
+    },
+    {
+     "type": "tip",
+     "text": "<b>Tests:</b> reading matrix entries as walk counts and handling the overcount. <b>Common mistake:</b> dividing by 3 (forgetting direction) or by 2 (forgetting the starting vertex)."
+    }
+   ]
+  },
+  {
+   "title": "Vertex and edge connectivity of W₅, K₂,₅, Q₃",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "Find the vertex connectivity κ and edge connectivity λ of W<sub>5</sub>, K<sub>2,5</sub> and Q<sub>3</sub>, with justification. (Recall κ ≤ λ ≤ minimum degree.)"
+    }
+   ],
+   "answer": "W₅: κ = λ = 3; K₂,₅: κ = λ = 2; Q₃: κ = λ = 3",
+   "solution": [
+    {
+     "type": "p",
+     "text": "<b>W<sub>5</sub>:</b> κ = λ = 3. Removing the hub and two non-adjacent rim vertices disconnects it, so κ ≤ 3. Any 2 removals leave it connected: if the hub stays, it reaches everything; if the hub goes, removing one rim vertex leaves a path. So κ = 3, and κ ≤ λ ≤ δ = 3 gives λ = 3."
+    },
+    {
+     "type": "p",
+     "text": "<b>K<sub>2,5</sub>:</b> κ = λ = 2. Removing the 2-vertex side disconnects it, and removing one vertex can’t. The minimum degree is 2, so λ ≤ 2, and λ ≥ κ = 2."
+    },
+    {
+     "type": "p",
+     "text": "<b>Q<sub>3</sub>:</b> κ = λ = 3. Think of Q<sub>3</sub> as a top 4-cycle and a bottom 4-cycle joined by 4 vertical edges. Remove any 2 vertices. If both are on top, the bottom cycle is intact and every remaining top vertex has its vertical edge down. If one is on each level, each level minus one vertex is a path, and at most 2 of the 4 vertical edges are destroyed, so at least one connects the two paths. Hence κ ≥ 3, and κ ≤ λ ≤ δ = 3."
+    },
+    {
+     "type": "tip",
+     "text": "<b>Tests:</b> an upper bound from an explicit cut plus a lower bound by case analysis. <b>Common mistake:</b> giving only the cut. To show κ ≥ 3 you have to argue that no smaller cut exists."
+    }
+   ]
+  },
+  {
+   "title": "More than C(n−1, 2) edges forces connectivity",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "Prove that a simple graph with n vertices and more than C(n − 1, 2) edges is connected. Show that the bound is sharp."
+    }
+   ],
+   "answer": "A disconnected graph has ≤ C(n,2) − a(n−a) ≤ C(n−1,2) edges; K₍ₙ₋₁₎ plus an isolated vertex shows sharpness.",
+   "solution": [
+    {
+     "type": "p",
+     "text": "Suppose G is disconnected. Then V splits into nonempty sets of sizes a and n − a (1 ≤ a ≤ n − 1) with no edges between them. So"
+    },
+    {
+     "type": "formula",
+     "text": "|E| ≤ C(a,2) + C(n−a,2) = C(n,2) − a(n − a)"
+    },
+    {
+     "type": "p",
+     "text": "Also a(n − a) ≥ n − 1, because (a − 1)(n − a − 1) ≥ 0 expands to exactly this. So |E| ≤ C(n,2) − (n − 1) = C(n − 1, 2), a contradiction. ∎"
+    },
+    {
+     "type": "p",
+     "text": "<b>Sharp:</b> K<sub>n−1</sub> plus an isolated vertex has exactly C(n − 1, 2) edges and is disconnected."
+    },
+    {
+     "type": "tip",
+     "text": "<b>Tests:</b> the contrapositive plus an extremal bound. <b>Common mistake:</b> assuming the worst case is two equal halves. It is actually the most lopsided split, a = 1."
+    }
+   ]
+  },
+  {
+   "title": "Self-complementary graphs need n ≡ 0, 1 (mod 4)",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "A graph is <i>self-complementary</i> if it is isomorphic to its complement. Prove that a self-complementary graph on n vertices has n ≡ 0 or 1 (mod 4), and give examples for n = 4 and n = 5."
+    }
+   ],
+   "answer": "|E| = n(n−1)/4 forces 4 | n(n−1); examples P₄ (n = 4) and C₅ (n = 5)",
+   "solution": [
+    {
+     "type": "p",
+     "text": "Isomorphic graphs have the same number of edges, and |E(G)| + |E(Ḡ)| = C(n, 2). So |E| = n(n − 1)/4, which means 4 | n(n − 1). One of n and n − 1 is odd, so 4 divides the other one: n ≡ 0 or 1 (mod 4). ∎"
+    },
+    {
+     "type": "p",
+     "text": "Examples: the path P<sub>4</sub> (its complement is again a P<sub>4</sub>), and C<sub>5</sub> (problem P3b). So no self-complementary graph has 6 or 7 vertices."
+    },
+    {
+     "type": "tip",
+     "text": "<b>Tests:</b> using a simple invariant (the edge count) together with divisibility. <b>Common mistake:</b> only proving n(n − 1)/2 is even. You need 4 | n(n − 1)."
+    }
+   ]
+  },
+  {
+   "title": "Proof: bipartite iff no odd cycle",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "Prove that a graph is bipartite <b>if and only if</b> it has no cycle of odd length."
+    }
+   ],
+   "answer": "Colours alternate on cycles (⇒); colour by distance parity, an odd closed walk contains an odd cycle (⇐).",
+   "solution": [
+    {
+     "type": "p",
+     "text": "<b>(⇒)</b> Along any cycle, the colors alternate, because each edge joins the two parts. Returning to the starting color takes an even number of steps."
+    },
+    {
+     "type": "p",
+     "text": "<b>Lemma.</b> Every closed walk of odd length contains an odd cycle. Strong induction on the length L. If the walk repeats no vertex except at the start and end, it is a cycle (L ≥ 3, since there are no loops and L is odd). Otherwise some vertex appears twice in the middle. Split the walk there into two shorter closed walks whose lengths add up to L. One of them has odd length, and it contains an odd cycle by the hypothesis."
+    },
+    {
+     "type": "p",
+     "text": "<b>(⇐)</b> Assume no odd cycle. It is enough to 2-color each connected component. Fix a vertex v and color u by the parity of d(v, u). Suppose some edge xy had d(v,x) ≡ d(v,y) (mod 2). Then a shortest path v → x, the edge x → y, and a shortest path y → v form a closed walk of length d(v,x) + 1 + d(v,y), which is odd. By the lemma it contains an odd cycle, a contradiction. So every edge joins different colors. ∎"
+    },
+    {
+     "type": "tip",
+     "text": "<b>Tests:</b> a BFS-distance 2-coloring, and getting from an odd closed walk to an odd cycle. <b>Common mistake:</b> claiming that the closed walk is itself a cycle. It can repeat vertices, which is why the lemma is needed."
+    }
+   ]
+  }
+ ],
+ "keyFacts": [
+  "Handshaking: Σ deg(v) = 2|E|; the number of odd-degree vertices is even",
+  "Digraphs: Σ deg⁻(v) = Σ deg⁺(v) = |E|",
+  "|E|: Kₙ n(n−1)/2, Cₙ n, Wₙ 2n (n + 1 vertices), Qₙ n·2ⁿ⁻¹ (2ⁿ vertices), Kₘ,ₙ mn",
+  "Bipartite ⟺ 2-colourable ⟺ no odd cycle; Cₙ bipartite iff n even, Qₙ and Kₘ,ₙ always, Wₙ never",
+  "Even degree sum is necessary, not sufficient: also degree ≤ n − 1 and Havel–Hakimi",
+  "Isomorphic: give a bijection and check every edge; not isomorphic: one differing invariant",
+  "Invariants: |V|, |E|, degree sequence, cycle counts, bipartite, connected components",
+  "Cut edge ⟺ lies on no cycle; κ(G) ≤ λ(G) ≤ minimum degree",
+  "(Aʳ)ᵢⱼ = number of walks of length r from i to j; trace(A³) = 6 · #triangles"
+ ]
+}

@@ -1,0 +1,1540 @@
+{
+ "id": "55-I",
+ "course": "55",
+ "title": "Counting: product/sum rules, pigeonhole, permutations & combinations",
+ "source": "Rosen 6.1–6.3 · Lec14",
+ "summary": "The basic counting toolkit: multiply for steps, add for disjoint cases, subtract overlaps, divide out overcounting, count the complement, and the pigeonhole principle for existence proofs. Permutations and combinations with restrictions (adjacent, apart, committees) are a large share of the counting on the final.",
+ "lesson": [
+  {
+   "title": "Product rule, sum rule and tree diagrams",
+   "blocks": [
+    {
+     "type": "tip",
+     "text": "Count without listing. Steps done one after another multiply. If you counted each outcome d times, divide by d. “Or” uses inclusion–exclusion. “At least one” is easiest as total minus none."
+    },
+    {
+     "type": "thm",
+     "name": "Product rule",
+     "text": "If a procedure breaks into k steps with n₁ ways to do step 1, n₂ ways to do step 2 (for each way of doing step 1), …, nₖ ways to do step k, then there are <b>n₁·n₂⋯nₖ</b> ways in total."
+    },
+    {
+     "type": "example",
+     "title": "Product rule in action",
+     "prompt": "Count: (a) hour-long weekday slots starting at 1, 2, 3 or 4 pm; (b) plates of the form digit, 3 letters, 3 digits; (c) ways to give 3 new faculty different offices out of 12; (d) orderings of the 26 letters; (e) subsets of an n-set; (f) one-to-one functions from an n-set to an m-set (m ≥ n).",
+     "steps": [
+      "<b>Weekday hour-long slots</b> starting at 1, 2, 3 or 4 pm: 5 days · 4 times = <b>20</b>.",
+      "<b>License plates:</b> digit, 3 letters, 3 digits: 10·26·26·26·10·10·10 = <b>175,760,000</b>.",
+      "<b>3 new faculty, 12 offices, all different:</b> 12·11·10 = <b>1320</b> (each choice removes an office).",
+      "<b>Orderings of all 26 letters:</b> 26·25·⋯·1 = 26!.",
+      "<b>Subsets of an n-element set:</b> each element is in or out: 2ⁿ.",
+      "<b>One-to-one functions</b> from an n-set to an m-set (m ≥ n): m(m − 1)⋯(m − n + 1)."
+     ],
+     "answer": "(a) 20 (b) 175,760,000 (c) 1320 (d) 26! (e) 2ⁿ (f) m(m − 1)⋯(m − n + 1)"
+    },
+    {
+     "type": "steps",
+     "title": "The product rule",
+     "items": [
+      "<b>Picture filling slots.</b> Draw one blank for each step: _ _ _.",
+      "<b>Write how many choices each slot has.</b> Fill the most restricted slot first (e.g. “can't be 0”, “must be odd”).",
+      "<b>Is repetition allowed?</b> Yes: every slot has the same n choices, so you get nʳ. No: each slot has one fewer choice than the one before, so n(n − 1)(n − 2)⋯.",
+      "<b>Check the count is the same no matter what you picked earlier.</b> If slot 3 has 8 choices in some cases and 9 in others, split into cases (and add), or fill the slots in a different order.",
+      "<b>Multiply.</b>",
+      "<b>Sanity check:</b> shrink the problem (2 letters instead of 26, length 2 instead of 6) and list everything by hand. Your formula should give the same number."
+     ]
+    },
+    {
+     "type": "tip",
+     "text": "An appetizer <b>and</b> a main: multiply. Soup <b>or</b> salad: add (and subtract anything counted in both). Ordered picks when you only care about the group: divide out the orderings."
+    },
+    {
+     "type": "thm",
+     "name": "Sum rule",
+     "text": "If a task can be done in one of n₁ ways <b>or</b> in one of n₂ ways, and no way is in both groups, there are n₁ + n₂ ways. In set language: if A and B are disjoint, |A ∪ B| = |A| + |B|."
+    },
+    {
+     "type": "example",
+     "title": "Sum rule and product rule together",
+     "prompt": "A variable name is either a single letter, or a letter followed by one letter or digit. How many names are there? How many passwords are 6 or 8 digits long?",
+     "steps": [
+      "Split into disjoint cases by length.",
+      "Length 1: 26 names. Length 2: 26·36 = 936 (first a letter, then any of 26 + 10 symbols).",
+      "No name has both lengths, so add: 26 + 936 = 962.",
+      "Passwords: 10⁶ + 10⁸ (again disjoint cases by length)."
+     ],
+     "answer": "962 names; 10⁶ + 10⁸ passwords"
+    },
+    {
+     "type": "example",
+     "title": "Tree diagram",
+     "prompt": "Two players play until one has won 2 games (no ties). How many different sequences of game results are possible?",
+     "steps": [
+      "Draw a tree: each game branches into A wins / B wins, and a branch stops as soon as someone has 2 wins.",
+      "After game 1: A or B. After game 2: AA and BB end; AB and BA continue.",
+      "Game 3 splits AB into ABA, ABB and BA into BAA, BAB.",
+      "Leaves: AA, ABA, ABB, BAA, BAB, BB.",
+      "The product rule does not apply directly because the number of games depends on earlier results; the tree counts the leaves instead."
+     ],
+     "answer": "6 sequences (for “first to 3 wins” the same tree gives 20)"
+    },
+    {
+     "type": "tip",
+     "text": "Tree diagrams handle the case where later choices depend on earlier ones: each branch is one choice, each leaf one outcome. Count the leaves."
+    },
+    {
+     "type": "warn",
+     "text": "<b>Wrong:</b> 3-letter strings with no repeated letter = 26³. <b>Right:</b> 26·25·24. (Each letter you use is gone for the next slot. Ask “is repetition allowed?” before you multiply.)"
+    }
+   ]
+  },
+  {
+   "title": "Division rule: correcting for overcounting",
+   "blocks": [
+    {
+     "type": "thm",
+     "name": "Division rule",
+     "text": "If a procedure can be done in n ways and <b>exactly d of those ways give each outcome</b>, then there are <b>n/d</b> outcomes."
+    },
+    {
+     "type": "example",
+     "title": "Division rule in action",
+     "prompt": "Count (a) the 2-element subsets of {1, …, 9}, (b) the 7-element subsets of {1, …, 9}, (c) the ways to seat 8 people at a round table, where rotations count as the same seating.",
+     "steps": [
+      "<b>2-element subsets of {1, …, 9}:</b> pick x (9 ways), then y ≠ x (8 ways). Every subset {x, y} gets made twice, so 9·8/2 = <b>36</b>. (Or count by the smaller element: 8 + 7 + ⋯ + 1 = 36.)",
+      "<b>7-element subsets of {1, …, 9}:</b> 9·8·7·6·5·4·3 ordered picks, each subset counted 7! times, so (9·8⋯3)/7! = 9·8/2 = 36.",
+      "<b>8 people around a round table</b> (same if everyone has the same neighbors on each side): 8!/8 = 7! = <b>5040</b>, since each seating is counted once per rotation."
+     ],
+     "answer": "(a) 36 (b) 36 (c) 8!/8 = 7! = 5040"
+    },
+    {
+     "type": "steps",
+     "title": "The division rule",
+     "items": [
+      "<b>Count the easy way, with order.</b> Pretend the order matters and use the product rule. Call that n.",
+      "<b>Ask: how many of those orderings give the same final answer?</b> That is d. Examples: a pair {x, y} is made 2 ways; a round seating of 8 people is made 8 ways (one per rotation); an r-element subset is made r! ways.",
+      "<b>Check d is the same for every outcome.</b> The division rule needs <i>exactly</i> d each time.",
+      "<b>Divide: n/d.</b>",
+      "<b>Sanity check:</b> n/d must be a whole number. If you get a fraction, your d is wrong."
+     ]
+    },
+    {
+     "type": "example",
+     "title": "Division rule: splitting into pairs",
+     "prompt": "In how many ways can 6 people be split into 3 lab pairs? The pairs have no names: only who is with whom matters.",
+     "steps": [
+      "Line all 6 people up: 6! = 720 ways — <i>count with order first; positions 1–2, 3–4, 5–6 form the pairs</i>",
+      "Swap the two people inside a pair: same split — <i>2 orders per pair, 3 pairs, so 2³ = 8 lineups look the same</i>",
+      "Shuffle the order of the 3 pairs: same split — <i>3! = 6 more lineups look the same</i>",
+      "d = 2³·3! = 48 — <i>every split is made by exactly 48 lineups</i>",
+      "720/48 = 15 — <i>division rule n/d</i>",
+      "Check: person 1 has 5 partner choices, then the first person left on the list has 3, then 1 pair remains: 5·3·1 = 15 — <i>a second count with no overcounting at all</i>"
+     ],
+     "answer": "15"
+    },
+    {
+     "type": "warn",
+     "text": "<b>Wrong:</b> unordered pairs from {1, …, 9} with repeats allowed = 9·9/2. <b>Right:</b> 36 pairs with x ≠ y plus 9 pairs like {3, 3}, so 45. (Pairs {x, x} are made only 1 way, not 2. The division rule needs the same d for every outcome. A fraction like 81/2 is the warning sign.)"
+    }
+   ]
+  },
+  {
+   "title": "Subtraction rule and complement counting",
+   "blocks": [
+    {
+     "type": "thm",
+     "name": "Subtraction rule (inclusion–exclusion for two sets)",
+     "text": "For finite sets: <b>|A ∪ B| = |A| + |B| − |A ∩ B|</b>. |A| + |B| counts the overlap twice, so subtract it once. Use it when the question says “or.”"
+    },
+    {
+     "type": "example",
+     "title": "The subtraction rule in action",
+     "prompt": "Count (a) bit strings of length 4 that begin with 1 or end with 0, (b) 8-character passwords from 10 digits, 26 letters and 10 symbols with no symbol or no digit, (c) integers in 1..100 divisible by 2 or 3.",
+     "steps": [
+      "<b>Bit strings of length 4 that begin with 1 or end with 0:</b> 2³ + 2³ − 2² = <b>12</b>.",
+      "<b>8-character passwords</b> from 0–9, a–z and 10 symbols, with no symbol <i>or</i> no digit: no symbol = 36⁸, no digit = 36⁸, neither = 26⁸, so 36⁸ + 36⁸ − 26⁸.",
+      "<b>Integers in 1..100 divisible by 2 or 3:</b> 50 + 33 − 16 = <b>67</b> (divisible by both means divisible by 6)."
+     ],
+     "answer": "(a) 12 (b) 2·36⁸ − 26⁸ (c) 67"
+    },
+    {
+     "type": "steps",
+     "title": "“or” questions (sum rule and inclusion–exclusion)",
+     "items": [
+      "<b>Name the two sets.</b> A = the things with property 1, B = the things with property 2. Write them down in words.",
+      "<b>Count |A| and |B|</b> separately (usually with the product rule).",
+      "<b>Can something be in both?</b> No (the cases are disjoint): the answer is just |A| + |B|. That's the sum rule. Yes: count |A ∩ B|, the things with <i>both</i> properties.",
+      "<b>Answer:</b> |A| + |B| − |A ∩ B|.",
+      "<b>Divisibility tip:</b> “divisible by a and by b” means divisible by lcm(a, b), not a·b. For 4 and 6 that's 12, not 24.",
+      "<b>Sanity check:</b> the answer can't be bigger than the total, and can't be smaller than the bigger of |A| and |B|."
+     ]
+    },
+    {
+     "type": "thm",
+     "name": "Counting the complement",
+     "text": "If A ⊆ B, then |A| = |B| − |B − A|. Count what you <i>don't</i> want and subtract."
+    },
+    {
+     "type": "example",
+     "title": "Complement counting",
+     "prompt": "How many strings of 10 capital letters contain at least one A?",
+     "steps": [
+      "Directly, “at least one A” splits into exactly 1, exactly 2, … A’s: messy.",
+      "Total strings: 26¹⁰ (26 choices per position).",
+      "Opposite of “at least one A” is “no A”: 25¹⁰.",
+      "Subtract: 26¹⁰ − 25¹⁰."
+     ],
+     "answer": "26¹⁰ − 25¹⁰"
+    },
+    {
+     "type": "steps",
+     "title": "“at least one” (the complement)",
+     "items": [
+      "<b>Spot the trigger:</b> “at least one”, “some”, “not all”, “contains a …”. Counting these directly means messy cases (exactly 1, exactly 2, …).",
+      "<b>Count everything:</b> the total with no restriction.",
+      "<b>Count the opposite.</b> The opposite of “at least one X” is “<b>no</b> X at all”. That is usually a clean product rule count.",
+      "<b>Subtract:</b> total − none.",
+      "<b>Careful with other phrases.</b> The opposite of “at least two” is “zero or one”, not “none”.",
+      "<b>Sanity check:</b> try length 2 by hand. Strings of 2 letters from {A, B} with at least one A: AA, AB, BA, so 3. Formula: 2² − 1² = 3. ✓"
+     ]
+    },
+    {
+     "type": "example",
+     "title": "“or” with letters, checked two ways",
+     "prompt": "How many strings of 6 capital letters (A–Z, repeats allowed) start with a vowel or end with a vowel? Vowels: A, E, I, O, U.",
+     "steps": [
+      "A = starts with a vowel: 5·26⁵ — <i>product rule: 5 choices for slot 1, 26 for each of the other 5</i>",
+      "B = ends with a vowel: 26⁵·5 — <i>same idea, the last slot is restricted</i>",
+      "A ∩ B = starts and ends with a vowel: 5·26⁴·5 — <i>both ends restricted, 4 free slots in the middle</i>",
+      "|A ∪ B| = 2·5·26⁵ − 25·26⁴ — <i>inclusion–exclusion: add, then subtract the overlap</i>",
+      "= 26⁴(260 − 25) = 26⁴·235 — <i>factor out 26⁴ to make the arithmetic easy</i>",
+      "Check: 26⁶ − 21·26⁴·21 = 26⁴(676 − 441) = 26⁴·235 — <i>complement: the opposite is “starts with a consonant and ends with a consonant” (21 consonants)</i>"
+     ],
+     "answer": "26⁴·235 = 107,389,360"
+    },
+    {
+     "type": "warn",
+     "text": "<b>Wrong:</b> 3-letter strings with at least one A = 3·26² (“put an A somewhere, fill the rest”). <b>Right:</b> 26³ − 25³ = 1951. (The string AAB gets counted once for the A in slot 1 and again for the A in slot 2. That's double counting. Use the complement.)"
+    },
+    {
+     "type": "warn",
+     "text": "<b>Wrong:</b> integers in 1..100 divisible by 2 or 3 = 50 + 33 = 83. <b>Right:</b> 50 + 33 − 16 = 67. (Numbers like 6 and 12 are in both sets. The cases overlap, so you must subtract the overlap.)"
+    },
+    {
+     "type": "warn",
+     "text": "<b>Wrong:</b> “divisible by 4 and 6” means divisible by 24. <b>Right:</b> divisible by lcm(4, 6) = 12. (12 is divisible by both 4 and 6 but not by 24.)"
+    }
+   ]
+  },
+  {
+   "title": "The pigeonhole principle",
+   "blocks": [
+    {
+     "type": "tip",
+     "text": "If you put more objects than boxes, some box gets at least two. It proves something <b>must</b> happen without telling you where."
+    },
+    {
+     "type": "thm",
+     "name": "Pigeonhole principle",
+     "text": "If k + 1 or more objects are placed into k sets, some set contains at least two of them.",
+     "proof": [
+      {
+       "type": "p",
+       "text": "By contradiction: if each set held at most one object, there would be at most k objects."
+      }
+     ]
+    },
+    {
+     "type": "thm",
+     "name": "Generalized pigeonhole",
+     "text": "If N objects are placed into k boxes, some box contains at least ⌈N/k⌉ objects.",
+     "proof": [
+      {
+       "type": "p",
+       "text": "If every box had at most ⌈N/k⌉ − 1 objects, the total would be at most k(⌈N/k⌉ − 1) &lt; k(N/k + 1 − 1) = N, a contradiction."
+      }
+     ]
+    },
+    {
+     "type": "example",
+     "title": "First pigeonhole arguments",
+     "prompt": "Show that (a) among any 27 English words two start with the same letter, (b) a function from a set with k + 1 elements to a set with k elements is not one-to-one.",
+     "steps": [
+      "<b>Any 27 English words:</b> two start with the same letter (26 letters are the boxes).",
+      "<b>If f : A → B with |B| = k and |A| ≥ k + 1, then f isn't one-to-one:</b> the boxes are the elements of B, and a goes in box f(a). Two elements land in the same box, so f(a₁) = f(a₂)."
+     ],
+     "answer": "Boxes = 26 letters for 27 words; boxes = elements of B for the k + 1 elements of A, so f(a₁) = f(a₂) for some a₁ ≠ a₂"
+    },
+    {
+     "type": "example",
+     "title": "Clever boxes: remainders",
+     "prompt": "Show that every positive integer n has a positive multiple whose decimal digits are all 0s and 1s.",
+     "steps": [
+      "Pigeons: the n + 1 numbers 1, 11, 111, …, 11⋯1 (n + 1 ones).",
+      "Holes: the n possible remainders mod n.",
+      "Two of them, a &lt; b, have the same remainder, so n | b − a.",
+      "b − a is a block of 1s followed by 0s, e.g. for n = 13 the multiple 1001 = 13·77."
+     ],
+     "answer": "b − a = 11⋯100⋯0 is a multiple of n"
+    },
+    {
+     "type": "p",
+     "text": "<b>Clever boxes: odd parts.</b> Among any n + 1 distinct numbers in 1..2n, one divides another: write each as 2ᵏ·(odd). There are only n odd numbers ≤ 2n, so two share the same odd part, and the one with the smaller power of 2 divides the other."
+    },
+    {
+     "type": "p",
+     "text": "<b>No perfect compression:</b> no lossless compressor shrinks every n-bit file. There are 2ⁿ files of length n but only 2⁰ + ⋯ + 2ⁿ⁻¹ = 2ⁿ − 1 shorter files, so two files would compress to the same thing."
+    },
+    {
+     "type": "warn",
+     "text": "The skill is choosing the <b>boxes</b>: letters, remainders, odd parts, shorter files. Write “boxes = …, objects = …” explicitly. The principle tells you a box is crowded, never which one."
+    },
+    {
+     "type": "steps",
+     "title": "A pigeonhole proof",
+     "items": [
+      "<b>Read the conclusion.</b> It always looks like “two of them share something” or “two of them are close / add up / divide.”",
+      "<b>Pigeons = the things you were handed.</b> The numbers, people, or points in the problem.",
+      "<b>Holes = the possible values of the “something.”</b> Ask: “if two pigeons land in the same hole, do I get what I want?” If yes, you chose good holes. Common holes: remainders mod n, parity (even/odd), odd parts, pairs that sum to a target, small regions of a shape.",
+      "<b>Count both.</b> You need more pigeons than holes. If you don't have that, your holes are too small or too many; try a different grouping.",
+      "<b>Write it out:</b> “Holes = …, there are k of them. Pigeons = …, there are k + 1. By pigeonhole two pigeons share a hole, so …”",
+      "<b>Sanity check:</b> try to build a counterexample with one fewer pigeon. You should be able to put one pigeon in each hole and avoid the conclusion. That shows your bound is the right one."
+     ]
+    },
+    {
+     "type": "steps",
+     "title": "“how many to guarantee …”",
+     "items": [
+      "<b>What are the holes?</b> Colors, suits, months, grades, possible sums.",
+      "<b>Play the worst case.</b> Imagine an enemy handing you items to <i>avoid</i> your goal as long as possible.",
+      "<b>Goal “r in the same hole”, any hole:</b> the enemy puts r − 1 in every one of the k holes. That's k(r − 1) items with no success. One more forces it: k(r − 1) + 1.",
+      "<b>If a hole has fewer than r − 1 items available,</b> the enemy can only use what exists there. Add up what's really available.",
+      "<b>Goal about a specific hole</b> (“2 blue socks”): this is not plain pigeonhole. The enemy first gives you every item that is <i>not</i> blue, then r − 1 blue ones. Add 1.",
+      "<b>Sanity check:</b> show the enemy's pile of size (answer − 1) really fails. If it does, your answer is the smallest that works."
+     ]
+    },
+    {
+     "type": "steps",
+     "title": "“at least how many in some box?”",
+     "items": [
+      "<b>Count N objects and k boxes.</b>",
+      "<b>Compute ⌈N/k⌉:</b> divide, and if there is any remainder, round <b>up</b>. 40/12 = 3.33…, so ⌈40/12⌉ = 4.",
+      "<b>Why round up?</b> If every box had at most ⌈N/k⌉ − 1, the total would be less than N. Too few spots for N objects.",
+      "<b>Say it right:</b> “<i>some</i> box has at least ⌈N/k⌉.” Not every box, and you don't know which one.",
+      "<b>Sanity check:</b> spread the N objects as evenly as you can. The fullest box has exactly ⌈N/k⌉. For 40 people and 12 months: 4 months with 4 people and 8 months with 3."
+     ]
+    },
+    {
+     "type": "example",
+     "title": "Generalized pigeonhole",
+     "prompt": "(a) 100 students: at least how many share a day of the week for their birthday? (b) Grades are A–F (5 grades). How many students guarantee that 6 have the same grade?",
+     "steps": [
+      "(a) N = 100 objects, k = 7 boxes: ⌈100/7⌉ = ⌈14.28…⌉ = 15.",
+      "Sharp: 2 days with 15 and 5 days with 14 gives 100 with nobody over 15.",
+      "(b) Worst case: 5 students in each of the 5 grades = 25 with no 6 alike.",
+      "One more forces 6: 5·5 + 1 = 26 (equivalently, the smallest N with ⌈N/5⌉ ≥ 6)."
+     ],
+     "answer": "(a) 15 (b) 26"
+    },
+    {
+     "type": "example",
+     "title": "Socks in the dark",
+     "prompt": "A drawer has 10 red, 8 blue and 3 green socks. You pull socks without looking. How many do you need to guarantee (a) two of the same color, (b) three of the same color, (c) two blue socks?",
+     "steps": [
+      "(a) Holes = 3 colors. Worst case: 1 of each = 3 socks — <i>the enemy avoids a pair as long as possible</i>",
+      "(a) Answer 3 + 1 = 4 — <i>k(r − 1) + 1 with k = 3, r = 2</i>",
+      "(b) Worst case: 2 red, 2 blue, 2 green = 6 socks — <i>each color has at least 2 available, so r − 1 = 2 in each hole works</i>",
+      "(b) Answer 6 + 1 = 7 — <i>k(r − 1) + 1 with k = 3, r = 3</i>",
+      "(c) Worst case: all 10 red, all 3 green, 1 blue = 14 socks — <i>a specific color: the enemy hands you everything else first</i>",
+      "(c) Answer 14 + 1 = 15 — <i>sock 15 must be blue, since only blue socks are left</i>"
+     ],
+     "answer": "(a) 4 (b) 7 (c) 15"
+    },
+    {
+     "type": "example",
+     "title": "Pigeonhole in geometry",
+     "prompt": "Prove: if 5 points are placed in a 2 × 2 square, some two of them are at distance at most √2.",
+     "steps": [
+      "Cut the square into four 1 × 1 squares — <i>these are the holes (a point on a cut line goes in either one)</i>",
+      "Pigeons = 5 points, holes = 4 small squares — <i>5 > 4, so pigeonhole applies</i>",
+      "Two points lie in the same 1 × 1 square — <i>pigeonhole principle</i>",
+      "The farthest apart two points in a 1 × 1 square can be is the diagonal, √(1² + 1²) = √2 — <i>Pythagorean theorem</i>",
+      "So those two points are at distance ≤ √2 — <i>that's what we wanted</i>",
+      "Why these holes? Because “same small square” <i>forces</i> “close together.” That's the test for good holes."
+     ],
+     "answer": "Two of the 5 points share a 1 × 1 square, so they are at distance ≤ √2"
+    },
+    {
+     "type": "warn",
+     "text": "<b>Wrong:</b> 12 people guarantee two with the same birth month. <b>Right:</b> 13. (With 12, each person could have a different month. You need one more pigeon than holes: k + 1.)"
+    },
+    {
+     "type": "warn",
+     "text": "<b>Wrong:</b> 25 students in 7 groups means some group has at least 3 (rounding 25/7 = 3.57 down). <b>Right:</b> ⌈25/7⌉ = 4. (If every group had at most 3, that's at most 21 students. Always round <b>up</b>.)"
+    },
+    {
+     "type": "warn",
+     "text": "<b>Wrong:</b> to guarantee 3 cards of the same suit, draw 3·4 = 12. <b>Right:</b> 2·4 + 1 = 9. (The worst case is 2 of each suit, 8 cards. The 9th card makes a third in some suit. Use k(r − 1) + 1, not kr.)"
+    },
+    {
+     "type": "warn",
+     "text": "<b>Wrong:</b> to guarantee 2 hearts, draw 2·4 + 1 = 9. <b>Right:</b> 39 + 1 + 1 = 41. (A specific suit is not “some hole.” The worst case gives you all 39 non-hearts first.)"
+    },
+    {
+     "type": "warn",
+     "text": "<b>Wrong:</b> “pigeonhole shows every box has 2.” <b>Right:</b> it shows <i>some</i> box has at least 2. (The other boxes could even be empty.)"
+    }
+   ]
+  },
+  {
+   "title": "Permutations and combinations",
+   "blocks": [
+    {
+     "type": "tip",
+     "text": "Choosing r things from n: if order matters it's a <b>permutation</b> P(n, r); if order doesn't matter it's a <b>combination</b> C(n, r)."
+    },
+    {
+     "type": "def",
+     "term": "permutation",
+     "text": "A <b>permutation</b> of a set of distinct objects is an ordered arrangement of them. An <b>r-permutation</b> is an ordered arrangement of exactly r of them."
+    },
+    {
+     "type": "p",
+     "text": "An <b>r-combination</b> is an unordered collection of r elements from the set, i.e. a subset of size r."
+    },
+    {
+     "type": "thm",
+     "name": "Counting permutations and combinations",
+     "text": "There are <b>n!</b> permutations of an n-set, <b>P(n, r) = n!/(n − r)!</b> r-permutations, and <b>C(n, r) = n!/((n − r)! r!)</b> r-combinations (also written “n choose r”).",
+     "proof": [
+      {
+       "type": "p",
+       "text": "C(n, r): there are P(n, r) ways to pick r things in order, and each subset is counted r! times (once per ordering of its r elements), so divide by r!."
+      }
+     ]
+    },
+    {
+     "type": "warn",
+     "text": "By definition <b>0! = 1</b>. So P(5, 5) = 5!/0! = 5! and C(5, 0) = 5!/(0!5!) = 1."
+    },
+    {
+     "type": "tip",
+     "text": "<b>Podium</b> (gold, silver, bronze): order matters, so it's a permutation. <b>Committee:</b> order doesn't matter, so it's a combination. Each committee of 3 gives 3! = 6 podiums, which is why C = P/r!."
+    },
+    {
+     "type": "example",
+     "title": "Choosing the right formula",
+     "prompt": "Count (a) ways to deal one card each to 4 different players, (b) 5-card hands, (c) bit strings of length 10 with exactly four 1s, (d) committees of 3 from 9 math and 11 CS majors with exactly 1 math major.",
+     "steps": [
+      "<b>Deal one card each to 4 different players:</b> P(52, 4) = 52·51·50·49 (who gets which card matters).",
+      "<b>5-card hands:</b> C(52, 5) = 52!/(47! 5!) = 2,598,960 (a hand is a set).",
+      "<b>Bit strings of length 10 with exactly four 1s:</b> choose which positions get a 1: C(10, 4) = 210.",
+      "<b>A committee of 3 from 9 math and 11 CS majors, exactly 1 math major:</b> C(9, 1)·C(11, 2) = 9·55 = 495."
+     ],
+     "answer": "(a) P(52, 4) (b) C(52, 5) = 2,598,960 (c) C(10, 4) = 210 (d) 9·55 = 495"
+    },
+    {
+     "type": "tip",
+     "text": "How big is n!? (n/3)ⁿ ≤ n! ≤ nⁿ, and Stirling’s formula says n! ≈ √(2πn)(n/e)ⁿ."
+    },
+    {
+     "type": "steps",
+     "title": "Does order matter?",
+     "items": [
+      "<b>The swap test.</b> Take one answer and swap two of the chosen things. Is it a <i>different</i> answer? Yes: order matters. No: order doesn't matter.",
+      "<b>Order matters</b> (ranks, titles, positions, PINs, line-ups, “1st, 2nd, 3rd”): use P(n, r) = n!/(n − r)!.",
+      "<b>Order doesn't matter</b> (committees, teams, hands, subsets, “choose which positions”): use C(n, r) = n!/((n − r)! r!).",
+      "<b>Is repetition allowed?</b> P and C both assume <b>no repeats</b>. If items can repeat and order matters (a PIN like 7707), it's plain product rule: nʳ. (Unordered with repeats is stars and bars.)",
+      "<b>Sanity check:</b> try n = 3, r = 2 with {a, b, c}. Ordered: ab, ba, ac, ca, bc, cb = 6 = P(3, 2). Unordered: {a, b}, {a, c}, {b, c} = 3 = C(3, 2)."
+     ]
+    },
+    {
+     "type": "steps",
+     "title": "Computing P and C fast",
+     "items": [
+      "<b>Never write out big factorials.</b> Cancel first. P(n, r) is the first r factors of n!: P(10, 3) = 10·9·8.",
+      "<b>C(n, r) = P(n, r)/r!.</b> So C(10, 3) = (10·9·8)/(3·2·1) = 120.",
+      "<b>Use symmetry:</b> C(n, r) = C(n, n − r). Choosing 17 to keep is the same as choosing 3 to leave out. So C(20, 17) = C(20, 3).",
+      "<b>Know the small ones:</b> C(n, 0) = C(n, n) = 1, C(n, 1) = n, C(n, 2) = n(n − 1)/2.",
+      "<b>Sanity check:</b> C(n, r) is always a whole number and never bigger than P(n, r)."
+     ]
+    },
+    {
+     "type": "steps",
+     "title": "Multi-step choices",
+     "items": [
+      "<b>Break the job into steps</b> you do one after another: “choose the women, <i>then</i> the men”, “choose the officers, <i>then</i> the board.” Each step is a P, a C or a simple count.",
+      "<b>Steps joined by “and then”: multiply</b> (product rule).",
+      "<b>Separate cases</b> (“exactly 2 women <i>or</i> exactly 3 women”): count each case, then <b>add</b>. Make sure the cases don't overlap.",
+      "<b>“At least one”: use the complement.</b> Total minus the ones with none. Don't “pick one first, then pick the rest”: that double counts.",
+      "<b>Restricted items first.</b> Handle the people with special rules (must be in, must sit together, can't be chosen) before the free ones.",
+      "<b>Sanity check:</b> shrink the numbers (3 women, 2 men) and list the answers by hand."
+     ]
+    },
+    {
+     "type": "example",
+     "title": "“at least one” the right way",
+     "prompt": "A club has 8 women and 6 men. How many 5-person committees have at least one man?",
+     "steps": [
+      "Order doesn't matter — <i>swap test: swapping two members gives the same committee, so use C</i>",
+      "Total committees: C(14, 5) = 2002 — <i>any 5 of the 14 people</i>",
+      "Committees with no man: C(8, 5) = 56 — <i>all 5 chosen from the 8 women</i>",
+      "At least one man: 2002 − 56 = 1946 — <i>complement: total − none</i>",
+      "Not 6·C(13, 4) = 4290 — <i>“pick a man, then any 4 others” counts a committee with 2 men twice, once for each man picked first</i>"
+     ],
+     "answer": "1946 (not 4290, which exceeds the total 2002: double counting)"
+    },
+    {
+     "type": "example",
+     "title": "Ordered and unordered in one problem",
+     "prompt": "From 10 people, choose a president, a vice president and a 3-person advisory board. Nobody holds two roles.",
+     "steps": [
+      "Step 1: president and VP: P(10, 2) = 10·9 = 90 — <i>order matters: Ana as president with Ben as VP is different from the reverse</i>",
+      "Step 2: board from the 8 people left: C(8, 3) = 56 — <i>order doesn't matter on the board; the 2 officers are already used</i>",
+      "Total: 90·56 = 5040 — <i>product rule: step 1 and then step 2</i>",
+      "Check another order: board first C(10, 3) = 120, then officers P(7, 2) = 42, and 120·42 = 5040 — <i>the order you do the steps in doesn't change the count</i>"
+     ],
+     "answer": "5040"
+    },
+    {
+     "type": "warn",
+     "text": "<b>Wrong:</b> a 3-person team from 10 people is P(10, 3) = 720. <b>Right:</b> C(10, 3) = 120. (A team has no 1st, 2nd, 3rd. P counts each team 3! = 6 times.)"
+    },
+    {
+     "type": "warn",
+     "text": "<b>Wrong:</b> committees of 5 with at least one man = 6·C(13, 4). <b>Right:</b> C(14, 5) − C(8, 5). (Picking “the” man first counts a committee with 2 men twice.)"
+    },
+    {
+     "type": "warn",
+     "text": "<b>Wrong:</b> 2 math majors <i>and</i> 3 CS majors = C(9, 2) + C(11, 3). <b>Right:</b> C(9, 2)·C(11, 3). (“And then” multiplies; adding is for separate cases.)"
+    },
+    {
+     "type": "warn",
+     "text": "<b>Wrong:</b> 4-digit PINs (repeats allowed) = P(10, 4). <b>Right:</b> 10⁴. (P forbids repeats. 1111 is a fine PIN.)"
+    },
+    {
+     "type": "warn",
+     "text": "<b>Wrong:</b> C(10, 3) = 10!/3!. <b>Right:</b> 10!/(7!·3!). (10!/3! is not even P(10, 3); you must divide by (n − r)! <i>and</i> r!.)"
+    }
+   ]
+  },
+  {
+   "title": "Restricted arrangements and committees",
+   "blocks": [
+    {
+     "type": "p",
+     "text": "Most exam counting problems are permutations or combinations with a twist: two people must sit together or apart, a committee needs at least so many of a group, a particular person must be in or out. Three tools handle almost everything."
+    },
+    {
+     "type": "steps",
+     "title": "Restricted arrangements: the three tools",
+     "items": [
+      "<b>Together → glue.</b> Treat the people who must be adjacent as one block, arrange the blocks, then multiply by the orders inside the block.",
+      "<b>Apart → gaps (or complement).</b> Arrange everyone else first, then drop the separated items into different gaps (including both ends). For just two items, total − together also works.",
+      "<b>Must be in / out → handle them first.</b> Put a required person in (and remove them from the pool), or delete a forbidden person from the pool, then count the rest.",
+      "<b>“At least” → complement or split into cases;</b> never “pick one first, then anything”."
+     ]
+    },
+    {
+     "type": "example",
+     "title": "Together and apart",
+     "prompt": "Seven people stand in a row. In how many orders are Ana and Ben (a) next to each other, (b) not next to each other?",
+     "steps": [
+      "(a) Glue Ana and Ben into one block: 6 objects in a row, 6! = 720 orders.",
+      "The block can be AB or BA: 2·720 = 1440.",
+      "(b) Complement: 7! − 1440 = 5040 − 1440 = 3600.",
+      "Check with gaps: arrange the other 5 (5! = 120), which leaves 6 gaps; put Ana and Ben into different gaps in order: P(6, 2) = 30. 120·30 = 3600 ✓."
+     ],
+     "answer": "(a) 1440 (b) 3600"
+    },
+    {
+     "type": "example",
+     "title": "No two of three adjacent",
+     "prompt": "Eight people stand in a row. In how many orders are no two of Ana, Ben and Cal next to each other?",
+     "steps": [
+      "The complement is messy here (pairs and triples overlap), so use gaps.",
+      "Arrange the other 5 people: 5! = 120.",
+      "They create 6 gaps: _ x _ x _ x _ x _ x _.",
+      "Put Ana, Ben, Cal into 3 different gaps, in order: P(6, 3) = 6·5·4 = 120.",
+      "Total 120·120 = 14,400 (checked by listing all 8! = 40,320 orders by computer)."
+     ],
+     "answer": "14,400"
+    },
+    {
+     "type": "example",
+     "title": "Committee with a required member and a minimum",
+     "prompt": "A club has 6 seniors and 7 juniors, one of whom is Pat. How many 5-person committees include Pat and at least 2 seniors?",
+     "steps": [
+      "Put Pat in first. Choose 4 more from the remaining 6 seniors and 6 juniors (12 people).",
+      "Without the senior condition: C(12, 4) = 495.",
+      "Complement of “at least 2 seniors” is “0 or 1 senior”: C(6, 4) = 15 with no senior, 6·C(6, 3) = 120 with exactly one.",
+      "495 − 15 − 120 = 360.",
+      "Check by cases: 2 seniors C(6,2)C(6,2) = 225, 3 seniors C(6,3)·6 = 120, 4 seniors C(6,4) = 15; 225 + 120 + 15 = 360 ✓."
+     ],
+     "answer": "360"
+    },
+    {
+     "type": "warn",
+     "text": "<b>Wrong:</b> “at least 2 seniors” = C(6, 2)·C(10, 2) (pick 2 seniors, then anyone). <b>Right:</b> split by the exact number of seniors or use the complement. A committee with 3 seniors would be counted 3 times."
+    }
+   ]
+  }
+ ],
+ "cards": [
+  {
+   "front": "What does the product rule say?",
+   "back": [
+    {
+     "type": "p",
+     "text": "<b>Meaning.</b> If you build something in <b>steps</b>, and the number of options at each step doesn’t depend on what you picked earlier, multiply the counts."
+    },
+    {
+     "type": "formula",
+     "text": "n₁ ways, then n₂ ways for each of those ⟹ n₁ · n₂ total"
+    },
+    {
+     "type": "formula",
+     "text": "k steps ⟹ n₁ · n₂ ⋯ nₖ"
+    },
+    {
+     "type": "p",
+     "text": "<b>Why.</b> Picture a tree: n₁ branches, each splitting into n₂ more, so n₁ · n₂ leaves. Each leaf is one complete outcome."
+    },
+    {
+     "type": "p",
+     "text": "<b>Example.</b> A weekday 1-hour slot starting at 1, 2, 3 or 4 pm: pick the day (5), then the time (4) ⟹ <b>20</b>."
+    },
+    {
+     "type": "warn",
+     "text": "Only multiply when every outcome is built exactly <b>one</b> way. If two different step sequences give the same outcome, you’ve overcounted (see the division rule)."
+    }
+   ]
+  },
+  {
+   "front": "How many California-style license plates are there: 1 digit, then 3 letters, then 3 digits?",
+   "back": [
+    {
+     "type": "formula",
+     "text": "10 · 26 · 26 · 26 · 10 · 10 · 10 = 175,760,000"
+    },
+    {
+     "type": "p",
+     "text": "<b>How.</b>"
+    },
+    {
+     "type": "list",
+     "items": [
+      "Treat each of the 7 positions as a step.",
+      "Digit positions have 10 options; letter positions have 26.",
+      "Repeats are allowed, so every position keeps its full count.",
+      "Multiply."
+     ]
+    }
+   ]
+  },
+  {
+   "front": "3 new faculty, 12 offices, everyone gets a different office. How many ways?",
+   "back": [
+    {
+     "type": "formula",
+     "text": "12 · 11 · 10 = 1320"
+    },
+    {
+     "type": "p",
+     "text": "<b>How.</b> Assign people one at a time. Alice has 12 options. Whatever she picked, Bob has 11 (hers is taken), then Charlotte has 10."
+    },
+    {
+     "type": "p",
+     "text": "<b>Same idea.</b> Strings using each of the 26 letters exactly once: 26 · 25 ⋯ 2 · 1 = <b>26!</b> The options shrink by one each step because nothing can repeat."
+    }
+   ]
+  },
+  {
+   "front": "How many subsets does a set with n elements have? Why?",
+   "back": [
+    {
+     "type": "formula",
+     "text": "2ⁿ"
+    },
+    {
+     "type": "p",
+     "text": "<b>Why.</b> Build a subset by walking through the elements one at a time. Each one is either <b>in</b> or <b>out</b>: 2 choices, n times ⟹ 2 · 2 ⋯ 2 = 2ⁿ."
+    },
+    {
+     "type": "p",
+     "text": "<b>Check.</b> {A, B} has 2² = 4 subsets: ∅, {A}, {B}, {A, B}."
+    }
+   ]
+  },
+  {
+   "front": "How many one-to-one functions are there from a set of size n to a set of size m (m ≥ n)?",
+   "back": [
+    {
+     "type": "formula",
+     "text": "m(m − 1)(m − 2) ⋯ (m − n + 1)"
+    },
+    {
+     "type": "p",
+     "text": "<b>Why.</b> Choose the outputs input by input. One-to-one means no two inputs share an output, so the 1st input has m options, the 2nd has m − 1, …, the nth has m − n + 1."
+    },
+    {
+     "type": "p",
+     "text": "<b>Example.</b> From {1, 2, 3} to {a, b, c, d, e}: 5 · 4 · 3 = <b>60</b>."
+    },
+    {
+     "type": "warn",
+     "text": "Without the one-to-one condition, each input has all m options: mⁿ functions."
+    }
+   ]
+  },
+  {
+   "front": "What does the sum rule say?",
+   "back": [
+    {
+     "type": "p",
+     "text": "<b>Meaning.</b> If the things you’re counting split into cases that <b>don’t overlap</b> and together cover everything, count each case and add."
+    },
+    {
+     "type": "formula",
+     "text": "A, B disjoint ⟹ |A ∪ B| = |A| + |B|"
+    },
+    {
+     "type": "p",
+     "text": "<b>Example.</b> Passwords that are 6 or 8 digits long: 10⁶ + 10⁸. A password can’t have both lengths, so nothing is counted twice."
+    },
+    {
+     "type": "warn",
+     "text": "“And then” (steps) means multiply. “Or” (separate cases) means add. If the cases overlap, use inclusion–exclusion instead."
+    }
+   ]
+  },
+  {
+   "front": "Count the 2-element subsets of {1, …, 9} using the sum rule.",
+   "back": [
+    {
+     "type": "formula",
+     "text": "8 + 7 + 6 + ⋯ + 1 = 36"
+    },
+    {
+     "type": "p",
+     "text": "<b>How.</b> Split by the <b>smaller</b> element x. Then the larger one must be bigger than x."
+    },
+    {
+     "type": "list",
+     "items": [
+      "x = 1: 8 choices for the larger (2–9).",
+      "x = 2: 7 choices.",
+      "…",
+      "x = 8: 1 choice (9)."
+     ]
+    },
+    {
+     "type": "p",
+     "text": "The cases don’t overlap, so add them: 36. That matches 9 · 8 / 2 from the division rule, which is a good check."
+    }
+   ]
+  },
+  {
+   "front": "What is the division rule, and when do you need it?",
+   "back": [
+    {
+     "type": "p",
+     "text": "<b>Meaning.</b> If your counting method produces <b>every outcome exactly d times</b>, divide by d."
+    },
+    {
+     "type": "formula",
+     "text": "answer = (number of ways the method runs) / d"
+    },
+    {
+     "type": "p",
+     "text": "<b>When.</b> Usually when you pick things in order but order doesn’t matter, or when rotations or other symmetries count as the same."
+    },
+    {
+     "type": "warn",
+     "text": "Every outcome must be overcounted by the <b>same</b> d. If some are counted 2 times and others 3 times, dividing doesn’t work."
+    }
+   ]
+  },
+  {
+   "front": "How many 2-element subsets does {1, …, 9} have, using the division rule?",
+   "back": [
+    {
+     "type": "formula",
+     "text": "9 · 8 / 2 = 36"
+    },
+    {
+     "type": "p",
+     "text": "<b>How.</b>"
+    },
+    {
+     "type": "list",
+     "items": [
+      "Pick a first element x (9 ways), then a different y (8 ways): 72 ordered picks.",
+      "The subset {x, y} comes up twice: once as (x, y), once as (y, x).",
+      "Every subset is counted exactly twice ⟹ divide by 2."
+     ]
+    }
+   ]
+  },
+  {
+   "front": "How many 7-element subsets does {1, …, 9} have, using the division rule?",
+   "back": [
+    {
+     "type": "formula",
+     "text": "(9 · 8 · 7 · 6 · 5 · 4 · 3) / 7! = 36"
+    },
+    {
+     "type": "p",
+     "text": "<b>How.</b> Picking 7 elements in order gives 9 · 8 ⋯ 3 ways. Each subset of 7 shows up in 7! orders (7 choices for which came first, 6 for second, …). Divide by 7!."
+    },
+    {
+     "type": "p",
+     "text": "This is exactly why C(n, r) = P(n, r) / r!. Also C(9, 7) = C(9, 2) = 36."
+    }
+   ]
+  },
+  {
+   "front": "8 people sit around a round table. Two seatings are the same if everyone has the same left and right neighbors. How many seatings?",
+   "back": [
+    {
+     "type": "formula",
+     "text": "8! / 8 = 7! = 5040"
+    },
+    {
+     "type": "p",
+     "text": "<b>How.</b>"
+    },
+    {
+     "type": "list",
+     "items": [
+      "Number the seats and fill them: 8! ways.",
+      "Rotating everyone one seat gives the same neighbors, so it’s the same seating. Each seating appears in 8 rotations.",
+      "Divide by 8."
+     ]
+    }
+   ]
+  },
+  {
+   "front": "What is inclusion–exclusion for two sets, and why does it work?",
+   "back": [
+    {
+     "type": "formula",
+     "text": "|A ∪ B| = |A| + |B| − |A ∩ B|"
+    },
+    {
+     "type": "p",
+     "text": "<b>Why.</b> A ∪ B means “in A <b>or</b> B”. Adding |A| + |B| counts anything in <b>both</b> twice, once in each. Subtract |A ∩ B| to count it once."
+    },
+    {
+     "type": "p",
+     "text": "<b>Use it when.</b> The question says <b>or</b> and the two groups can overlap."
+    },
+    {
+     "type": "p",
+     "text": "|A| means the number of elements in A."
+    }
+   ]
+  },
+  {
+   "front": "How many integers from 1 to 100 are divisible by 2 or by 3?",
+   "back": [
+    {
+     "type": "formula",
+     "text": "50 + 33 − 16 = 67"
+    },
+    {
+     "type": "p",
+     "text": "<b>How.</b>"
+    },
+    {
+     "type": "list",
+     "items": [
+      "A = divisible by 2: ⌊100/2⌋ = 50.",
+      "B = divisible by 3: ⌊100/3⌋ = 33.",
+      "A ∩ B = divisible by 2 and 3 = divisible by 6: ⌊100/6⌋ = 16.",
+      "|A ∪ B| = 50 + 33 − 16."
+     ]
+    },
+    {
+     "type": "warn",
+     "text": "“Divisible by both a and b” means divisible by lcm(a, b), not a · b. Here they’re equal (6) only because 2 and 3 share no factor."
+    }
+   ]
+  },
+  {
+   "front": "How many 4-bit strings start with 1 or end with 0?",
+   "back": [
+    {
+     "type": "formula",
+     "text": "8 + 8 − 4 = 12"
+    },
+    {
+     "type": "p",
+     "text": "<b>How.</b>"
+    },
+    {
+     "type": "list",
+     "items": [
+      "Start with 1: the other 3 bits are free ⟹ 2³ = 8.",
+      "End with 0: the other 3 bits are free ⟹ 8.",
+      "Both: 2 bits are fixed, 2 free ⟹ 2² = 4."
+     ]
+    }
+   ]
+  },
+  {
+   "front": "8-character passwords from 10 digits, 26 letters and 10 special characters. How many have no special character or no digit?",
+   "back": [
+    {
+     "type": "formula",
+     "text": "36⁸ + 36⁸ − 26⁸"
+    },
+    {
+     "type": "p",
+     "text": "<b>How.</b>"
+    },
+    {
+     "type": "list",
+     "items": [
+      "No special character: 36 symbols allowed ⟹ 36⁸.",
+      "No digit: 26 + 10 = 36 symbols allowed ⟹ 36⁸.",
+      "Both (no special and no digit): letters only ⟹ 26⁸.",
+      "Inclusion–exclusion."
+     ]
+    }
+   ]
+  },
+  {
+   "front": "When should you count the complement, and how?",
+   "back": [
+    {
+     "type": "formula",
+     "text": "# with property = # total − # without property"
+    },
+    {
+     "type": "p",
+     "text": "<b>When.</b> When the property is messy to count directly, especially <b>“at least one”</b>. “At least one” splits into many cases (exactly 1, exactly 2, …), but its opposite, “none”, is usually one simple case."
+    },
+    {
+     "type": "p",
+     "text": "<b>Why it works.</b> Every object either has the property or doesn’t, never both."
+    }
+   ]
+  },
+  {
+   "front": "How many length-10 strings of uppercase letters contain at least one A?",
+   "back": [
+    {
+     "type": "formula",
+     "text": "26¹⁰ − 25¹⁰"
+    },
+    {
+     "type": "p",
+     "text": "<b>How.</b>"
+    },
+    {
+     "type": "list",
+     "items": [
+      "Total strings: 26 choices per position ⟹ 26¹⁰.",
+      "Opposite of “at least one A” is “no A”: 25 choices per position ⟹ 25¹⁰.",
+      "Subtract."
+     ]
+    },
+    {
+     "type": "warn",
+     "text": "Don’t try 10 · 26⁹ (“put an A somewhere, fill the rest”). Strings with several A’s get counted several times."
+    }
+   ]
+  },
+  {
+   "front": "What are a permutation, an r-permutation, and an r-combination?",
+   "back": [
+    {
+     "type": "p",
+     "text": "<b>Permutation:</b> an <b>ordered</b> arrangement of all the objects."
+    },
+    {
+     "type": "p",
+     "text": "<b>r-permutation:</b> an ordered arrangement of exactly r of them."
+    },
+    {
+     "type": "p",
+     "text": "<b>r-combination:</b> an <b>unordered</b> choice of r of them, i.e. a subset of size r."
+    },
+    {
+     "type": "p",
+     "text": "<b>Example with {A, B, C}.</b> Permutations: ABC, ACB, BAC, BCA, CAB, CBA (6). 2-permutations: AB, BA, AC, CA, BC, CB (6). 2-combinations: {A, B}, {A, C}, {B, C} (3)."
+    }
+   ]
+  },
+  {
+   "front": "What is P(n, r), and why?",
+   "back": [
+    {
+     "type": "formula",
+     "text": "P(n, r) = n! / (n − r)! = n(n − 1) ⋯ (n − r + 1)"
+    },
+    {
+     "type": "p",
+     "text": "<b>Why.</b> Fill r spots in order with no repeats: n choices for the 1st spot, n − 1 for the 2nd, …, n − r + 1 for the rth. The product rule gives n(n − 1)⋯(n − r + 1), which is n! with the last (n − r)! factors cancelled."
+    },
+    {
+     "type": "p",
+     "text": "All n objects in order: P(n, n) = n!. Example: P(5, 3) = 5 · 4 · 3 = 60."
+    }
+   ]
+  },
+  {
+   "front": "What is C(n, r), and why is it P(n, r) / r!?",
+   "back": [
+    {
+     "type": "formula",
+     "text": "C(n, r) = n! / (r! (n − r)!)"
+    },
+    {
+     "type": "p",
+     "text": "<b>Why.</b>"
+    },
+    {
+     "type": "list",
+     "items": [
+      "Choose r things <b>in order</b>: P(n, r) ways.",
+      "Each set of r things shows up in r! different orders.",
+      "Division rule: divide by r!."
+     ]
+    },
+    {
+     "type": "p",
+     "text": "Example: C(5, 2) = 5 · 4 / 2 = 10. Also written as the binomial coefficient (n choose r)."
+    }
+   ]
+  },
+  {
+   "front": "What is 0!? And C(n, 0) and C(n, n)?",
+   "back": [
+    {
+     "type": "formula",
+     "text": "0! = 1, so C(n, 0) = C(n, n) = 1"
+    },
+    {
+     "type": "p",
+     "text": "There is exactly one way to choose nothing (the empty set) and one way to choose everything. Defining 0! = 1 makes the formula n!/(r!(n − r)!) give those answers."
+    },
+    {
+     "type": "p",
+     "text": "P(5, 5) = 5!/0! = 120, and C(5, 0) = 1."
+    }
+   ]
+  },
+  {
+   "front": "How do you decide between P (order matters) and C (order doesn’t)?",
+   "back": [
+    {
+     "type": "p",
+     "text": "<b>Swap test.</b> Take an outcome and swap two of the chosen items. Is it now a <b>different</b> outcome?"
+    },
+    {
+     "type": "list",
+     "items": [
+      "Yes ⟹ order matters ⟹ P(n, r).",
+      "No ⟹ order doesn’t matter ⟹ C(n, r)."
+     ]
+    },
+    {
+     "type": "p",
+     "text": "<b>Examples.</b> <b>Deal one card each to Alice, Bob, Charlotte and Dave:</b> swapping two people’s cards changes the deal ⟹ P(52, 4) = 52·51·50·49.<br><b>A 5-card hand:</b> the same cards in any order are the same hand ⟹ C(52, 5) = 2,598,960."
+    }
+   ]
+  },
+  {
+   "front": "State the pigeonhole principle and prove it.",
+   "back": [
+    {
+     "type": "formula",
+     "text": "k + 1 or more objects in k boxes ⟹ some box has at least 2"
+    },
+    {
+     "type": "p",
+     "text": "<b>Proof (by contradiction).</b> Suppose every box had at most 1 object. With k boxes, that’s at most k objects in total. But there are at least k + 1. Contradiction."
+    },
+    {
+     "type": "p",
+     "text": "<b>Use it to prove.</b> “Some two things must share a property”, without finding which two."
+    }
+   ]
+  },
+  {
+   "front": "How do you write a pigeonhole proof?",
+   "back": [
+    {
+     "type": "list",
+     "items": [
+      "<b>Pigeons:</b> say what the objects are and how many (say N).",
+      "<b>Holes:</b> say what the boxes are and how many (fewer than N).",
+      "<b>Rule:</b> say exactly which hole each pigeon goes in.",
+      "<b>Conclude:</b> by pigeonhole, two pigeons share a hole. Then say what that <b>means</b> for the problem."
+     ]
+    },
+    {
+     "type": "warn",
+     "text": "The hard part is choosing holes so that “two in the same hole” gives what you want. Write the holes out explicitly."
+    }
+   ]
+  },
+  {
+   "front": "Show that any 27 English words include two that start with the same letter.",
+   "back": [
+    {
+     "type": "list",
+     "items": [
+      "<b>Pigeons:</b> the 27 words.",
+      "<b>Holes:</b> the 26 letters a–z.",
+      "<b>Rule:</b> put each word in the hole of its first letter."
+     ]
+    },
+    {
+     "type": "p",
+     "text": "27 pigeons, 26 holes ⟹ some hole has 2 words ⟹ they start with the same letter."
+    }
+   ]
+  },
+  {
+   "front": "Why can’t a function f : A → B be one-to-one if |A| > |B|?",
+   "back": [
+    {
+     "type": "list",
+     "items": [
+      "<b>Pigeons:</b> the elements of A (at least |B| + 1 of them).",
+      "<b>Holes:</b> the elements of B.",
+      "<b>Rule:</b> a goes in hole f(a)."
+     ]
+    },
+    {
+     "type": "p",
+     "text": "Two different a₁ ≠ a₂ land in the same hole b, so f(a₁) = b = f(a₂). That breaks one-to-one."
+    }
+   ]
+  },
+  {
+   "front": "Pick any n + 1 numbers from {1, …, 2n}. Why must one of them divide another?",
+   "back": [
+    {
+     "type": "list",
+     "items": [
+      "Write each chosen number as 2ᵏ · b with b odd (pull out all the factors of 2). For example, 12 = 2² · 3.",
+      "<b>Holes:</b> the odd part b. The odd numbers from 1 to 2n are 1, 3, …, 2n − 1, so there are n holes.",
+      "n + 1 pigeons, n holes ⟹ two chosen numbers have the same odd part: 2ⁱb and 2ʲb with i &lt; j.",
+      "2ʲb = 2ʲ⁻ⁱ · (2ⁱb), so the smaller divides the larger."
+     ]
+    }
+   ]
+  },
+  {
+   "front": "Why does every positive integer n have a positive multiple written only with 0s and 1s?",
+   "back": [
+    {
+     "type": "list",
+     "items": [
+      "Look at the numbers 1, 11, 111, …, up to the one with n + 1 ones. That’s n + 1 numbers.",
+      "<b>Holes:</b> their remainders mod n (0, 1, …, n − 1), so n holes.",
+      "Two of them, a &lt; b, have the same remainder ⟹ n divides b − a.",
+      "b − a looks like 11…1100…0 (ones, then zeros), a multiple of n written with only 0s and 1s."
+     ]
+    },
+    {
+     "type": "p",
+     "text": "Example: n = 3 ⟹ 111 = 3 · 37."
+    }
+   ]
+  },
+  {
+   "front": "Why can no compression algorithm make every n-bit file shorter?",
+   "back": [
+    {
+     "type": "list",
+     "items": [
+      "Lossless compression must be undoable, so the compression function must be one-to-one.",
+      "<b>Pigeons:</b> all 2ⁿ files of length n.",
+      "<b>Holes:</b> all shorter files: 2⁰ + 2¹ + ⋯ + 2ⁿ⁻¹ = 2ⁿ − 1 of them.",
+      "More pigeons than holes ⟹ two files compress to the same thing ⟹ not one-to-one. Contradiction."
+     ]
+    }
+   ]
+  },
+  {
+   "front": "How many 3-letter strings (A–Z) are there with repeats allowed? With no repeats?",
+   "back": [
+    {
+     "type": "p",
+     "text": "26³ = 17,576. 26·25·24 = 15,600."
+    }
+   ]
+  },
+  {
+   "front": "How many integers in 1..100 are divisible by 3 or 5?",
+   "back": [
+    {
+     "type": "p",
+     "text": "33 + 20 − 6 = 47."
+    }
+   ]
+  },
+  {
+   "front": "How many 3-digit numbers (100–999) have at least one 0?",
+   "back": [
+    {
+     "type": "p",
+     "text": "900 − 9³ = 171."
+    }
+   ]
+  },
+  {
+   "front": "How many people guarantee two share a birth month?",
+   "back": [
+    {
+     "type": "p",
+     "text": "13."
+    }
+   ]
+  },
+  {
+   "front": "Why must two of any 6 integers have the same remainder mod 5?",
+   "back": [
+    {
+     "type": "p",
+     "text": "There are only 5 remainders (boxes) for 6 numbers."
+    }
+   ]
+  },
+  {
+   "front": "Show any 5 distinct numbers from 1..8 include one dividing another.",
+   "back": [
+    {
+     "type": "p",
+     "text": "The odd parts can only be 1, 3, 5, 7 (4 boxes) for 5 numbers, so two share an odd part, and the smaller divides the larger."
+    }
+   ]
+  },
+  {
+   "front": "From 10 people: (a) president, VP, treasurer; (b) a 3-person team. How many ways?",
+   "back": [
+    {
+     "type": "p",
+     "text": "(a) P(10, 3) = 720. (b) C(10, 3) = 120."
+    }
+   ]
+  },
+  {
+   "front": "Compute P(6, 2) and C(6, 2).",
+   "back": [
+    {
+     "type": "p",
+     "text": "30 and 15."
+    }
+   ]
+  },
+  {
+   "front": "How many 5-card hands are all hearts?",
+   "back": [
+    {
+     "type": "p",
+     "text": "C(13, 5) = 1287."
+    }
+   ]
+  },
+  {
+   "front": "What are 0! and C(7, 0)?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Both are 1."
+    }
+   ]
+  },
+  {
+   "front": "Generalized pigeonhole principle?",
+   "back": [
+    {
+     "type": "formula",
+     "text": "N objects in k boxes ⟹ some box has at least ⌈N/k⌉"
+    },
+    {
+     "type": "p",
+     "text": "To guarantee r in some box: k(r − 1) + 1 objects. For a specific box, the worst case first takes everything outside it."
+    }
+   ]
+  },
+  {
+   "front": "How do you count arrangements where two people must be together? Apart?",
+   "back": [
+    {
+     "type": "list",
+     "items": [
+      "together: glue into one block, arrange, × 2 for the order inside",
+      "apart: total − together, or arrange the others and choose gaps"
+     ]
+    },
+    {
+     "type": "p",
+     "text": "7 in a row: together 2·6! = 1440, apart 5040 − 1440 = 3600."
+    }
+   ]
+  },
+  {
+   "front": "When do you need a tree diagram instead of the product rule?",
+   "back": [
+    {
+     "type": "p",
+     "text": "When the number of choices at a step depends on earlier choices (e.g. a match that stops once someone has won). Count the leaves."
+    }
+   ]
+  }
+ ],
+ "hard": [
+  {
+   "title": "Monotone 4-digit numbers",
+   "level": "hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "How many 4-digit integers (1000–9999) have digits that are (a) strictly increasing, (b) strictly decreasing, (c) non-decreasing, read left to right?"
+    }
+   ],
+   "answer": "(a) C(9,4) = 126 (b) C(10,4) = 210 (c) C(12,4) = 495",
+   "solution": [
+    {
+     "type": "p",
+     "text": "(a) 0 can’t appear: in an increasing sequence it would have to come first. Choosing 4 digits from 1–9 gives exactly one increasing order: <b>C(9,4) = 126</b>."
+    },
+    {
+     "type": "p",
+     "text": "(b) Now 0 is allowed, but only as the last digit, and the first digit is the largest so it is never 0: <b>C(10,4) = 210</b>."
+    },
+    {
+     "type": "p",
+     "text": "(c) The digits form a multiset of size 4 from 1–9 (0 is impossible again), in one order: <b>C(9 + 4 − 1, 4) = C(12,4) = 495</b>."
+    },
+    {
+     "type": "tip",
+     "text": "<b>Tests:</b> “a sorted arrangement ⇔ a subset (or multiset)”. <b>Common mistake:</b> using 10 digits in (a) or 9 in (b). The rules about 0 go in opposite directions."
+    }
+   ]
+  },
+  {
+   "title": "Not adjacent and in order",
+   "level": "hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "How many permutations of 1, 2, …, 8 have 1 and 2 <b>not</b> next to each other, <b>and</b> 3 somewhere before 4?"
+    }
+   ],
+   "answer": "15120",
+   "solution": [
+    {
+     "type": "p",
+     "text": "1 and 2 adjacent: glue them into one block (7 objects, 2 internal orders): 2·7! = 10080. Not adjacent: 8! − 10080 = 30240."
+    },
+    {
+     "type": "p",
+     "text": "Swapping the values 3 and 4 is a bijection that keeps “1, 2 not adjacent” and exchanges “3 before 4” with “4 before 3”. So exactly half qualify: <b>15120</b>."
+    },
+    {
+     "type": "tip",
+     "text": "<b>Tests:</b> the complement for adjacency, and symmetry for order conditions. <b>Common mistake:</b> halving without checking that the swap preserves the other condition. It does here because the swap doesn’t move 1 or 2."
+    }
+   ]
+  },
+  {
+   "title": "Committee with a woman chair, two ways",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "From 10 men and 8 women, choose a 6-person committee with at least 2 women, one of whom is chair. How many ways? Solve it two different ways."
+    }
+   ],
+   "answer": "47488",
+   "solution": [
+    {
+     "type": "p",
+     "text": "<b>By the number of women w:</b> Σ<sub>w=2</sub><sup>6</sup> C(8,w)C(10,6−w)·w = 11760 + 20160 + 12600 + 2800 + 168 = <b>47488</b>."
+    },
+    {
+     "type": "p",
+     "text": "<b>Chair first:</b> 8 choices for the chair. The other 5 seats come from the remaining 17 people and must include at least one more woman: C(17,5) − C(10,5) = 6188 − 252 = 5936. Then 8·5936 = <b>47488</b>. ✓"
+    },
+    {
+     "type": "tip",
+     "text": "<b>Tests:</b> choosing a decomposition with no double counting. <b>Common mistake:</b> “pick 2 women, then 4 more from anyone”: C(8,2)C(16,4)·… counts a committee with 3 women several times."
+    }
+   ]
+  },
+  {
+   "title": "MISSISSIPPI with no adjacent S’s",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "How many arrangements of MISSISSIPPI have no two S’s next to each other? What is the probability that a random arrangement has this property?"
+    }
+   ],
+   "answer": "7350 arrangements; probability 7/33",
+   "solution": [
+    {
+     "type": "p",
+     "text": "First arrange the 7 non-S letters (M, I×4, P×2): 7!/(4!·2!) = 105. They create 8 gaps, counting both ends. Put the 4 S’s into 4 different gaps: C(8,4) = 70. Total <b>105·70 = 7350</b>."
+    },
+    {
+     "type": "p",
+     "text": "All arrangements: 11!/(1!·4!·4!·2!) = 34650. Probability <b>7350/34650 = 7/33</b>."
+    },
+    {
+     "type": "tip",
+     "text": "<b>Tests:</b> “no two adjacent” means arranging the others first, then choosing gaps. <b>Common mistake:</b> subtracting “at least one SS” with a single glued block, which overcounts strings with SSS or two SS pairs."
+    }
+   ]
+  },
+  {
+   "title": "Lattice midpoints and birthdays",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "list",
+     "items": [
+      "(a) Prove that among any 5 points with integer coordinates in the plane, some two have a midpoint with integer coordinates. Is 4 enough? How many points are needed in 3-space?",
+      "(b) How many people do you need to guarantee that 4 of them were born in the same month <i>and</i> on the same day of the week?"
+     ]
+    }
+   ],
+   "answer": "(a) 5 points suffice, 4 do not; 9 points in 3-space (b) 253",
+   "solution": [
+    {
+     "type": "p",
+     "text": "(a) The midpoint of (x<sub>1</sub>, y<sub>1</sub>) and (x<sub>2</sub>, y<sub>2</sub>) is integral iff x<sub>1</sub> ≡ x<sub>2</sub> and y<sub>1</sub> ≡ y<sub>2</sub> (mod 2). There are 4 parity classes, so among 5 points two share a class. 4 points are <b>not</b> enough: (0,0), (1,0), (0,1), (1,1). In 3-space there are 8 classes, so <b>9</b> points."
+    },
+    {
+     "type": "p",
+     "text": "(b) There are 12·7 = 84 boxes. With 3·84 = 252 people you can have exactly 3 in each box, so you need <b>253</b>."
+    },
+    {
+     "type": "tip",
+     "text": "<b>Tests:</b> choosing the boxes, and the generalized pigeonhole k·N + 1. <b>Common mistake:</b> forgetting to show that the bound is sharp (the 4-point example, the 252 people)."
+    }
+   ]
+  },
+  {
+   "title": "Forcing a difference of 10",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "What is the smallest k such that every k-element subset of {1, …, 100} contains two numbers that differ by exactly 10? Prove both bounds."
+    }
+   ],
+   "answer": "k = 51",
+   "solution": [
+    {
+     "type": "p",
+     "text": "Split {1, …, 100} into 10 chains r, r + 10, …, r + 90 (r = 1, …, 10), each with 10 elements. Two numbers differ by 10 iff they are <i>consecutive</i> in the same chain."
+    },
+    {
+     "type": "p",
+     "text": "<b>Upper bound.</b> A set with no such pair takes no two consecutive elements from any chain. A 10-element chain allows at most 5 (pair up its elements as 1st–2nd, 3rd–4th, …; at most one from each pair). So such a set has at most 50 elements, and any 51 numbers contain a pair."
+    },
+    {
+     "type": "p",
+     "text": "<b>Sharp.</b> {1–10, 21–30, 41–50, 61–70, 81–90} has 50 elements and no two differ by 10."
+    },
+    {
+     "type": "p",
+     "text": "<b>Answer:</b> k = 51."
+    },
+    {
+     "type": "tip",
+     "text": "<b>Tests:</b> designing the boxes (chains), plus a matching example. <b>Common mistake:</b> using the boxes {n, n + 10} directly. They overlap, so the pigeonhole count is wrong."
+    }
+   ]
+  },
+  {
+   "title": "One number divides another",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "Prove that if you choose n + 1 numbers from {1, 2, …, 2n}, one of them divides another. Show that n numbers are not enough."
+    }
+   ],
+   "answer": "Boxes = odd parts (n of them) for n + 1 numbers; {n + 1, …, 2n} shows n numbers are not enough",
+   "solution": [
+    {
+     "type": "p",
+     "text": "Write each chosen number as 2<sup>k</sup>·m with m odd. The odd part m is one of 1, 3, …, 2n − 1: that is n possibilities for n + 1 numbers. So two have the same odd part: 2<sup>a</sup>m and 2<sup>b</sup>m with a &lt; b, and the first divides the second."
+    },
+    {
+     "type": "p",
+     "text": "Sharp: in {n + 1, …, 2n}, any quotient of two different elements is strictly between 1 and 2, so none divides another."
+    },
+    {
+     "type": "tip",
+     "text": "<b>Tests:</b> finding the right “pigeonhole” (the odd part). <b>Common mistake:</b> using parity or residues mod n as boxes. Those don’t force divisibility."
+    }
+   ]
+  },
+  {
+   "title": "Disjoint subsets with equal sums",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "Prove that any set of 10 distinct two-digit numbers (10–99) has two <b>disjoint</b> nonempty subsets with the same sum."
+    }
+   ],
+   "answer": "1023 nonempty subsets but at most 936 sums; remove the common elements to make them disjoint",
+   "solution": [
+    {
+     "type": "p",
+     "text": "There are 2<sup>10</sup> − 1 = 1023 nonempty subsets. Every subset sum lies between 10 and 90 + 91 + ⋯ + 99 = 945, so there are at most 936 possible sums. Hence two different subsets A ≠ B have the same sum."
+    },
+    {
+     "type": "p",
+     "text": "Remove the common elements: A′ = A − B, B′ = B − A. They are disjoint, and their sums are still equal (we subtracted the same amount). If A′ were empty, then A ⊆ B, and equal sums of positive numbers would force B − A = ∅, i.e. A = B. Contradiction. So both are nonempty. ∎"
+    },
+    {
+     "type": "tip",
+     "text": "<b>Tests:</b> pigeonhole on subsets, then repairing the conclusion (disjointness). <b>Common mistake:</b> stopping at “two subsets with equal sum”. They might overlap, and the problem asks for disjoint ones."
+    }
+   ]
+  },
+  {
+   "title": "A block sum divisible by n",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "Prove that in any list of n integers a<sub>1</sub>, …, a<sub>n</sub>, some block of consecutive entries a<sub>i+1</sub> + ⋯ + a<sub>j</sub> (0 ≤ i &lt; j ≤ n) has a sum divisible by n."
+    }
+   ],
+   "answer": "Pigeonhole on the n + 1 prefix sums S₀ = 0, …, Sₙ mod n",
+   "solution": [
+    {
+     "type": "p",
+     "text": "Let S<sub>0</sub> = 0 and S<sub>k</sub> = a<sub>1</sub> + ⋯ + a<sub>k</sub>. These are n + 1 numbers and there are only n residues mod n, so S<sub>i</sub> ≡ S<sub>j</sub> for some i &lt; j. Then n | S<sub>j</sub> − S<sub>i</sub> = a<sub>i+1</sub> + ⋯ + a<sub>j</sub>. ∎"
+    },
+    {
+     "type": "tip",
+     "text": "<b>Tests:</b> applying pigeonhole to partial sums rather than to the entries. <b>Common mistake:</b> forgetting S<sub>0</sub> = 0. Without it there are only n prefix sums, which may all differ."
+    }
+   ]
+  }
+ ],
+ "keyFacts": [
+  "Steps one after another: multiply; disjoint cases: add",
+  "|A ∪ B| = |A| + |B| − |A ∩ B|; “divisible by a and b” means divisible by lcm(a, b)",
+  "Division rule: if every outcome is counted exactly d times, divide by d (round table: n!/n)",
+  "“At least one” = total − none",
+  "Pigeonhole: N objects in k boxes ⟹ some box has ≥ ⌈N/k⌉; guarantee r alike with k(r − 1) + 1",
+  "P(n, r) = n!/(n − r)! (order matters); C(n, r) = n!/(r!(n − r)!) (order doesn’t); 0! = 1",
+  "Together: glue into a block (× internal orders); apart: arrange the others, choose gaps",
+  "Never “pick one first, then anything” for “at least one”: it double counts"
+ ]
+}

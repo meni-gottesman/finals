@@ -1,0 +1,2411 @@
+{
+ "id": "55-O",
+ "course": "55",
+ "title": "Relations, closures, equivalence relations, partial orders",
+ "source": "Rosen 9.1, 9.4–9.6 · Lec23–24",
+ "summary": "Relations are sets of ordered pairs; this unit covers their properties, composition and powers (with matrices), closures, equivalence relations and partitions, and partial orders with Hasse diagrams, bounds, lattices and topological sorts. Final questions ask you to check properties, count relations, compute closures, list classes and analyse posets.",
+ "lesson": [
+  {
+   "title": "Relations and the four properties",
+   "blocks": [
+    {
+     "type": "formula",
+     "text": "a binary relation R from A to B is a subset R ⊆ A × B"
+    },
+    {
+     "type": "p",
+     "text": "A × B = all ordered pairs (a, b) with a ∈ A, b ∈ B. Write <b>aRb</b> when (a, b) ∈ R, and a R̸ b when it isn’t."
+    },
+    {
+     "type": "p",
+     "text": "That’s the whole definition: a relation is just a <b>set of ordered pairs</b>. Any set of pairs counts, even one with no pattern."
+    },
+    {
+     "type": "example",
+     "title": "Relations as sets of pairs",
+     "prompt": "Give three relations and read them.",
+     "steps": [
+      "A = {1, 2, 3}, B = {a, b, c, d}, R = {(1, a), (1, b), (2, c), (2, d)}. Then 1Ra is true, 3Ra is false.",
+      "A = courses, B = classrooms, aRb if course a meets in room b.",
+      "A = B = web pages, aRb if page a links to page b."
+     ],
+     "answer": "Any set of ordered pairs is a relation; aRb just means (a, b) is in the set"
+    },
+    {
+     "type": "warn",
+     "text": "Order matters: (a, b) and (b, a) are different pairs. aRb doesn’t mean bRa."
+    },
+    {
+     "type": "list",
+     "items": [
+      "<b>On numbers:</b> =, &lt;, ≤ on ℝ; divisibility a | b on positive integers (3 | 6, but 3 ∤ 2); congruence a ≡ b (mod m) on ℤ; “relatively prime” (aRb if gcd(a, b) = 1).",
+      "<b>On sets:</b> “element of” from A to P(A) (1 ∈ {1, 2}); “subset” ⊆ on P(C).",
+      "<b>Empty relation:</b> R = ∅, nothing is related.",
+      "<b>Complete relation:</b> R = A × B, everything is related to everything.",
+      "<b>Graph of a function f : A → B:</b> {(a, b) : f(a) = b}. For f(x) = x² on ℕ: {(0,0), (1,1), (2,4), (3,9), …}, so 2R4 is true and 4R2 is false."
+     ]
+    },
+    {
+     "type": "p",
+     "text": "A <b>relation on A</b> is a relation from A to itself, a subset of A × A."
+    },
+    {
+     "type": "p",
+     "text": "You can draw one as a diagram: a dot for each element, an arrow a → b whenever aRb, and a <b>loop</b> at a when aRa."
+    },
+    {
+     "type": "p",
+     "text": "Running example for the next pages: R = {(1,1), (1,2), (2,2), (1,3), (2,3)} on {1, 2, 3}. Its arrow diagram has loops at 1 and 2 and arrows 1 → 2, 1 → 3, 2 → 3."
+    },
+    {
+     "type": "table",
+     "head": [
+      "",
+      "1",
+      "2",
+      "3"
+     ],
+     "rows": [
+      [
+       "1",
+       "1",
+       "1",
+       "1"
+      ],
+      [
+       "2",
+       "0",
+       "1",
+       "1"
+      ],
+      [
+       "3",
+       "0",
+       "0",
+       "0"
+      ]
+     ]
+    },
+    {
+     "type": "p",
+     "text": "That table is the <b>matrix</b> M<sub>R</sub> of R: row a, column b holds 1 exactly when aRb."
+    },
+    {
+     "type": "formula",
+     "text": "R is reflexive if aRa for <b>every</b> a ∈ A"
+    },
+    {
+     "type": "p",
+     "text": "In the diagram: a loop at every dot."
+    },
+    {
+     "type": "p",
+     "text": "<b>To show not reflexive:</b> find one a with a R̸ a."
+    },
+    {
+     "type": "example",
+     "title": "Reflexive or not?",
+     "prompt": "Decide reflexivity for the running R, ⊆, divisibility on ℤ⁺, congruence mod m, gcd(a, b) = 1, gcd(a, b) ≠ 1.",
+     "steps": [
+      "Running example: <b>not reflexive</b>, since (3, 3) ∉ R.",
+      "⊆: reflexive (every set is a subset of itself). | on positive integers: reflexive (a | a). Congruence mod m: reflexive.",
+      "gcd(a, b) = 1: <b>not</b> reflexive (gcd(2, 2) = 2). gcd(a, b) ≠ 1: <b>not</b> reflexive either (gcd(1, 1) = 1)."
+     ],
+     "answer": "Running R: no; ⊆, |, ≡: yes; gcd = 1 and gcd ≠ 1: no"
+    },
+    {
+     "type": "warn",
+     "text": "The gcd examples show a relation and its “opposite” can <b>both</b> fail to be reflexive. Reflexive needs every element; one failure ruins it."
+    },
+    {
+     "type": "formula",
+     "text": "symmetric: aRb ⟹ bRa"
+    },
+    {
+     "type": "formula",
+     "text": "antisymmetric: aRb and bRa ⟹ a = b"
+    },
+    {
+     "type": "p",
+     "text": "<b>Symmetric:</b> every arrow has a return arrow. <b>Antisymmetric:</b> between two <b>different</b> elements there is never a two-way arrow (loops are fine)."
+    },
+    {
+     "type": "warn",
+     "text": "“Antisymmetric” does <b>not</b> mean “not symmetric”. A relation can be both (=), neither, or just one."
+    },
+    {
+     "type": "example",
+     "title": "Symmetric and antisymmetric",
+     "prompt": "Decide symmetry and antisymmetry for the running R, ≤, ⊆, | on ℤ⁺, gcd = 1, and congruence mod m.",
+     "steps": [
+      "Running example: 1R2 but 2 R̸ 1, so <b>not symmetric</b>. No two-way arrows between different elements, so <b>antisymmetric</b>.",
+      "≤ on ℝ: not symmetric (1 ≤ 3, 3 ≰ 1); antisymmetric (a ≤ b and b ≤ a forces a = b).",
+      "⊆: not symmetric; antisymmetric (A ⊆ B and B ⊆ A means A = B).",
+      "| on positive integers: not symmetric (2 | 4, 4 ∤ 2); antisymmetric (a | b and b | a forces a = b for positive integers).",
+      "gcd = 1: symmetric, since gcd(a, b) = gcd(b, a); not antisymmetric (2R3 and 3R2 but 2 ≠ 3). Same for gcd ≠ 1.",
+      "Congruence mod m: symmetric; not antisymmetric (1 ≡ 4 and 4 ≡ 1 mod 3)."
+     ],
+     "answer": "Running R, ≤, ⊆, |: antisymmetric, not symmetric; gcd = 1 and ≡ mod m: symmetric, not antisymmetric"
+    },
+    {
+     "type": "warn",
+     "text": "Divisibility on <b>all integers</b> is not antisymmetric: 2 | −2 and −2 | 2. The positive-integer version is."
+    },
+    {
+     "type": "formula",
+     "text": "R is transitive if aRb and bRc ⟹ aRc"
+    },
+    {
+     "type": "p",
+     "text": "In the diagram: whenever you can go a → b → c in two steps, there must also be a direct arrow a → c."
+    },
+    {
+     "type": "p",
+     "text": "<b>How to check a finite relation</b>"
+    },
+    {
+     "type": "steps",
+     "title": "Method",
+     "items": [
+      "For each pair (a, b) in R, look at every pair (b, c) in R that starts where it ends.",
+      "Check (a, c) is in R. One missing (a, c) is a counterexample."
+     ]
+    },
+    {
+     "type": "example",
+     "title": "Transitive or not?",
+     "prompt": "Decide transitivity for the running R, ≤, ⊆, |, ≡ (mod m), gcd = 1 and gcd ≠ 1.",
+     "steps": [
+      "Running example: 1R2 and 2R3, and 1R3 ✓. The other chains involve loops, which always work. <b>Transitive.</b>",
+      "≤, ⊆, | and congruence mod m are all transitive.",
+      "gcd = 1: <b>not</b> transitive: 2R3 and 3R4, but gcd(2, 4) = 2.",
+      "gcd ≠ 1: <b>not</b> transitive: 2S6 and 6S3, but gcd(2, 3) = 1."
+     ],
+     "answer": "All transitive except gcd = 1 and gcd ≠ 1"
+    },
+    {
+     "type": "warn",
+     "text": "Watch chains that come <b>back</b>: R = {(1, 2), (2, 1)} has 1R2 and 2R1, so transitivity needs 1R1. It isn’t transitive."
+    },
+    {
+     "type": "table",
+     "head": [
+      "Relation",
+      "Refl",
+      "Sym",
+      "Anti",
+      "Trans"
+     ],
+     "rows": [
+      [
+       "=",
+       "✓",
+       "✓",
+       "✓",
+       "✓"
+      ],
+      [
+       "≤ on ℝ",
+       "✓",
+       "✗",
+       "✓",
+       "✓"
+      ],
+      [
+       "&lt; on ℝ",
+       "✗",
+       "✗",
+       "✓",
+       "✓"
+      ],
+      [
+       "⊆",
+       "✓",
+       "✗",
+       "✓",
+       "✓"
+      ],
+      [
+       "| on ℤ⁺",
+       "✓",
+       "✗",
+       "✓",
+       "✓"
+      ],
+      [
+       "≡ (mod m)",
+       "✓",
+       "✓",
+       "✗",
+       "✓"
+      ],
+      [
+       "gcd = 1",
+       "✗",
+       "✓",
+       "✗",
+       "✗"
+      ],
+      [
+       "gcd ≠ 1",
+       "✗",
+       "✓",
+       "✗",
+       "✗"
+      ],
+      [
+       "running ex.",
+       "✗",
+       "✗",
+       "✓",
+       "✓"
+      ]
+     ]
+    },
+    {
+     "type": "p",
+     "text": "&lt; is antisymmetric <b>vacuously</b>: a &lt; b and b &lt; a never both happen, so the “if” part is never true."
+    },
+    {
+     "type": "example",
+     "title": "Tricky cases",
+     "prompt": "Which relations are both symmetric and antisymmetric? Give one that is neither symmetric nor transitive.",
+     "steps": [
+      "<b>Both symmetric and antisymmetric:</b> only relations with no arrows between different elements, i.e. subsets of {(a, a)}. Examples: = and ∅. If aRb with a ≠ b, symmetry gives bRa, and then antisymmetry would force a = b.",
+      "<b>Neither symmetric nor transitive:</b> R = {(1, 2), (2, 3)} on {1, 2, 3}: 1R2 but 2 R̸ 1, and 1R2, 2R3 but 1 R̸ 3."
+     ],
+     "answer": "Both: exactly the subsets of the diagonal (e.g. = and ∅); neither: {(1, 2), (2, 3)}"
+    },
+    {
+     "type": "example",
+     "title": "A relation on ℤ from scratch",
+     "prompt": "On ℤ define aRb ⇔ a − b is even and a ≤ b. Which of the four properties hold?",
+     "steps": [
+      "Reflexive: a − a = 0 is even and a ≤ a. Yes.",
+      "Symmetric: 1R3 (difference −2, 1 ≤ 3) but not 3R1 (3 ≰ 1). No.",
+      "Antisymmetric: aRb and bRa give a ≤ b ≤ a, so a = b. Yes.",
+      "Transitive: aRb, bRc give a − c = (a − b) + (b − c) even and a ≤ b ≤ c. Yes.",
+      "So R is a partial order."
+     ],
+     "answer": "Reflexive, antisymmetric, transitive; not symmetric"
+    }
+   ]
+  },
+  {
+   "title": "Counting relations",
+   "blocks": [
+    {
+     "type": "p",
+     "text": "Let |A| = n. A relation on A is any subset of A × A, which has n² pairs. Decide in or out for each pair:"
+    },
+    {
+     "type": "table",
+     "head": [
+      "Kind",
+      "How many",
+      "Why"
+     ],
+     "rows": [
+      [
+       "all relations",
+       "2<sup>n²</sup>",
+       "each of the n² pairs is in or out"
+      ],
+      [
+       "reflexive",
+       "2<sup>n² − n</sup>",
+       "the n pairs (a, a) are forced in; the other n² − n are free"
+      ],
+      [
+       "symmetric",
+       "2<sup>n(n+1)/2</sup>",
+       "n loops are free, and each of the C(n, 2) pairs {a, b} is decided together: both in or both out"
+      ],
+      [
+       "antisymmetric (Rosen)",
+       "2<sup>n</sup>·3<sup>C(n,2)</sup>",
+       "loops free; for each {a, b}: only (a,b), only (b,a), or neither"
+      ]
+     ]
+    },
+    {
+     "type": "p",
+     "text": "n + C(n, 2) = n + n(n − 1)/2 = n(n + 1)/2, which explains the symmetric exponent."
+    },
+    {
+     "type": "example",
+     "title": "Counting relations on a 3-element set",
+     "prompt": "Let |A| = 3. How many relations on A are there in all, and how many are reflexive, symmetric, antisymmetric, and both reflexive and symmetric?",
+     "steps": [
+      "A × A has 9 pairs: 3 loops and C(3, 2) = 3 unordered pairs {a, b}.",
+      "All: 2⁹ = 512.",
+      "Reflexive: loops forced, 6 free pairs: 2⁶ = 64.",
+      "Symmetric: 3 loops free, each {a, b} both-or-neither: 2³ · 2³ = 64.",
+      "Antisymmetric: loops free (2³), each {a, b} has 3 options: 8 · 27 = 216.",
+      "Reflexive and symmetric: loops forced, only the 3 pairs {a, b} free: 2³ = 8."
+     ],
+     "answer": "512; 64; 64; 216; 8"
+    },
+    {
+     "type": "warn",
+     "text": "A relation can be both symmetric and antisymmetric (any subset of the diagonal), so do not subtract them as if they were complements. “Not symmetric” is not “antisymmetric”."
+    }
+   ]
+  },
+  {
+   "title": "Composition, powers and matrices",
+   "blocks": [
+    {
+     "type": "formula",
+     "text": "S ∘ R = {(a, c) : there is b with aRb and bSc}"
+    },
+    {
+     "type": "p",
+     "text": "R goes from A to B, S from B to C, so S ∘ R goes from A to C. Do <b>R first</b>, then S, just like composing functions g ∘ f."
+    },
+    {
+     "type": "steps",
+     "title": "Method",
+     "items": [
+      "For each pair (a, b) in R, find every pair in S that starts with b.",
+      "Each (b, c) found gives (a, c) in S ∘ R."
+     ]
+    },
+    {
+     "type": "example",
+     "title": "Composing two relations",
+     "prompt": "R = {(1, a), (1, b), (2, c)} from {1, 2} to {a, b, c} and S = {(a, x), (b, y), (c, x)}. Find S ∘ R.",
+     "steps": [
+      "Follow R first, then S: 1 → a → x, 1 → b → y, 2 → c → x."
+     ],
+     "answer": "S ∘ R = {(1, x), (1, y), (2, x)}"
+    },
+    {
+     "type": "example",
+     "title": "gcd = 1 composed with itself",
+     "prompt": "On ℤ⁺ let aRb ⇔ gcd(a, b) = 1. What is R ∘ R?",
+     "steps": [
+      "Given any a, b, choose a prime p larger than both.",
+      "Then gcd(a, p) = 1 and gcd(p, b) = 1, so aRp and pRb.",
+      "Hence a (R ∘ R) b for every pair, even (2, 2), although 2 is not related to 2."
+     ],
+     "answer": "R ∘ R = ℤ⁺ × ℤ⁺ (every pair)"
+    },
+    {
+     "type": "warn",
+     "text": "Order: in S ∘ R, the pair from <b>R</b> comes first in the chain. S ∘ R and R ∘ S are usually different."
+    },
+    {
+     "type": "formula",
+     "text": "R<sup>1</sup> = R, R<sup>n+1</sup> = R<sup>n</sup> ∘ R"
+    },
+    {
+     "type": "p",
+     "text": "a R<sup>n</sup> b exactly when there’s a <b>path of length n</b> from a to b: a = a<sub>0</sub> → a<sub>1</sub> → ⋯ → a<sub>n</sub> = b, each step an arrow of R."
+    },
+    {
+     "type": "example",
+     "title": "Powers of a 3-cycle",
+     "prompt": "R = {(1,2), (2,3), (3,1)} on {1, 2, 3}. Find R², R³, R⁴.",
+     "steps": [
+      "R is a cycle 1 → 2 → 3 → 1.",
+      "R² (two steps): 1 → 3, 2 → 1, 3 → 2. So R² = {(1,3), (2,1), (3,2)}.",
+      "R³ (three steps returns home): {(1,1), (2,2), (3,3)}.",
+      "R⁴ = R again, so the powers repeat every 3: R = R⁴ = R⁷ = …, R² = R⁵ = …, R³ = R⁶ = …"
+     ],
+     "answer": "R² = {(1,3), (2,1), (3,2)}, R³ = the diagonal, R⁴ = R"
+    },
+    {
+     "type": "p",
+     "text": "<b>Matrices.</b> Number the elements 1, …, n and let M<sub>R</sub> have entry 1 in row i, column j when iRj. Composition becomes a matrix product."
+    },
+    {
+     "type": "thm",
+     "name": "Boolean product gives composition",
+     "text": "M<sub>S∘R</sub> = M<sub>R</sub> ⊙ M<sub>S</sub>, where ⊙ multiplies like matrices but uses “or” for + and “and” for ×. In particular M<sub>R<sup>n</sup></sub> = M<sub>R</sub><sup>[n]</sup>, the n-th Boolean power.",
+     "proof": [
+      {
+       "type": "p",
+       "text": "Entry (i, j) of M<sub>R</sub> ⊙ M<sub>S</sub> is 1 exactly when some k has (M<sub>R</sub>)<sub>ik</sub> = 1 and (M<sub>S</sub>)<sub>kj</sub> = 1, i.e. iRk and kSj, which is the definition of i (S ∘ R) j."
+      }
+     ]
+    },
+    {
+     "type": "thm",
+     "name": "Ordinary powers count paths",
+     "text": "If M is the 0–1 matrix of R and Mⁿ is its ordinary (integer) n-th power, then the (i, j) entry of Mⁿ is the number of paths of length n from i to j.",
+     "proof": [
+      {
+       "type": "p",
+       "text": "Induction on n. For n = 1 an entry is 1 exactly when there is a one-step path. Suppose (Mⁿ)<sub>ik</sub> counts the paths of length n from i to k. A path of length n + 1 from i to j is a path of length n from i to some k followed by one arrow k → j. So the number of them is Σ<sub>k</sub> (Mⁿ)<sub>ik</sub> M<sub>kj</sub> = (Mⁿ⁺¹)<sub>ij</sub>. ∎"
+      },
+      {
+       "type": "p",
+       "text": "The Boolean power just records whether that count is positive, which is why a Rⁿ b ⇔ (Mⁿ)<sub>ab</sub> > 0."
+      }
+     ]
+    },
+    {
+     "type": "example",
+     "title": "Counting paths with matrix powers",
+     "prompt": "R = {(1,2), (1,3), (2,3), (2,4), (3,4), (4,1)} on {1, 2, 3, 4}. How many paths of length 2 go from 1 to 4? Of length 3 from 1 back to 1? Is R transitive?",
+     "steps": [
+      "M has rows (0,1,1,0), (0,0,1,1), (0,0,0,1), (1,0,0,0).",
+      "M² has rows (0,0,1,2), (1,0,0,1), (1,0,0,0), (0,1,1,0). Entry (1,4) = 2: the paths 1→2→4 and 1→3→4.",
+      "M³ = M²·M has rows (2,0,0,1), (1,1,1,0), (0,1,1,0), (0,0,1,2). Entry (1,1) = 2: 1→2→4→1 and 1→3→4→1.",
+      "Not transitive: M² has a positive entry at (1,4) where M has 0, so R² ⊄ R (1→2→4 but not 1→4)."
+     ],
+     "answer": "2 paths; 2 paths; not transitive"
+    },
+    {
+     "type": "thm",
+     "name": "Transitivity via powers",
+     "text": "R is transitive if and only if Rⁿ ⊆ R for every n ≥ 1.",
+     "proof": [
+      {
+       "type": "p",
+       "text": "(⇐) Take n = 2. If aRb and bRc then a R² c, and R² ⊆ R gives aRc. So R is transitive."
+      },
+      {
+       "type": "p",
+       "text": "(⇒) Induction on n. R¹ = R ⊆ R. Suppose Rⁿ ⊆ R and let (a, c) ∈ Rⁿ⁺¹ = Rⁿ ∘ R. Then aRb and b Rⁿ c for some b. By the hypothesis bRc, and transitivity applied to aRb, bRc gives aRc. So Rⁿ⁺¹ ⊆ R. ∎"
+      },
+      {
+       "type": "p",
+       "text": "In matrix language: R is transitive iff M<sub>R</sub><sup>[2]</sup> has no 1 where M<sub>R</sub> has a 0."
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "title": "Closures: reflexive, symmetric, transitive",
+   "blocks": [
+    {
+     "type": "tip",
+     "text": "Take a relation R and a property P (reflexive, symmetric, transitive). The <b>closure of R with respect to P</b> is the <b>smallest</b> relation that contains R and has P. “Smallest” means: it is contained in <b>every</b> relation that contains R and has P."
+    },
+    {
+     "type": "formula",
+     "text": "closure of R = R plus exactly the pairs that are <b>forced</b>"
+    },
+    {
+     "type": "p",
+     "text": "Every pair you add must be one that any relation with property P containing R would have to include anyway."
+    },
+    {
+     "type": "p",
+     "text": "That is how you prove something is the closure: show (1) it contains R, (2) it has the property, (3) every pair you added was forced."
+    },
+    {
+     "type": "warn",
+     "text": "Not every property has closures. If R already contains (1, 1), no relation containing R is <b>irreflexive</b>, so there is no “irreflexive closure”. Same for antisymmetric: if (1, 2) and (2, 1) are both in R, adding pairs never removes the problem. Closures exist for properties you can fix by <b>adding</b>."
+    },
+    {
+     "type": "formula",
+     "text": "reflexive closure: R ∪ Δ, Δ = {(a, a) : a ∈ A}"
+    },
+    {
+     "type": "formula",
+     "text": "symmetric closure: R ∪ R<sup>−1</sup>, R<sup>−1</sup> = {(b, a) : (a, b) ∈ R}"
+    },
+    {
+     "type": "p",
+     "text": "Δ is the “diagonal” (equality relation). R<sup>−1</sup> is the inverse relation: every arrow reversed."
+    },
+    {
+     "type": "p",
+     "text": "<b>Why these are the smallest</b>"
+    },
+    {
+     "type": "list",
+     "items": [
+      "A reflexive relation must contain every (a, a). So any reflexive relation containing R contains R ∪ Δ, and R ∪ Δ is reflexive.",
+      "A symmetric relation containing (a, b) must contain (b, a). So it contains R ∪ R<sup>−1</sup>, and that union is symmetric: reversing a pair of R gives a pair of R<sup>−1</sup> and vice versa."
+     ]
+    },
+    {
+     "type": "example",
+     "title": "Reflexive and symmetric closures",
+     "prompt": "R = {(1,2), (2,3), (3,4), (4,2)} on {1, 2, 3, 4} (arrows 1→2, 2→3, 3→4, 4→2). Find its reflexive and symmetric closures.",
+     "steps": [
+      "<b>Reflexive closure:</b> add the 4 loops (1,1), (2,2), (3,3), (4,4). Total 8 pairs.",
+      "<b>Symmetric closure:</b> add the 4 reversed arrows (2,1), (3,2), (4,3), (2,4). Total 8 pairs."
+     ],
+     "answer": "Reflexive: R ∪ {(1,1), (2,2), (3,3), (4,4)}; symmetric: R ∪ {(2,1), (3,2), (4,3), (2,4)}; 8 pairs each"
+    },
+    {
+     "type": "p",
+     "text": "Transitivity is harder: adding a pair can create new two-step chains, which force more pairs. The clean way to think about it is with paths."
+    },
+    {
+     "type": "formula",
+     "text": "a <b>path</b> of length n from a to b: a = x<sub>0</sub> → x<sub>1</sub> → ⋯ → x<sub>n</sub> = b, each step a pair of R"
+    },
+    {
+     "type": "p",
+     "text": "Recall: a R<sup>n</sup> b exactly when there’s a path of length n from a to b. A path that starts and ends at the same element is a <b>circuit</b> (cycle)."
+    },
+    {
+     "type": "formula",
+     "text": "R* = R ∪ R<sup>2</sup> ∪ R<sup>3</sup> ∪ ⋯"
+    },
+    {
+     "type": "p",
+     "text": "The <b>connectivity relation</b>: a R* b when there is a path of <b>some</b> positive length from a to b."
+    },
+    {
+     "type": "example",
+     "title": "Connectivity relation by reachability",
+     "prompt": "Same R = {(1,2), (2,3), (3,4), (4,2)}. Find R*.",
+     "steps": [
+      "From 1: reach 2 (one step), 3 (1→2→3), 4 (1→2→3→4).",
+      "From 2: 2→3→4→2, so 2 reaches 3, 4 and itself. Same for 3 and 4.",
+      "Nothing reaches 1, and 1 is on no circuit, so (1, 1) ∉ R*."
+     ],
+     "answer": "R* = {(1,2), (1,3), (1,4)} ∪ {2,3,4} × {2,3,4}: 12 pairs"
+    },
+    {
+     "type": "tip",
+     "text": "If |A| = n and there is a path from a to b, there is one of length <b>at most n</b> (at most n − 1 if a ≠ b).<br><b>Why:</b> a path of length m visits m + 1 positions x<sub>0</sub>, …, x<sub>m</sub>. If m > n, some element repeats (pigeonhole), say x<sub>i</sub> = x<sub>j</sub> with i &lt; j. Cut out the loop x<sub>i</sub> → ⋯ → x<sub>j</sub>; it’s still a path from a to b, and shorter. Repeat until no repeats are forced."
+    },
+    {
+     "type": "formula",
+     "text": "|A| = n ⟹ R* = R ∪ R<sup>2</sup> ∪ ⋯ ∪ R<sup>n</sup>"
+    },
+    {
+     "type": "thm",
+     "name": "Transitive closure = connectivity relation",
+     "text": "The transitive closure of R is R* = R ∪ R² ∪ R³ ∪ ⋯.",
+     "proof": [
+      {
+       "type": "p",
+       "text": "<b>Contains R:</b> R = R<sup>1</sup> ⊆ R*."
+      },
+      {
+       "type": "p",
+       "text": "<b>Transitive:</b> if a R* b and b R* c, glue a path a → ⋯ → b to a path b → ⋯ → c. That’s a path a → ⋯ → c, so a R* c."
+      },
+      {
+       "type": "p",
+       "text": "<b>Smallest:</b> let S be transitive with R ⊆ S. Take any path a = x<sub>0</sub> → x<sub>1</sub> → ⋯ → x<sub>n</sub> = b in R. Each step is in S. Transitivity of S gives x<sub>0</sub> S x<sub>2</sub>, then x<sub>0</sub> S x<sub>3</sub>, …, then a S b (induction on n). So R* ⊆ S. ∎"
+      }
+     ]
+    },
+    {
+     "type": "steps",
+     "title": "Method",
+     "items": [
+      "For each element a, list everything reachable from a by following arrows (one or more steps).",
+      "Put (a, b) in the closure for each reachable b. Include (a, a) only if a lies on a circuit."
+     ]
+    },
+    {
+     "type": "warn",
+     "text": "R ∪ R² is not the closure in general. For R = {(1,2), (2,3), (3,4)}, R ∪ R² = R ∪ {(1,3), (2,4)} still misses (1, 4), which needs 3 steps. Keep going until nothing new appears."
+    },
+    {
+     "type": "warn",
+     "text": "(a, a) is in R* only when a path leaves a and comes back. In the running example, 2, 3, 4 get loops (they’re on the circuit 2→3→4→2), but 1 does not. The transitive closure is <b>not</b> automatically reflexive."
+    },
+    {
+     "type": "warn",
+     "text": "Taking a symmetric closure can destroy transitivity. R = {(1,2), (3,2)} is transitive (no two-step chains). Its symmetric closure has 1→2→3 but not (1, 3). To get the smallest <b>equivalence relation</b> containing R, close in the order reflexive, symmetric, <b>then</b> transitive."
+    },
+    {
+     "type": "p",
+     "text": "Write R as a 0–1 matrix M<sub>R</sub>: entry (i, j) is 1 when i R j. Then:"
+    },
+    {
+     "type": "formula",
+     "text": "M<sub>R²</sub> = M<sub>R</sub> ⊙ M<sub>R</sub> (Boolean product)"
+    },
+    {
+     "type": "formula",
+     "text": "M<sub>R*</sub> = M<sub>R</sub> ∨ M<sub>R</sub><sup>[2]</sup> ∨ ⋯ ∨ M<sub>R</sub><sup>[n]</sup>"
+    },
+    {
+     "type": "p",
+     "text": "Boolean product: like matrix multiplication, but with “or” for + and “and” for ×. Entry (i, j) of M ⊙ M is 1 when some k has i R k and k R j, a 2-step path. ∨ is entrywise “or”."
+    },
+    {
+     "type": "p",
+     "text": "Instead of all powers, build up the allowed <b>middle stops</b> one element at a time. Let W<sub>k</sub>[i][j] = 1 when there’s a path from i to j whose interior stops all lie in {1, …, k}."
+    },
+    {
+     "type": "formula",
+     "text": "W<sub>0</sub> = M<sub>R</sub>; W<sub>k</sub>[i][j] = W<sub>k−1</sub>[i][j] ∨ (W<sub>k−1</sub>[i][k] ∧ W<sub>k−1</sub>[k][j])"
+    },
+    {
+     "type": "p",
+     "text": "At step k: if i can reach k and k can reach j (using stops 1…k−1), then i can now reach j. W<sub>n</sub> = M<sub>R*</sub>."
+    },
+    {
+     "type": "p",
+     "text": "<b>By hand:</b> at step k, look at column k (who reaches k) and row k (where k goes). Add every pair (who, where)."
+    },
+    {
+     "type": "example",
+     "title": "Warshall by hand",
+     "prompt": "Run Warshall’s algorithm on R = {(1,3), (2,1), (3,4)} on {1, 2, 3, 4}.",
+     "steps": [
+      "<b>k = 1:</b> into 1: {2}. Out of 1: {3}. Add (2, 3).",
+      "<b>k = 2:</b> nothing goes into 2. No change.",
+      "<b>k = 3:</b> into 3: {1, 2}. Out of 3: {4}. Add (1, 4), (2, 4).",
+      "<b>k = 4:</b> nothing leaves 4. No change.",
+      "Closure: <b>{(1,3), (1,4), (2,1), (2,3), (2,4), (3,4)}</b>. Check by paths: 2→1→3→4 reaches everything after 2. ✓"
+     ],
+     "answer": "{(1,3), (1,4), (2,1), (2,3), (2,4), (3,4)}"
+    },
+    {
+     "type": "warn",
+     "text": "At step k, use the matrix <b>as updated so far</b> (W<sub>k−1</sub>), including pairs added at earlier steps. The pair (2, 3) found at k = 1 is what lets k = 3 add (2, 4)."
+    },
+    {
+     "type": "p",
+     "text": "Cost: computing all n Boolean powers takes about n⁴ bit operations; Warshall takes about 2n³. For the exam, the path view is usually fastest on small examples."
+    },
+    {
+     "type": "example",
+     "title": "Smallest equivalence relation containing R",
+     "prompt": "R = {(1,2), (2,3), (3,1), (3,4), (5,4)} on {1, …, 5}. Find the transitive closure and the smallest equivalence relation containing R.",
+     "steps": [
+      "Transitive closure: 1, 2, 3 lie on the circuit 1→2→3→1, so each reaches 1, 2, 3 and also 4 (via 3). 5 reaches 4. 4 reaches nothing.",
+      "t(R) = {1,2,3} × {1,2,3,4} ∪ {(5,4)}: 13 pairs.",
+      "Equivalence closure: close reflexively, then symmetrically, then transitively. Ignoring directions, everything is connected through 4."
+     ],
+     "answer": "t(R) has 13 pairs; the equivalence closure is all 25 pairs (one class)"
+    }
+   ]
+  },
+  {
+   "title": "Equivalence relations, classes and partitions",
+   "blocks": [
+    {
+     "type": "formula",
+     "text": "equivalence relation = reflexive + symmetric + transitive"
+    },
+    {
+     "type": "p",
+     "text": "Write a ∼ b when a R b. Elements related by an equivalence relation are called <b>equivalent</b>."
+    },
+    {
+     "type": "tip",
+     "text": "An equivalence relation says “a and b are the same in one particular respect” (same remainder, same length, same birthday). The three properties are exactly what “same” must obey: everything is the same as itself; sameness goes both ways; and things the same as a common thing are the same as each other."
+    },
+    {
+     "type": "tip",
+     "text": "For any function f : A → B, the relation <b>a ∼ b ⟺ f(a) = f(b)</b> is an equivalence relation, because = is. Almost every example is this one in disguise: pick f = “remainder mod m”, “length”, “floor”, … (In fact every equivalence relation is of this form: take f(a) = the class of a.)"
+    },
+    {
+     "type": "steps",
+     "title": "Method",
+     "items": [
+      "Reflexive: show a ∼ a for an arbitrary a.",
+      "Symmetric: assume a ∼ b; derive b ∼ a.",
+      "Transitive: assume a ∼ b and b ∼ c; derive a ∼ c."
+     ]
+    },
+    {
+     "type": "p",
+     "text": "Or, faster: rewrite the relation as f(a) = f(b) for some function f, and quote the master example."
+    },
+    {
+     "type": "p",
+     "text": "<b>How to show it is not</b>"
+    },
+    {
+     "type": "p",
+     "text": "Give one concrete counterexample to one property."
+    },
+    {
+     "type": "example",
+     "title": "Proof: congruence mod m is an equivalence relation",
+     "prompt": "Prove that a ≡ b (mod m), meaning m | (a − b), is an equivalence relation on ℤ (m ≥ 2).",
+     "steps": [
+      "Reflexive: a − a = 0 = 0·m.",
+      "Symmetric: if a − b = km, then b − a = (−k)m.",
+      "Transitive: if a − b = km and b − c = lm, then a − c = (k + l)m.",
+      "(Or: a ≡ b ⟺ a mod m = b mod m, the master example with f = remainder.)"
+     ],
+     "answer": "Reflexive, symmetric and transitive, so an equivalence relation"
+    },
+    {
+     "type": "p",
+     "text": "<b>Same length.</b> On bit strings, s ∼ t when they have the same length: this is f(s) = f(t) with f = length, so it is an equivalence relation. 0110 ∼ 1111, but 01 ≁ 010."
+    },
+    {
+     "type": "p",
+     "text": "<b>Same fractional part.</b> On ℝ, x ∼ y when x − y ∈ ℤ, equivalently x − ⌊x⌋ = y − ⌊y⌋. So 2.3 ∼ −0.7 ∼ 5.3."
+    },
+    {
+     "type": "example",
+     "title": "Non-examples",
+     "prompt": "For each relation, find the property that fails: |x − y| ≤ 1 on ℝ; a | b on ℤ⁺; “shares a letter” on words; ∅ on a nonempty set.",
+     "steps": [
+      "x ∼ y when |x − y| ≤ 1 on ℝ: reflexive and symmetric but <b>not transitive</b> (0 ∼ 1, 1 ∼ 2, 0 ≁ 2).",
+      "a | b on ℤ⁺: <b>not symmetric</b> (2 | 4, 4 ∤ 2).",
+      "“shares a letter” on English words: not transitive (“cat” ∼ “to” ∼ “so”, but “cat” and “so” share nothing).",
+      "The empty relation on a nonempty set: symmetric and transitive (vacuously), but <b>not reflexive</b>."
+     ],
+     "answer": "not transitive; not symmetric; not transitive; not reflexive"
+    },
+    {
+     "type": "warn",
+     "text": "“a ∼ b and b ∼ a give a ∼ a by transitivity.” This only works if a is related to <b>something</b>. An element with no partners breaks it, which is why the empty relation is a counterexample."
+    },
+    {
+     "type": "formula",
+     "text": "[a] = {x ∈ A : x ∼ a}"
+    },
+    {
+     "type": "p",
+     "text": "The <b>equivalence class</b> of a: everything equivalent to a. Any element b of [a] is a <b>representative</b> of the class."
+    },
+    {
+     "type": "example",
+     "title": "Listing equivalence classes",
+     "prompt": "List the classes of: congruence mod 4 on ℤ; same length on bit strings; x − y ∈ ℤ on ℝ.",
+     "steps": [
+      "Mod 4 on ℤ: [0] = {…, −4, 0, 4, 8, …}, [1] = {…, −3, 1, 5, …}, [2], [3]. Exactly 4 classes, called <b>congruence classes</b> mod 4. [7] = [3] = [−1].",
+      "Same length on bit strings: [0110] = all 16 strings of length 4. One class per length 0, 1, 2, …",
+      "x − y ∈ ℤ on ℝ: [0.25] = {…, −0.75, 0.25, 1.25, …}. Each class has exactly one representative in [0, 1)."
+     ],
+     "answer": "Mod 4: [0], [1], [2], [3]; one class per length; one class per number in [0, 1)"
+    },
+    {
+     "type": "thm",
+     "name": "Classes are equal or disjoint",
+     "text": "For an equivalence relation R and any a, b: aRb ⟺ [a] = [b] ⟺ [a] ∩ [b] ≠ ∅.",
+     "proof": [
+      {
+       "type": "p",
+       "text": "<b>(i) ⇒ (ii):</b> suppose a R b. If x ∈ [a], then x R a; with a R b, transitivity gives x R b, so x ∈ [b]. So [a] ⊆ [b]. By symmetry b R a, and the same argument gives [b] ⊆ [a]."
+      },
+      {
+       "type": "p",
+       "text": "<b>(ii) ⇒ (iii):</b> a ∈ [a] by reflexivity, so [a] = [b] contains a and is nonempty."
+      },
+      {
+       "type": "p",
+       "text": "<b>(iii) ⇒ (i):</b> pick c in both. Then c R a and c R b. Symmetry: a R c. Transitivity with c R b: a R b. ∎"
+      }
+     ]
+    },
+    {
+     "type": "p",
+     "text": "So two classes are either <b>identical</b> or <b>disjoint</b>. Nothing in between."
+    },
+    {
+     "type": "formula",
+     "text": "a <b>partition</b> of A: nonempty subsets A<sub>i</sub>, pairwise disjoint, whose union is A"
+    },
+    {
+     "type": "p",
+     "text": "The A<sub>i</sub> are the <b>blocks</b> (or parts). Every element of A lies in exactly one block."
+    },
+    {
+     "type": "thm",
+     "name": "Equivalence classes partition the set",
+     "text": "The distinct equivalence classes of an equivalence relation on A form a partition of A.",
+     "proof": [
+      {
+       "type": "p",
+       "text": "<b>Nonempty, and they cover A:</b> each a lies in its own class [a] (reflexivity). So no class is empty and the union of all classes is A."
+      },
+      {
+       "type": "p",
+       "text": "<b>Disjoint:</b> if two classes [a], [b] share an element, the previous theorem says [a] = [b]. So <b>distinct</b> classes are disjoint. ∎"
+      }
+     ]
+    },
+    {
+     "type": "warn",
+     "text": "The classes [a] for different a are not all different: [0] = [3] = [6] for congruence mod 3 on {0, …, 8}, whose classes are {0, 3, 6}, {1, 4, 7}, {2, 5, 8}. A partition lists each block <b>once</b>. When asked “list the classes”, don’t repeat."
+    },
+    {
+     "type": "thm",
+     "name": "Partitions give equivalence relations",
+     "text": "Given a partition {Aᵢ} of A, the relation “a and b lie in the same block” is an equivalence relation whose classes are the blocks.",
+     "proof": [
+      {
+       "type": "p",
+       "text": "Reflexive: a is in some block (the blocks cover A), and it’s in the same block as itself."
+      },
+      {
+       "type": "p",
+       "text": "Symmetric: “same block” doesn’t care about order."
+      },
+      {
+       "type": "p",
+       "text": "Transitive: if a, b share block A<sub>i</sub> and b, c share block A<sub>j</sub>, then b ∈ A<sub>i</sub> ∩ A<sub>j</sub>. Blocks are disjoint, so A<sub>i</sub> = A<sub>j</sub>, and a, c share it. ∎"
+      }
+     ]
+    },
+    {
+     "type": "formula",
+     "text": "equivalence relations on A ⟷ partitions of A"
+    },
+    {
+     "type": "p",
+     "text": "A one-to-one correspondence: relation → its set of classes; partition → “same block”. Doing one then the other returns where you started."
+    },
+    {
+     "type": "example",
+     "title": "Pairs in an equivalence relation",
+     "prompt": "The partition {1, 2, 3}, {4, 5}, {6} of {1, …, 6} gives an equivalence relation. How many ordered pairs does it contain?",
+     "steps": [
+      "Every ordered pair inside a block is in the relation, and no pair across blocks.",
+      "3² + 2² + 1² = 9 + 4 + 1."
+     ],
+     "answer": "14 pairs"
+    },
+    {
+     "type": "formula",
+     "text": "#pairs in an equivalence relation = Σ (block size)²"
+    },
+    {
+     "type": "example",
+     "title": "Classes of a squared congruence",
+     "prompt": "On ℤ, a ∼ b when a² ≡ b² (mod 5). Show it is an equivalence relation and list the classes.",
+     "steps": [
+      "It is f(a) = f(b) with f(a) = a² mod 5, so it is an equivalence relation.",
+      "Squares mod 5: 0 → 0, 1 → 1, 2 → 4, 3 → 4, 4 → 1.",
+      "So a ∼ b exactly when a, b are both ≡ 0, both ≡ ±1, or both ≡ ±2 (mod 5)."
+     ],
+     "answer": "Three classes: {a ≡ 0}, {a ≡ ±1}, {a ≡ ±2} (mod 5)"
+    },
+    {
+     "type": "example",
+     "title": "Classes by an invariant",
+     "prompt": "On bit strings of length 6, s ∼ t when they have the same first bit and the same number of 1s. How many classes, and how big is the class of 110110?",
+     "steps": [
+      "First bit 0: the number of 1s can be 0–5, giving 6 classes.",
+      "First bit 1: the number of 1s can be 1–6, giving 6 classes.",
+      "110110 starts with 1 and has four 1s; the other 5 positions must hold three 1s: C(5, 3) = 10."
+     ],
+     "answer": "12 classes; the class of 110110 has 10 strings"
+    }
+   ]
+  },
+  {
+   "title": "Counting equivalence relations",
+   "blocks": [
+    {
+     "type": "p",
+     "text": "Since equivalence relations correspond to partitions, counting equivalence relations on an n-set is the same as counting <b>partitions</b> of an n-set. These counts are the <b>Bell numbers</b> B<sub>n</sub>."
+    },
+    {
+     "type": "table",
+     "head": [
+      "n",
+      "1",
+      "2",
+      "3",
+      "4",
+      "5",
+      "6"
+     ],
+     "rows": [
+      [
+       "B<sub>n</sub>",
+       "1",
+       "2",
+       "5",
+       "15",
+       "52",
+       "203"
+      ]
+     ]
+    },
+    {
+     "type": "example",
+     "title": "B₄ = 15 by block sizes",
+     "prompt": "Count the equivalence relations on {1, 2, 3, 4} by listing partition shapes.",
+     "steps": [
+      "One block {1234}: <b>1</b>.",
+      "Sizes 3 + 1: choose the singleton: <b>4</b>.",
+      "Sizes 2 + 2: pair 1 with one of the other 3; the rest is forced: <b>3</b>.",
+      "Sizes 2 + 1 + 1: choose the pair: C(4, 2) = <b>6</b>.",
+      "All singletons: <b>1</b>. Total 1 + 4 + 3 + 6 + 1 = <b>15</b>."
+     ],
+     "answer": "15"
+    },
+    {
+     "type": "p",
+     "text": "<b>Two useful counts</b>"
+    },
+    {
+     "type": "list",
+     "items": [
+      "<b>Exactly 2 classes:</b> 2<sup>n−1</sup> − 1. Element 1’s block is set; each of the other n − 1 elements either joins it or not (2<sup>n−1</sup>), minus the one case where everyone joins (only 1 class).",
+      "<b>Equal blocks:</b> to split 6 elements into three pairs, line them up (6!), divide by orderings inside each pair (2!³) and by the order of the pairs (3!): 720/(8·6) = <b>15</b>."
+     ]
+    },
+    {
+     "type": "warn",
+     "text": "When blocks have the same size, divide by the number of ways to order them. {1,2},{3,4} and {3,4},{1,2} are the same partition."
+    },
+    {
+     "type": "example",
+     "title": "Exactly two classes",
+     "prompt": "How many equivalence relations on {1, 2, 3, 4, 5} have exactly 2 classes?",
+     "steps": [
+      "Each of 2, 3, 4, 5 either joins 1’s block or not: 2⁴ = 16 choices.",
+      "Subtract the one where all join (only one class): 15.",
+      "Check by shapes: 4 + 1 gives 5, 3 + 2 gives C(5, 2) = 10."
+     ],
+     "answer": "15"
+    },
+    {
+     "type": "example",
+     "title": "Forcing a relation",
+     "prompt": "How many equivalence relations on {1, 2, 3, 4} have 1 ∼ 2?",
+     "steps": [
+      "Glue 1 and 2 into a single object.",
+      "Partitions of the 3 objects {12, 3, 4}: B₃ = 5."
+     ],
+     "answer": "5"
+    }
+   ]
+  },
+  {
+   "title": "Partial orders, total orders, lexicographic order",
+   "blocks": [
+    {
+     "type": "formula",
+     "text": "partial order = reflexive + <b>antisymmetric</b> + transitive"
+    },
+    {
+     "type": "p",
+     "text": "A set S with a partial order R is a <b>partially ordered set</b>, or <b>poset</b>, written (S, R). We often write a ≼ b for a R b, and a ≺ b for “a ≼ b and a ≠ b”."
+    },
+    {
+     "type": "tip",
+     "text": "An equivalence relation glues things together; a partial order ranks them. Antisymmetry says two <b>different</b> elements can’t each be below the other: no ties between distinct things."
+    },
+    {
+     "type": "example",
+     "title": "Standard posets",
+     "prompt": "Check that (ℤ, ≤), (ℤ⁺, |) and (P(S), ⊆) are posets.",
+     "steps": [
+      "(ℤ, ≤): reflexive (a ≤ a), antisymmetric (a ≤ b ≤ a ⇒ a = b), transitive.",
+      "(ℤ⁺, |): a | a; if a | b and b | a with both positive then a = b; a | b, b | c ⇒ a | c.",
+      "(P(S), ⊆): A ⊆ A; A ⊆ B ⊆ A ⇒ A = B; ⊆ is transitive."
+     ],
+     "answer": "All three are reflexive, antisymmetric and transitive"
+    },
+    {
+     "type": "example",
+     "title": "Not partial orders",
+     "prompt": "Why are (ℤ, &lt;), (ℤ, |) and “at least as tall as” not partial orders?",
+     "steps": [
+      "(ℤ, &lt;): not reflexive. (It’s a <b>strict</b> order.)",
+      "(ℤ, |) on all integers: not antisymmetric (3 | −3 and −3 | 3).",
+      "“is at least as tall as” on people: not antisymmetric (two different people of the same height)."
+     ],
+     "answer": "&lt; is not reflexive; | on ℤ and “at least as tall” are not antisymmetric"
+    },
+    {
+     "type": "formula",
+     "text": "a, b <b>comparable</b>: a ≼ b or b ≼ a"
+    },
+    {
+     "type": "p",
+     "text": "“Partial” means some pairs may be <b>incomparable</b>: in (ℤ⁺, |), neither 2 | 3 nor 3 | 2."
+    },
+    {
+     "type": "formula",
+     "text": "total (linear) order: every two elements are comparable"
+    },
+    {
+     "type": "p",
+     "text": "A totally ordered set is also called a <b>chain</b>."
+    },
+    {
+     "type": "list",
+     "items": [
+      "(ℤ, ≤) is total. (ℤ⁺, |) is not. ({1, 2, 4, 8, 16}, |) is total: each divides the next.",
+      "(P(S), ⊆) is total only if |S| ≤ 1: {a} and {b} are incomparable.",
+      "<b>Well-ordered:</b> a total order where every nonempty subset has a least element. (ℕ, ≤) is; (ℤ, ≤) isn’t (ℤ has no least element). This is what makes induction work."
+     ]
+    },
+    {
+     "type": "formula",
+     "text": "(a<sub>1</sub>, a<sub>2</sub>) ≺ (b<sub>1</sub>, b<sub>2</sub>) ⟺ a<sub>1</sub> ≺ b<sub>1</sub>, or (a<sub>1</sub> = b<sub>1</sub> and a<sub>2</sub> ≺ b<sub>2</sub>)"
+    },
+    {
+     "type": "p",
+     "text": "Dictionary order: compare first coordinates; only on a tie, compare second coordinates. Then ≼ means ≺ or =. Extends to n-tuples: the first coordinate where they differ decides."
+    },
+    {
+     "type": "example",
+     "title": "Lexicographic comparisons",
+     "prompt": "In ℤ × ℤ with lexicographic order, compare (2, 5) with (3, 1) and (4, −1) with (4, 0).",
+     "steps": [
+      "(2, 5) ≺ (3, 1): first coordinates decide, 2 &lt; 3. The 5 vs 1 is never looked at.",
+      "(4, −1) ≺ (4, 0): tie in the first coordinate, then −1 &lt; 0."
+     ],
+     "answer": "(2, 5) ≺ (3, 1) and (4, −1) ≺ (4, 0)"
+    },
+    {
+     "type": "p",
+     "text": "<b>Strings.</b> Compare letter by letter; the first difference decides. If one string is a prefix of the other, the shorter comes first. So ab ≺ abc ≺ b, and “disc” ≺ “discreet” ≺ “discrete”."
+    },
+    {
+     "type": "warn",
+     "text": "Lexicographic is not “compare coordinatewise” (that’s the product order). Under lex, every two pairs are comparable when the coordinate orders are total; under the product order (2, 5) and (3, 1) are incomparable."
+    },
+    {
+     "type": "example",
+     "title": "Proving a partial order",
+     "prompt": "On ℤ⁺ × ℤ⁺ define (a, b) ≼ (c, d) when a ≤ c and b ≤ d. Prove this is a partial order. Is it total?",
+     "steps": [
+      "Reflexive: a ≤ a and b ≤ b.",
+      "Antisymmetric: a ≤ c ≤ a and b ≤ d ≤ b force a = c and b = d.",
+      "Transitive: ≤ is transitive in each coordinate.",
+      "Not total: (1, 2) and (2, 1) are incomparable."
+     ],
+     "answer": "A partial order (the product order), not total"
+    }
+   ]
+  },
+  {
+   "title": "Hasse diagrams, extremal elements, bounds, lattices",
+   "blocks": [
+    {
+     "type": "tip",
+     "text": "The arrow diagram of a partial order is cluttered: loops everywhere, plus every arrow implied by transitivity. A Hasse diagram keeps only the essential arrows and lets “up the page” mean “bigger”."
+    },
+    {
+     "type": "steps",
+     "title": "Method",
+     "items": [
+      "Drop all loops (reflexivity is understood).",
+      "Drop every arrow implied by transitivity: keep a → b only if <b>b covers a</b>: a ≺ b with nothing strictly between them.",
+      "Place each element above the ones it covers, and drop the arrowheads."
+     ]
+    },
+    {
+     "type": "p",
+     "text": "To read it back: a ≼ b exactly when you can climb from a to b along edges, always going <b>up</b>."
+    },
+    {
+     "type": "p",
+     "text": "<b>Divisors of 12 under |.</b> Bottom row 1; above it 2 and 3; above those 4 and 6; 12 on top. Edges (covers): 1–2, 1–3, 2–4, 2–6, 3–6, 4–12, 6–12."
+    },
+    {
+     "type": "p",
+     "text": "<b>P({a, b, c}) under ⊆</b> is a cube: ∅ at the bottom, then {a}, {b}, {c}, then {a,b}, {a,c}, {b,c}, then {a,b,c}; each set is joined to the sets with exactly one more element (12 edges)."
+    },
+    {
+     "type": "example",
+     "title": "Reading a Hasse diagram",
+     "prompt": "Using the divisors-of-12 diagram: is 2 | 12? Are 4 and 6 comparable? Why is there no edge 1–4 or 2–12?",
+     "steps": [
+      "2 | 12: climb 2 → 4 → 12 (or 2 → 6 → 12). ✓",
+      "4 and 6: no upward route between them, so incomparable (4 ∤ 6, 6 ∤ 4).",
+      "There’s no edge 1–4 because 2 sits between them (1 | 2 | 4). There’s no edge 2–12 because 4 and 6 sit between."
+     ],
+     "answer": "2 | 12 (climb 2–4–12); 4 and 6 are incomparable; 1–4 and 2–12 are not covers"
+    },
+    {
+     "type": "warn",
+     "text": "Drawing an edge for every relation (like 1–12) is the most common error. Only <b>covers</b>: ask “is there anything strictly between?”"
+    },
+    {
+     "type": "p",
+     "text": "Running poset for this page: S = {2, 3, 4, 6, 9, 12, 18} under divisibility. Its Hasse diagram has bottom row 2, 3; middle row 4, 6, 9; top row 12, 18; edges 2–4, 2–6, 3–6, 3–9, 4–12, 6–12, 6–18, 9–18."
+    },
+    {
+     "type": "table",
+     "head": [
+      "Word",
+      "Meaning",
+      "In the diagram"
+     ],
+     "rows": [
+      [
+       "<b>maximal</b> a",
+       "nothing is strictly above a",
+       "no edge goes up from a"
+      ],
+      [
+       "<b>minimal</b> a",
+       "nothing is strictly below a",
+       "no edge goes down from a"
+      ],
+      [
+       "<b>greatest</b> a",
+       "b ≼ a for <b>every</b> b",
+       "everything climbs to a"
+      ],
+      [
+       "<b>least</b> a",
+       "a ≼ b for <b>every</b> b",
+       "a climbs to everything"
+      ]
+     ]
+    },
+    {
+     "type": "tip",
+     "text": "“Maximal” says nothing <b>beats</b> a. “Greatest” says a <b>beats everything</b>. With incomparable elements around, those are very different: a maximal element can simply be incomparable to the rest."
+    },
+    {
+     "type": "example",
+     "title": "Maximal, minimal, greatest, least",
+     "prompt": "In S = {2, 3, 4, 6, 9, 12, 18} under |, find the maximal, minimal, greatest and least elements. Compare with the divisors of 12.",
+     "steps": [
+      "<b>Minimal:</b> 2 and 3 (nothing in S divides them except themselves).",
+      "<b>Maximal:</b> 12 and 18.",
+      "<b>No greatest:</b> 12 and 18 are incomparable, so neither is above everything. <b>No least</b> for the same reason with 2 and 3.",
+      "Divisors of 12, by contrast: 1 is least (and the only minimal); 12 is greatest (and the only maximal)."
+     ],
+     "answer": "Minimal 2, 3; maximal 12, 18; no greatest, no least. Divisors of 12: least 1, greatest 12"
+    },
+    {
+     "type": "list",
+     "items": [
+      "<b>Greatest is unique if it exists:</b> if a and a′ are both greatest, a ≼ a′ and a′ ≼ a, so a = a′ by antisymmetry.",
+      "<b>Greatest ⇒ the only maximal:</b> anything else is below it, so not maximal.",
+      "<b>Every finite nonempty poset has a minimal element:</b> start anywhere, step down while you can; you can’t step down forever in a finite set without repeating, and a repeat would contradict antisymmetry.",
+      "Infinite posets can have none: (ℤ, ≤) has no maximal or minimal element. (ℤ⁺, |) has least element 1 but no maximal element."
+     ]
+    },
+    {
+     "type": "warn",
+     "text": "“Only one maximal element” does <b>not</b> guarantee a greatest element in infinite posets. In finite posets it does (every element climbs to some maximal one)."
+    },
+    {
+     "type": "formula",
+     "text": "u is an <b>upper bound</b> of a subset A if a ≼ u for all a ∈ A"
+    },
+    {
+     "type": "formula",
+     "text": "l is a <b>lower bound</b> of A if l ≼ a for all a ∈ A"
+    },
+    {
+     "type": "p",
+     "text": "Bounds come from the whole poset S and need not be in A."
+    },
+    {
+     "type": "formula",
+     "text": "lub(A) = least upper bound: an upper bound below every other upper bound"
+    },
+    {
+     "type": "formula",
+     "text": "glb(A) = greatest lower bound"
+    },
+    {
+     "type": "p",
+     "text": "Also called supremum and infimum. Each is unique if it exists."
+    },
+    {
+     "type": "steps",
+     "title": "Method",
+     "items": [
+      "List all upper bounds (everything that every element of A climbs to).",
+      "If that list has a least element, that’s the lub. If the list is empty, or has no least element, there’s no lub."
+     ]
+    },
+    {
+     "type": "example",
+     "title": "Bounds, lub and glb",
+     "prompt": "In S = {2, 3, 4, 6, 9, 12, 18} under |, find the upper and lower bounds, lub and glb of {2, 3}, {12, 18}, {4, 9} and {4, 6}.",
+     "steps": [
+      "A = {2, 3}: upper bounds 6, 12, 18; least of these is 6. <b>lub = 6</b>. Lower bounds: none (nothing in S divides both 2 and 3; 1 ∉ S). <b>No glb.</b>",
+      "A = {12, 18}: upper bounds none, <b>no lub</b>. Lower bounds 2, 3, 6; greatest is 6. <b>glb = 6</b>.",
+      "A = {4, 9}: no upper bound (36 ∉ S), no lower bound.",
+      "A = {4, 6}: upper bound 12 only, lub = 12; lower bound 2, glb = 2."
+     ],
+     "answer": "lub{2,3} = 6, no glb; no lub{12,18}, glb = 6; {4,9} has no bounds; lub{4,6} = 12, glb = 2"
+    },
+    {
+     "type": "tip",
+     "text": "lub{a, b} = lcm(a, b) and glb{a, b} = gcd(a, b). In (P(S), ⊆), lub{A, B} = A ∪ B and glb{A, B} = A ∩ B."
+    },
+    {
+     "type": "warn",
+     "text": "Having upper bounds isn’t enough: the upper bounds must have a <b>least</b> one. If the upper bounds were, say, two incomparable elements, there’d be no lub."
+    },
+    {
+     "type": "formula",
+     "text": "lattice: a poset in which <b>every pair</b> of elements has both a lub and a glb"
+    },
+    {
+     "type": "list",
+     "items": [
+      "(ℤ⁺, |): lattice (lcm and gcd). Divisors of any n under |: lattice (lcm and gcd of divisors of n are divisors of n).",
+      "(P(S), ⊆): lattice (∪ and ∩).",
+      "Every total order: lattice (lub = the larger, glb = the smaller).",
+      "S = {2, 3, 4, 6, 9, 12, 18} under |: <b>not</b> a lattice, since {12, 18} has no lub.",
+      "({1, 2, 3, 4, 5}, |): not a lattice, since {2, 3} has no upper bound."
+     ]
+    },
+    {
+     "type": "warn",
+     "text": "To show “not a lattice”, exhibit <b>one pair</b> missing a lub or a glb, and say why (list its upper bounds)."
+    },
+    {
+     "type": "example",
+     "title": "Is it a lattice?",
+     "prompt": "Is ({1, 2, 3, 4, 5}, |) a lattice? Is the set of divisors of 30 under | a lattice?",
+     "steps": [
+      "A lattice needs a lub and a glb for every pair.",
+      "{2, 3} in {1, …, 5}: an upper bound must be a common multiple of 2 and 3 in the set; there is none. Not a lattice.",
+      "Divisors of 30: for divisors a, b of 30, lcm(a, b) and gcd(a, b) also divide 30, and they are the lub and glb. A lattice."
+     ],
+     "answer": "No ({2, 3} has no upper bound); yes (lub = lcm, glb = gcd)"
+    }
+   ]
+  },
+  {
+   "title": "Topological sorting",
+   "blocks": [
+    {
+     "type": "tip",
+     "text": "You have tasks with prerequisites (a partial order). You must do them one at a time. A <b>topological sort</b> lists all elements in a total order that <b>respects</b> the partial order: if a ≺ b, then a comes before b. (Also called a compatible total order, or linear extension.)"
+    },
+    {
+     "type": "steps",
+     "title": "Method",
+     "items": [
+      "Pick any <b>minimal</b> element (one with nothing still below it). One exists because every finite nonempty poset has a minimal element.",
+      "Write it down and delete it. What’s left is still a poset.",
+      "Repeat until empty."
+     ]
+    },
+    {
+     "type": "p",
+     "text": "<b>Why it respects the order:</b> when b is picked it’s minimal among what’s left, so anything below b was already picked."
+    },
+    {
+     "type": "example",
+     "title": "Topological sort of six tasks",
+     "prompt": "Prerequisites: A and B before C; B before D; C and D before E; E before F. Find a topological sort and count all of them.",
+     "steps": [
+      "Minimal at the start: A, B. Pick B.",
+      "Now minimal: A, D. Pick A. Then C, D are minimal; pick C, then D.",
+      "Then E, then F. Order: <b>B, A, C, D, E, F</b>.",
+      "Different choices give other valid orders; this poset has exactly 5 (ABCDEF, ABDCEF, BACDEF, BADCEF, BDACEF)."
+     ],
+     "answer": "B, A, C, D, E, F is one; there are exactly 5"
+    },
+    {
+     "type": "example",
+     "title": "Linear extensions of the divisors of 12",
+     "prompt": "How many topological sorts do the divisors of 12 under | have?",
+     "steps": [
+      "1 must be first and 12 last.",
+      "The middle elements 2, 3, 4, 6 need 2 before 4, 2 before 6, 3 before 6.",
+      "Orders of the middle: 2346, 2364, 2436, 3246, 3264."
+     ],
+     "answer": "5 (for example 1, 3, 2, 6, 4, 12)"
+    },
+    {
+     "type": "warn",
+     "text": "A topological sort must include <b>every</b> element, and for incomparable elements either order is fine. Don’t try to “compare” 4 and 6; just respect the edges."
+    }
+   ]
+  }
+ ],
+ "cards": [
+  {
+   "front": "What is a binary relation from A to B?",
+   "back": [
+    {
+     "type": "formula",
+     "text": "R ⊆ A × B"
+    },
+    {
+     "type": "p",
+     "text": "A relation is just a <b>set of ordered pairs</b> (a, b) with a ∈ A and b ∈ B. Write <b>aRb</b> when (a, b) ∈ R. Any set of pairs counts, with or without a pattern."
+    },
+    {
+     "type": "p",
+     "text": "<b>Examples.</b>"
+    },
+    {
+     "type": "list",
+     "items": [
+      "A = {1, 2, 3}, B = {a, b, c, d}, R = {(1,a), (1,b), (2,c), (2,d)}: 1Ra true, 3Ra false.",
+      "Classes and classrooms: Math 55 R Wheeler 150.",
+      "Web pages: aRb if page a links to page b."
+     ]
+    },
+    {
+     "type": "warn",
+     "text": "Order matters: aRb doesn’t mean bRa."
+    }
+   ]
+  },
+  {
+   "front": "When is a relation reflexive? Is R = {(1,1), (1,2), (2,2), (1,3), (2,3)} on {1, 2, 3} reflexive?",
+   "back": [
+    {
+     "type": "formula",
+     "text": "reflexive: aRa for every a ∈ A"
+    },
+    {
+     "type": "p",
+     "text": "In the diagram, a loop at <b>every</b> dot. To show it fails, find one a with a R̸ a."
+    },
+    {
+     "type": "p",
+     "text": "<b>R is not reflexive</b>: (3, 3) ∉ R."
+    }
+   ]
+  },
+  {
+   "front": "Define symmetric and antisymmetric. Are they opposites?",
+   "back": [
+    {
+     "type": "formula",
+     "text": "symmetric: aRb ⟹ bRa"
+    },
+    {
+     "type": "formula",
+     "text": "antisymmetric: aRb and bRa ⟹ a = b"
+    },
+    {
+     "type": "p",
+     "text": "<b>Symmetric:</b> every arrow has a return arrow. <b>Antisymmetric:</b> no two-way arrows between <b>different</b> elements (loops are fine)."
+    },
+    {
+     "type": "warn",
+     "text": "Not opposites. “Antisymmetric” is not “not symmetric”. A relation can be both (=), neither, or just one."
+    }
+   ]
+  },
+  {
+   "front": "Symmetric? Antisymmetric? ≤ on ℝ, ⊆, divisibility on ℤ⁺, gcd = 1, congruence mod 3.",
+   "back": [
+    {
+     "type": "list",
+     "items": [
+      "≤: not symmetric (1 ≤ 3, 3 ≰ 1); <b>antisymmetric</b>.",
+      "⊆: not symmetric; <b>antisymmetric</b> (A ⊆ B and B ⊆ A ⟹ A = B).",
+      "| on ℤ⁺: not symmetric (2 | 4, 4 ∤ 2); <b>antisymmetric</b>.",
+      "gcd = 1: <b>symmetric</b>; not antisymmetric (2R3, 3R2, 2 ≠ 3).",
+      "≡ mod 3: <b>symmetric</b>; not antisymmetric (1 ≡ 4 and 4 ≡ 1)."
+     ]
+    },
+    {
+     "type": "warn",
+     "text": "Divisibility on all of ℤ is <b>not</b> antisymmetric: 2 | −2 and −2 | 2."
+    }
+   ]
+  },
+  {
+   "front": "When is a relation transitive, and how do you check a finite one?",
+   "back": [
+    {
+     "type": "formula",
+     "text": "transitive: aRb and bRc ⟹ aRc"
+    },
+    {
+     "type": "p",
+     "text": "In the diagram: any two-step path a → b → c needs a direct arrow a → c."
+    },
+    {
+     "type": "p",
+     "text": "<b>How to check.</b>"
+    },
+    {
+     "type": "list",
+     "items": [
+      "For each (a, b) in R, find every (b, c) in R starting where it ends.",
+      "Check (a, c) ∈ R. One missing pair disproves it."
+     ]
+    },
+    {
+     "type": "p",
+     "text": "Running example: 1R2 and 2R3, and 1R3 ✓; the other chains use loops. <b>Transitive.</b>"
+    }
+   ]
+  },
+  {
+   "front": "Is R = {(1, 2), (2, 1)} on {1, 2} transitive?",
+   "back": [
+    {
+     "type": "p",
+     "text": "<b>No.</b> 1R2 and 2R1 would require 1R1, which is missing (and 2R2 too)."
+    },
+    {
+     "type": "warn",
+     "text": "Watch for chains that come back to where they started: they force loops."
+    }
+   ]
+  },
+  {
+   "front": "Fill in reflexive / symmetric / antisymmetric / transitive for =, &lt;, ≤, ⊆, | (ℤ⁺), ≡ (mod m), gcd = 1.",
+   "back": [
+    {
+     "type": "list",
+     "items": [
+      "<b>=</b>: R S A T (all four).",
+      "<b>&lt;</b>: not R, not S, A, T.",
+      "<b>≤, ⊆, |</b>: R, not S, A, T.",
+      "<b>≡ mod m</b>: R, S, not A, T.",
+      "<b>gcd = 1</b> (and gcd ≠ 1): not R, S, not A, not T."
+     ]
+    },
+    {
+     "type": "p",
+     "text": "&lt; is antisymmetric <b>vacuously</b>: a &lt; b and b &lt; a never both happen."
+    }
+   ]
+  },
+  {
+   "front": "Which relations are both symmetric and antisymmetric? Give one that is neither symmetric nor transitive.",
+   "back": [
+    {
+     "type": "p",
+     "text": "<b>Both:</b> exactly the relations with no arrows between different elements, i.e. only loops. Examples: = and ∅. If aRb with a ≠ b, symmetry gives bRa, and then antisymmetry would force a = b, a contradiction."
+    },
+    {
+     "type": "p",
+     "text": "<b>Neither symmetric nor transitive:</b> {(1, 2), (2, 3)} on {1, 2, 3}: 1R2 but 2 R̸ 1, and 1R2, 2R3 but 1 R̸ 3."
+    }
+   ]
+  },
+  {
+   "front": "If |A| = n, how many relations, reflexive relations and symmetric relations are there on A?",
+   "back": [
+    {
+     "type": "list",
+     "items": [
+      "<b>All:</b> A × A has n² pairs, each in or out: <b>2<sup>n²</sup></b>.",
+      "<b>Reflexive:</b> the n loops (a, a) are forced in, and the other n² − n pairs are free: <b>2<sup>n² − n</sup></b>.",
+      "<b>Symmetric:</b> the n loops are free, and each of the C(n, 2) pairs {a, b} is decided together (both in or both out): <b>2<sup>n + C(n,2)</sup> = 2<sup>n(n+1)/2</sup></b>."
+     ]
+    },
+    {
+     "type": "p",
+     "text": "n = 2: 16, 4, 8."
+    }
+   ]
+  },
+  {
+   "front": "How many antisymmetric relations on an n-element set?",
+   "back": [
+    {
+     "type": "formula",
+     "text": "2ⁿ · 3<sup>C(n,2)</sup>"
+    },
+    {
+     "type": "p",
+     "text": "The loops are free (2 choices each). For each pair {a, b} of different elements there are 3 allowed options: only (a, b), only (b, a), or neither. Both is forbidden."
+    },
+    {
+     "type": "p",
+     "text": "n = 2: 4 · 3 = 12."
+    }
+   ]
+  },
+  {
+   "front": "What is the composition S ∘ R, and how do you compute it?",
+   "back": [
+    {
+     "type": "formula",
+     "text": "S ∘ R = {(a, c) : there is b with aRb and bSc}"
+    },
+    {
+     "type": "p",
+     "text": "R goes from A to B, S from B to C; S ∘ R goes from A to C. Do <b>R first</b>, then S, just like g ∘ f for functions."
+    },
+    {
+     "type": "p",
+     "text": "<b>How.</b>"
+    },
+    {
+     "type": "list",
+     "items": [
+      "For each (a, b) in R, find every pair in S starting with b.",
+      "Each (b, c) found gives (a, c)."
+     ]
+    },
+    {
+     "type": "warn",
+     "text": "S ∘ R and R ∘ S are usually different."
+    }
+   ]
+  },
+  {
+   "front": "R = {(1,a), (1,b), (2,c)} and S = {(a,x), (b,y), (c,x)}. Find S ∘ R.",
+   "back": [
+    {
+     "type": "p",
+     "text": "1 → a → x, 1 → b → y, 2 → c → x."
+    },
+    {
+     "type": "formula",
+     "text": "S ∘ R = {(1, x), (1, y), (2, x)}"
+    }
+   ]
+  },
+  {
+   "front": "R is “gcd(a, b) = 1” on positive integers. What is R ∘ R?",
+   "back": [
+    {
+     "type": "p",
+     "text": "<b>Every pair (a, b)</b>, even (2, 2)."
+    },
+    {
+     "type": "p",
+     "text": "For any a, b pick a prime p bigger than both. Then gcd(a, p) = 1 and gcd(p, b) = 1, so aRp and pRb, hence a (R ∘ R) b."
+    }
+   ]
+  },
+  {
+   "front": "What are the powers Rⁿ of a relation, and what does a Rⁿ b mean?",
+   "back": [
+    {
+     "type": "formula",
+     "text": "R¹ = R, Rⁿ⁺¹ = Rⁿ ∘ R"
+    },
+    {
+     "type": "p",
+     "text": "a Rⁿ b exactly when there’s a <b>path of length n</b> from a to b: a = a₀ → a₁ → ⋯ → aₙ = b, each step an arrow of R."
+    },
+    {
+     "type": "p",
+     "text": "R is transitive ⟺ Rⁿ ⊆ R for every n ≥ 1: paths of any length must already be direct arrows."
+    }
+   ]
+  },
+  {
+   "front": "R = {(1,2), (2,3), (3,1)} on {1, 2, 3}. Find R², R³, R⁴.",
+   "back": [
+    {
+     "type": "p",
+     "text": "R is the cycle 1 → 2 → 3 → 1."
+    },
+    {
+     "type": "list",
+     "items": [
+      "R² (two steps): <b>{(1,3), (2,1), (3,2)}</b>.",
+      "R³ (three steps, back home): <b>{(1,1), (2,2), (3,3)}</b>.",
+      "R⁴ = <b>R</b> again."
+     ]
+    },
+    {
+     "type": "p",
+     "text": "So the powers repeat every 3: R = R⁴ = R⁷ = ⋯, R² = R⁵ = ⋯, R³ = R⁶ = ⋯"
+    }
+   ]
+  },
+  {
+   "front": "What is the closure of a relation R with respect to a property P?",
+   "back": [
+    {
+     "type": "p",
+     "text": "<b>Meaning.</b> The <b>smallest</b> relation that contains R and has property P. Smallest means it sits inside every relation that contains R and has P."
+    },
+    {
+     "type": "p",
+     "text": "To prove something is the closure: it contains R, it has P, and every pair you added was <b>forced</b>."
+    },
+    {
+     "type": "warn",
+     "text": "Closures exist only for properties you can fix by adding pairs. If (1, 1) ∈ R there is no “irreflexive closure”."
+    }
+   ]
+  },
+  {
+   "front": "What are the reflexive closure and the symmetric closure of R?",
+   "back": [
+    {
+     "type": "formula",
+     "text": "reflexive: R ∪ Δ, Δ = {(a, a) : a ∈ A}"
+    },
+    {
+     "type": "formula",
+     "text": "symmetric: R ∪ R⁻¹, R⁻¹ = {(b, a) : (a, b) ∈ R}"
+    },
+    {
+     "type": "p",
+     "text": "Add every missing loop; add every missing reverse arrow. Both are forced, and the result already has the property."
+    },
+    {
+     "type": "p",
+     "text": "R = {(1,2), (2,3), (3,4), (4,2)} on {1,2,3,4}: reflexive closure adds 4 loops; symmetric closure adds (2,1), (3,2), (4,3), (2,4)."
+    }
+   ]
+  },
+  {
+   "front": "What is the connectivity relation R*?",
+   "back": [
+    {
+     "type": "formula",
+     "text": "R* = R ∪ R² ∪ R³ ∪ ⋯"
+    },
+    {
+     "type": "p",
+     "text": "a R* b when there is a path of some positive length from a to b, each step a pair of R. (Recall a Rⁿ b means a path of exactly n steps.)"
+    },
+    {
+     "type": "p",
+     "text": "For R = {(1,2), (2,3), (3,4), (4,2)}: 1 reaches 2, 3, 4; each of 2, 3, 4 reaches 2, 3, 4. R* has 12 pairs."
+    }
+   ]
+  },
+  {
+   "front": "If |A| = n, how long can the paths you need for R* be? Why?",
+   "back": [
+    {
+     "type": "formula",
+     "text": "R* = R ∪ R² ∪ ⋯ ∪ Rⁿ"
+    },
+    {
+     "type": "p",
+     "text": "A path of length m visits m + 1 spots. If m > n, some element repeats (pigeonhole); cut out the loop between the repeats to get a shorter path with the same ends. So length ≤ n always suffices (≤ n − 1 if a ≠ b)."
+    }
+   ]
+  },
+  {
+   "front": "Prove that the transitive closure of R is R*.",
+   "back": [
+    {
+     "type": "list",
+     "items": [
+      "<b>Contains R:</b> R = R¹ ⊆ R*.",
+      "<b>Transitive:</b> a path a→⋯→b glued to a path b→⋯→c is a path a→⋯→c.",
+      "<b>Smallest:</b> if S ⊇ R is transitive, each step of a path is in S, and transitivity collapses the path step by step, so a S b. Hence R* ⊆ S. ∎"
+     ]
+    }
+   ]
+  },
+  {
+   "front": "How do you find a transitive closure by hand? What traps are there?",
+   "back": [
+    {
+     "type": "p",
+     "text": "<b>Recipe.</b> For each a, list everything reachable by following arrows one or more steps. Add (a, b) for each reachable b."
+    },
+    {
+     "type": "p",
+     "text": "{(1,2), (2,1), (3,3)} on {1,2,3} → {(1,1), (1,2), (2,1), (2,2), (3,3)}."
+    },
+    {
+     "type": "warn",
+     "text": "R ∪ R² isn’t enough in general: {(1,2), (2,3), (3,4)} needs (1,4) from 3 steps. And (a, a) appears only if a lies on a circuit; the transitive closure is not automatically reflexive."
+    }
+   ]
+  },
+  {
+   "front": "Does the order of closures matter? How do you get the smallest equivalence relation containing R?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Yes. A symmetric closure can destroy transitivity: R = {(1,2), (3,2)} is transitive, but its symmetric closure has 1→2→3 without (1,3)."
+    },
+    {
+     "type": "formula",
+     "text": "smallest equivalence relation ⊇ R: reflexive, then symmetric, then transitive closure"
+    },
+    {
+     "type": "p",
+     "text": "Transitive closure preserves reflexive and symmetric, so doing it last is safe."
+    }
+   ]
+  },
+  {
+   "front": "What is Warshall’s algorithm doing?",
+   "back": [
+    {
+     "type": "formula",
+     "text": "Wₖ[i][j] = Wₖ₋₁[i][j] ∨ (Wₖ₋₁[i][k] ∧ Wₖ₋₁[k][j])"
+    },
+    {
+     "type": "p",
+     "text": "Wₖ records paths whose <b>interior stops</b> lie in {1, …, k}. At step k: everyone who reaches k gets connected to everywhere k goes. Wₙ is the matrix of R*."
+    },
+    {
+     "type": "p",
+     "text": "R = {(1,3), (2,1), (3,4)}: k=1 adds (2,3); k=3 adds (1,4), (2,4). Closure {(1,3), (1,4), (2,1), (2,3), (2,4), (3,4)}."
+    },
+    {
+     "type": "warn",
+     "text": "Use pairs added at earlier steps: (2,3) from k = 1 is what gives (2,4) at k = 3."
+    }
+   ]
+  },
+  {
+   "front": "How do Boolean matrix products relate to relations?",
+   "back": [
+    {
+     "type": "formula",
+     "text": "M(R²) = M(R) ⊙ M(R); M(R*) = M(R) ∨ M(R)^[2] ∨ ⋯ ∨ M(R)^[n]"
+    },
+    {
+     "type": "p",
+     "text": "Boolean product: multiply like matrices but use “or” for + and “and” for ×. Entry (i, j) is 1 when some k has iRk and kRj, i.e. a 2-step path. ∨ is entrywise “or”."
+    }
+   ]
+  },
+  {
+   "front": "What is the fastest way to prove a relation is an equivalence relation?",
+   "back": [
+    {
+     "type": "formula",
+     "text": "a ∼ b ⟺ f(a) = f(b) is always an equivalence relation"
+    },
+    {
+     "type": "p",
+     "text": "Rewrite the relation as “same value of some function f”. It inherits reflexive, symmetric, transitive from =. Otherwise check the three properties directly."
+    },
+    {
+     "type": "p",
+     "text": "a ≡ b (mod m) ⟺ a mod m = b mod m. Same length: f = length. x − y ∈ ℤ ⟺ same fractional part."
+    }
+   ]
+  },
+  {
+   "front": "Prove congruence mod m is an equivalence relation.",
+   "back": [
+    {
+     "type": "list",
+     "items": [
+      "Reflexive: a − a = 0·m.",
+      "Symmetric: a − b = km ⇒ b − a = (−k)m.",
+      "Transitive: a − b = km, b − c = lm ⇒ a − c = (k + l)m."
+     ]
+    },
+    {
+     "type": "p",
+     "text": "Classes mod 4: [0], [1], [2], [3]; [7] = [3] = [−1]."
+    }
+   ]
+  },
+  {
+   "front": "Give non-examples of equivalence relations, naming the failing property.",
+   "back": [
+    {
+     "type": "list",
+     "items": [
+      "|x − y| ≤ 1 on ℝ: <b>not transitive</b> (0∼1, 1∼2, 0≁2).",
+      "a | b on ℤ⁺: <b>not symmetric</b>.",
+      "Empty relation on a nonempty set: symmetric and transitive (vacuously) but <b>not reflexive</b>."
+     ]
+    },
+    {
+     "type": "warn",
+     "text": "“aRb and bRa give aRa” fails if a is related to nothing. Symmetric + transitive does not imply reflexive."
+    }
+   ]
+  },
+  {
+   "front": "On ℤ, a ∼ b when a² ≡ b² (mod 5). Equivalence relation? Classes?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Yes: it is f(a) = f(b) with f(a) = a² mod 5."
+    },
+    {
+     "type": "p",
+     "text": "Squares mod 5: 0 → 0, ±1 → 1, ±2 → 4. So <b>three classes</b>: a ≡ 0; a ≡ ±1; a ≡ ±2 (mod 5)."
+    },
+    {
+     "type": "warn",
+     "text": "Not five classes: 1 and 4 are equivalent since 1 ≡ 16 (mod 5)."
+    }
+   ]
+  },
+  {
+   "front": "For an equivalence relation, how are aRb, [a] = [b], and [a] ∩ [b] ≠ ∅ related? Prove it.",
+   "back": [
+    {
+     "type": "formula",
+     "text": "aRb ⟺ [a] = [b] ⟺ [a] ∩ [b] ≠ ∅"
+    },
+    {
+     "type": "list",
+     "items": [
+      "aRb ⇒ [a] ⊆ [b]: x ∈ [a] means xRa, with aRb gives xRb. By symmetry also [b] ⊆ [a].",
+      "[a] = [b] ⇒ it contains a (reflexive), so nonempty.",
+      "c in both ⇒ cRa, cRb ⇒ aRc, cRb ⇒ aRb."
+     ]
+    },
+    {
+     "type": "p",
+     "text": "So two classes are identical or disjoint."
+    }
+   ]
+  },
+  {
+   "front": "What is a partition? Why do equivalence classes form one?",
+   "back": [
+    {
+     "type": "formula",
+     "text": "partition: nonempty, pairwise disjoint blocks whose union is A"
+    },
+    {
+     "type": "list",
+     "items": [
+      "a ∈ [a] by reflexivity: no class is empty and the classes cover A.",
+      "Two classes that meet are equal, so distinct classes are disjoint. ∎"
+     ]
+    },
+    {
+     "type": "warn",
+     "text": "[0] = [3] = [6] mod 3. List each block once."
+    }
+   ]
+  },
+  {
+   "front": "How many ordered pairs are in an equivalence relation with given class sizes?",
+   "back": [
+    {
+     "type": "formula",
+     "text": "#pairs = Σ (class size)²"
+    },
+    {
+     "type": "p",
+     "text": "Every ordered pair inside a block is in the relation, and no pair across blocks."
+    },
+    {
+     "type": "p",
+     "text": "Classes {1,2,3}, {4,5}, {6}: 9 + 4 + 1 = 14 pairs. Sizes 4, 2, 1: 16 + 4 + 1 = 21."
+    }
+   ]
+  },
+  {
+   "front": "How many equivalence relations are there on an n-element set?",
+   "back": [
+    {
+     "type": "formula",
+     "text": "Bell numbers Bₙ: 1, 2, 5, 15, 52, 203 (n = 1…6)"
+    },
+    {
+     "type": "p",
+     "text": "Same as counting partitions."
+    },
+    {
+     "type": "p",
+     "text": "B₄ by block sizes: 4 → 1; 3+1 → 4; 2+2 → 3; 2+1+1 → 6; 1+1+1+1 → 1. Total 15."
+    }
+   ]
+  },
+  {
+   "front": "How many equivalence relations on an n-set have exactly 2 classes? Why?",
+   "back": [
+    {
+     "type": "formula",
+     "text": "2ⁿ⁻¹ − 1"
+    },
+    {
+     "type": "p",
+     "text": "Look at element 1’s block. Each of the other n − 1 elements joins it or not: 2ⁿ⁻¹ ways. Subtract the case where all join (only one class)."
+    },
+    {
+     "type": "p",
+     "text": "n = 5: 15 (= 5 of type 4+1, plus 10 of type 3+2)."
+    }
+   ]
+  },
+  {
+   "front": "How many ways to split 6 people into three unlabeled pairs?",
+   "back": [
+    {
+     "type": "formula",
+     "text": "6! / (2!³ · 3!) = 15"
+    },
+    {
+     "type": "p",
+     "text": "Line them up and pair neighbors (6!), then divide by the swaps inside each pair (2!³) and by the order of the pairs (3!)."
+    },
+    {
+     "type": "warn",
+     "text": "Blocks of equal size are unlabeled: {1,2},{3,4},{5,6} is the same partition in any order."
+    }
+   ]
+  },
+  {
+   "front": "What is a partial order? A poset?",
+   "back": [
+    {
+     "type": "formula",
+     "text": "partial order = reflexive + antisymmetric + transitive"
+    },
+    {
+     "type": "p",
+     "text": "A set with a partial order is a poset (S, ≼). Antisymmetry: two <b>different</b> elements can’t each be below the other."
+    },
+    {
+     "type": "p",
+     "text": "(ℤ, ≤), (ℤ⁺, |), (P(S), ⊆)."
+    },
+    {
+     "type": "warn",
+     "text": "(ℤ, &lt;) isn’t one (not reflexive). | on all of ℤ isn’t (3 | −3, −3 | 3)."
+    }
+   ]
+  },
+  {
+   "front": "What is lexicographic order on pairs and on strings?",
+   "back": [
+    {
+     "type": "formula",
+     "text": "(a₁, a₂) ≺ (b₁, b₂) ⟺ a₁ ≺ b₁, or (a₁ = b₁ and a₂ ≺ b₂)"
+    },
+    {
+     "type": "p",
+     "text": "The first coordinate decides; only a tie passes to the next. Strings: first differing letter decides; a proper prefix comes first."
+    },
+    {
+     "type": "p",
+     "text": "(2, 5) ≺ (3, 1). ab ≺ abc ≺ b."
+    },
+    {
+     "type": "warn",
+     "text": "Not coordinatewise: under the product order (2, 5) and (3, 1) are incomparable."
+    }
+   ]
+  },
+  {
+   "front": "How do you draw a Hasse diagram?",
+   "back": [
+    {
+     "type": "list",
+     "items": [
+      "Drop loops.",
+      "Drop every edge implied by transitivity: keep a–b only if b <b>covers</b> a (a ≺ b, nothing strictly between).",
+      "Put larger elements higher; no arrowheads."
+     ]
+    },
+    {
+     "type": "p",
+     "text": "a ≼ b ⟺ you can climb from a to b going up."
+    },
+    {
+     "type": "p",
+     "text": "Divisors of 12: edges 1–2, 1–3, 2–4, 2–6, 3–6, 4–12, 6–12."
+    },
+    {
+     "type": "warn",
+     "text": "No edge 1–12 or 2–12: something sits between."
+    }
+   ]
+  },
+  {
+   "front": "Maximal vs greatest, minimal vs least: what’s the difference?",
+   "back": [
+    {
+     "type": "list",
+     "items": [
+      "<b>Maximal:</b> nothing is strictly above it.",
+      "<b>Greatest:</b> it is above <b>everything</b>."
+     ]
+    },
+    {
+     "type": "p",
+     "text": "Same for minimal / least. Greatest ⇒ unique and the only maximal; maximal can just be incomparable to others."
+    },
+    {
+     "type": "p",
+     "text": "{2, 3, 4, 6, 9, 12, 18} under |: minimal 2, 3; maximal 12, 18; no greatest or least."
+    }
+   ]
+  },
+  {
+   "front": "Define upper bound, lower bound, lub and glb.",
+   "back": [
+    {
+     "type": "formula",
+     "text": "u upper bound of A: a ≼ u ∀a ∈ A; lub = least upper bound"
+    },
+    {
+     "type": "p",
+     "text": "Lower bound and glb (greatest lower bound) are the mirror images. Bounds are taken in the whole poset, not just A."
+    },
+    {
+     "type": "p",
+     "text": "In {2, 3, 4, 6, 9, 12, 18} under |: lub{2, 3} = 6 (upper bounds 6, 12, 18); {2, 3} has no lower bound; glb{12, 18} = 6; {4, 9} has no bounds at all."
+    },
+    {
+     "type": "warn",
+     "text": "Upper bounds may exist with no <b>least</b> one: then no lub."
+    }
+   ]
+  },
+  {
+   "front": "What are lub and glb in (ℤ⁺, |) and in (P(S), ⊆)?",
+   "back": [
+    {
+     "type": "formula",
+     "text": "(ℤ⁺, |): lub = lcm, glb = gcd"
+    },
+    {
+     "type": "formula",
+     "text": "(P(S), ⊆): lub = ∪, glb = ∩"
+    },
+    {
+     "type": "p",
+     "text": "lcm(a, b) is a common multiple dividing every common multiple; gcd(a, b) is a common divisor divisible by every common divisor."
+    }
+   ]
+  },
+  {
+   "front": "What is a lattice? Give examples and a non-example.",
+   "back": [
+    {
+     "type": "formula",
+     "text": "lattice: every pair has a lub and a glb"
+    },
+    {
+     "type": "list",
+     "items": [
+      "(ℤ⁺, |), divisors of n, (P(S), ⊆), any total order.",
+      "<b>Not:</b> ({1, 2, 3, 4, 5}, |), since {2, 3} has no upper bound."
+     ]
+    },
+    {
+     "type": "warn",
+     "text": "To show “not a lattice”, name one pair and show its upper (or lower) bounds have no least (greatest) element."
+    }
+   ]
+  },
+  {
+   "front": "What is a topological sort, and how do you find one?",
+   "back": [
+    {
+     "type": "p",
+     "text": "A total order that respects the partial order: a ≺ b ⇒ a listed before b."
+    },
+    {
+     "type": "p",
+     "text": "<b>Algorithm.</b> Repeatedly pick any <b>minimal</b> element of what’s left, write it down, delete it."
+    },
+    {
+     "type": "p",
+     "text": "Tasks: A, B before C; B before D; C, D before E; E before F. One sort: B, A, C, D, E, F. (5 sorts in all.)"
+    },
+    {
+     "type": "warn",
+     "text": "Incomparable elements may go in either order; every element must appear."
+    }
+   ]
+  },
+  {
+   "front": "Hasse diagram of P({a, b, c})? How many topological sorts do the divisors of 12 have?",
+   "back": [
+    {
+     "type": "p",
+     "text": "P({a,b,c}) is a cube: ∅ at the bottom, three singletons, three pairs, {a,b,c} on top; each set joined to those with one more element."
+    },
+    {
+     "type": "p",
+     "text": "Divisors of 12: 1 first, 12 last; 2 before 4 and 6; 3 before 6. Exactly 5 sorts, e.g. 1, 3, 2, 6, 4, 12."
+    }
+   ]
+  },
+  {
+   "front": "How do matrix powers count paths, and how do you test transitivity with matrices?",
+   "back": [
+    {
+     "type": "p",
+     "text": "If M is the 0–1 matrix of R, the (i, j) entry of the ordinary power Mⁿ is the number of paths of length n from i to j. The Boolean power M<sup>[n]</sup> is the matrix of Rⁿ."
+    },
+    {
+     "type": "p",
+     "text": "R is transitive iff Rⁿ ⊆ R for all n, iff M<sup>[2]</sup> has no 1 where M has a 0."
+    }
+   ]
+  }
+ ],
+ "hard": [
+  {
+   "title": "Counting relations with properties on 4 elements",
+   "level": "hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "On a set with 4 elements, how many relations are (a) reflexive and symmetric, (b) antisymmetric, (c) reflexive and antisymmetric, (d) both symmetric and antisymmetric, (e) neither reflexive nor irreflexive?"
+    }
+   ],
+   "answer": "(a) 64 (b) 11664 (c) 729 (d) 16 (e) 57344",
+   "solution": [
+    {
+     "type": "p",
+     "text": "There are 16 ordered pairs: 4 on the diagonal and 6 unordered off-diagonal pairs {a, b}."
+    },
+    {
+     "type": "list",
+     "items": [
+      "(a) Diagonal forced in; each {a, b} is both directions or neither: <b>2⁶ = 64</b>.",
+      "(b) Diagonal free (2⁴); each {a, b}: neither, (a,b) only, or (b,a) only (3 ways): <b>16·729 = 11664</b>.",
+      "(c) <b>3⁶ = 729</b>.",
+      "(d) No off-diagonal pairs at all; diagonal free: <b>16</b>.",
+      "(e) 2<sup>16</sup> − (reflexive) − (irreflexive) = 65536 − 4096 − 4096 = <b>57344</b>. (No relation is both, since the set is nonempty.)"
+     ]
+    },
+    {
+     "type": "tip",
+     "text": "<b>Tests:</b> treating diagonal and off-diagonal pairs separately. <b>Common mistake:</b> in (d), answering 1 (only ∅) or 2. Any subset of the diagonal is both symmetric and antisymmetric."
+    }
+   ]
+  },
+  {
+   "title": "Partial orders on 3 elements, equivalence relations on 5",
+   "level": "hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "(a) How many partial orders are there on {a, b, c}? (b) How many equivalence relations on a 5-element set? (c) How many equivalence relations on a 4-element set have exactly 2 classes?"
+    }
+   ],
+   "answer": "(a) 19 (b) 52 (c) 7",
+   "solution": [
+    {
+     "type": "p",
+     "text": "(a) Sort by the shape of the Hasse diagram: antichain (1); one comparable pair plus an isolated element (3·2 = 6); a chain (3! = 6); one bottom below two incomparable elements (3); two incomparable elements below one top (3). Total <b>19</b>."
+    },
+    {
+     "type": "p",
+     "text": "(b) Equivalence relations correspond to partitions. With k classes: S(5,k) = 1, 15, 25, 10, 1. Total <b>52</b>."
+    },
+    {
+     "type": "p",
+     "text": "(c) <b>S(4,2) = (2⁴ − 2)/2 = 7</b>: label-free splits into two nonempty parts."
+    },
+    {
+     "type": "tip",
+     "text": "<b>Tests:</b> equivalence relation = partition, and partial order = a Hasse diagram with labels. <b>Common mistake:</b> in (a), counting unlabeled shapes (5) instead of labeled orders."
+    }
+   ]
+  },
+  {
+   "title": "Which properties survive ∘, ∪, ⁻¹, ∩?",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "R and S are relations on a set A. Recall that S ∘ R = {(a, c) : ∃b, aRb and bSc}."
+    },
+    {
+     "type": "list",
+     "items": [
+      "(a) R, S symmetric ⇒ S ∘ R symmetric.",
+      "(b) R, S transitive ⇒ R ∪ S transitive.",
+      "(c) R transitive ⇒ R<sup>−1</sup> transitive.",
+      "(d) R, S transitive ⇒ R ∩ S transitive.",
+      "(e) R reflexive and transitive ⇒ R ∘ R = R."
+     ]
+    }
+   ],
+   "answer": "(a) false (b) false (c) true (d) true (e) true",
+   "solution": [
+    {
+     "type": "list",
+     "items": [
+      "(a) <b>False.</b> R = {(1,2),(2,1)}, S = {(2,3),(3,2)}: S ∘ R = {(1,3)}, which is not symmetric.",
+      "(b) <b>False.</b> R = {(1,2)}, S = {(2,3)}: the union lacks (1,3).",
+      "(c) <b>True.</b> If (a,b), (b,c) ∈ R<sup>−1</sup>, then (c,b), (b,a) ∈ R, so (c,a) ∈ R and (a,c) ∈ R<sup>−1</sup>.",
+      "(d) <b>True.</b> If (a,b), (b,c) are in both relations, then (a,c) is in both.",
+      "(e) <b>True.</b> ⊆: (a,b), (b,c) ∈ R gives (a,c) ∈ R by transitivity. ⊇: for (a,b) ∈ R, use (a,a) ∈ R (reflexive) and then (a,b), so (a,b) ∈ R ∘ R."
+     ]
+    },
+    {
+     "type": "tip",
+     "text": "<b>Tests:</b> finding small counterexamples, and element-chasing proofs. <b>Common mistake:</b> in (e), proving only one inclusion."
+    }
+   ]
+  },
+  {
+   "title": "Transitive and equivalence closures",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "R = {(1,2), (2,3), (3,1), (3,4), (5,4)} on {1, …, 5}."
+    },
+    {
+     "type": "list",
+     "items": [
+      "(a) Find the transitive closure t(R) and its size.",
+      "(b) Find the smallest equivalence relation containing R.",
+      "(c) Show that the symmetric closure of a transitive relation need not be transitive."
+     ]
+    }
+   ],
+   "answer": "(a) t(R) = {1,2,3} × {1,2,3,4} ∪ {(5,4)}, 13 pairs (b) all 25 pairs, one class (c) {(1,2),(1,3)} is transitive but its symmetric closure is not",
+   "solution": [
+    {
+     "type": "p",
+     "text": "(a) (a, b) ∈ t(R) iff there is a directed path of length ≥ 1 from a to b. 1, 2, 3 lie on a cycle, so each reaches 1, 2, 3 and 4. Vertex 5 reaches 4, and 4 reaches nothing. <b>t(R) = {1,2,3} × {1,2,3,4} ∪ {(5,4)}</b>, with 12 + 1 = 13 pairs. (The reflexive–transitive closure adds (4,4) and (5,5), giving 15.)"
+    },
+    {
+     "type": "p",
+     "text": "(b) Take reflexive, then symmetric, then transitive closure. Ignoring directions, all of 1–5 are connected (through 4), so the result is <b>one class</b>, A × A, with 25 pairs."
+    },
+    {
+     "type": "p",
+     "text": "(c) R = {(1,2), (1,3)} is transitive (vacuously). Its symmetric closure {(1,2),(2,1),(1,3),(3,1)} contains (2,1) and (1,3) but not (2,3). So to get an equivalence relation, take the symmetric closure <i>before</i> the transitive one."
+    },
+    {
+     "type": "tip",
+     "text": "<b>Tests:</b> closure as reachability, and that the order of closures matters. <b>Common mistake:</b> in (a), adding (4,4) or (1,5). Paths have to follow the arrows."
+    }
+   ]
+  },
+  {
+   "title": "Classes of x − y ∈ ℚ and of bit strings",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "list",
+     "items": [
+      "(a) On ℝ, let x ~ y iff x − y ∈ ℚ. Prove this is an equivalence relation, that each class is countable, and that there are uncountably many classes.",
+      "(b) On bit strings of length 6, let s ~ t iff they have the same first bit and the same number of 1s. How many classes are there, and how big is the class of 110110?"
+     ]
+    }
+   ],
+   "answer": "(a) equivalence relation; each class x + ℚ is countable; uncountably many classes (b) 12 classes; the class of 110110 has C(5,3) = 10",
+   "solution": [
+    {
+     "type": "p",
+     "text": "(a) Reflexive: x − x = 0 ∈ ℚ. Symmetric: if x − y ∈ ℚ, so is y − x. Transitive: (x − y) + (y − z) = x − z ∈ ℚ. The class of x is x + ℚ, which is countable (it is in bijection with ℚ). ℝ is the union of the classes. If there were only countably many classes, ℝ would be a countable union of countable sets, hence countable. Contradiction."
+    },
+    {
+     "type": "p",
+     "text": "(b) First bit 0: the number of 1s is 0–5 (6 classes). First bit 1: the number of 1s is 1–6 (6 classes). <b>12 classes</b>. The class of 110110 (first bit 1, four 1s): the other 5 positions hold 3 ones, so <b>C(5,3) = 10</b>."
+    },
+    {
+     "type": "tip",
+     "text": "<b>Tests:</b> proving all three properties, and counting classes by a complete invariant. <b>Common mistake:</b> in (b), answering 2·7 = 14 (a string starting with 0 can’t have six 1s, and one starting with 1 can’t have zero)."
+    }
+   ]
+  },
+  {
+   "title": "Analysing the poset {2, 3, 4, 6, 8, 9, 12, 18}",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "Consider the poset ({2, 3, 4, 6, 8, 9, 12, 18}, |). Draw the Hasse diagram. Find the maximal and minimal elements, any greatest or least element, the upper bounds and lub of {2, 3}, the lub of {4, 6}, and the glb of {12, 18}. Is it a lattice?"
+    }
+   ],
+   "answer": "Maximal 8, 12, 18; minimal 2, 3; no greatest/least; lub{2,3} = 6; lub{4,6} = 12; glb{12,18} = 6; not a lattice",
+   "solution": [
+    {
+     "type": "list",
+     "items": [
+      "Maximal: <b>8, 12, 18</b>. Minimal: <b>2, 3</b>. No greatest element and no least element.",
+      "Upper bounds of {2, 3}: 6, 12, 18. lub = <b>6</b>.",
+      "lub{4, 6} = <b>12</b>, its only upper bound.",
+      "Lower bounds of {12, 18}: 2, 3, 6. glb = <b>6</b>.",
+      "<b>Not a lattice:</b> {8, 12} has no upper bound, and {2, 3} has no lower bound."
+     ]
+    },
+    {
+     "type": "tip",
+     "text": "<b>Tests:</b> maximal (nothing above it) versus greatest (above everything). <b>Common mistake:</b> drawing an edge from 2 to 8, which isn’t a covering pair, or calling 6 a lower bound of {4, 6} (6 ∤ 4)."
+    }
+   ]
+  },
+  {
+   "title": "Counting linear extensions of divisor lattices",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "Count the linear extensions (topological sorts) of (a) the divisors of 12 under divisibility, and (b) the divisors of 30 under divisibility."
+    }
+   ],
+   "answer": "(a) 5 (b) 48",
+   "solution": [
+    {
+     "type": "p",
+     "text": "(a) 1 comes first and 12 last. The middle elements {2, 3, 4, 6} need 2 before 4, 2 before 6, and 3 before 6. Listing them: 2346, 2364, 2436, 3246, 3264. <b>5</b>."
+    },
+    {
+     "type": "p",
+     "text": "(b) 1 first and 30 last. The middle six are the atoms 2, 3, 5 and the products 6, 10, 15, each of which must come after its two atoms. Fix the order in which the atoms appear, say a, b, c (3! = 6 ways). Then a and b come first, in that order: c can’t precede b, and no product can come before b. The remaining four, c, ab, ac, bc, can go in any order with c before ac and bc. That is 4!/3 = 8 orders. Total <b>6·8 = 48</b>."
+    },
+    {
+     "type": "tip",
+     "text": "<b>Tests:</b> counting linear extensions by fixing a structural choice. <b>Common mistake:</b> in (b), assuming all atoms must come before all products. 6 can come before 5."
+    }
+   ]
+  },
+  {
+   "title": "Proof: transitive closure needs paths of length ≤ n",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "Let R be a relation on a set A with |A| = n. Prove: (a) the transitive closure is R* = ∪<sub>k≥1</sub> R<sup>k</sup>; (b) in fact R* = R ∪ R² ∪ ⋯ ∪ R<sup>n</sup>."
+    }
+   ],
+   "answer": "R* is the smallest transitive relation ⊇ R; paths longer than n repeat a vertex (pigeonhole) and can be shortened.",
+   "solution": [
+    {
+     "type": "p",
+     "text": "(a) (a, b) ∈ R<sup>k</sup> iff there is a path of length k from a to b. We check that R* is the smallest transitive relation containing R."
+    },
+    {
+     "type": "list",
+     "items": [
+      "R ⊆ R*.",
+      "R* is transitive: a path a → b followed by a path b → c is a path a → c.",
+      "If S is transitive and S ⊇ R, then R<sup>k</sup> ⊆ S for every k, by induction: R<sup>k+1</sup> = R<sup>k</sup> ∘ R ⊆ S ∘ S ⊆ S. So R* ⊆ S."
+     ]
+    },
+    {
+     "type": "p",
+     "text": "(b) Suppose there is a path from a to b of length m > n: a = x<sub>0</sub>, x<sub>1</sub>, …, x<sub>m</sub> = b. The m + 1 ≥ n + 2 vertex occurrences take only n values, so x<sub>i</sub> = x<sub>j</sub> for some i &lt; j by pigeonhole. Delete the loop x<sub>i+1</sub>, …, x<sub>j</sub>. The result is still a path from a to b, of length m − (j − i) &lt; m and still ≥ 1. Repeat until the length is ≤ n. So every pair in R* is already in some R<sup>k</sup> with k ≤ n. ∎"
+    },
+    {
+     "type": "tip",
+     "text": "<b>Tests:</b> combining pigeonhole with path shortening, and proving that a closure really is the smallest. <b>Common mistake:</b> in (a), showing that R* is transitive but not that it is <i>smallest</i>."
+    }
+   ]
+  },
+  {
+   "title": "Lattice proofs and the greatest element",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "list",
+     "items": [
+      "(a) Show that (𝒫(S), ⊆) is a lattice, identifying lub and glb.",
+      "(b) Show that (ℤ<sup>+</sup>, |) is a lattice.",
+      "(c) Prove that every finite nonempty lattice has a greatest element."
+     ]
+    }
+   ],
+   "answer": "(a) lub = ∪, glb = ∩ (b) lub = lcm, glb = gcd (c) u₁ = x₁, uₖ₊₁ = lub(uₖ, xₖ₊₁) ends at a greatest element",
+   "solution": [
+    {
+     "type": "p",
+     "text": "(a) A ∪ B contains both A and B, and any set that contains both contains A ∪ B, so lub = A ∪ B. In the same way, glb = A ∩ B."
+    },
+    {
+     "type": "p",
+     "text": "(b) lub(a, b) = lcm(a, b): it is a common multiple, and every common multiple is a multiple of it (prime exponents: max). glb = gcd, similarly."
+    },
+    {
+     "type": "p",
+     "text": "(c) Let the elements be x<sub>1</sub>, …, x<sub>n</sub>. Define u<sub>1</sub> = x<sub>1</sub> and u<sub>k+1</sub> = lub(u<sub>k</sub>, x<sub>k+1</sub>). By induction, u<sub>k</sub> is an upper bound of x<sub>1</sub>, …, x<sub>k</sub>: u<sub>k+1</sub> ≥ u<sub>k</sub> ≥ each earlier x<sub>i</sub> (transitivity), and u<sub>k+1</sub> ≥ x<sub>k+1</sub>. So u<sub>n</sub> is above every element, i.e. it is the greatest element. ∎ (This fails for infinite lattices: (ℤ<sup>+</sup>, |) has no greatest element.)"
+    },
+    {
+     "type": "tip",
+     "text": "<b>Tests:</b> lub/glb definitions, and induction over a finite list. <b>Common mistake:</b> in (c), taking a maximal element and asserting it is greatest without using the lattice property."
+    }
+   ]
+  }
+ ],
+ "keyFacts": [
+  "Reflexive: aRa ∀a; symmetric: aRb ⇒ bRa; antisymmetric: aRb ∧ bRa ⇒ a = b; transitive: aRb ∧ bRc ⇒ aRc",
+  "On an n-set: 2<sup>n²</sup> relations, 2<sup>n²−n</sup> reflexive, 2<sup>n(n+1)/2</sup> symmetric, 2ⁿ3<sup>C(n,2)</sup> antisymmetric",
+  "S ∘ R: R first, then S; M<sub>S∘R</sub> = M<sub>R</sub> ⊙ M<sub>S</sub>; (Mⁿ)<sub>ij</sub> = number of paths of length n",
+  "R is transitive ⟺ Rⁿ ⊆ R for all n ≥ 1",
+  "Closures: reflexive R ∪ Δ; symmetric R ∪ R⁻¹; transitive R* = R ∪ R² ∪ ⋯ ∪ Rⁿ (Warshall)",
+  "Equivalence = reflexive + symmetric + transitive; classes are equal or disjoint and partition the set",
+  "#pairs of an equivalence relation = Σ (class size)²; # equivalence relations = Bell numbers 1, 2, 5, 15, 52, 203",
+  "Partial order = reflexive + antisymmetric + transitive; Hasse diagram keeps only covers",
+  "Maximal (nothing above) ≠ greatest (above everything); lub/glb in (ℤ⁺, |) are lcm/gcd",
+  "Topological sort: repeatedly remove a minimal element"
+ ]
+}

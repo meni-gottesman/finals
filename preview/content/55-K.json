@@ -1,0 +1,1536 @@
+{
+ "id": "55-K",
+ "course": "55",
+ "title": "Probability: basics, conditional, independence, Bernoulli, Bayes",
+ "source": "Rosen 7.1–7.3 · Lec16, 18, 19",
+ "summary": "Discrete probability built on counting: equally likely outcomes, complements and unions, conditional probability and the law of total probability, independence, Bernoulli trials, and Bayes’ theorem. Final questions are usually a counting probability, a conditional or Bayes computation, or an independence check.",
+ "lesson": [
+  {
+   "title": "Sample spaces and equally likely outcomes",
+   "blocks": [
+    {
+     "type": "tip",
+     "text": "Probability is counting with a denominator. Set up the sample space carefully, and most problems become counting problems."
+    },
+    {
+     "type": "def",
+     "term": "experiment, sample space, event",
+     "text": "An <b>experiment</b> is a process with a random result. Its <b>sample space</b> S is the set of all possible outcomes. An <b>event</b> E is any subset of S."
+    },
+    {
+     "type": "p",
+     "text": "Example: flip two different coins. S = {HH, HT, TH, TT}; the event “both the same” is {HH, TT}."
+    },
+    {
+     "type": "thm",
+     "name": "Equally likely outcomes (Laplace)",
+     "text": "If S is finite and every outcome is equally likely, then p(E) = |E| / |S|."
+    },
+    {
+     "type": "def",
+     "term": "probability distribution",
+     "text": "In general each outcome s gets a number p(s) with 0 ≤ p(s) ≤ 1 and Σ p(s) = 1. Then p(E) = Σ<sub>s∈E</sub> p(s). The <b>uniform distribution</b> p(s) = 1/|S| gives back |E|/|S|."
+    },
+    {
+     "type": "warn",
+     "text": "Treat dice and coins as distinguishable (first die, second die). The 36 ordered outcomes of two dice are equally likely; the 21 unordered ones are not."
+    },
+    {
+     "type": "example",
+     "title": "Equally likely: two dice and a divisibility count",
+     "prompt": "(a) Two fair dice: p(sum = 7)? (b) A random integer from 1 to 1000: p(divisible by 5)?",
+     "steps": [
+      "(a) |S| = 6 · 6 = 36 ordered outcomes, all equally likely.",
+      "Sum 7: (1,6), (2,5), (3,4), (4,3), (5,2), (6,1), so |E| = 6.",
+      "p = 6/36 = 1/6.",
+      "(b) Multiples of 5 in 1..1000: ⌊1000/5⌋ = 200, so p = 200/1000 = 1/5."
+     ],
+     "answer": "(a) 1/6 (b) 1/5"
+    },
+    {
+     "type": "example",
+     "title": "A non-uniform distribution",
+     "prompt": "A loaded die has p(6) = 1/2 and each other face 1/10. Find p(even).",
+     "steps": [
+      "Check it is a distribution: 5 · 1/10 + 1/2 = 1.",
+      "Even = {2, 4, 6}; add the probabilities of its outcomes.",
+      "p(even) = 1/10 + 1/10 + 1/2 = 7/10."
+     ],
+     "answer": "7/10"
+    },
+    {
+     "type": "example",
+     "title": "Poker hands: count the good hands, divide by C(52, 5)",
+     "prompt": "A 5-card hand is dealt from a standard deck. Find the number of (a) full houses, (b) two-pair hands, and (c) the probability that all 5 cards share a suit.",
+     "steps": [
+      "All C(52, 5) = 2,598,960 hands are equally likely. Build each kind of hand in steps and multiply.",
+      "(a) Rank of the triple: 13. Rank of the pair: 12 (different role, so ordered). Suits: C(4, 3) · C(4, 2) = 4 · 6. Total 13 · 12 · 4 · 6 = 3744.",
+      "(b) The two pair ranks play the same role: C(13, 2) = 78. Suits for each pair: C(4, 2)² = 36. Fifth card from the other 11 ranks: 44. Total 78 · 36 · 44 = 123,552.",
+      "(c) Suit: 4. Five of its 13 cards: C(13, 5) = 1287. Count 5148, so p = 5148/2,598,960 ≈ 0.00198."
+     ],
+     "answer": "(a) 3744 (b) 123,552 (c) 4·C(13,5)/C(52,5) ≈ 0.00198"
+    },
+    {
+     "type": "warn",
+     "text": "Use 13 · 12 when two ranks play different roles (triple vs pair) and C(13, 2) when they play the same role (two pairs). Mixing these up doubles or halves the count."
+    }
+   ]
+  },
+  {
+   "title": "Complements, unions and the union bound",
+   "blocks": [
+    {
+     "type": "thm",
+     "name": "Complement rule",
+     "text": "p(Ē) = 1 − p(E).",
+     "proof": [
+      {
+       "type": "p",
+       "text": "E and Ē are disjoint and their union is S, so p(E) + p(Ē) = p(S) = 1."
+      }
+     ]
+    },
+    {
+     "type": "thm",
+     "name": "Union rule (inclusion–exclusion)",
+     "text": "p(E ∪ F) = p(E) + p(F) − p(E ∩ F), for any distribution.",
+     "proof": [
+      {
+       "type": "p",
+       "text": "Split E ∪ F into the disjoint pieces E − F, E ∩ F, F − E and add. p(E) + p(F) counts E ∩ F twice, so subtract it once."
+      }
+     ]
+    },
+    {
+     "type": "thm",
+     "name": "Union bound",
+     "text": "p(E₁ ∪ ⋯ ∪ Eₙ) ≤ p(E₁) + ⋯ + p(Eₙ).",
+     "proof": [
+      {
+       "type": "p",
+       "text": "For two events the subtracted term p(E₁ ∩ E₂) is ≥ 0. Induct on n."
+      }
+     ]
+    },
+    {
+     "type": "tip",
+     "text": "“At least one” almost always means: compute the complement “none”, then subtract from 1."
+    },
+    {
+     "type": "example",
+     "title": "Complement: at least one",
+     "prompt": "Five fair coins are flipped. Find p(at least one head). Then find the probability that a 5-card hand has at least two cards of the same rank.",
+     "steps": [
+      "The complement of “at least one head” is “all tails”: 1 of 2⁵ = 32 outcomes.",
+      "p = 1 − 1/32 = 31/32.",
+      "For the hand, the complement is “5 different ranks”: choose the ranks C(13, 5), then a suit for each, 4⁵.",
+      "p = 1 − C(13, 5) · 4⁵ / C(52, 5) = 1 − 1,317,888/2,598,960 ≈ 0.493."
+     ],
+     "answer": "31/32; ≈ 0.493"
+    },
+    {
+     "type": "example",
+     "title": "Union rule",
+     "prompt": "A random integer from 1 to 100: p(divisible by 2 or 5)? And if p(rain) = 0.4, p(snow) = 0.3, p(both) = 0.1, what is p(rain or snow)?",
+     "steps": [
+      "Divisible by 2: 50. By 5: 20. By both, i.e. by 10: 10.",
+      "p = (50 + 20 − 10)/100 = 3/5.",
+      "Weather: 0.4 + 0.3 − 0.1 = 0.6."
+     ],
+     "answer": "3/5; 0.6"
+    }
+   ]
+  },
+  {
+   "title": "Conditional probability and total probability",
+   "blocks": [
+    {
+     "type": "def",
+     "term": "conditional probability",
+     "text": "For p(F) > 0, p(E | F) = p(E ∩ F) / p(F), “the probability of E given F”. Knowing F happened makes F the new sample space; ask what share of it is also in E. With equally likely outcomes, p(E | F) = |E ∩ F| / |F|."
+    },
+    {
+     "type": "thm",
+     "name": "Multiplication rule",
+     "text": "p(E ∩ F) = p(E | F) · p(F). For a sequence: p(E₁ ∩ E₂ ∩ E₃) = p(E₁) p(E₂ | E₁) p(E₃ | E₁ ∩ E₂)."
+    },
+    {
+     "type": "example",
+     "title": "Two conditions that sound alike",
+     "prompt": "Two fair coins. Find p(both heads | at least one head) and p(second is heads | first is heads).",
+     "steps": [
+      "Given at least one head: F = {HH, HT, TH}, E ∩ F = {HH}. p = (1/4)/(3/4) = 1/3.",
+      "Given the first is heads: F = {HH, HT}, E ∩ F = {HH}. p = (1/4)/(2/4) = 1/2.",
+      "Different conditions F, different answers. Always write F out."
+     ],
+     "answer": "1/3 and 1/2"
+    },
+    {
+     "type": "example",
+     "title": "Multiplication rule for draws without replacement",
+     "prompt": "Two cards are drawn without replacement. Find p(both aces).",
+     "steps": [
+      "p(first ace) = 4/52.",
+      "Given the first is an ace, 3 aces remain among 51 cards: p(second ace | first ace) = 3/51.",
+      "p = (4/52)(3/51) = 1/221. Check by counting: C(4, 2)/C(52, 2) = 6/1326 = 1/221."
+     ],
+     "answer": "1/221"
+    },
+    {
+     "type": "thm",
+     "name": "Law of total probability",
+     "text": "If F₁, …, Fₙ are disjoint, cover S and each has p(Fᵢ) > 0, then p(E) = p(E | F₁)p(F₁) + ⋯ + p(E | Fₙ)p(Fₙ).",
+     "proof": [
+      {
+       "type": "p",
+       "text": "E is the disjoint union of E ∩ F₁, …, E ∩ Fₙ. Add their probabilities and rewrite each as p(E | Fᵢ)p(Fᵢ) by the multiplication rule."
+      }
+     ]
+    },
+    {
+     "type": "example",
+     "title": "Total probability with two urns",
+     "prompt": "A fair coin picks urn 1 (3 red, 2 blue) or urn 2 (1 red, 4 blue); then one ball is drawn. Find p(red), and p(urn 1 | red).",
+     "steps": [
+      "Cases: urn 1 or urn 2, each with probability 1/2.",
+      "p(red) = (3/5)(1/2) + (1/5)(1/2) = 3/10 + 1/10 = 2/5.",
+      "p(urn 1 | red) = p(urn 1 ∩ red)/p(red) = (3/10)/(2/5) = 3/4."
+     ],
+     "answer": "p(red) = 2/5; p(urn 1 | red) = 3/4"
+    },
+    {
+     "type": "example",
+     "title": "Monty Hall",
+     "prompt": "Three doors, one car. You pick a door; the host, who knows where the car is, opens a different door with a goat. Should you switch?",
+     "steps": [
+      "Let G = your first pick was a goat, p(G) = 2/3.",
+      "If G, the host must open the other goat door, so switching wins: p(win | G) = 1.",
+      "If not G, switching loses: p(win | Ḡ) = 0.",
+      "p(win by switching) = 1 · 2/3 + 0 · 1/3 = 2/3."
+     ],
+     "answer": "Switch: you win with probability 2/3"
+    },
+    {
+     "type": "example",
+     "title": "Randomized survey",
+     "prompt": "Each respondent flips a coin: heads means say “yes”, tails means answer honestly. 60% say yes. What fraction of honest answers are yes?",
+     "steps": [
+      "Unknown x = p(yes | tails).",
+      "Total probability: 0.6 = 1 · 1/2 + x · 1/2.",
+      "x = 0.2."
+     ],
+     "answer": "20%"
+    }
+   ]
+  },
+  {
+   "title": "Independence: pairwise vs mutual",
+   "blocks": [
+    {
+     "type": "def",
+     "term": "independent events",
+     "text": "E and F are <b>independent</b> if p(E ∩ F) = p(E) p(F). When p(F) > 0 this is the same as p(E | F) = p(E): learning F does not change the chance of E."
+    },
+    {
+     "type": "warn",
+     "text": "Never assume independence unless the problem says so or you check the product rule."
+    },
+    {
+     "type": "example",
+     "title": "Checking independence",
+     "prompt": "A random 4-bit string. E = “first bit is 1”, F = “even number of 1s”. Independent? And for two dice, is A = “first die even” independent of “sum 7”? Of “sum 8”?",
+     "steps": [
+      "p(E) = 8/16 = 1/2; p(F) = (1 + 6 + 1)/16 = 1/2.",
+      "E ∩ F = {1001, 1010, 1100, 1111}: 4/16 = 1/4 = (1/2)(1/2). Independent.",
+      "Dice: p(A) = 1/2, p(sum 7) = 6/36. A ∩ {sum 7} = (2,5), (4,3), (6,1): 3/36 = (1/2)(6/36). Independent.",
+      "p(sum 8) = 5/36, and A ∩ {sum 8} = (2,6), (4,4), (6,2): 3/36 ≠ (1/2)(5/36) = 5/72. Not independent."
+     ],
+     "answer": "E, F independent; A independent of “sum 7” but not of “sum 8”"
+    },
+    {
+     "type": "thm",
+     "name": "Disjoint events are not independent",
+     "text": "If p(E) > 0, p(F) > 0 and E ∩ F = ∅, then E and F are not independent.",
+     "proof": [
+      {
+       "type": "p",
+       "text": "p(E ∩ F) = p(∅) = 0, but p(E)p(F) > 0. Intuitively, learning F happened tells you E certainly did not, which is the opposite of “no information”."
+      },
+      {
+       "type": "p",
+       "text": "Example: two dice, E = “sum 2”, F = “sum 12”: p(E ∩ F) = 0 ≠ (1/36)(1/36) = 1/1296."
+      }
+     ]
+    },
+    {
+     "type": "def",
+     "term": "pairwise vs mutual independence",
+     "text": "E₁, …, Eₙ are <b>pairwise independent</b> if every pair satisfies the product rule, and <b>mutually independent</b> if p(Eᵢ₁ ∩ ⋯ ∩ Eᵢₘ) = p(Eᵢ₁)⋯p(Eᵢₘ) for every subcollection (pairs, triples, …, all n)."
+    },
+    {
+     "type": "example",
+     "title": "Pairwise but not mutually independent",
+     "prompt": "Alice, Bob and Charlotte each pick a random number from 1 to 100. E₁ = Alice and Bob match, E₂ = Alice and Charlotte match, E₃ = Bob and Charlotte match.",
+     "steps": [
+      "Each p(Eᵢ) = 1/100.",
+      "Any two of them together means all three numbers are equal: probability 100/100³ = 1/100² = (1/100)(1/100). So every pair is independent.",
+      "But E₁ ∩ E₂ forces E₃, so p(E₁ ∩ E₂ ∩ E₃) = 1/100² ≠ 1/100³."
+     ],
+     "answer": "Pairwise independent, not mutually independent"
+    }
+   ]
+  },
+  {
+   "title": "Bernoulli trials and binomial probabilities",
+   "blocks": [
+    {
+     "type": "def",
+     "term": "Bernoulli trials",
+     "text": "n repetitions of the same experiment, independently, each a success with probability p and a failure with probability q = 1 − p."
+    },
+    {
+     "type": "thm",
+     "name": "Binomial probability",
+     "text": "The probability of exactly k successes in n Bernoulli trials is b(k; n, p) = C(n, k) pᵏ (1 − p)ⁿ⁻ᵏ.",
+     "proof": [
+      {
+       "type": "p",
+       "text": "One specific pattern with k successes and n − k failures has probability pᵏ(1 − p)ⁿ⁻ᵏ, because the trials are independent and probabilities multiply."
+      },
+      {
+       "type": "p",
+       "text": "There are C(n, k) patterns (choose which trials succeed). They are disjoint, so add: C(n, k) pᵏ(1 − p)ⁿ⁻ᵏ. By the binomial theorem these add to (p + q)ⁿ = 1 over k = 0..n."
+      }
+     ]
+    },
+    {
+     "type": "example",
+     "title": "A biased coin",
+     "prompt": "A coin with p(H) = 1/4 is flipped 4 times. Find p(exactly 2 heads) and p(at least one head).",
+     "steps": [
+      "Exactly 2: C(4, 2)(1/4)²(3/4)² = 6 · 1/16 · 9/16 = 54/256 = 27/128.",
+      "At least one: complement of “no heads”, (3/4)⁴ = 81/256, so 1 − 81/256 = 175/256."
+     ],
+     "answer": "27/128; 175/256"
+    },
+    {
+     "type": "example",
+     "title": "“At least k” with Bernoulli trials",
+     "prompt": "A player makes each free throw independently with probability 0.8. In 5 shots, what is p(at least 4 makes)?",
+     "steps": [
+      "At least 4 = exactly 4 or exactly 5 (disjoint).",
+      "Exactly 4: C(5, 4)(0.8)⁴(0.2) = 5 · 0.4096 · 0.2 = 0.4096.",
+      "Exactly 5: (0.8)⁵ = 0.32768.",
+      "Total 0.73728."
+     ],
+     "answer": "0.73728"
+    },
+    {
+     "type": "warn",
+     "text": "(1/4)²(3/4)² alone is the probability of one specific pattern such as HHTT. Don’t forget the factor C(n, k)."
+    }
+   ]
+  },
+  {
+   "title": "Bayes’ theorem",
+   "blocks": [
+    {
+     "type": "tip",
+     "text": "You usually know p(evidence | cause) but want p(cause | evidence). Bayes flips the condition, and the base rate p(cause) matters a lot."
+    },
+    {
+     "type": "thm",
+     "name": "Bayes’ theorem",
+     "text": "p(F | E) = p(E | F) p(F) / [ p(E | F) p(F) + p(E | F̄) p(F̄) ].",
+     "proof": [
+      {
+       "type": "p",
+       "text": "By the definition of conditional probability, p(F | E) p(E) = p(E ∩ F) = p(E | F) p(F). Divide by p(E), then expand p(E) by the law of total probability with the cases F, F̄."
+      }
+     ]
+    },
+    {
+     "type": "thm",
+     "name": "Generalized Bayes (several causes)",
+     "text": "If F₁, …, Fₙ are disjoint and cover S, p(Fⱼ | E) = p(E | Fⱼ) p(Fⱼ) / Σᵢ p(E | Fᵢ) p(Fᵢ)."
+    },
+    {
+     "type": "steps",
+     "title": "Bayes by the table of products",
+     "items": [
+      "One row per cause: p(cause), p(evidence | cause), and their product.",
+      "Add the products: that is p(evidence).",
+      "Each posterior p(cause | evidence) = its product / the total.",
+      "The most likely cause has the biggest product, not the biggest p(evidence | cause)."
+     ]
+    },
+    {
+     "type": "example",
+     "title": "A screening test with a small base rate",
+     "prompt": "1% of people have a disease. A test is positive for 90% of people who have it and for 10% of people who do not. A random person tests positive. Find p(disease | positive).",
+     "steps": [
+      "F = disease, E = positive: p(F) = 0.01, p(E | F) = 0.9, p(E | F̄) = 0.1.",
+      "Products: 0.9 · 0.01 = 0.009 and 0.1 · 0.99 = 0.099. Total p(E) = 0.108.",
+      "p(F | E) = 0.009/0.108 = 1/12 ≈ 8.3%.",
+      "Check with 1000 people: 10 sick, 9 test positive; 990 healthy, 99 test positive; only 9 of the 108 positives are sick."
+     ],
+     "answer": "1/12 ≈ 8.3%"
+    },
+    {
+     "type": "example",
+     "title": "Bayes with three causes",
+     "prompt": "Factories A, B, C make 50%, 30%, 20% of a company’s chips, with defect rates 2%, 3%, 5%. A random chip is defective. Find the probability it came from each factory.",
+     "steps": [
+      "Products p(factory) · p(defective | factory): A 0.5 · 0.02 = 0.010, B 0.3 · 0.03 = 0.009, C 0.2 · 0.05 = 0.010.",
+      "Total p(defective) = 0.029.",
+      "p(A | D) = 10/29, p(B | D) = 9/29, p(C | D) = 10/29.",
+      "C has by far the worst defect rate, yet A is just as likely, because A makes more chips."
+     ],
+     "answer": "A: 10/29, B: 9/29, C: 10/29"
+    },
+    {
+     "type": "warn",
+     "text": "p(A | B) and p(B | A) are usually very different. “The test catches 90% of cases” is p(positive | sick), not p(sick | positive)."
+    }
+   ]
+  },
+  {
+   "title": "Birthday problems and the probabilistic method",
+   "blocks": [
+    {
+     "type": "example",
+     "title": "The birthday problem",
+     "prompt": "n people have independent, uniformly random birthdays among 365 days. Find p(some two share a birthday), and evaluate for n = 23.",
+     "steps": [
+      "Complement: all n birthdays different.",
+      "Ordered lists of birthdays: 365ⁿ. All different: 365 · 364 ⋯ (365 − n + 1).",
+      "p(shared) = 1 − 365 · 364 ⋯ (365 − n + 1)/365ⁿ.",
+      "n = 23 gives ≈ 0.507 (and n = 22 gives ≈ 0.476, so 23 is the first n above 1/2).",
+      "Why so big: 23 people form C(23, 2) = 253 pairs."
+     ],
+     "answer": "1 − 365·364⋯(366 − n)/365ⁿ; ≈ 50.7% for n = 23"
+    },
+    {
+     "type": "tip",
+     "text": "Rule of thumb: n random picks from d possibilities collide with probability roughly C(n, 2)/d (union bound over pairs). For 64-bit keys, 2³² keys already collide with probability about 39%."
+    },
+    {
+     "type": "thm",
+     "name": "Probabilistic method",
+     "text": "If a random object has a property with probability > 0, then some object has the property. Usual tool: p(something bad happens) ≤ Σ p(bad eventᵢ) &lt; 1."
+    },
+    {
+     "type": "example",
+     "title": "Two-colouring clubs",
+     "prompt": "A school has 10 clubs of exactly 5 students each (students may be in many clubs). Show the students can be split into red and blue so that no club is all one colour.",
+     "steps": [
+      "Colour each student red or blue by an independent fair coin.",
+      "For one club: p(all red) + p(all blue) = 2 · (1/2)⁵ = 1/16.",
+      "Union bound over 10 clubs: p(some club is one colour) ≤ 10/16 &lt; 1.",
+      "So p(no club is one colour) ≥ 6/16 > 0, and some colouring works. The union bound needs no independence between clubs."
+     ],
+     "answer": "A good colouring exists, since p(failure) ≤ 10/16 &lt; 1"
+    },
+    {
+     "type": "warn",
+     "text": "A probabilistic-method proof shows existence only; it does not tell you which colouring works."
+    }
+   ]
+  }
+ ],
+ "cards": [
+  {
+   "front": "If all outcomes are equally likely, what is p(E)?",
+   "back": [
+    {
+     "type": "formula",
+     "text": "p(E) = |E| / |S|"
+    },
+    {
+     "type": "p",
+     "text": "Probability is <b>counting with a denominator</b>: count the outcomes in E, divide by all outcomes."
+    },
+    {
+     "type": "p",
+     "text": "<b>Examples.</b> <b>Two coins, both the same:</b> {HH, TT} ⟹ 2/4 = 1/2.<br><b>Two dice sum to 7:</b> (1,6), (2,5), (3,4), (4,3), (5,2), (6,1) ⟹ 6/36 = 1/6.<br><b>Number from 1–1000 divisible by 5:</b> 200/1000 = 1/5."
+    },
+    {
+     "type": "warn",
+     "text": "The two dice must be treated as different (first, second), or the 36 outcomes aren’t equally likely."
+    }
+   ]
+  },
+  {
+   "front": "What is a probability distribution (outcomes not equally likely)?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Each outcome s gets a number p(s) with 0 ≤ p(s) ≤ 1, and all of them add up to 1. The probability of an event is then:"
+    },
+    {
+     "type": "formula",
+     "text": "p(E) = sum of p(s) over all s in E"
+    },
+    {
+     "type": "p",
+     "text": "The <b>uniform distribution</b> on n outcomes is p(s) = 1/n for each, which brings back p(E) = |E|/|S|."
+    }
+   ]
+  },
+  {
+   "front": "A loaded die has p(6) = 1/2 and each other face 1/10. What is p(even)?",
+   "back": [
+    {
+     "type": "formula",
+     "text": "p(2) + p(4) + p(6) = 1/10 + 1/10 + 1/2 = 7/10"
+    },
+    {
+     "type": "p",
+     "text": "<b>How.</b>"
+    },
+    {
+     "type": "list",
+     "items": [
+      "Check it’s a distribution: 5 · (1/10) + 1/2 = 1 ✓.",
+      "Even = {2, 4, 6}. <b>Add</b> their probabilities."
+     ]
+    },
+    {
+     "type": "warn",
+     "text": "With unequal outcomes you can’t use “3 even faces out of 6 = 1/2”."
+    }
+   ]
+  },
+  {
+   "front": "What is the probability a 5-card hand has all 5 cards in the same suit?",
+   "back": [
+    {
+     "type": "formula",
+     "text": "4 · C(13, 5) / C(52, 5)"
+    },
+    {
+     "type": "p",
+     "text": "<b>How.</b>"
+    },
+    {
+     "type": "list",
+     "items": [
+      "All C(52, 5) = 2,598,960 hands are equally likely, so count the good ones.",
+      "Pick the suit: 4 ways.",
+      "Pick 5 of that suit’s 13 cards: C(13, 5).",
+      "Divide by the total."
+     ]
+    },
+    {
+     "type": "p",
+     "text": "About 0.2%. Leaving it as a formula is fine."
+    }
+   ]
+  },
+  {
+   "front": "How many full houses (3 cards of one rank + 2 of another)?",
+   "back": [
+    {
+     "type": "formula",
+     "text": "13 · 12 · C(4, 3) · C(4, 2) = 3744"
+    },
+    {
+     "type": "p",
+     "text": "<b>Steps.</b>"
+    },
+    {
+     "type": "list",
+     "items": [
+      "Rank for the three of a kind: 13.",
+      "A different rank for the pair: 12.",
+      "Which 3 of the 4 suits for the triple: C(4, 3) = 4.",
+      "Which 2 of the 4 suits for the pair: C(4, 2) = 6."
+     ]
+    },
+    {
+     "type": "p",
+     "text": "13 · 12 (not C(13, 2)) because the two ranks play <b>different roles</b>: three kings and two 5s is a different hand from three 5s and two kings."
+    }
+   ]
+  },
+  {
+   "front": "How many two-pair hands? Why C(13, 2) and not 13 · 12?",
+   "back": [
+    {
+     "type": "formula",
+     "text": "C(13, 2) · C(4, 2)² · 44"
+    },
+    {
+     "type": "p",
+     "text": "<b>Steps.</b>"
+    },
+    {
+     "type": "list",
+     "items": [
+      "The two ranks for the pairs: C(13, 2). The pairs play the <b>same role</b>, so order doesn’t matter.",
+      "Two suits for each pair: C(4, 2) · C(4, 2).",
+      "The 5th card: any of the 52 − 8 = 44 cards of the other 11 ranks."
+     ]
+    },
+    {
+     "type": "warn",
+     "text": "13 · 12 would count “kings and 5s” and “5s and kings” as different, so every hand would be counted twice."
+    }
+   ]
+  },
+  {
+   "front": "State the complement rule and use it: 5 fair coins, p(at least one head)?",
+   "back": [
+    {
+     "type": "formula",
+     "text": "p(not E) = 1 − p(E)"
+    },
+    {
+     "type": "p",
+     "text": "<b>Why.</b> E and “not E” split S, so their probabilities add to 1."
+    },
+    {
+     "type": "p",
+     "text": "<b>Example.</b> The opposite of “at least one head” is “no heads” = all tails, which is 1 of the 2⁵ = 32 outcomes. So p = 1 − 1/32 = <b>31/32</b>."
+    }
+   ]
+  },
+  {
+   "front": "5-card hand: what’s the probability at least two cards have the same rank?",
+   "back": [
+    {
+     "type": "formula",
+     "text": "1 − C(13, 5) · 4⁵ / C(52, 5) ≈ 0.49"
+    },
+    {
+     "type": "p",
+     "text": "<b>How (complement).</b>"
+    },
+    {
+     "type": "list",
+     "items": [
+      "The opposite is “all 5 ranks different”.",
+      "Choose 5 different ranks: C(13, 5).",
+      "Each of those cards can be any of 4 suits: 4⁵.",
+      "Subtract that probability from 1."
+     ]
+    }
+   ]
+  },
+  {
+   "front": "State the union rule and use it: a number from 1–100, p(divisible by 2 or 5)?",
+   "back": [
+    {
+     "type": "formula",
+     "text": "p(E ∪ F) = p(E) + p(F) − p(E ∩ F)"
+    },
+    {
+     "type": "p",
+     "text": "It’s inclusion–exclusion divided by |S|, and it holds for any distribution."
+    },
+    {
+     "type": "p",
+     "text": "<b>Example.</b> Divisible by 2: 50. By 5: 20. By both = by 10: 10. So (50 + 20 − 10)/100 = <b>3/5</b>."
+    },
+    {
+     "type": "p",
+     "text": "Weather: 40% rain, 30% snow, 10% both ⟹ rain or snow = 40 + 30 − 10 = 60%."
+    }
+   ]
+  },
+  {
+   "front": "What is the union bound, and why is it always true?",
+   "back": [
+    {
+     "type": "formula",
+     "text": "p(E₁ ∪ E₂ ∪ ⋯ ∪ Eₙ) ≤ p(E₁) + p(E₂) + ⋯ + p(Eₙ)"
+    },
+    {
+     "type": "p",
+     "text": "<b>Why.</b> For two events, p(E₁ ∪ E₂) = p(E₁) + p(E₂) − p(E₁ ∩ E₂), and the subtracted part is ≥ 0. With more events, adding counts every overlap at least once extra, so the sum can only be too <b>big</b>."
+    },
+    {
+     "type": "p",
+     "text": "<b>Use.</b> When the exact union is hard but each event is easy, the union bound gives an upper limit. This is key in the probabilistic method and the birthday rule of thumb."
+    }
+   ]
+  },
+  {
+   "front": "What is p(E | F), and what does it mean?",
+   "back": [
+    {
+     "type": "formula",
+     "text": "p(E | F) = p(E ∩ F) / p(F) (needs p(F) > 0)"
+    },
+    {
+     "type": "p",
+     "text": "<b>Meaning.</b> “The probability of E <b>given</b> that F happened.” Once you know F happened, every outcome outside F is ruled out. F becomes the new sample space, and you ask what share of it is also in E."
+    },
+    {
+     "type": "p",
+     "text": "With equally likely outcomes: p(E | F) = |E ∩ F| / |F|."
+    }
+   ]
+  },
+  {
+   "front": "Two fair coins. p(both heads | at least one head)? And p(2nd heads | 1st heads)?",
+   "back": [
+    {
+     "type": "p",
+     "text": "<b>Given at least one head:</b> F = {HH, HT, TH} (3 outcomes), E ∩ F = {HH} ⟹ <b>1/3</b>."
+    },
+    {
+     "type": "p",
+     "text": "<b>Given the 1st is heads:</b> F = {HH, HT}, E ∩ F = {HH} ⟹ <b>1/2</b>."
+    },
+    {
+     "type": "warn",
+     "text": "They sound alike, but “at least one head” leaves 3 possibilities and “the first is heads” leaves 2. Always write out F."
+    }
+   ]
+  },
+  {
+   "front": "What is the multiplication rule?",
+   "back": [
+    {
+     "type": "formula",
+     "text": "p(E ∩ F) = p(E | F) · p(F)"
+    },
+    {
+     "type": "p",
+     "text": "It’s the definition of conditional probability, multiplied out. Use it for “first F happens, then E happens”."
+    },
+    {
+     "type": "p",
+     "text": "Example: draw 2 cards. p(both aces) = p(1st ace) · p(2nd ace | 1st ace) = (4/52)(3/51)."
+    }
+   ]
+  },
+  {
+   "front": "State the law of total probability and explain it.",
+   "back": [
+    {
+     "type": "p",
+     "text": "If F₁, …, Fₙ are disjoint cases that cover all of S (each with p(Fᵢ) > 0):"
+    },
+    {
+     "type": "formula",
+     "text": "p(E) = p(E | F₁)p(F₁) + ⋯ + p(E | Fₙ)p(Fₙ)"
+    },
+    {
+     "type": "p",
+     "text": "<b>Why.</b> E splits into the pieces E ∩ F₁, …, E ∩ Fₙ, which don’t overlap. Add their probabilities, and write each one as p(E | Fᵢ)p(Fᵢ) (the multiplication rule)."
+    },
+    {
+     "type": "p",
+     "text": "Two cases: p(E) = p(E | F)p(F) + p(E | not F)p(not F)."
+    }
+   ]
+  },
+  {
+   "front": "Monty Hall: 3 doors, 1 car, 2 goats. You pick a door; the host (who knows) opens another door with a goat. Should you switch?",
+   "back": [
+    {
+     "type": "p",
+     "text": "<b>Yes. Switching wins with probability 2/3.</b>"
+    },
+    {
+     "type": "p",
+     "text": "<b>Intuition.</b> Your first pick is right only 1/3 of the time, and the host opening a goat door doesn’t change that. So the other unopened door has the remaining 2/3."
+    },
+    {
+     "type": "p",
+     "text": "<b>With total probability.</b> Let G = your first pick was a goat, so p(G) = 2/3. If G, the host must reveal the other goat, and switching gets the car. If not G, switching gets a goat."
+    },
+    {
+     "type": "formula",
+     "text": "p(win by switching) = 1 · ⅔ + 0 · ⅓ = 2/3"
+    }
+   ]
+  },
+  {
+   "front": "Survey trick: flip a coin; heads means say “yes”, tails means answer honestly. 60% say yes. What fraction of honest answers are yes?",
+   "back": [
+    {
+     "type": "formula",
+     "text": "0.6 = 1 · ½ + x · ½ ⟹ x = 0.2 = 20%"
+    },
+    {
+     "type": "p",
+     "text": "<b>How.</b>"
+    },
+    {
+     "type": "list",
+     "items": [
+      "Cases: heads (p = ½) or tails (p = ½).",
+      "p(yes | heads) = 1. p(yes | tails) = x, the unknown.",
+      "Total probability: p(yes) = 1 · ½ + x · ½ = 0.6, so x = 0.2."
+     ]
+    },
+    {
+     "type": "p",
+     "text": "Why it’s useful: nobody knows whether a given “yes” is honest, so people answer truthfully."
+    }
+   ]
+  },
+  {
+   "front": "When are E and F independent?",
+   "back": [
+    {
+     "type": "formula",
+     "text": "p(E ∩ F) = p(E) · p(F)"
+    },
+    {
+     "type": "p",
+     "text": "If p(F) > 0, that’s the same as <b>p(E | F) = p(E)</b>: learning F doesn’t change the chance of E."
+    },
+    {
+     "type": "p",
+     "text": "<b>How to check.</b>"
+    },
+    {
+     "type": "list",
+     "items": [
+      "Compute p(E), p(F) and p(E ∩ F) separately.",
+      "Check whether p(E ∩ F) = p(E) · p(F)."
+     ]
+    },
+    {
+     "type": "warn",
+     "text": "Never assume independence unless the problem gives it. Wrongly assuming it is a very common real-world mistake."
+    }
+   ]
+  },
+  {
+   "front": "Random 4-bit string. E = first bit is 1, F = even number of 1s. Are they independent?",
+   "back": [
+    {
+     "type": "p",
+     "text": "<b>Work.</b>"
+    },
+    {
+     "type": "list",
+     "items": [
+      "16 equally likely strings.",
+      "p(E) = 8/16 = ½ (the first bit is 1, the other 3 are free).",
+      "p(F) = 8/16 = ½ (0, 2 or 4 ones: 1 + 6 + 1 = 8 strings).",
+      "E ∩ F = strings starting with 1 that have an even number of 1s: 1001, 1010, 1100, 1111 ⟹ 4/16 = ¼."
+     ]
+    },
+    {
+     "type": "p",
+     "text": "¼ = ½ · ½ ⟹ <b>independent</b>."
+    }
+   ]
+  },
+  {
+   "front": "What’s the difference between pairwise and mutual independence?",
+   "back": [
+    {
+     "type": "p",
+     "text": "<b>Pairwise:</b> every <b>pair</b> Eᵢ, Eⱼ (i ≠ j) satisfies p(Eᵢ ∩ Eⱼ) = p(Eᵢ)p(Eⱼ)."
+    },
+    {
+     "type": "p",
+     "text": "<b>Mutual:</b> the product rule holds for <b>every group</b> of the events, all pairs, triples, …, and all of them at once:"
+    },
+    {
+     "type": "formula",
+     "text": "p(Eᵢ₁ ∩ ⋯ ∩ Eᵢₘ) = p(Eᵢ₁) ⋯ p(Eᵢₘ)"
+    },
+    {
+     "type": "p",
+     "text": "Intuition: mutual means knowing any of the events tells you nothing about the others."
+    },
+    {
+     "type": "warn",
+     "text": "Pairwise does <b>not</b> imply mutual."
+    }
+   ]
+  },
+  {
+   "front": "Give an example of events that are pairwise but not mutually independent.",
+   "back": [
+    {
+     "type": "p",
+     "text": "Alice, Bob and Charlotte each pick a random number from 1–100."
+    },
+    {
+     "type": "list",
+     "items": [
+      "E₁ = Alice and Bob match",
+      "E₂ = Alice and Charlotte match",
+      "E₃ = Bob and Charlotte match"
+     ]
+    },
+    {
+     "type": "p",
+     "text": "<b>Each</b> has probability 1/100. <b>Any two</b> together means all three match: 1/100² = (1/100)(1/100) ⟹ pairwise independent."
+    },
+    {
+     "type": "p",
+     "text": "<b>All three:</b> E₁ and E₂ already force E₃, so p(E₁ ∩ E₂ ∩ E₃) = 1/100², not 1/100³ ⟹ <b>not mutually independent</b>."
+    }
+   ]
+  },
+  {
+   "front": "What are Bernoulli trials?",
+   "back": [
+    {
+     "type": "p",
+     "text": "The same try repeated n times, <b>independently</b>. Each try succeeds with the same probability p and fails with probability 1 − p."
+    },
+    {
+     "type": "p",
+     "text": "Flip a coin n times and count heads (p = ½). Roll a die n times and count the 1s (p = 1/6)."
+    }
+   ]
+  },
+  {
+   "front": "What’s the probability of exactly k successes in n Bernoulli trials? Why?",
+   "back": [
+    {
+     "type": "formula",
+     "text": "C(n, k) · pᵏ · (1 − p)ⁿ⁻ᵏ"
+    },
+    {
+     "type": "p",
+     "text": "<b>Why.</b>"
+    },
+    {
+     "type": "list",
+     "items": [
+      "Take one specific pattern, like SSFF…: the tries are independent, so multiply, giving pᵏ(1 − p)ⁿ⁻ᵏ.",
+      "Every pattern with k successes has this same probability.",
+      "There are C(n, k) patterns (choose which k tries succeed). They don’t overlap, so add them."
+     ]
+    },
+    {
+     "type": "p",
+     "text": "Example: a die rolled 3 times, exactly one 1: C(3, 1)(1/6)(5/6)² = 75/216 ≈ 0.35."
+    }
+   ]
+  },
+  {
+   "front": "A coin with p(H) = ¼ is flipped 4 times. p(exactly 2 heads)? p(at least one head)?",
+   "back": [
+    {
+     "type": "p",
+     "text": "<b>Exactly 2:</b> C(4, 2)(¼)²(¾)² = 6 · 1/16 · 9/16 = <b>27/128</b>."
+    },
+    {
+     "type": "p",
+     "text": "<b>At least one:</b> the complement is “no heads” = (¾)⁴ ⟹ 1 − 81/256 = <b>175/256</b>."
+    },
+    {
+     "type": "warn",
+     "text": "Don’t forget the C(n, k): (¼)²(¾)² alone is the probability of one specific pattern, like HHTT."
+    }
+   ]
+  },
+  {
+   "front": "n people with random birthdays (365 equally likely days). p(some two share a birthday)? For n = 23?",
+   "back": [
+    {
+     "type": "formula",
+     "text": "1 − (365 · 364 ⋯ (365 − n + 1)) / 365ⁿ"
+    },
+    {
+     "type": "p",
+     "text": "<b>Why.</b>"
+    },
+    {
+     "type": "list",
+     "items": [
+      "Use the complement: everyone has a <b>different</b> birthday.",
+      "Total possibilities: 365ⁿ.",
+      "All different: the 1st person has 365 options, the 2nd 364, …, the nth 365 − n + 1.",
+      "Subtract that probability from 1."
+     ]
+    },
+    {
+     "type": "p",
+     "text": "For n = 23, about <b>50.7%</b>. It’s surprisingly big because 23 people make C(23, 2) = 253 pairs."
+    }
+   ]
+  },
+  {
+   "front": "What’s the rule of thumb for collisions, and a security example?",
+   "back": [
+    {
+     "type": "formula",
+     "text": "p(two match) ≈ C(n, 2) / d (n random picks from d possibilities)"
+    },
+    {
+     "type": "p",
+     "text": "There are C(n, 2) pairs, and each matches with probability 1/d. The union bound adds them up (it’s an upper bound, and accurate when it’s small)."
+    },
+    {
+     "type": "p",
+     "text": "<b>Security:</b> 64-bit secrets give d = 2⁶⁴ ≈ 1.8 × 10¹⁹. But just 2³² ≈ 4 billion of them already give about a 39% chance that two collide, and 4 billion is easy for a computer."
+    }
+   ]
+  },
+  {
+   "front": "What is the probabilistic method?",
+   "back": [
+    {
+     "type": "p",
+     "text": "<b>Idea (Erdős).</b> To prove that something with a property <b>exists</b>, describe a random way to build one and show p(it has the property) > 0. If the probability is positive, at least one good outcome must exist."
+    },
+    {
+     "type": "p",
+     "text": "<b>Usual tool.</b> Union bound: p(something goes wrong) ≤ sum of the bad-event probabilities &lt; 1 ⟹ p(nothing goes wrong) > 0."
+    }
+   ]
+  },
+  {
+   "front": "10 clubs of exactly 5 students each. Why can students be split into red and blue so that no club is all one color?",
+   "back": [
+    {
+     "type": "list",
+     "items": [
+      "Put each student on a team by an independent fair coin flip.",
+      "For one club: p(all red) = (½)⁵ and p(all blue) = (½)⁵ ⟹ p(one color) = 2/32 = 1/16.",
+      "Union bound over the 10 clubs: p(some club is one color) ≤ 10 · 1/16 = 10/16 &lt; 1.",
+      "So p(no club is one color) ≥ 6/16 > 0, which means some assignment works."
+     ]
+    },
+    {
+     "type": "p",
+     "text": "It doesn’t matter that clubs share students: the union bound needs no independence."
+    }
+   ]
+  },
+  {
+   "front": "State Bayes’ theorem and derive it.",
+   "back": [
+    {
+     "type": "formula",
+     "text": "p(F | E) = p(E | F) · p(F) / p(E)"
+    },
+    {
+     "type": "formula",
+     "text": "with p(E) = p(E | F)p(F) + p(E | not F)p(not F)"
+    },
+    {
+     "type": "p",
+     "text": "<b>Derivation.</b>"
+    },
+    {
+     "type": "list",
+     "items": [
+      "By the definition of conditional probability, p(F | E)p(E) = p(E ∩ F) = p(E | F)p(F).",
+      "Divide by p(E).",
+      "Expand p(E) with the law of total probability."
+     ]
+    },
+    {
+     "type": "p",
+     "text": "Use it when you know p(evidence | cause) but want p(cause | evidence)."
+    }
+   ]
+  },
+  {
+   "front": "1% of people have a cancer. The test is positive for 90% of people with it and negative for 90% without it. A random person tests positive: p(cancer | positive)?",
+   "back": [
+    {
+     "type": "formula",
+     "text": "(0.9 · 0.01) / (0.9 · 0.01 + 0.1 · 0.99) = 0.009 / 0.108 = 1/12 ≈ 8.3%"
+    },
+    {
+     "type": "p",
+     "text": "<b>Setup.</b> F = cancer, E = positive. p(F) = 0.01, p(E | F) = 0.9, p(E | not F) = 0.1 (false positives)."
+    },
+    {
+     "type": "p",
+     "text": "<b>Check with 1000 people.</b> 10 have cancer ⟹ 9 test positive. 990 don’t ⟹ 99 test positive. 108 positives, only 9 real ⟹ 9/108 ≈ 8.3%."
+    },
+    {
+     "type": "warn",
+     "text": "Most people guess about 90%. That mixes up p(positive | cancer) with p(cancer | positive)."
+    }
+   ]
+  },
+  {
+   "front": "Someone says they love to read. 99% of librarians and 40% of farmers do, and there are about 30 farmers per librarian. More likely a librarian or a farmer?",
+   "back": [
+    {
+     "type": "formula",
+     "text": "p(librarian | reads) = 0.99 · 1 / (0.99 · 1 + 0.4 · 30) ≈ 7.6%"
+    },
+    {
+     "type": "p",
+     "text": "<b>Farmer</b>, by far. Reading fits librarians better, but there are 30 times as many farmers, and that base rate wins."
+    },
+    {
+     "type": "p",
+     "text": "Using counts: per 1 librarian there are 30 farmers. Readers: 0.99 librarians vs 0.4 · 30 = 12 farmers."
+    }
+   ]
+  },
+  {
+   "front": "How does Bayes’ theorem “update” a probability with evidence, and how much can one test change it?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Start with a <b>prior</b> guess p(F), like 1% have cancer. New evidence E, like a positive test, gives the <b>updated</b> p(F | E) by Bayes."
+    },
+    {
+     "type": "p",
+     "text": "In the cancer example, a test that’s wrong 1/10 of the time raises the probability by at most about a factor of 10 (1% ⟹ 8.3%). It can’t make a rare thing likely on its own."
+    },
+    {
+     "type": "p",
+     "text": "Real use: spam filters estimate p(spam | contains a word) from p(word | spam), which they learn from emails already labeled as spam or not."
+    }
+   ]
+  },
+  {
+   "front": "State Bayes’ theorem for one cause F and its complement F̄, and say what each part means.",
+   "back": [
+    {
+     "type": "formula",
+     "text": "p(F | E) = p(E | F)p(F) / [ p(E | F)p(F) + p(E | F̄)p(F̄) ]"
+    },
+    {
+     "type": "p",
+     "text": "<b>Top:</b> the probability E happens <b>through F</b>. <b>Bottom:</b> all the ways E can happen, which is p(E) by the law of total probability."
+    },
+    {
+     "type": "p",
+     "text": "So p(F | E) is the share of “E happening” that came from F."
+    }
+   ]
+  },
+  {
+   "front": "Bayes’ theorem with more than two causes: how do you find p(Fⱼ | E)?",
+   "back": [
+    {
+     "type": "formula",
+     "text": "p(Fⱼ | E) = p(E | Fⱼ)p(Fⱼ) / [ p(E | F₁)p(F₁) + ⋯ + p(E | Fₙ)p(Fₙ) ]"
+    },
+    {
+     "type": "p",
+     "text": "F₁, …, Fₙ are disjoint causes that cover everything. The bottom is p(E), from the law of total probability."
+    },
+    {
+     "type": "p",
+     "text": "<b>Recipe.</b>"
+    },
+    {
+     "type": "list",
+     "items": [
+      "For each cause, multiply p(cause) · p(evidence | cause).",
+      "Add those products to get p(E).",
+      "The answer for a cause is its product divided by the total."
+     ]
+    },
+    {
+     "type": "p",
+     "text": "The most likely cause is the one with the biggest product, not the biggest p(E | Fⱼ)."
+    }
+   ]
+  },
+  {
+   "front": "What is the “table of products” way to do any Bayes problem quickly?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Make one row per cause:"
+    },
+    {
+     "type": "formula",
+     "text": "cause | p(cause) | p(evidence | cause) | product"
+    },
+    {
+     "type": "p",
+     "text": "Add up the product column; that’s p(evidence). Then each p(cause | evidence) = its product / that total."
+    },
+    {
+     "type": "p",
+     "text": "Cancer test: cancer 0.01 × 0.9 = 0.009; no cancer 0.99 × 0.1 = 0.099. Total 0.108. p(cancer | positive) = 0.009/0.108 ≈ 8.3%."
+    }
+   ]
+  },
+  {
+   "front": "What is the difference between p(E | F) and p(F | E)? Give the classic mistake.",
+   "back": [
+    {
+     "type": "p",
+     "text": "p(E | F): the chance of the evidence <b>assuming</b> the cause. p(F | E): the chance of the cause <b>given</b> that you saw the evidence. They are usually very different."
+    },
+    {
+     "type": "warn",
+     "text": "“The test catches 90% of cancers” is p(positive | cancer) = 0.9. It does not mean p(cancer | positive) = 0.9; that was only 8.3%, because the base rate p(cancer) = 1% was small."
+    }
+   ]
+  },
+  {
+   "front": "Why are disjoint events with positive probability never independent?",
+   "back": [
+    {
+     "type": "p",
+     "text": "p(E ∩ F) = 0 but p(E)p(F) > 0. Knowing F happened tells you E did not happen, so F carries information about E."
+    }
+   ]
+  },
+  {
+   "front": "Why is p(A | B) usually different from p(B | A)?",
+   "back": [
+    {
+     "type": "formula",
+     "text": "p(A | B) = p(B | A) p(A) / p(B)"
+    },
+    {
+     "type": "p",
+     "text": "They differ by the factor p(A)/p(B). With a small base rate p(A), p(A | B) can be small even when p(B | A) is large."
+    }
+   ]
+  },
+  {
+   "front": "Probability that the first success in independent trials (success probability p) happens on trial k?",
+   "back": [
+    {
+     "type": "formula",
+     "text": "(1 − p)ᵏ⁻¹ p"
+    },
+    {
+     "type": "p",
+     "text": "k − 1 failures, then a success; independent, so multiply."
+    }
+   ]
+  }
+ ],
+ "hard": [
+  {
+   "title": "Sum 8 given at least one 3",
+   "level": "hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "Two fair dice are rolled. Given that at least one die shows a 3, what is the probability that the sum is 8?"
+    }
+   ],
+   "answer": "2/11",
+   "solution": [
+    {
+     "type": "p",
+     "text": "Outcomes with at least one 3: 36 − 25 = 11. Of these, the ones with sum 8 are (3,5) and (5,3). <b>2/11</b>."
+    },
+    {
+     "type": "tip",
+     "text": "<b>Tests:</b> shrinking the sample space correctly. <b>Common mistake:</b> answering 1/6 by reasoning “the other die has to be a 5”. Which die is “the other” isn’t well defined."
+    }
+   ]
+  },
+  {
+   "title": "Odd dice: pairwise but not mutually independent",
+   "level": "hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "Roll two dice. A = “the first die is odd”, B = “the second die is odd”, C = “the sum is odd”. Show that A, B, C are pairwise independent but not mutually independent."
+    }
+   ],
+   "answer": "Each pair multiplies (1/4 = 1/2·1/2), but P(A ∩ B ∩ C) = 0 ≠ 1/8.",
+   "solution": [
+    {
+     "type": "p",
+     "text": "P(A) = P(B) = P(C) = 1/2."
+    },
+    {
+     "type": "list",
+     "items": [
+      "P(A ∩ B) = 9/36 = 1/4 = P(A)P(B).",
+      "A ∩ C means first odd and second even: 9/36 = 1/4. ✓",
+      "B ∩ C means first even and second odd: 1/4. ✓"
+     ]
+    },
+    {
+     "type": "p",
+     "text": "But A ∩ B ∩ C = ∅: if both dice are odd, the sum is even. So P(A ∩ B ∩ C) = 0 ≠ 1/8."
+    },
+    {
+     "type": "tip",
+     "text": "<b>Tests:</b> mutual independence needs <i>every</i> sub-collection to multiply, not just the pairs. <b>Common mistake:</b> checking only the pairs and declaring the three events independent."
+    }
+   ]
+  },
+  {
+   "title": "Shared birth month",
+   "level": "hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "Each person’s birth month is uniform over the 12 months, independently. What is the smallest group size for which the probability that two people share a birth month exceeds 1/2?"
+    }
+   ],
+   "answer": "5 people (P(share) = 89/144 ≈ 0.618; with 4 it is ≈ 0.427)",
+   "solution": [
+    {
+     "type": "p",
+     "text": "P(all different among k people) = 12·11⋯(12 − k + 1)/12<sup>k</sup>."
+    },
+    {
+     "type": "list",
+     "items": [
+      "k = 4: 11880/20736 ≈ 0.573, so P(share) ≈ 0.427.",
+      "k = 5: 95040/248832 ≈ 0.382, so P(share) = 89/144 ≈ 0.618."
+     ]
+    },
+    {
+     "type": "p",
+     "text": "<b>Answer:</b> 5 people."
+    },
+    {
+     "type": "tip",
+     "text": "<b>Tests:</b> using the complement. <b>Common mistake:</b> computing P(share) as k(k − 1)/2 · 1/12, which treats overlapping pairs as disjoint events."
+    }
+   ]
+  },
+  {
+   "title": "All four suits in a poker hand",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "What is the probability that a 5-card poker hand contains at least one card of each suit?"
+    }
+   ],
+   "answer": "4·C(13,2)·13³/C(52,5) = 2197/8330 ≈ 0.264",
+   "solution": [
+    {
+     "type": "p",
+     "text": "The suit pattern must be 2-1-1-1. Choose the doubled suit (4), its 2 cards (C(13,2) = 78), and one card from each of the other three suits (13³ = 2197): 4·78·2197 = 685464."
+    },
+    {
+     "type": "p",
+     "text": "685464 / C(52,5) = 685464/2598960 = <b>2197/8330 ≈ 0.264</b>."
+    },
+    {
+     "type": "tip",
+     "text": "<b>Tests:</b> counting by pattern. <b>Common mistake:</b> 13⁴·48 (“one per suit, then any fifth card”) counts each hand twice, since either card of the doubled suit can be “the fifth”."
+    }
+   ]
+  },
+  {
+   "title": "Bayes with one and two positive tests",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "A disease affects 0.5% of people. A test is positive for 98% of sick people and for 3% of healthy people. (a) Given one positive test, what is the probability of being sick? (b) Given two positive tests, assuming they are independent given the person’s true status?"
+    }
+   ],
+   "answer": "(a) 98/695 ≈ 14.1% (b) 9604/11395 ≈ 84.3%",
+   "solution": [
+    {
+     "type": "p",
+     "text": "(a) P(D|+) = (0.005·0.98)/(0.005·0.98 + 0.995·0.03) = 0.0049/0.03475 = <b>98/695 ≈ 14.1%</b>."
+    },
+    {
+     "type": "p",
+     "text": "(b) Replace the likelihoods by their squares: (0.005·0.98²)/(0.005·0.98² + 0.995·0.03²) = 0.004802/0.0056975 ≈ <b>84.3%</b> (exactly 9604/11395)."
+    },
+    {
+     "type": "p",
+     "text": "Equivalently, use the posterior from (a) as the new prior and apply Bayes again."
+    },
+    {
+     "type": "tip",
+     "text": "<b>Tests:</b> Bayes with a small prior, and updating twice. <b>Common mistake:</b> answering 98% (that confuses P(+|D) with P(D|+)), or assuming the two tests are independent without conditioning on status."
+    }
+   ]
+  },
+  {
+   "title": "Geometric, conditional binomial, best-of-7",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "list",
+     "items": [
+      "(a) A coin shows heads with probability p. Find the probability that the first head appears on an even-numbered flip, and evaluate it at p = 1/3.",
+      "(b) A fair coin is flipped 10 times. Given at least 4 heads, what is the probability of exactly 5 heads?",
+      "(c) A wins each game independently with probability 0.6. What is the probability that A wins a best-of-7 series?"
+     ]
+    }
+   ],
+   "answer": "(a) (1 − p)/(2 − p) = 2/5 at p = 1/3 (b) 63/212 ≈ 0.297 (c) 0.710208",
+   "solution": [
+    {
+     "type": "p",
+     "text": "(a) Σ<sub>k≥1</sub> (1 − p)<sup>2k−1</sup>p = p(1 − p)/(1 − (1 − p)²) = (1 − p)/(2 − p). At p = 1/3: <b>2/5</b>. (It is always less than 1/2.)"
+    },
+    {
+     "type": "p",
+     "text": "(b) P(5) = 252/1024 and P(≥ 4) = (1024 − 1 − 10 − 45 − 120)/1024 = 848/1024. Answer <b>252/848 = 63/212 ≈ 0.297</b>."
+    },
+    {
+     "type": "p",
+     "text": "(c) A wins in 4 + k games (k = 0..3) when A wins the last game and 3 of the previous 3 + k: Σ<sub>k=0</sub><sup>3</sup> C(3 + k, k)(0.6)⁴(0.4)<sup>k</sup> = <b>0.710208</b>. (Equivalently, the probability of at least 4 wins in 7 games, if all 7 are played.)"
+    },
+    {
+     "type": "tip",
+     "text": "<b>Tests:</b> geometric series, conditional binomial probabilities, and “the last game must be a win”. <b>Common mistake:</b> in (c), using C(4 + k, 4) and so allowing the series to continue after A has already won."
+    }
+   ]
+  },
+  {
+   "title": "Boy born on a Tuesday",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "A family has two children. Each child is independently a boy or a girl with probability 1/2 and is born on a uniformly random day of the week. Given that at least one child is a boy born on a Tuesday, what is the probability that both are boys?"
+    }
+   ],
+   "answer": "13/27 ≈ 0.48",
+   "solution": [
+    {
+     "type": "p",
+     "text": "Each child has 14 equally likely types (sex, weekday), so there are 196 equally likely pairs. Pairs with at least one Tuesday boy: 196 − 13² = 27. Among those, pairs with two boys: 7² − 6² = 13 (boy–boy pairs minus those with no Tuesday boy)."
+    },
+    {
+     "type": "p",
+     "text": "<b>Answer:</b> 13/27 ≈ 0.48"
+    },
+    {
+     "type": "tip",
+     "text": "<b>Tests:</b> computing conditional probability by careful counting instead of intuition. <b>Common mistake:</b> answering 1/2 or 1/3. The extra detail makes the condition “almost” pick out one specific child, which pushes the answer toward 1/2."
+    }
+   ]
+  },
+  {
+   "title": "HH vs TH race",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "A fair coin is flipped until either HH or TH appears (as two consecutive flips). What is the probability that HH appears first?"
+    }
+   ],
+   "answer": "P(HH first) = 1/4",
+   "solution": [
+    {
+     "type": "p",
+     "text": "If the first two flips are HH (probability 1/4), HH wins. Otherwise, a T has appeared among the first two flips, and no HH has occurred yet. From the first T on, look at the first H after it: it is preceded by a T, so it completes TH. Any HH needs an H preceded by an H, and that can only happen after this first H. So TH always comes first."
+    },
+    {
+     "type": "p",
+     "text": "<b>Answer:</b> P(HH first) = 1/4."
+    },
+    {
+     "type": "p",
+     "text": "(Check with states: let x<sub>H</sub>, x<sub>T</sub> be the probability that HH wins given the last flip. x<sub>T</sub> = ½·0 + ½·x<sub>T</sub> gives x<sub>T</sub> = 0. Then x<sub>H</sub> = ½·1 + ½·x<sub>T</sub> = ½, and the answer is ½x<sub>H</sub> + ½x<sub>T</sub> = ¼.)"
+    },
+    {
+     "type": "tip",
+     "text": "<b>Tests:</b> reasoning about a sequential process. <b>Common mistake:</b> “each pattern has probability 1/4 at any given position, so it’s 50–50”. Patterns overlap, and position-by-position symmetry doesn’t make the race fair."
+    }
+   ]
+  },
+  {
+   "title": "Ramsey bound by the probabilistic method",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "Prove that the edges of K<sub>100</sub> can be colored red and blue so that no 10 vertices span a single-color K<sub>10</sub>. (You may use C(100,10) ≈ 1.731 × 10<sup>13</sup> and 2<sup>44</sup> ≈ 1.759 × 10<sup>13</sup>.)"
+    }
+   ],
+   "answer": "Random colouring: P(some 10-set monochromatic) ≤ C(100,10)·2⁻⁴⁴ ≈ 0.984 &lt; 1, so a good colouring exists.",
+   "solution": [
+    {
+     "type": "p",
+     "text": "Color each edge red or blue independently with probability 1/2. Fix a set S of 10 vertices. It spans C(10,2) = 45 edges, and P(S monochromatic) = 2·2<sup>−45</sup> = 2<sup>−44</sup> (all red or all blue)."
+    },
+    {
+     "type": "p",
+     "text": "By the union bound, P(some S is monochromatic) ≤ C(100,10)·2<sup>−44</sup> ≈ 1.731/1.759 ≈ 0.984 &lt; 1."
+    },
+    {
+     "type": "p",
+     "text": "So with positive probability no S is monochromatic. Hence at least one coloring has none. (In Ramsey language, R(10,10) > 100.) ∎"
+    },
+    {
+     "type": "tip",
+     "text": "<b>Tests:</b> “probability &lt; 1 that something bad happens ⇒ a good outcome exists”. <b>Common mistake:</b> forgetting the factor 2 (red or blue), or using 2<sup>−10</sup> (vertices) instead of 2<sup>−45</sup> (edges)."
+    }
+   ]
+  },
+  {
+   "title": "Gene screening and dice conditioning",
+   "level": "hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "<b>(a)</b> 2% of a population carries a certain gene. A screening test is positive for 95% of carriers and for 10% of non-carriers. A random person tests positive. What is the probability they carry the gene?"
+    },
+    {
+     "type": "p",
+     "text": "<b>(b)</b> Two fair dice are rolled. Find P(at least one 6 | the sum is 8) and P(the sum is 8 | at least one 6)."
+    },
+    {
+     "type": "p",
+     "text": "<b>(c)</b> Let A = “the first die is even”, B = “the sum is 7”, C = “the sum is 8”. Is A independent of B? Of C?"
+    }
+   ],
+   "answer": "(a) 19/117 ≈ 0.162 (b) 2/5 and 2/11 (c) A is independent of “sum 7”, not of “sum 8”",
+   "solution": [
+    {
+     "type": "p",
+     "text": "<b>(a)</b> G = carrier, + = positive. Bayes:"
+    },
+    {
+     "type": "formula",
+     "text": "P(G | +) = P(+ | G)P(G) / [P(+ | G)P(G) + P(+ | Ḡ)P(Ḡ)]"
+    },
+    {
+     "type": "p",
+     "text": "= (0.95)(0.02) / [(0.95)(0.02) + (0.10)(0.98)] = 0.019 / (0.019 + 0.098) = 0.019/0.117 = <b>19/117 ≈ 0.162</b>."
+    },
+    {
+     "type": "p",
+     "text": "Only about 16%: carriers are so rare that the false positives among the 98% swamp the true positives."
+    },
+    {
+     "type": "p",
+     "text": "<b>(b)</b> Sum 8: (2,6), (3,5), (4,4), (5,3), (6,2), 5 equally likely outcomes, 2 with a 6. P = <b>2/5</b>."
+    },
+    {
+     "type": "p",
+     "text": "At least one 6: 36 − 25 = 11 outcomes; of these, sum 8: (2,6), (6,2). P = <b>2/11</b>."
+    },
+    {
+     "type": "p",
+     "text": "<b>(c)</b> P(A) = 1/2, P(B) = 6/36 = 1/6. A ∩ B = {(2,5), (4,3), (6,1)}: 3/36 = 1/12 = (1/2)(1/6). <b>Independent.</b>"
+    },
+    {
+     "type": "p",
+     "text": "P(C) = 5/36. A ∩ C = {(2,6), (4,4), (6,2)}: 3/36 = 1/12, but P(A)P(C) = 5/72. <b>Not independent.</b>"
+    },
+    {
+     "type": "tip",
+     "text": "Bayes’ theorem with the law of total probability; conditioning as shrinking the sample space; the definition of independence."
+    },
+    {
+     "type": "warn",
+     "text": "Answering 0.95 in (a), which is P(+ | G), not P(G | +). In (b), the two conditionals are different numbers: the condition is the new sample space. In (c), deciding independence by intuition instead of checking P(A ∩ B) = P(A)P(B)."
+    }
+   ]
+  }
+ ],
+ "keyFacts": [
+  "Equally likely outcomes: p(E) = |E|/|S|; in general p(E) = Σ over s ∈ E of p(s)",
+  "p(Ē) = 1 − p(E); p(E ∪ F) = p(E) + p(F) − p(E ∩ F); union bound p(∪Eᵢ) ≤ Σ p(Eᵢ)",
+  "p(E | F) = p(E ∩ F)/p(F); multiplication rule p(E ∩ F) = p(E | F) p(F)",
+  "Total probability: p(E) = Σ p(E | Fᵢ) p(Fᵢ) over disjoint cases Fᵢ covering S",
+  "Independent ⟺ p(E ∩ F) = p(E) p(F); mutual independence needs every subcollection",
+  "Disjoint events with positive probabilities are never independent",
+  "Bernoulli: p(exactly k successes in n) = C(n, k) pᵏ (1 − p)ⁿ⁻ᵏ",
+  "Bayes: p(F | E) = p(E | F) p(F) / Σ p(E | Fᵢ) p(Fᵢ); use a table of products",
+  "Birthday: p(shared) = 1 − 365·364⋯(366 − n)/365ⁿ, ≈ 50.7% at n = 23",
+  "Probabilistic method: p(bad) &lt; 1 ⇒ a good object exists"
+ ]
+}

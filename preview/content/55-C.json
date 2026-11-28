@@ -1,0 +1,1946 @@
+{
+ "id": "55-C",
+ "course": "55",
+ "title": "Sets, functions, cardinality, uncountability",
+ "source": "Rosen 2.1–2.3, 2.5 · Lec05–06",
+ "summary": "The objects of discrete math: sets and their operations, functions and the properties injective, surjective and bijective, floor and ceiling, and how to compare the sizes of infinite sets. On the final expect set-identity proofs, injective/surjective proofs, countability arguments and Cantor’s diagonal argument.",
+ "lesson": [
+  {
+   "title": "Sets, subsets, power sets and products",
+   "blocks": [
+    {
+     "type": "tip",
+     "text": "A set is a bag of distinct items; order and repeats don't matter. Know ∈ (“is an item in”) versus ⊆ (“every item is also in”)."
+    },
+    {
+     "type": "def",
+     "term": "set",
+     "text": "A <b>set</b> is an unordered collection of distinct objects, called its <b>elements</b> or <b>members</b>. a ∈ A means a is an element of A; a ∉ A means it isn't. Sets get uppercase letters, elements lowercase."
+    },
+    {
+     "type": "tip",
+     "text": "A set is a <b>bag</b>. All that matters is what's in the bag. The order you list things in doesn't matter, and putting the same thing in twice doesn't add anything: {1, 2} = {2, 1} = {1, 1, 2}."
+    },
+    {
+     "type": "p",
+     "text": "<b>Describing sets</b>"
+    },
+    {
+     "type": "list",
+     "items": [
+      "<b>Roster:</b> list elements in braces: {1, 13, 20}, {Alice, Bob, Charlie, Eve}. Use “…” only when the pattern is obvious: {1, 2, …, 100}, {2, 4, 6, 8, …}.",
+      "<b>Set-builder:</b> {x | P(x)} is the set of all x satisfying P(x). E.g. {x | x is even and x > 0} = {2, 4, 6, …}."
+     ]
+    },
+    {
+     "type": "table",
+     "head": [
+      "Symbol",
+      "Set"
+     ],
+     "rows": [
+      [
+       "ℕ = {0, 1, 2, 3, …}",
+       "natural numbers (<b>includes 0</b>, as in Rosen)"
+      ],
+      [
+       "ℤ = {…, −2, −1, 0, 1, 2, …}",
+       "integers"
+      ],
+      [
+       "ℤ⁺ = {1, 2, 3, …}",
+       "positive integers"
+      ],
+      [
+       "ℚ = {p/q | p, q ∈ ℤ, q ≠ 0}",
+       "rational numbers"
+      ],
+      [
+       "ℝ",
+       "real numbers (anything you can write as a decimal)"
+      ],
+      [
+       "ℂ = {x + iy | x, y ∈ ℝ}",
+       "complex numbers"
+      ]
+     ]
+    },
+    {
+     "type": "def",
+     "term": "subset",
+     "text": "A is a <b>subset</b> of B, written A ⊆ B (and B is a <b>superset</b> of A, B ⊇ A), if every element of A is also an element of B:"
+    },
+    {
+     "type": "p",
+     "text": "A ⊆ B ⟺ ∀x (x ∈ A → x ∈ B)"
+    },
+    {
+     "type": "p",
+     "text": "A is a <b>proper subset</b>, A ⊊ B (Rosen: A ⊂ B), if A ⊆ B and A ≠ B."
+    },
+    {
+     "type": "p",
+     "text": "Two sets are <b>equal</b> if they have exactly the same elements: A = B ⟺ ∀x (x ∈ A ↔ x ∈ B). Equivalently <b>A ⊆ B and B ⊆ A</b>."
+    },
+    {
+     "type": "def",
+     "term": "empty set",
+     "text": "The <b>empty set</b>, written ∅ or {}, is the set with no elements."
+    },
+    {
+     "type": "thm",
+     "name": "Theorem",
+     "text": "For every set S: ∅ ⊆ S and S ⊆ S.",
+     "proof": [
+      {
+       "type": "p",
+       "text": "∅ ⊆ S means ∀x (x ∈ ∅ → x ∈ S). Since x ∈ ∅ is always false, each implication is vacuously true. S ⊆ S because x ∈ S → x ∈ S is always true."
+      }
+     ]
+    },
+    {
+     "type": "p",
+     "text": "True/false checks: {1, 3} ⊆ {1, 2, 3} T; {1, 2, 3} ⊆ {1, 2, 3} T; {1, 3} ⊆ {1, 2} F; {1, 2} = {2, 1} T; {1, 2, 3} = {1, 2} F; {1, 1, 2} = {1, 2} T."
+    },
+    {
+     "type": "p",
+     "text": "<b>Sets inside sets: ∈ vs ⊆</b>"
+    },
+    {
+     "type": "tip",
+     "text": "x ∈ A: “x is one of the items in bag A.”<br>X ⊆ A: “every item in bag X is also an item in bag A.”<br>A bag can contain another bag as a single item. The items <i>inside</i> the inner bag are not items of the outer bag."
+    },
+    {
+     "type": "p",
+     "text": "<b>Example.</b> Let B = {1, {1, 2}, {{3}}}. It has exactly <b>3</b> elements: 1, {1, 2} and {{3}}. The table below checks ∈ and ⊆ for it."
+    },
+    {
+     "type": "p",
+     "text": "Note 2 ∈ {1, 2} and {1, 2} ∈ B, but 2 ∉ B: <b>∈ is not transitive</b> (⊆ is)."
+    },
+    {
+     "type": "p",
+     "text": "With C = {∅}: ∅ ∈ C (T), ∅ ⊆ C (T), and C ≠ ∅ (C has one element). With D = {∅, {∅}}: {∅} ∈ D and {∅} ⊆ D are both true."
+    },
+    {
+     "type": "table",
+     "head": [
+      "Statement",
+      "",
+      "Why"
+     ],
+     "rows": [
+      [
+       "1 ∈ B",
+       "T",
+       "listed"
+      ],
+      [
+       "2 ∈ B",
+       "F",
+       "2 is inside {1, 2}, which is an element, but 2 itself isn't"
+      ],
+      [
+       "{1, 2} ∈ B",
+       "T",
+       "listed as an element"
+      ],
+      [
+       "{1, 2} ⊆ B",
+       "F",
+       "would need 2 ∈ B"
+      ],
+      [
+       "{1} ⊆ B",
+       "T",
+       "1 ∈ B"
+      ],
+      [
+       "{3} ∈ B",
+       "F",
+       "the element is {{3}}, not {3}"
+      ],
+      [
+       "∅ ⊆ B",
+       "T",
+       "always"
+      ],
+      [
+       "∅ ∈ B",
+       "F",
+       "∅ isn't listed"
+      ]
+     ]
+    },
+    {
+     "type": "warn",
+     "text": "∅ ≠ {∅}. The first is an empty bag; the second is a bag holding one empty bag."
+    },
+    {
+     "type": "def",
+     "term": "finite",
+     "text": "If S has exactly n distinct elements (n a nonnegative integer), S is <b>finite</b> with <b>cardinality</b> |S| = n. A set that is not finite is <b>infinite</b>. (|∅| = 0, |{∅}| = 1.)"
+    },
+    {
+     "type": "def",
+     "term": "power set",
+     "text": "The <b>power set</b> of A, 𝒫(A), is the set of all subsets of A: 𝒫(A) = {B | B ⊆ A}."
+    },
+    {
+     "type": "p",
+     "text": "𝒫({1, 2}) = {∅, {1}, {2}, {1, 2}}. 𝒫(∅) = {∅}. 𝒫({∅}) = {∅, {∅}}."
+    },
+    {
+     "type": "p",
+     "text": "If |A| = n then |𝒫(A)| = 2ⁿ (each element is either in or out of a subset). Always ∅ ∈ 𝒫(A) and A ∈ 𝒫(A)."
+    },
+    {
+     "type": "thm",
+     "name": "Theorem",
+     "text": "If A ⊆ B then 𝒫(A) ⊆ 𝒫(B).",
+     "proof": [
+      {
+       "type": "p",
+       "text": "Assume A ⊆ B. Suppose C ∈ 𝒫(A), so C ⊆ A by definition. Since A ⊆ B and ⊆ is transitive, C ⊆ B. So C ∈ 𝒫(B). □"
+      }
+     ]
+    },
+    {
+     "type": "p",
+     "text": "<b>Tuples and Cartesian products</b>"
+    },
+    {
+     "type": "def",
+     "term": "ordered n-tuple",
+     "text": "An <b>ordered n-tuple</b> (a₁, …, aₙ) has a first element, a second element, …, an nth element. Two tuples are equal iff corresponding entries are equal. A 2-tuple is an <b>ordered pair</b>: (a, b) = (c, d) iff a = c and b = d. So (1, 3) ≠ (3, 1), unlike sets."
+    },
+    {
+     "type": "p",
+     "text": "The <b>Cartesian product</b> A × B = {(a, b) | a ∈ A ∧ b ∈ B}. More generally A₁ × ⋯ × Aₙ = {(a₁, …, aₙ) | aᵢ ∈ Aᵢ}."
+    },
+    {
+     "type": "p",
+     "text": "<b>Example.</b> {1, 2} × {x, y} = {(1, x), (1, y), (2, x), (2, y)}. ℝ × ℝ = ℝ² is the plane. In general A × B ≠ B × A, and |A × B| = |A|·|B|."
+    },
+    {
+     "type": "steps",
+     "title": "∈ vs ⊆ for sets of sets",
+     "items": [
+      "<b>List the top-level items.</b> Write the big set's elements one per line. Only commas at the outermost level split items: {1, {1, 2}, {{3}}} has 3 lines.",
+      "<b>For x ∈ A:</b> look for x <i>exactly</i>, braces and all, as one whole line. Being inside a line doesn't count.",
+      "<b>For X ⊆ A:</b> X must be a set. Take off X's outer braces. Check that <b>each</b> thing left over is one of A's lines.",
+      "<b>Empty set shortcuts:</b> ∅ ⊆ A is always true. ∅ ∈ A is true only if ∅ (or {}) is one of the lines.",
+      "<b>Check:</b> {x} ⊆ A is true exactly when x ∈ A. Use this to test one answer against another."
+     ]
+    },
+    {
+     "type": "steps",
+     "title": "List a power set",
+     "items": [
+      "<b>Count first.</b> If |A| = n, you need 2ⁿ subsets. Write that number down.",
+      "<b>List by size.</b> Size 0: ∅. Size 1: wrap each element in its own braces. Size 2: every pair. Keep going up to size n, which is A itself.",
+      "<b>Wrap set-elements again.</b> If an element is itself a set, the size-1 subset holding it gets a second pair of braces: the subset holding {1} is {{1}}.",
+      "<b>Put braces around the whole list.</b> 𝒫(A) is a set whose elements are sets.",
+      "<b>Check:</b> you have exactly 2ⁿ items, and both ∅ and A are on the list."
+     ]
+    },
+    {
+     "type": "steps",
+     "title": "List a Cartesian product",
+     "items": [
+      "<b>Count first:</b> |A × B| = |A|·|B|.",
+      "Fix the first element of A. Pair it with every element of B, one at a time.",
+      "Move to the next element of A and repeat. It's like reading a table row by row.",
+      "The first coordinate always comes from A, the second from B. (a, b) is a pair, not a set, so order matters.",
+      "<b>Check:</b> you have |A|·|B| pairs. If A or B is ∅, then A × B = ∅."
+     ]
+    },
+    {
+     "type": "steps",
+     "title": "Prove or disprove A ⊆ B and A = B",
+     "items": [
+      "<b>To prove A ⊆ B:</b> write “Let x ∈ A be arbitrary.” Unpack what x ∈ A means (A's rule). Use it to show x passes B's rule. End with “So x ∈ B. Hence A ⊆ B.”",
+      "<b>To disprove A ⊆ B:</b> name one specific element that is in A but not in B. One is enough.",
+      "<b>To prove A = B:</b> do step 1 twice, once for A ⊆ B and once for B ⊆ A.",
+      "<b>Filled-in example:</b> show {x ∈ ℤ | 6 divides x} ⊆ {x ∈ ℤ | x is even}. Let x be in the first set, so x = 6k for some integer k. Then x = 2(3k), so x is even. The other direction fails: 2 is even but 6 doesn't divide 2. So the sets are not equal."
+     ]
+    },
+    {
+     "type": "example",
+     "title": "power set of a set of sets",
+     "prompt": "Let A = {∅, {1}}. List 𝒫(A). Then decide: ∅ ∈ 𝒫(A)? {1} ∈ 𝒫(A)? {{1}} ∈ 𝒫(A)? {∅} ⊆ 𝒫(A)? {1} ⊆ 𝒫(A)?",
+     "steps": [
+      "|A| = 2, so 𝒫(A) has 2² = 4 items — <i>count first; A's two lines are ∅ and {1}</i>",
+      "size 0: ∅ — <i>always a subset</i>",
+      "size 1: {∅}, {{1}} — <i>wrap each element in its own braces</i>",
+      "size 2: {∅, {1}} — <i>that's A itself</i>",
+      "𝒫(A) = {∅, {∅}, {{1}}, {∅, {1}}} — <i>4 items, matches the count</i>",
+      "∅ ∈ 𝒫(A): true — <i>it's one of the 4 lines</i>",
+      "{1} ∈ 𝒫(A): false — <i>{1} ⊆ A would need 1 ∈ A, but A's items are ∅ and {1}, not 1</i>",
+      "{{1}} ∈ 𝒫(A): true — <i>it's one of the 4 lines</i>",
+      "{∅} ⊆ 𝒫(A): true — <i>its only item, ∅, is a line of 𝒫(A)</i>",
+      "{1} ⊆ 𝒫(A): false — <i>would need 1 ∈ 𝒫(A); every item of 𝒫(A) is a set, and 1 isn't</i>",
+      "Notice {∅} is both an element and a subset of 𝒫(A). That can happen; you just check each question separately."
+     ],
+     "answer": "𝒫(A) = {∅, {∅}, {{1}}, {∅, {1}}}; T, F, T, T, F"
+    },
+    {
+     "type": "example",
+     "title": "product with a set inside",
+     "prompt": "Let A = {1, 2} and B = {∅, x}. List A × B. Is (x, 1) ∈ A × B? Find |B × A × A| and |𝒫(A × B)|.",
+     "steps": [
+      "|A × B| = 2 · 2 = 4 — <i>count first</i>",
+      "(1, ∅), (1, x) — <i>fix 1, run through B</i>",
+      "(2, ∅), (2, x) — <i>fix 2, run through B</i>",
+      "A × B = {(1, ∅), (1, x), (2, ∅), (2, x)} — <i>collect; ∅ is a real element of B, so (1, ∅) is a real pair</i>",
+      "(x, 1) ∉ A × B — <i>the first coordinate must come from A, and x ∉ A</i>",
+      "|B × A × A| = 2 · 2 · 2 = 8 — <i>multiply the sizes</i>",
+      "|𝒫(A × B)| = 2⁴ = 16 — <i>A × B has 4 elements</i>"
+     ],
+     "answer": "4 pairs; (x, 1) ∉ A × B; |B × A × A| = 8; |𝒫(A × B)| = 16"
+    },
+    {
+     "type": "warn",
+     "text": "<b>Wrong:</b> 2 ∈ {{1, 2}} because 2 appears in it. <b>Right:</b> 2 ∉ {{1, 2}}. The only element is the bag {1, 2}; 2 is inside that inner bag."
+    },
+    {
+     "type": "warn",
+     "text": "<b>Wrong:</b> 𝒫({1, 2}) = {{1}, {2}, {1, 2}} or {∅, 1, 2, {1, 2}}. <b>Right:</b> {∅, {1}, {2}, {1, 2}}. Every item is a set, and ∅ is always there (2² = 4 items)."
+    },
+    {
+     "type": "warn",
+     "text": "<b>Wrong:</b> |{∅}| = 0 or {∅} = ∅. <b>Right:</b> |{∅}| = 1. A bag holding an empty bag is not empty."
+    },
+    {
+     "type": "warn",
+     "text": "<b>Wrong:</b> |{1, 1, 2}| = 3. <b>Right:</b> it's 2, since repeats don't count in a set."
+    },
+    {
+     "type": "warn",
+     "text": "<b>Wrong:</b> |A × B| = |A| + |B|, or A × B = B × A. <b>Right:</b> |A × B| = |A|·|B|, and (1, x) ≠ (x, 1), so the products usually differ."
+    }
+   ]
+  },
+  {
+   "title": "Set operations and identities",
+   "blocks": [
+    {
+     "type": "tip",
+     "text": "Union, intersection, difference and complement are “or,” “and,” “and not” and “not” for sets. Prove two sets are equal by chasing an element."
+    },
+    {
+     "type": "def",
+     "term": "Union",
+     "text": "<b>Union</b>: A ∪ B = {x | x ∈ A ∨ x ∈ B}, elements in A or B or both."
+    },
+    {
+     "type": "def",
+     "term": "Intersection",
+     "text": "<b>Intersection</b>: A ∩ B = {x | x ∈ A ∧ x ∈ B}, elements in both."
+    },
+    {
+     "type": "p",
+     "text": "A and B are <b>disjoint</b> if A ∩ B = ∅."
+    },
+    {
+     "type": "def",
+     "term": "Difference",
+     "text": "<b>Difference</b>: A − B = {x | x ∈ A ∧ x ∉ B} (also written A \\ B), elements of A not in B."
+    },
+    {
+     "type": "def",
+     "term": "Complement",
+     "text": "<b>Complement</b> (relative to a universal set U): Ā = U − A = {x ∈ U | x ∉ A}."
+    },
+    {
+     "type": "p",
+     "text": "<b>Example.</b> {1, 2} ∪ {2, 5} = {1, 2, 5}, {1, 2} ∩ {2, 5} = {2}, {1, 2} − {2, 5} = {1}. With U = ℤ, the complement of the evens is the odds."
+    },
+    {
+     "type": "p",
+     "text": "Counting: |A ∪ B| = |A| + |B| − |A ∩ B| (don't double count the overlap)."
+    },
+    {
+     "type": "tip",
+     "text": "Set operations are logic in disguise: ∪ is ∨, ∩ is ∧, complement is ¬, and ⊆ is →. Every logical equivalence gives a set identity."
+    },
+    {
+     "type": "table",
+     "head": [
+      "Set identity",
+      "Name"
+     ],
+     "rows": [
+      [
+       "A ∪ ∅ = A, A ∩ U = A",
+       "Identity"
+      ],
+      [
+       "A ∪ U = U, A ∩ ∅ = ∅",
+       "Domination"
+      ],
+      [
+       "A ∪ A = A, A ∩ A = A",
+       "Idempotent"
+      ],
+      [
+       "complement of Ā is A",
+       "Complementation"
+      ],
+      [
+       "A ∪ B = B ∪ A, A ∩ B = B ∩ A",
+       "Commutative"
+      ],
+      [
+       "A ∪ (B ∪ C) = (A ∪ B) ∪ C, same for ∩",
+       "Associative"
+      ],
+      [
+       "A ∩ (B ∪ C) = (A ∩ B) ∪ (A ∩ C), A ∪ (B ∩ C) = (A ∪ B) ∩ (A ∪ C)",
+       "Distributive"
+      ],
+      [
+       "complement of (A ∪ B) = Ā ∩ B̄, complement of (A ∩ B) = Ā ∪ B̄",
+       "De Morgan"
+      ],
+      [
+       "A ∪ (A ∩ B) = A, A ∩ (A ∪ B) = A",
+       "Absorption"
+      ],
+      [
+       "A ∪ Ā = U, A ∩ Ā = ∅",
+       "Complement"
+      ]
+     ]
+    },
+    {
+     "type": "def",
+     "term": "Proving set equality",
+     "text": "To prove A = B you must show ∀x (x ∈ A ↔ x ∈ B). Two standard ways:"
+    },
+    {
+     "type": "list",
+     "items": [
+      "<b>Chain of iffs</b> (“element chasing”): x ∈ A ⟺ … ⟺ x ∈ B, using the definitions of the operations at each step.",
+      "<b>Double inclusion:</b> show A ⊆ B (“let x ∈ A … so x ∈ B”) and B ⊆ A separately."
+     ]
+    },
+    {
+     "type": "p",
+     "text": "To show <b>not equal</b>, give one element in one set but not the other (a concrete counterexample with small sets)."
+    },
+    {
+     "type": "example",
+     "title": "distributive law by element chasing",
+     "prompt": "Show A ∩ (B ∪ C) = (A ∩ B) ∪ (A ∩ C). For any x:",
+     "steps": [
+      "x ∈ A ∩ (B ∪ C)",
+      "⟺ x ∈ A ∧ (x ∈ B ∨ x ∈ C) — <i>def of ∩, ∪</i>",
+      "⟺ (x ∈ A ∧ x ∈ B) ∨ (x ∈ A ∧ x ∈ C) — <i>distributive law of logic</i>",
+      "⟺ x ∈ A ∩ B ∨ x ∈ A ∩ C — <i>def of ∩</i>",
+      "⟺ x ∈ (A ∩ B) ∪ (A ∩ C) — <i>def of ∪</i>"
+     ],
+     "answer": "Every step is ⟺, so A ∩ (B ∪ C) = (A ∩ B) ∪ (A ∩ C)"
+    },
+    {
+     "type": "def",
+     "term": "Union and intersection of many sets",
+     "text": "For a collection of sets, A₁ ∪ ⋯ ∪ Aₙ = ⋃ᵢ Aᵢ contains elements in <b>at least one</b> Aᵢ; A₁ ∩ ⋯ ∩ Aₙ = ⋂ᵢ Aᵢ contains elements in <b>all</b> of them."
+    },
+    {
+     "type": "steps",
+     "title": "Compute ∪, ∩, −, complement",
+     "items": [
+      "<b>Write everything out.</b> List each set in sorted order. If there's a universal set U, list it too.",
+      "<b>Go element by element.</b> For each element ask two yes/no questions: in A? in B?",
+      "<b>Keep the right ones.</b> A ∪ B: yes to at least one. A ∩ B: yes to both. A − B: yes for A, no for B. Ā: everything in U that says no for A.",
+      "<b>Big expressions:</b> work inside parentheses first, like arithmetic, and write each in-between set down.",
+      "<b>Check:</b> |A ∪ B| = |A| + |B| − |A ∩ B|, and A − B should match A ∩ B̄."
+     ]
+    },
+    {
+     "type": "steps",
+     "title": "Count with the overlap rule",
+     "items": [
+      "Name the sets (e.g. C = took CS, M = took Math) and write down every number you're given.",
+      "Use |C ∪ M| = |C| + |M| − |C ∩ M|. Any three of these four numbers give you the fourth.",
+      "“Neither” = |U| − |C ∪ M|. “Only C” = |C| − |C ∩ M|.",
+      "<b>Check:</b> the four Venn regions (only C, only M, both, neither) add up to |U| and none is negative."
+     ]
+    },
+    {
+     "type": "steps",
+     "title": "Element chasing (chain of iffs)",
+     "items": [
+      "Write “Let x be arbitrary.” Start from x ∈ (left side).",
+      "Translate each operation to logic, outermost first: x ∈ P ∪ Q ⟺ x ∈ P ∨ x ∈ Q; x ∈ P ∩ Q ⟺ x ∈ P ∧ x ∈ Q; x ∈ P − Q ⟺ x ∈ P ∧ x ∉ Q; x ∈ P̄ ⟺ x ∉ P.",
+      "Now it's a logic problem. Rewrite with logic laws (De Morgan, distributive, …). Name the law on each line.",
+      "Translate back into set language until you reach x ∈ (right side).",
+      "Every link must be ⟺, not just ⟹. Finish: “So x ∈ LHS ⟺ x ∈ RHS for every x, hence LHS = RHS.”"
+     ]
+    },
+    {
+     "type": "steps",
+     "title": "Double inclusion",
+     "items": [
+      "<b>Part 1 (LHS ⊆ RHS):</b> “Let x ∈ LHS.” Unpack the definitions. If you learn “x ∈ P or x ∈ Q,” split into cases. Conclude “x ∈ RHS.”",
+      "<b>Part 2 (RHS ⊆ LHS):</b> “Let x ∈ RHS.” Same idea, ending “x ∈ LHS.”",
+      "Conclude: “LHS ⊆ RHS and RHS ⊆ LHS, so LHS = RHS.”",
+      "Pick this method when the problem has a hypothesis (“if A ⊆ B, then …”). Often only one half needs the hypothesis."
+     ]
+    },
+    {
+     "type": "steps",
+     "title": "Membership table (check or disprove)",
+     "items": [
+      "Make one row for every in/out pattern, with 1 = in and 0 = out. Two sets: 4 rows. Three sets: 8 rows.",
+      "Fill a column for each piece. ∪: 1 if any input is 1. ∩: 1 only if all are 1. Complement: flip. P − Q: 1 only for the pattern (1, 0).",
+      "Same final columns for both sides: the identity is true (this counts as a proof).",
+      "Different in some row: the identity is false. Turn that row into a counterexample: put one element into exactly the sets marked 1 in that row."
+     ]
+    },
+    {
+     "type": "example",
+     "title": "element chasing with De Morgan",
+     "prompt": "Prove A − (B ∩ C) = (A − B) ∪ (A − C). Let x be arbitrary.",
+     "steps": [
+      "x ∈ A − (B ∩ C) — <i>start on the left</i>",
+      "⟺ x ∈ A ∧ x ∉ B ∩ C — <i>def of −</i>",
+      "⟺ x ∈ A ∧ ¬(x ∈ B ∧ x ∈ C) — <i>def of ∩</i>",
+      "⟺ x ∈ A ∧ (x ∉ B ∨ x ∉ C) — <i>De Morgan's law (logic)</i>",
+      "⟺ (x ∈ A ∧ x ∉ B) ∨ (x ∈ A ∧ x ∉ C) — <i>distributive law (logic)</i>",
+      "⟺ x ∈ A − B ∨ x ∈ A − C — <i>def of −, twice</i>",
+      "⟺ x ∈ (A − B) ∪ (A − C) — <i>def of ∪</i>",
+      "Every step is ⟺, so the two sets have exactly the same elements. Read it back: “not in both B and C” means “missing from B or missing from C.”"
+     ],
+     "answer": "Every step is ⟺, so A − (B ∩ C) = (A − B) ∪ (A − C)"
+    },
+    {
+     "type": "example",
+     "title": "double inclusion with a hypothesis",
+     "prompt": "Prove: if A ⊆ B, then A ∪ B = B.",
+     "steps": [
+      "(⊆) Let x ∈ A ∪ B — <i>start with the left side</i>",
+      "x ∈ A or x ∈ B — <i>def of ∪</i>",
+      "Case x ∈ A: then x ∈ B — <i>because A ⊆ B (the hypothesis)</i>",
+      "Case x ∈ B: then x ∈ B — <i>nothing to do</i>",
+      "So A ∪ B ⊆ B — <i>x ∈ B in both cases</i>",
+      "(⊇) Let x ∈ B. Then x ∈ A ∪ B — <i>“or” only needs one side to be true</i>",
+      "A ∪ B = B — <i>both inclusions hold</i>",
+      "Only the first half used A ⊆ B. Without that hypothesis the claim fails: A = {1}, B = ∅ gives A ∪ B = {1} ≠ ∅."
+     ],
+     "answer": "A ∪ B = B"
+    },
+    {
+     "type": "example",
+     "title": "Membership table: prove or disprove",
+     "prompt": "Use a membership table to decide whether A ∪ (B ∩ C) = (A ∪ B) ∩ C.",
+     "steps": [
+      "Three sets → 8 rows of in/out patterns (1 = in, 0 = out). Build B ∩ C, then A ∪ (B ∩ C); build A ∪ B, then (A ∪ B) ∩ C (table below).",
+      "The final columns differ in rows (1,1,0) and (1,0,0).",
+      "Turn row (1,0,0) into a counterexample: put one element in A only. A = {1}, B = C = ∅.",
+      "Then A ∪ (B ∩ C) = {1} but (A ∪ B) ∩ C = ∅."
+     ],
+     "answer": "Not equal; counterexample A = {1}, B = C = ∅"
+    },
+    {
+     "type": "table",
+     "head": [
+      "A",
+      "B",
+      "C",
+      "B ∩ C",
+      "A ∪ (B ∩ C)",
+      "A ∪ B",
+      "(A ∪ B) ∩ C"
+     ],
+     "rows": [
+      [
+       "1",
+       "1",
+       "1",
+       "1",
+       "1",
+       "1",
+       "1"
+      ],
+      [
+       "1",
+       "1",
+       "0",
+       "0",
+       "1",
+       "1",
+       "0"
+      ],
+      [
+       "1",
+       "0",
+       "1",
+       "0",
+       "1",
+       "1",
+       "1"
+      ],
+      [
+       "1",
+       "0",
+       "0",
+       "0",
+       "1",
+       "1",
+       "0"
+      ],
+      [
+       "0",
+       "1",
+       "1",
+       "1",
+       "1",
+       "1",
+       "1"
+      ],
+      [
+       "0",
+       "1",
+       "0",
+       "0",
+       "0",
+       "1",
+       "0"
+      ],
+      [
+       "0",
+       "0",
+       "1",
+       "0",
+       "0",
+       "0",
+       "0"
+      ],
+      [
+       "0",
+       "0",
+       "0",
+       "0",
+       "0",
+       "0",
+       "0"
+      ]
+     ]
+    },
+    {
+     "type": "warn",
+     "text": "<b>Wrong:</b> complement of (A ∪ B) = Ā ∪ B̄. <b>Right:</b> it's Ā ∩ B̄. De Morgan flips ∪ to ∩ (and ∩ to ∪) when the bar spreads out."
+    },
+    {
+     "type": "warn",
+     "text": "<b>Wrong:</b> “x ∉ A ∩ B, so x ∉ A and x ∉ B.” <b>Right:</b> x ∉ A <i>or</i> x ∉ B. Missing from the overlap only means missing from at least one set."
+    },
+    {
+     "type": "warn",
+     "text": "<b>Wrong:</b> A − B = B − A. <b>Right:</b> {1, 2} − {2, 3} = {1} but {2, 3} − {1, 2} = {3}. Difference is not symmetric."
+    },
+    {
+     "type": "warn",
+     "text": "<b>Wrong:</b> |A ∪ B| = |A| + |B|. <b>Right:</b> subtract |A ∩ B|, or the overlap gets counted twice."
+    },
+    {
+     "type": "warn",
+     "text": "<b>Wrong:</b> proving an identity with a Venn diagram picture or one example, or doing only one inclusion. <b>Right:</b> use an arbitrary x and get both directions. A single example can only <i>disprove</i>."
+    }
+   ]
+  },
+  {
+   "title": "Functions: injective and surjective",
+   "blocks": [
+    {
+     "type": "tip",
+     "text": "A function gives every input exactly one output. Injective: no two inputs share an output. Surjective: every possible output is hit. Bijective: both."
+    },
+    {
+     "type": "def",
+     "term": "function",
+     "text": "A <b>function</b> f from A to B, written f : A → B, assigns <b>exactly one</b> element f(a) ∈ B to each element a ∈ A. Functions are also called <b>mappings</b>."
+    },
+    {
+     "type": "p",
+     "text": "A is the <b>domain</b>, B is the <b>codomain</b>. If f(a) = b, then b is the <b>image</b> of a and a is a <b>preimage</b> of b."
+    },
+    {
+     "type": "p",
+     "text": "The <b>graph</b> of f is {(a, b) ∈ A × B | f(a) = b}. In set theory a function <i>is</i> its graph: a subset f ⊆ A × B such that for every a ∈ A there is a unique b ∈ B with (a, b) ∈ f."
+    },
+    {
+     "type": "tip",
+     "text": "Domain = buttons, codomain = all snacks the machine could stock. A function means <b>every button gives exactly one snack</b>. Two buttons may give the same snack (not injective). Some snacks may not be on any button (not surjective). A button that gives nothing, or a random one of two snacks, means it isn't a function at all: f(x) = 1/x on ℝ (0 gets nothing) and “f(x) = ±√x” (two outputs) aren't functions."
+    },
+    {
+     "type": "p",
+     "text": "<b>Injective (one-to-one)</b>"
+    },
+    {
+     "type": "def",
+     "term": "one-to-one",
+     "text": "f is <b>one-to-one</b> (<b>injective</b>, an <b>injection</b>) if different inputs give different outputs:"
+    },
+    {
+     "type": "p",
+     "text": "∀a ∀b (a ≠ b → f(a) ≠ f(b)) ≡ ∀a ∀b (f(a) = f(b) → a = b)"
+    },
+    {
+     "type": "p",
+     "text": "<b>To prove injective:</b> assume f(a) = f(b) and show a = b. <b>To disprove:</b> give two different inputs with the same output."
+    },
+    {
+     "type": "example",
+     "title": "Injective or not?",
+     "prompt": "Decide whether each is injective: x + 1 on ℤ, x² on ℤ, x² on ℕ.",
+     "steps": [
+      "f : ℤ → ℤ, f(x) = x + 1: injective. If a + 1 = b + 1 then a = b.",
+      "f : ℤ → ℤ, f(x) = x²: not injective. f(−2) = f(2) = 4.",
+      "f : ℕ → ℕ, f(x) = x²: injective. If a² = b² then a = b, since both are ≥ 0 (no negative roots in the domain). <b>Same formula, different domain, different answer.</b>"
+     ],
+     "answer": "yes; no (f(−2) = f(2)); yes. Same formula, different domain, different answer"
+    },
+    {
+     "type": "def",
+     "term": "increasing",
+     "text": "For f with domain and codomain ⊆ ℝ, and all x, y in the domain with x &lt; y, f is:"
+    },
+    {
+     "type": "list",
+     "items": [
+      "<b>increasing</b> if f(x) ≤ f(y); <b>strictly increasing</b> if f(x) &lt; f(y);",
+      "<b>decreasing</b> if f(x) ≥ f(y); <b>strictly decreasing</b> if f(x) > f(y)."
+     ]
+    },
+    {
+     "type": "p",
+     "text": "Examples: eˣ is strictly increasing. The constant f(x) = 0 is <b>both</b> increasing and decreasing (not strictly). x² on ℤ is neither (−1 &lt; 0 but f(−1) > f(0); 0 &lt; 1 but f(0) &lt; f(1)). −x is strictly decreasing."
+    },
+    {
+     "type": "thm",
+     "name": "Theorem",
+     "text": "If f : A → B (A, B ⊆ ℝ) is strictly increasing, then f is injective.",
+     "proof": [
+      {
+       "type": "p",
+       "text": "Let a, b ∈ A with a ≠ b. Case 1: a &lt; b, so f(a) &lt; f(b), so f(a) ≠ f(b). Case 2: b &lt; a, so f(b) &lt; f(a), so f(a) ≠ f(b)."
+      }
+     ]
+    },
+    {
+     "type": "p",
+     "text": "<b>Image and range</b>"
+    },
+    {
+     "type": "def",
+     "term": "image of S",
+     "text": "For S ⊆ A, the <b>image of S</b> is f(S) = {f(s) | s ∈ S}. The <b>range</b> of f is ran(f) = f(A) = {f(a) | a ∈ A}, the set of outputs actually hit."
+    },
+    {
+     "type": "warn",
+     "text": "<b>Range ≠ codomain.</b> The codomain is where outputs are <i>allowed</i> to land; the range is where they <i>actually</i> land."
+    },
+    {
+     "type": "example",
+     "title": "Images and ranges",
+     "prompt": "Find f({−1, 2, 3}) and ran(f) for f(x) = 2x on ℤ; find the ranges of x³ on ℝ and ⌊x⌋ : ℝ → ℤ.",
+     "steps": [
+      "f : ℤ → ℤ, f(x) = 2x. f({−1, 2, 3}) = {−2, 4, 6}. ran(f) = all even integers.",
+      "f : ℝ → ℝ, f(x) = x³. ran(f) = ℝ, since for any y, f(∛y) = y.",
+      "f : ℝ → ℤ, f(x) = ⌊x⌋ (floor: the greatest integer ≤ x). ran(f) = ℤ, since ⌊n⌋ = n."
+     ],
+     "answer": "{−2, 4, 6} and the even integers; ℝ; ℤ"
+    },
+    {
+     "type": "thm",
+     "name": "Images of unions and intersections",
+     "text": "For f : A → B and S₁, S₂ ⊆ A: f(S₁ ∪ S₂) = f(S₁) ∪ f(S₂) and f(S₁ ∩ S₂) ⊆ f(S₁) ∩ f(S₂).",
+     "proof": [
+      {
+       "type": "p",
+       "text": "(∪) y ∈ f(S₁ ∪ S₂) ⟺ y = f(a) for some a ∈ S₁ ∪ S₂ ⟺ y = f(a) for some a ∈ S₁, or y = f(a) for some a ∈ S₂ ⟺ y ∈ f(S₁) or y ∈ f(S₂) ⟺ y ∈ f(S₁) ∪ f(S₂).<br>(∩) Suppose y ∈ f(S₁ ∩ S₂), so y = f(x) for some x ∈ S₁ ∩ S₂. Then x ∈ S₁, so y ∈ f(S₁), and x ∈ S₂, so y ∈ f(S₂). So y ∈ f(S₁) ∩ f(S₂)."
+      }
+     ]
+    },
+    {
+     "type": "p",
+     "text": "The ∩ version is only ⊆: equality can fail when f isn’t injective: f(x) = x², S₁ = {−1}, S₂ = {1} gives f(S₁ ∩ S₂) = ∅ but f(S₁) ∩ f(S₂) = {1}."
+    },
+    {
+     "type": "steps",
+     "title": "Prove or disprove injective",
+     "items": [
+      "<b>Set up:</b> “Let a, b ∈ A (the domain) and suppose f(a) = f(b).”",
+      "<b>Plug in the formula:</b> write f(a) = f(b) as an equation in a and b.",
+      "<b>Do algebra until you reach a = b.</b> If you divide, cross-multiply or take a square root, say why it's allowed (“a − 1 ≠ 0,” “both are ≥ 0 since the domain is ℕ”).",
+      "<b>Finish:</b> “So a = b, and f is injective.”",
+      "<b>To disprove:</b> find two <i>different</i> inputs in the domain with the same output, and show the arithmetic. Good places to look: a number and its negative, 0 and 1, values that round to the same integer."
+     ]
+    },
+    {
+     "type": "steps",
+     "title": "Find an image or a range",
+     "items": [
+      "<b>Image of a finite set S:</b> plug in each element of S, collect the outputs, drop repeats.",
+      "<b>Range of a formula:</b> write y = f(x) and solve for x. The range is every y that gives an x in the domain.",
+      "Use simple bounds to see what's missed: x² ≥ 0, |x| ≥ 0, 2x is even, ⌊x⌋ is an integer.",
+      "<b>Check:</b> the range always sits inside the codomain, and f is onto exactly when range = codomain."
+     ]
+    },
+    {
+     "type": "warn",
+     "text": "<b>Wrong:</b> “Suppose a = b. Then f(a) = f(b), so f is injective.” <b>Right:</b> start from f(a) = f(b) and end at a = b. The other direction is true for every function."
+    },
+    {
+     "type": "warn",
+     "text": "<b>Wrong:</b> checking a few values and saying “looks injective.” <b>Right:</b> a proof uses arbitrary a and b. Examples can only disprove."
+    }
+   ]
+  },
+  {
+   "title": "Bijections, inverses and composition",
+   "blocks": [
+    {
+     "type": "def",
+     "term": "onto",
+     "text": "f is <b>onto</b> (<b>surjective</b>, a <b>surjection</b>) if every element of the codomain is hit: ∀b ∈ B ∃a ∈ A (f(a) = b), i.e. ran(f) = B."
+    },
+    {
+     "type": "p",
+     "text": "f is a <b>bijection</b> (<b>one-to-one correspondence</b>) if it is both injective and surjective. A bijection pairs up the elements of A and B exactly."
+    },
+    {
+     "type": "p",
+     "text": "<b>To prove surjective:</b> let b ∈ B be arbitrary; solve for an a with f(a) = b and check a really is in A. <b>To disprove:</b> name one b in the codomain that's never hit."
+    },
+    {
+     "type": "example",
+     "title": "Surjective or not?",
+     "prompt": "Classify 2x on ℤ, x³ on ℝ, ⌊x⌋ : ℝ → ℤ, and x² on ℝ → ℝ versus ℝ → [0, ∞).",
+     "steps": [
+      "f : ℤ → ℤ, f(x) = 2x: injective (2x = 2y ⇒ x = y) but <b>not</b> onto (1 is never hit, since 2x is even).",
+      "f : ℝ → ℝ, f(x) = x³: onto (ran = ℝ) and injective, so a bijection.",
+      "⌊x⌋ : ℝ → ℤ: onto, not injective (⌊0.2⌋ = ⌊0.7⌋ = 0).",
+      "f : ℝ → ℝ, f(x) = x² is not onto (−1 isn't hit), but f : ℝ → [0, ∞) with the same formula is onto. <b>Changing the codomain changes surjectivity.</b>"
+     ],
+     "answer": "injective only; bijection; onto only; x² is onto [0, ∞) but not onto ℝ"
+    },
+    {
+     "type": "def",
+     "term": "inverse",
+     "text": "If f : A → B is a bijection, its <b>inverse</b> f⁻¹ : B → A sends b to the unique a with f(a) = b: f⁻¹(b) = a ⟺ f(a) = b. (For an injective f one can also define it as a function ran(f) → A.)"
+    },
+    {
+     "type": "p",
+     "text": "Example: f(x) = x³ on ℝ is a bijection with f⁻¹(y) = ∛y, since y = x³ ⟺ ∛y = x."
+    },
+    {
+     "type": "p",
+     "text": "Facts: f⁻¹(f(a)) = a for all a ∈ A, and f(f⁻¹(b)) = b for all b ∈ B."
+    },
+    {
+     "type": "warn",
+     "text": "f⁻¹ is the inverse <i>function</i>, not 1/f. Only bijections (or injections, onto their range) have inverses."
+    },
+    {
+     "type": "p",
+     "text": "<b>Composition</b>"
+    },
+    {
+     "type": "def",
+     "term": "composition",
+     "text": "If g : A → B and f : B → C, the <b>composition</b> f ∘ g : A → C is (f ∘ g)(a) = f(g(a)). <b>Apply g first</b> (read right to left)."
+    },
+    {
+     "type": "p",
+     "text": "Example: f(x) = 2x + 3, g(x) = x² on ℝ. (f ∘ g)(x) = 2x² + 3 but (g ∘ f)(x) = (2x + 3)². Composition isn't commutative."
+    },
+    {
+     "type": "thm",
+     "name": "Compositions keep injectivity and surjectivity",
+     "text": "Let g : A → B and f : B → C. (1) If f and g are injective, so is f ∘ g. (2) If f and g are surjective, so is f ∘ g. (So compositions of bijections are bijections.)",
+     "proof": [
+      {
+       "type": "p",
+       "text": "(1) Suppose a ≠ b in A. Since g is injective, g(a) ≠ g(b). Since f is injective, f(g(a)) ≠ f(g(b)). (2) Let z ∈ C. Since f is onto, z = f(b) for some b ∈ B. Since g is onto, b = g(a) for some a ∈ A. So z = f(g(a))."
+      }
+     ]
+    },
+    {
+     "type": "steps",
+     "title": "Prove or disprove surjective",
+     "items": [
+      "<b>Set up:</b> “Let b ∈ B (the codomain) be arbitrary.”",
+      "<b>Scratch work:</b> set f(a) = b and solve for a.",
+      "<b>Check that a is really in the domain.</b> Is it an integer? Is a denominator zero? Is it in the interval? If this fails for some b, that b is your counterexample.",
+      "<b>Write it up:</b> “Let a = …. Then a ∈ A and f(a) = … = b.” Actually plug a in and simplify.",
+      "<b>To disprove:</b> name one b in the codomain and show f(a) = b has no solution in the domain. Common reasons: parity (2x is never odd), sign (x² is never negative), or a fraction that isn't an integer."
+     ]
+    },
+    {
+     "type": "steps",
+     "title": "Find an inverse",
+     "items": [
+      "Check f is a bijection first. No bijection, no inverse.",
+      "Write y = f(x).",
+      "Solve for x in terms of y.",
+      "Write f⁻¹(y) = that expression. f⁻¹ goes from B back to A.",
+      "<b>Check:</b> pick a number, say x = 2. Compute f(2), then apply f⁻¹. You should get 2 back."
+     ]
+    },
+    {
+     "type": "steps",
+     "title": "Compose two functions",
+     "items": [
+      "f ∘ g means “g first, then f”: (f ∘ g)(x) = f(g(x)). Read right to left.",
+      "Write out g(x). Then take f's formula and replace every x with (g(x)), in parentheses.",
+      "Simplify.",
+      "Make sure it's defined: g's outputs must be allowed inputs for f.",
+      "<b>Check:</b> at x = 1, compute g(1), then f of that number, and compare with your formula at 1."
+     ]
+    },
+    {
+     "type": "example",
+     "title": "prove a bijection, find the inverse",
+     "prompt": "Let f : ℝ − {1} → ℝ − {2}, f(x) = (2x + 1)/(x − 1). Show f is a bijection and find f⁻¹.",
+     "steps": [
+      "f(x) = 2 would mean 2x + 1 = 2x − 2 — <i>impossible, so outputs really land in ℝ − {2}</i>",
+      "Suppose f(a) = f(b): (2a + 1)/(a − 1) = (2b + 1)/(b − 1) — <i>injective: start</i>",
+      "(2a + 1)(b − 1) = (2b + 1)(a − 1) — <i>cross-multiply; allowed since a − 1 ≠ 0 and b − 1 ≠ 0</i>",
+      "2ab − 2a + b − 1 = 2ab − 2b + a − 1 — <i>expand both sides</i>",
+      "3b = 3a, so a = b — <i>cancel 2ab and −1, rearrange: f is injective</i>",
+      "Let y ∈ ℝ − {2}. Solve y = (2x + 1)/(x − 1) — <i>surjective: start</i>",
+      "yx − y = 2x + 1, so x(y − 2) = y + 1 — <i>multiply out, collect the x terms</i>",
+      "x = (y + 1)/(y − 2) — <i>divide; allowed since y ≠ 2</i>",
+      "x ≠ 1, since x = 1 gives y + 1 = y − 2 — <i>so x is in the domain</i>",
+      "f(x) = [3y/(y − 2)] / [3/(y − 2)] = y — <i>plug back in: f is onto</i>",
+      "So f is a bijection and f⁻¹(y) = (y + 1)/(y − 2). Check: f(2) = 5/1 = 5 and f⁻¹(5) = 6/3 = 2. ✓"
+     ],
+     "answer": "Bijection with f⁻¹(y) = (y + 1)/(y − 2)"
+    },
+    {
+     "type": "example",
+     "title": "compositions, image, range",
+     "prompt": "On ℝ → ℝ let f(x) = x² + 1 and g(x) = x − 3. Find f ∘ g and g ∘ f, the image (f ∘ g)({1, 2, 3, 4, 5}), and the range of f ∘ g. Is f ∘ g injective? Onto?",
+     "steps": [
+      "(f ∘ g)(x) = f(x − 3) = (x − 3)² + 1 — <i>g first, then f</i>",
+      "(g ∘ f)(x) = g(x² + 1) = x² − 2 — <i>f first, then g: a different function</i>",
+      "inputs 1, 2, 3, 4, 5 give 5, 2, 1, 2, 5 — <i>e.g. (1 − 3)² + 1 = 5</i>",
+      "image = {1, 2, 5} — <i>drop repeats</i>",
+      "range = [1, ∞) — <i>(x − 3)² ≥ 0, and any y ≥ 1 is hit by x = 3 + √(y − 1)</i>",
+      "not injective: (f ∘ g)(2) = (f ∘ g)(4) = 2 — <i>two inputs, one output</i>",
+      "not onto ℝ: 0 is never hit — <i>range ≠ codomain</i>"
+     ],
+     "answer": "(x − 3)² + 1 and x² − 2; image {1, 2, 5}; range [1, ∞); neither injective nor onto."
+    },
+    {
+     "type": "warn",
+     "text": "<b>Wrong:</b> “f(x) = 4x − 1 on ℤ is onto: take a = (b + 1)/4.” <b>Right:</b> check a is in the domain. For b = 0, a = 1/4 isn't an integer, so f is not onto ℤ."
+    },
+    {
+     "type": "warn",
+     "text": "<b>Wrong:</b> (f ∘ g)(x) = g(f(x)). <b>Right:</b> f(g(x)); the function next to x acts first."
+    },
+    {
+     "type": "warn",
+     "text": "<b>Wrong:</b> f⁻¹(x) = 1/f(x), or saying the range is the codomain. <b>Right:</b> f⁻¹ undoes f (solve y = f(x) for x), and the range is only the outputs actually hit."
+    }
+   ]
+  },
+  {
+   "title": "Floor and ceiling",
+   "blocks": [
+    {
+     "type": "def",
+     "term": "Floor",
+     "text": "<b>Floor</b> ⌊x⌋ = the largest integer ≤ x. <b>Ceiling</b> ⌈x⌉ = the smallest integer ≥ x. E.g. ⌊3.7⌋ = 3, ⌈3.2⌉ = 4, ⌊−1.5⌋ = −2."
+    },
+    {
+     "type": "table",
+     "head": [
+      "x",
+      "⌊x⌋",
+      "⌈x⌉"
+     ],
+     "rows": [
+      [
+       "3.7",
+       "3",
+       "4"
+      ],
+      [
+       "3",
+       "3",
+       "3"
+      ],
+      [
+       "−1.5",
+       "−2",
+       "−1"
+      ],
+      [
+       "−3",
+       "−3",
+       "−3"
+      ]
+     ]
+    },
+    {
+     "type": "thm",
+     "name": "Floor/ceiling facts",
+     "text": "For real x and integer n:"
+    },
+    {
+     "type": "list",
+     "items": [
+      "⌊x⌋ = n ⟺ n ≤ x &lt; n + 1, and ⌈x⌉ = n ⟺ n − 1 &lt; x ≤ n",
+      "x − 1 &lt; ⌊x⌋ ≤ x ≤ ⌈x⌉ &lt; x + 1",
+      "⌊−x⌋ = −⌈x⌉ and ⌈−x⌉ = −⌊x⌋",
+      "⌊x + n⌋ = ⌊x⌋ + n and ⌈x + n⌉ = ⌈x⌉ + n (integers slide out)",
+      "⌊x⌋ + ⌊y⌋ ≤ ⌊x + y⌋ ≤ ⌊x⌋ + ⌊y⌋ + 1, so in general ⌊x + y⌋ ≠ ⌊x⌋ + ⌊y⌋",
+      "The number of multiples of k in {1, …, n} is ⌊n/k⌋; splitting n items into groups of size k needs ⌈n/k⌉ groups"
+     ]
+    },
+    {
+     "type": "thm",
+     "name": "Theorem: ⌊x + n⌋ = ⌊x⌋ + n for every integer n",
+     "text": "For every real x and integer n, ⌊x + n⌋ = ⌊x⌋ + n.",
+     "proof": [
+      {
+       "type": "p",
+       "text": "Let m = ⌊x⌋, so m ≤ x &lt; m + 1. Adding n: m + n ≤ x + n &lt; m + n + 1."
+      },
+      {
+       "type": "p",
+       "text": "m + n is an integer, so by the characterization of floor, ⌊x + n⌋ = m + n = ⌊x⌋ + n. □"
+      }
+     ]
+    },
+    {
+     "type": "steps",
+     "title": "Method: prove a floor/ceiling identity",
+     "items": [
+      "Write x = n + ε with n = ⌊x⌋ an integer and 0 ≤ ε &lt; 1.",
+      "Slide integers out of every floor: ⌊n + stuff⌋ = n + ⌊stuff⌋.",
+      "Split into cases by where ε lies (e.g. ε &lt; ½ and ε ≥ ½), so that each remaining floor is a known integer.",
+      "Check both sides agree in every case.",
+      "To disprove, try x, y = ½ or 1.5: fractional parts that add up past 1 break most false identities."
+     ]
+    },
+    {
+     "type": "example",
+     "title": "A floor identity by cases",
+     "prompt": "Prove ⌊x⌋ + ⌊x + ½⌋ = ⌊2x⌋ for every real x.",
+     "steps": [
+      "Let n = ⌊x⌋ and write x = n + ε with 0 ≤ ε &lt; 1.",
+      "Case ε &lt; ½: ⌊x + ½⌋ = n + ⌊ε + ½⌋ = n (since ε + ½ &lt; 1), and ⌊2x⌋ = 2n + ⌊2ε⌋ = 2n (since 2ε &lt; 1). Both sides are 2n.",
+      "Case ε ≥ ½: ⌊x + ½⌋ = n + 1 (since 1 ≤ ε + ½ &lt; 1.5), and ⌊2x⌋ = 2n + 1 (since 1 ≤ 2ε &lt; 2). Both sides are 2n + 1.",
+      "The cases cover all ε in [0, 1), so the identity holds. □"
+     ],
+     "answer": "Proved: both sides equal 2n or 2n + 1 according to ε &lt; ½ or ε ≥ ½"
+    },
+    {
+     "type": "example",
+     "title": "Disprove and compute",
+     "prompt": "(a) Disprove ⌊xy⌋ = ⌊x⌋⌊y⌋. (b) How many integers in {1, …, 1000} are multiples of 7? (c) How many bytes hold 100 bits? (d) Solve ⌊x/2⌋ = 3 over the integers.",
+     "steps": [
+      "(a) x = y = 1.5: ⌊2.25⌋ = 2 but ⌊1.5⌋⌊1.5⌋ = 1 · 1 = 1.",
+      "(b) The multiples are 7, 14, …, 7k with 7k ≤ 1000, so k ≤ 1000/7 ≈ 142.86: ⌊1000/7⌋ = 142.",
+      "(c) 8 bits per byte: ⌈100/8⌉ = ⌈12.5⌉ = 13 bytes.",
+      "(d) ⌊x/2⌋ = 3 ⟺ 3 ≤ x/2 &lt; 4 ⟺ 6 ≤ x &lt; 8, so x = 6 or 7."
+     ],
+     "answer": "(a) x = y = 1.5; (b) 142; (c) 13; (d) x ∈ {6, 7}"
+    },
+    {
+     "type": "warn",
+     "text": "<b>Wrong:</b> ⌊−1.5⌋ = −1. <b>Right:</b> −2. Floor always moves <i>down</i> the number line, even for negatives."
+    },
+    {
+     "type": "warn",
+     "text": "<b>Wrong:</b> ⌈x⌉ + ⌈y⌉ = ⌈x + y⌉. <b>Right:</b> false for x = y = ½ (2 vs 1). Only integers slide in and out freely."
+    }
+   ]
+  },
+  {
+   "title": "Cardinality and countable sets",
+   "blocks": [
+    {
+     "type": "tip",
+     "text": "Two sets are the same size if you can pair them up perfectly. ℕ, ℤ and ℚ are all the same size (countable), but ℝ is strictly bigger."
+    },
+    {
+     "type": "def",
+     "term": "same cardinality",
+     "text": "Sets A and B have the <b>same cardinality</b>, |A| = |B|, if there is a <b>bijection</b> from A to B."
+    },
+    {
+     "type": "p",
+     "text": "|A| ≤ |B| if there is an <b>injection</b> from A to B. |A| &lt; |B| if |A| ≤ |B| and |A| ≠ |B| (an injection exists but no bijection does)."
+    },
+    {
+     "type": "tip",
+     "text": "Before you could count, you could still tell if you had as many sheep as pebbles: pair them off one to one. That's a bijection. Same cardinality means the sets are <b>relabelings</b> of each other. Cantor (late 1800s) noticed this matches “size” for finite sets and proposed it as the definition for infinite sets too."
+    },
+    {
+     "type": "example",
+     "title": "Surprising bijections",
+     "prompt": "Find bijections: positive ↔ negative integers, odd ↔ even positive integers, ℕ ↔ ℤ⁺, and a listing of ℤ.",
+     "steps": [
+      "Positive ↔ negative integers: f(x) = −x.",
+      "Odd ↔ even positive integers: f(x) = x + 1.",
+      "ℕ = {0, 1, 2, …} ↔ ℤ⁺ = {1, 2, 3, …}: f(x) = x + 1. An infinite set can have the same size as a proper subset of itself.",
+      "ℤ is countable: list it as 0, 1, −1, 2, −2, 3, −3, …."
+     ],
+     "answer": "−x; x + 1; x + 1; 0, 1, −1, 2, −2, …"
+    },
+    {
+     "type": "tip",
+     "text": "A hotel with rooms 0, 1, 2, … is full. <b>One new guest:</b> everyone moves from room n to n + 1, and room 0 is free. <b>An infinite bus with seats 0, 1, 2, …:</b> everyone in the hotel moves from n to 2n (freeing all odd rooms) and the passenger in seat n takes room 2n + 1."
+    },
+    {
+     "type": "thm",
+     "name": "|ℕ × ℕ| = |ℕ| and ℚ is countable",
+     "text": "Write ℕ × ℕ as an infinite grid of pairs (a, b) and walk the diagonals in a zigzag: (0,0), (1,0), (0,1), (2,0), (1,1), (0,2), … Every pair appears exactly once, which gives a bijection ℕ → ℕ × ℕ. The same idea shows <b>ℚ is countable</b> (list fractions p/q along diagonals, skipping repeats)."
+    },
+    {
+     "type": "def",
+     "term": "finite",
+     "text": "A is <b>finite</b> if it has the same cardinality as {0, 1, …, n − 1} for some n ∈ ℕ; then |A| = n. Otherwise A is <b>infinite</b>."
+    },
+    {
+     "type": "p",
+     "text": "A set is <b>countable</b> if it has the same cardinality as a subset of ℕ. Equivalently, it's finite or has the same cardinality as ℕ (<b>countably infinite</b>). Intuitively: you can list its elements as a₀, a₁, a₂, …"
+    },
+    {
+     "type": "p",
+     "text": "Rosen’s version: a set is countable if it is finite or has the same cardinality as ℤ⁺; otherwise <b>uncountable</b>. A countably infinite S has |S| = ℵ₀ (“aleph null”). It is the same notion."
+    },
+    {
+     "type": "thm",
+     "name": "ℕ is the smallest infinity",
+     "text": "Every set A is either finite, or |ℕ| ≤ |A|."
+    },
+    {
+     "type": "p",
+     "text": "Idea: pick distinct elements a₀, a₁, a₂, … of A one by one. Either you run out at some step n (then i ↦ aᵢ is a bijection {0, …, n−1} → A), or you never do (then i ↦ aᵢ is an injection ℕ → A). Making infinitely many choices at once quietly uses the <b>axiom of choice</b>, which is why this is only a proof idea."
+    },
+    {
+     "type": "thm",
+     "name": "Useful facts",
+     "text": "Standard countability facts:"
+    },
+    {
+     "type": "list",
+     "items": [
+      "A subset of a countable set is countable.",
+      "If A and B are countable, so is A ∪ B (list them alternately). More generally a countable union of countable sets is countable.",
+      "<b>Schröder–Bernstein:</b> if |A| ≤ |B| and |B| ≤ |A|, then |A| = |B|. So two injections, one each way, give a bijection.",
+      "ℕ × ℕ, ℤ, ℚ are countable. ℝ, [0, 1], and the irrationals are uncountable."
+     ]
+    },
+    {
+     "type": "steps",
+     "title": "Show |A| = |B| with a bijection",
+     "items": [
+      "<b>Line them up.</b> Write the first few elements of A and of B side by side in a natural order.",
+      "<b>Guess a formula</b> f : A → B that matches your lineup: a shift, a stretch, a flip, or a piecewise rule for “zigzag” sets like ℤ.",
+      "<b>Check f lands in B</b> for every a ∈ A (right sign, right parity, inside the interval).",
+      "<b>Prove it's a bijection.</b> Either prove injective and surjective, or find g : B → A with g(f(a)) = a and f(g(b)) = b. A two-sided inverse proves bijection in one go.",
+      "<b>Conclude:</b> “f is a bijection, so |A| = |B|.”",
+      "<b>Shortcut for open intervals:</b> a straight line works. (a, b) → (c, d) by f(x) = c + (d − c)(x − a)/(b − a)."
+     ]
+    },
+    {
+     "type": "steps",
+     "title": "Show a set is countable",
+     "items": [
+      "Finite? Then it's countable. Done.",
+      "Otherwise <b>describe a list</b> a₀, a₁, a₂, … in which every element shows up at some <i>finite</i> position. Repeats can just be skipped.",
+      "Or give an <b>injection into ℕ</b> (or into any set already known to be countable). That shows |S| ≤ |ℕ|.",
+      "Or <b>build it from known pieces:</b> a subset of a countable set is countable, and a union of two countable sets is countable.",
+      "<b>Check your list:</b> pick a “far away” element (like −1000 or 7/3) and say exactly where it shows up. If it never does, the list is broken."
+     ]
+    },
+    {
+     "type": "steps",
+     "title": "Explain why ℚ is countable",
+     "items": [
+      "Put the positive fractions p/q in a grid: row p, column q.",
+      "Walk the diagonals p + q = 2, then 3, then 4, … Each diagonal is finite, so you always finish it and move on.",
+      "Skip fractions not in lowest terms (2/2 is 1/1 again).",
+      "Every p/q sits on diagonal p + q, so it appears at a finite spot. That's a list of ℚ⁺.",
+      "For all of ℚ: list 0, then alternate signs, q₁, −q₁, q₂, −q₂, … (the same trick as for ℤ)."
+     ]
+    },
+    {
+     "type": "example",
+     "title": "Countable unions and listings",
+     "prompt": "Show that (a) ℤ × ℤ and (b) the set of all finite strings over the alphabet {a, b, c} are countable.",
+     "steps": [
+      "(a) List pairs (m, n) by “size” s = |m| + |n|: s = 0 gives (0, 0); s = 1 gives (1, 0), (−1, 0), (0, 1), (0, −1); s = 2 gives 8 pairs; and so on.",
+      "Each size class is finite, so every pair appears at a finite position. That is a list of ℤ × ℤ.",
+      "(b) List strings by length: the empty string, then the 3 strings of length 1, the 9 of length 2, … (3ⁿ of length n), alphabetically within a length.",
+      "Each length class is finite, so every string appears after finitely many others. A countable union of finite sets is countable."
+     ],
+     "answer": "Both countable: list by size / length, each class finite"
+    },
+    {
+     "type": "example",
+     "title": "an explicit bijection ℤ → ℕ",
+     "prompt": "Show |ℤ| = |ℕ| using f(n) = 2n if n ≥ 0 and f(n) = −2n − 1 if n &lt; 0.",
+     "steps": [
+      "0, 1, 2, … ↦ 0, 2, 4, … — <i>nonnegatives fill the even numbers</i>",
+      "−1, −2, −3, … ↦ 1, 3, 5, … — <i>negatives fill the odd numbers</i>",
+      "f(n) ∈ ℕ for every n — <i>2n ≥ 0 when n ≥ 0; −2n − 1 ≥ 1 when n ≤ −1</i>",
+      "Suppose f(a) = f(b). If it's even, a, b ≥ 0 and 2a = 2b — <i>evens only come from n ≥ 0; so a = b</i>",
+      "If it's odd, a, b &lt; 0 and −2a − 1 = −2b − 1 — <i>odds only come from n &lt; 0; so a = b</i>",
+      "m even: n = m/2. m odd: n = −(m + 1)/2 — <i>onto: in each case n is in the right part of ℤ and f(n) = m</i>",
+      "m = 7: n = −4, f(−4) = 8 − 1 = 7 ✓ — <i>spot check</i>",
+      "So f is a bijection and |ℤ| = |ℕ|. This is the formula behind the list 0, −1, 1, −2, 2, … (position f(n) holds n)."
+     ],
+     "answer": "f is a bijection, so |ℤ| = |ℕ|"
+    },
+    {
+     "type": "warn",
+     "text": "<b>Wrong:</b> “ℕ ⊊ ℤ, so |ℕ| &lt; |ℤ|.” <b>Right:</b> |ℕ| = |ℤ|. An infinite set can be the same size as a proper subset; size is about bijections, not about containment."
+    },
+    {
+     "type": "warn",
+     "text": "<b>Wrong:</b> listing ℤ as 0, 1, 2, 3, …, then −1, −2, … <b>Right:</b> that list never reaches −1. Every element must appear at a finite position, so alternate: 0, 1, −1, 2, −2, …"
+    },
+    {
+     "type": "warn",
+     "text": "<b>Wrong:</b> proving only that f is injective and concluding |A| = |B|. <b>Right:</b> an injection only gives |A| ≤ |B|. You need onto too, or an injection the other way (Schröder–Bernstein)."
+    },
+    {
+     "type": "warn",
+     "text": "<b>Wrong:</b> “countable” means finite. <b>Right:</b> countable means finite <i>or</i> countably infinite (listable), like ℕ or ℚ."
+    }
+   ]
+  },
+  {
+   "title": "Uncountability and the diagonal argument",
+   "blocks": [
+    {
+     "type": "thm",
+     "name": "Cantor’s diagonal argument",
+     "text": "The interval [0, 1] = {x ∈ ℝ | 0 ≤ x ≤ 1} is uncountable. Hence ℝ is uncountable and |ℕ| &lt; |ℝ|.",
+     "proof": [
+      {
+       "type": "p",
+       "text": "Suppose for a contradiction there were a bijection f : ℕ → [0, 1]. List the decimal expansions of f(0), f(1), f(2), … in a table. Build y = 0.d₀d₁d₂… by going down the <b>diagonal</b>: choose digit dₙ different from the nth digit of f(n) (and avoid 0 and 9; e.g. use 5 unless that digit is 5, then use 4). Then y ≠ f(0) since they differ in the 1st digit, y ≠ f(1) since they differ in the 2nd digit, and in general y ≠ f(n) for every n. So y ∈ [0, 1] is not in the range of f, so f isn't onto. Contradiction!"
+      }
+     ]
+    },
+    {
+     "type": "warn",
+     "text": "Some reals have two decimal expansions: 0.4999… = 0.5000… That's why the proof avoids digits 0 and 9, so y has only one expansion and really differs from every f(n)."
+    },
+    {
+     "type": "warn",
+     "text": "Why 0.999… = 1: let x = 0.999…; then 10x = 9.999…, so 10x − x = 9, so 9x = 9 and x = 1. (Or: the geometric series Σ 0.9·(0.1)ⁿ = 0.9 / (1 − 0.1) = 1.) The underlying reason is there are no infinitely small nonzero real numbers."
+    },
+    {
+     "type": "thm",
+     "name": "Cantor’s theorem",
+     "text": "For every set X, |X| &lt; |𝒫(X)|. There's always a bigger infinity: |ℕ| &lt; |𝒫(ℕ)| &lt; |𝒫(𝒫(ℕ))| &lt; …",
+     "proof": [
+      {
+       "type": "p",
+       "text": "x ↦ {x} is an injection, so |X| ≤ |𝒫(X)|. Suppose f : X → 𝒫(X) were onto. Let D = {x ∈ X | x ∉ f(x)}, so D = f(d) for some d. If d ∈ D then d ∉ f(d) = D; if d ∉ D = f(d) then d ∈ D. Contradiction either way, so no bijection exists. □"
+      }
+     ]
+    },
+    {
+     "type": "tip",
+     "text": "Why it matters: a real number is <b>algebraic</b> if it solves a nonzero integer polynomial equation (√2 solves x² = 2). There are only countably many integer polynomials, so only countably many algebraic numbers. Since ℝ is uncountable, most real numbers are not algebraic (they are transcendental), proved without exhibiting a single one."
+    },
+    {
+     "type": "p",
+     "text": "Cantor (1878) asked: is there a cardinality strictly between |ℕ| and |ℝ|? Gödel (1938) and Cohen (1963) showed the standard axioms (ZFC) <b>can't prove or disprove it</b>. There are “universes” of set theory where |ℝ| is the next infinity after |ℕ|, and others with many sizes in between."
+    },
+    {
+     "type": "steps",
+     "title": "Diagonal argument (proof template)",
+     "items": [
+      "“Suppose for contradiction S is countable, so its elements can be listed s₀, s₁, s₂, …” (a bijection f : ℕ → S with f(n) = sₙ).",
+      "Write each sₙ as an infinite string of digits (decimals, or 0s and 1s). Stack them as rows of a table.",
+      "Build a new y: digit n of y is <b>different</b> from digit n of sₙ (go down the diagonal). For decimals use 5, or 4 if that digit is 5. For bits, flip 0 ↔ 1.",
+      "Check that y really belongs to S (allowed digits, only one expansion).",
+      "“y differs from sₙ at digit n, for every n, so y is not on the list. Contradiction. So S is uncountable.”"
+     ]
+    },
+    {
+     "type": "steps",
+     "title": "Countable or uncountable? (quick sort)",
+     "items": [
+      "<b>Countable:</b> finite sets, ℕ, ℤ, ℚ, ℕ × ℕ, ℤ × ℤ, all finite strings over a finite alphabet, any subset of these.",
+      "<b>Uncountable:</b> ℝ, any interval with more than one point, the irrationals, all infinite 0/1 sequences, 𝒫(ℕ).",
+      "A set containing an uncountable subset is uncountable. A subset of a countable set is countable.",
+      "Not sure? Try to list it. If every attempt seems to leave something out, try a diagonal argument."
+     ]
+    },
+    {
+     "type": "example",
+     "title": "diagonal argument on 0/1 sequences",
+     "prompt": "Let S be the set of all infinite sequences of 0s and 1s. Show S is uncountable.",
+     "steps": [
+      "Suppose s₀, s₁, s₂, … lists all of S — <i>for contradiction</i>",
+      "s₀ = 0 1 1 0 …, s₁ = 1 1 0 1 …, s₂ = 0 0 0 0 …, s₃ = 1 0 1 1 … — <i>a sample of the table (positions counted from 0)</i>",
+      "diagonal: 0, 1, 0, 1, … — <i>digit n of row sₙ</i>",
+      "y = 1 0 1 0 … — <i>flip every diagonal bit</i>",
+      "y ∈ S — <i>it's an infinite sequence of 0s and 1s</i>",
+      "y ≠ sₙ for every n — <i>they disagree at position n</i>",
+      "contradiction, so S is uncountable — <i>the “complete” list missed y</i>",
+      "Bonus: match each subset X ⊆ ℕ with the sequence that has a 1 at position n exactly when n ∈ X. That's a bijection 𝒫(ℕ) → S, so 𝒫(ℕ) is uncountable too, just as Cantor's theorem |ℕ| &lt; |𝒫(ℕ)| says."
+     ],
+     "answer": "The flipped diagonal y is missing from every list, so S is uncountable"
+    },
+    {
+     "type": "warn",
+     "text": "<b>Wrong:</b> “The diagonal argument shows ℚ is uncountable.” <b>Right:</b> the new number y need not be rational, so missing it from a list of rationals is no contradiction."
+    }
+   ]
+  }
+ ],
+ "cards": [
+  {
+   "front": "A = {1, {2}, {1, 2}}. Is 2 ∈ A? {2} ∈ A? {1} ⊆ A? {1, 2} ⊆ A?",
+   "back": [
+    {
+     "type": "p",
+     "text": "No · yes · yes · no (that would need 2 ∈ A)."
+    }
+   ]
+  },
+  {
+   "front": "How big is 𝒫({a, b, c})? List its 2-element subsets.",
+   "back": [
+    {
+     "type": "p",
+     "text": "2³ = 8. The 2-element subsets are {a, b}, {a, c}, {b, c}."
+    }
+   ]
+  },
+  {
+   "front": "Is ∅ ∈ {1, 2}? Is ∅ ⊆ {1, 2}?",
+   "back": [
+    {
+     "type": "p",
+     "text": "No (it isn't listed). Yes (∅ is a subset of everything)."
+    }
+   ]
+  },
+  {
+   "front": "A = {1, 2, 3, 4}, B = {3, 4, 5}. Find A ∪ B, A ∩ B, A − B, B − A.",
+   "back": [
+    {
+     "type": "p",
+     "text": "{1, 2, 3, 4, 5} · {3, 4} · {1, 2} · {5}."
+    }
+   ]
+  },
+  {
+   "front": "U = {1, …, 6}. What's the complement of {2, 4, 6}?",
+   "back": [
+    {
+     "type": "p",
+     "text": "{1, 3, 5}."
+    }
+   ]
+  },
+  {
+   "front": "State De Morgan's law for sets.",
+   "back": [
+    {
+     "type": "p",
+     "text": "The complement of A ∪ B is Ā ∩ B̄, and the complement of A ∩ B is Ā ∪ B̄."
+    }
+   ]
+  },
+  {
+   "front": "f : ℤ → ℤ, f(x) = 3x + 1. Injective? Surjective?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Injective (3a + 1 = 3b + 1 ⇒ a = b). Not surjective: 3x + 1 = 0 has no integer solution."
+    }
+   ]
+  },
+  {
+   "front": "Same formula on ℝ → ℝ: is it a bijection? What's the inverse?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Yes. f⁻¹(y) = (y − 1)/3."
+    }
+   ]
+  },
+  {
+   "front": "f(x) = x + 1, g(x) = 2x. Find (f ∘ g)(3) and (g ∘ f)(3).",
+   "back": [
+    {
+     "type": "p",
+     "text": "f(g(3)) = f(6) = 7, and g(f(3)) = g(4) = 8."
+    }
+   ]
+  },
+  {
+   "front": "Show ℕ and the even naturals have the same cardinality.",
+   "back": [
+    {
+     "type": "p",
+     "text": "f(n) = 2n is a bijection between them."
+    }
+   ]
+  },
+  {
+   "front": "Countable or uncountable: ℤ × ℤ? the interval (0, 1)? all finite strings of letters?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Countable · uncountable · countable."
+    }
+   ]
+  },
+  {
+   "front": "In the diagonal argument, why can't the new number y be on the list?",
+   "back": [
+    {
+     "type": "p",
+     "text": "For every n, y differs from the n-th number in its n-th digit."
+    }
+   ]
+  },
+  {
+   "front": "∈ vs ⊆: is 2 ∈ {{1, 2}}? Is {1} ⊆ {1, {1}}?",
+   "back": [
+    {
+     "type": "p",
+     "text": "2 ∉ {{1, 2}} (its only element is the set {1, 2}). {1} ⊆ {1, {1}} is true because 1 is an element."
+    }
+   ]
+  },
+  {
+   "front": "|𝒫(A)| and |A × B| for finite sets?",
+   "back": [
+    {
+     "type": "formula",
+     "text": "|𝒫(A)| = 2^|A|,  |A × B| = |A| · |B|"
+    },
+    {
+     "type": "p",
+     "text": "𝒫(∅) = {∅} has 1 element; A × ∅ = ∅."
+    }
+   ]
+  },
+  {
+   "front": "Two ways to prove A = B for sets.",
+   "back": [
+    {
+     "type": "list",
+     "items": [
+      "element chasing: x ∈ A ⟺ … ⟺ x ∈ B",
+      "double inclusion: A ⊆ B and B ⊆ A",
+      "membership table (8 rows for 3 sets) also works"
+     ]
+    },
+    {
+     "type": "p",
+     "text": "One element in one set but not the other disproves equality."
+    }
+   ]
+  },
+  {
+   "front": "De Morgan for sets.",
+   "back": [
+    {
+     "type": "formula",
+     "text": "complement of (A ∪ B) = Ā ∩ B̄"
+    },
+    {
+     "type": "formula",
+     "text": "complement of (A ∩ B) = Ā ∪ B̄"
+    }
+   ]
+  },
+  {
+   "front": "Definitions: injective, surjective, bijective.",
+   "back": [
+    {
+     "type": "list",
+     "items": [
+      "injective: f(a) = f(b) ⇒ a = b",
+      "surjective: every b in the codomain has some a with f(a) = b",
+      "bijective: both; exactly then f⁻¹ exists"
+     ]
+    }
+   ]
+  },
+  {
+   "front": "How do you prove f is onto?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Let b in the codomain be arbitrary, solve f(a) = b for a, check that a is in the domain, and plug it back in."
+    }
+   ]
+  },
+  {
+   "front": "g ∘ f injective / surjective: what does it force?",
+   "back": [
+    {
+     "type": "p",
+     "text": "g ∘ f injective ⇒ f injective; g ∘ f surjective ⇒ g surjective. Not the other way: f(1) = 1 into {1, 2} and g collapsing {1, 2} to 1 gives g ∘ f = id."
+    }
+   ]
+  },
+  {
+   "front": "Range vs codomain?",
+   "back": [
+    {
+     "type": "p",
+     "text": "The codomain is where outputs may land; the range f(A) is where they actually land. f is onto iff range = codomain."
+    }
+   ]
+  },
+  {
+   "front": "Key floor/ceiling facts.",
+   "back": [
+    {
+     "type": "list",
+     "items": [
+      "⌊x⌋ = n ⟺ n ≤ x &lt; n + 1",
+      "⌊x + n⌋ = ⌊x⌋ + n for integer n",
+      "⌊−x⌋ = −⌈x⌉",
+      "x − 1 &lt; ⌊x⌋ ≤ x ≤ ⌈x⌉ &lt; x + 1"
+     ]
+    }
+   ]
+  },
+  {
+   "front": "Method for floor identities?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Write x = n + ε with n integer and 0 ≤ ε &lt; 1, slide n out, and split on where ε lies."
+    }
+   ]
+  },
+  {
+   "front": "When do A and B have the same cardinality? What is countable?",
+   "back": [
+    {
+     "type": "p",
+     "text": "|A| = |B| iff there is a bijection A → B. Countable = finite or in bijection with ℕ (can be listed a₀, a₁, a₂, …)."
+    }
+   ]
+  },
+  {
+   "front": "Why are ℤ × ℤ and ℚ countable?",
+   "back": [
+    {
+     "type": "p",
+     "text": "List by diagonals / by size |m| + |n|: each class is finite, so every element appears at a finite position. ℚ injects into ℤ × ℤ via p/q (lowest terms, q > 0) ↦ (p, q)."
+    }
+   ]
+  },
+  {
+   "front": "Run Cantor’s diagonal argument for [0, 1].",
+   "back": [
+    {
+     "type": "p",
+     "text": "Suppose f(0), f(1), … lists [0, 1]. Build y whose n-th digit is 5 unless the n-th digit of f(n) is 5 (then 4). y ∈ [0, 1] differs from every f(n) in digit n, so it is missing. Avoiding 0 and 9 dodges double expansions."
+    }
+   ]
+  },
+  {
+   "front": "Why is 𝒫(ℕ) uncountable?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Subsets of ℕ correspond to infinite 0/1 sequences, which are uncountable by flipping the diagonal; or Cantor’s theorem |X| &lt; |𝒫(X)| with D = {x | x ∉ f(x)}."
+    }
+   ]
+  },
+  {
+   "front": "Schröder–Bernstein.",
+   "back": [
+    {
+     "type": "p",
+     "text": "If there are injections A → B and B → A, then |A| = |B|. Example: (0, 1) ⊂ [0, 1] and x ↦ x/2 + ¼ maps [0, 1] into (0, 1)."
+    }
+   ]
+  }
+ ],
+ "hard": [
+  {
+   "title": "Four set identities: prove or disprove",
+   "level": "hard",
+   "prompt": [
+    {
+     "type": "list",
+     "items": [
+      "(a) A − (B − C) = (A − B) ∪ (A ∩ C)",
+      "(b) (A × B) ∪ (C × D) = (A ∪ C) × (B ∪ D)",
+      "(c) 𝒫(A) ∩ 𝒫(B) = 𝒫(A ∩ B)",
+      "(d) 𝒫(A) ∪ 𝒫(B) = 𝒫(A ∪ B). Find exactly when it holds."
+     ]
+    }
+   ],
+   "answer": "(a) true (b) false: A=B={1}, C=D={2} (c) true (d) holds iff A ⊆ B or B ⊆ A",
+   "solution": [
+    {
+     "type": "p",
+     "text": "(a) <b>True.</b> For any x: x ∈ A − (B − C) ⇔ x ∈ A ∧ ¬(x ∈ B ∧ x ∉ C) ⇔ x ∈ A ∧ (x ∉ B ∨ x ∈ C) ⇔ (x ∈ A ∧ x ∉ B) ∨ (x ∈ A ∧ x ∈ C) ⇔ x ∈ (A − B) ∪ (A ∩ C)."
+    },
+    {
+     "type": "p",
+     "text": "(b) <b>False.</b> A = B = {1}, C = D = {2}. Then (1, 2) is in the right side but not the left. (Only ⊆ holds.)"
+    },
+    {
+     "type": "p",
+     "text": "(c) <b>True.</b> S ∈ 𝒫(A) ∩ 𝒫(B) ⇔ S ⊆ A and S ⊆ B ⇔ S ⊆ A ∩ B."
+    },
+    {
+     "type": "p",
+     "text": "(d) It holds <b>if and only if A ⊆ B or B ⊆ A</b>. If A ⊆ B, then A ∪ B = B and 𝒫(A) ⊆ 𝒫(B), so both sides equal 𝒫(B). If neither contains the other, pick a ∈ A − B and b ∈ B − A. Then {a, b} ∈ 𝒫(A ∪ B), but {a, b} ⊄ A (since b ∉ A) and {a, b} ⊄ B. For example, A = {1}, B = {2}."
+    },
+    {
+     "type": "tip",
+     "text": "<b>Tests:</b> element-chasing proofs, and Cartesian products. <b>Common mistake:</b> drawing a Venn diagram for (b). Products aren’t unions of regions; think of rectangles in a grid."
+    }
+   ]
+  },
+  {
+   "title": "Floor and ceiling identities",
+   "level": "hard",
+   "prompt": [
+    {
+     "type": "list",
+     "items": [
+      "(a) Prove ⌊2x⌋ = ⌊x⌋ + ⌊x + ½⌋ for all real x.",
+      "(b) Prove ⌊⌊x/2⌋/2⌋ = ⌊x/4⌋ for all real x.",
+      "(c) True or false: ⌈x⌉ + ⌈y⌉ = ⌈x + y⌉."
+     ]
+    }
+   ],
+   "answer": "(a), (b) true (write x = n + ε, split cases) (c) false: x = y = ½",
+   "solution": [
+    {
+     "type": "p",
+     "text": "(a) Write x = n + ε with n = ⌊x⌋ and 0 ≤ ε &lt; 1."
+    },
+    {
+     "type": "list",
+     "items": [
+      "If ε &lt; ½: 2x = 2n + 2ε with 0 ≤ 2ε &lt; 1, so ⌊2x⌋ = 2n. Also x + ½ = n + (ε + ½) with ½ ≤ ε + ½ &lt; 1, so ⌊x + ½⌋ = n. The sum is n + n = 2n. ✓",
+      "If ε ≥ ½: 1 ≤ 2ε &lt; 2, so ⌊2x⌋ = 2n + 1. Also x + ½ = (n + 1) + (ε − ½) with 0 ≤ ε − ½ &lt; ½, so ⌊x + ½⌋ = n + 1. The sum is 2n + 1. ✓"
+     ]
+    },
+    {
+     "type": "p",
+     "text": "(b) Let n = ⌊x/2⌋ and k = ⌊n/2⌋. Then 2k ≤ n ≤ 2k + 1, since n is an integer below 2k + 2. From n ≤ x/2 &lt; n + 1: 4k ≤ 2n ≤ x &lt; 2n + 2 ≤ 4k + 4. So k ≤ x/4 &lt; k + 1, which means ⌊x/4⌋ = k. ✓"
+    },
+    {
+     "type": "p",
+     "text": "(c) <b>False.</b> x = y = ½: 1 + 1 = 2, but ⌈1⌉ = 1."
+    },
+    {
+     "type": "tip",
+     "text": "<b>Tests:</b> the standard method: write x = n + ε and split on where ε lies. <b>Common mistake:</b> using ⌊n/2⌋ ≤ n/2 without the sharper integer bound n ≤ 2k + 1, which is what makes (b) work."
+    }
+   ]
+  },
+  {
+   "title": "Classify three functions on ℤ and ℕ × ℕ",
+   "level": "hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "Decide injective, surjective, both or neither, with proof:"
+    },
+    {
+     "type": "list",
+     "items": [
+      "(a) f: ℤ → ℤ, f(n) = n + (−1)<sup>n</sup>. If it is a bijection, find its inverse.",
+      "(b) g: ℤ × ℤ → ℤ, g(m, n) = 2m + 3n.",
+      "(c) h: ℕ × ℕ → ℤ<sup>+</sup>, h(m, n) = 2<sup>m</sup>3<sup>n</sup>."
+     ]
+    }
+   ],
+   "answer": "(a) bijection, its own inverse (b) onto, not one-to-one (c) one-to-one, not onto (5 is missed)",
+   "solution": [
+    {
+     "type": "p",
+     "text": "(a) <b>Bijection, and it is its own inverse.</b> For even n, f(n) = n + 1, which is odd, so f(f(n)) = (n + 1) − 1 = n. For odd n, f(n) = n − 1, which is even, so f(f(n)) = (n − 1) + 1 = n. Since f ∘ f = id, f has an inverse (itself), so it is bijective."
+    },
+    {
+     "type": "p",
+     "text": "(b) <b>Surjective, not injective.</b> For any k, g(−k, k) = −2k + 3k = k. But g(3, 0) = 6 = g(0, 2)."
+    },
+    {
+     "type": "p",
+     "text": "(c) <b>Injective, not surjective.</b> If 2<sup>m</sup>3<sup>n</sup> = 2<sup>m′</sup>3<sup>n′</sup>, unique prime factorization gives m = m′ and n = n′. The value 5 is never hit."
+    },
+    {
+     "type": "tip",
+     "text": "<b>Tests:</b> proving bijectivity by exhibiting an inverse. <b>Common mistake:</b> “checking” injectivity on a few inputs. You need the general argument (or one collision to disprove it)."
+    }
+   ]
+  },
+  {
+   "title": "What does g ∘ f inherit?",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "Let f: A → B and g: B → C."
+    },
+    {
+     "type": "list",
+     "items": [
+      "(a) Prove: if g ∘ f is injective, then f is injective.",
+      "(b) Prove: if g ∘ f is surjective, then g is surjective.",
+      "(c) Give an example where g ∘ f is a bijection but neither f nor g is.",
+      "(d) True or false: if f and g ∘ f are bijections, then g is a bijection."
+     ]
+    }
+   ],
+   "answer": "(a), (b) proved (c) A = C = {1}, B = {1, 2} (d) true: g = (g ∘ f) ∘ f⁻¹",
+   "solution": [
+    {
+     "type": "p",
+     "text": "(a) If f(a) = f(a′), apply g: (g ∘ f)(a) = (g ∘ f)(a′). Injectivity of g ∘ f gives a = a′."
+    },
+    {
+     "type": "p",
+     "text": "(b) Let c ∈ C. Some a has g(f(a)) = c, so b = f(a) ∈ B satisfies g(b) = c."
+    },
+    {
+     "type": "p",
+     "text": "(c) A = C = {1}, B = {1, 2}, f(1) = 1, g(1) = g(2) = 1. Then g ∘ f = id<sub>{1}</sub>, but f misses 2 and g sends two inputs to 1."
+    },
+    {
+     "type": "p",
+     "text": "(d) <b>True.</b> g = (g ∘ f) ∘ f<sup>−1</sup>, a composition of bijections."
+    },
+    {
+     "type": "tip",
+     "text": "<b>Tests:</b> which function inherits which property: the inner one gets injectivity, the outer one gets surjectivity. <b>Common mistake:</b> concluding that g is injective from (a). Example (c) refutes that."
+    }
+   ]
+  },
+  {
+   "title": "Counting idempotents and involutions",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "list",
+     "items": [
+      "(a) How many functions f: {1,2,3,4} → {1,2,3,4} satisfy f ∘ f = f? Prove the characterization you use.",
+      "(b) How many f: {1,…,5} → {1,…,5} satisfy f ∘ f = id?",
+      "(c) How many f: {1,2,3,4} → {1,2,3,4} satisfy f ∘ f ∘ f = id?"
+     ]
+    }
+   ],
+   "answer": "(a) 41 (b) 26 (c) 9",
+   "solution": [
+    {
+     "type": "p",
+     "text": "(a) <b>Claim:</b> f ∘ f = f ⇔ f fixes every point of its image. (⇒) If y = f(x), then f(y) = f(f(x)) = f(x) = y. (⇐) f(x) is in the image, so f(f(x)) = f(x)."
+    },
+    {
+     "type": "p",
+     "text": "Count by the image I, with |I| = k: choose I (C(4, k) ways), fix each element of I, and send each of the other 4 − k elements anywhere in I (k<sup>4−k</sup> ways). Total: 4·1 + 6·4 + 4·3 + 1·1 = <b>41</b>."
+    },
+    {
+     "type": "p",
+     "text": "(b) f ∘ f = id makes f a bijection (it is its own inverse) whose cycles have length 1 or 2. With zero, one or two swaps: 1 + C(5,2) + C(5,2)·C(3,2)/2 = 1 + 10 + 15 = <b>26</b>."
+    },
+    {
+     "type": "p",
+     "text": "(c) f is a bijection (f ∘ f is its inverse), and every cycle length divides 3. So f is the identity or a single 3-cycle: 1 + C(4,3)·2 = <b>9</b>. (A set of 3 elements carries 2 different 3-cycles.)"
+    },
+    {
+     "type": "tip",
+     "text": "<b>Tests:</b> turning a functional equation into structure, then counting. <b>Common mistake:</b> in (b), dividing by the wrong symmetry. Two swaps {a,b}, {c,d} are an unordered pair of pairs, hence the /2."
+    }
+   ]
+  },
+  {
+   "title": "Explicit bijections between intervals",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "list",
+     "items": [
+      "(a) Give an explicit bijection from (0, 1] to (0, 1) and prove it is one.",
+      "(b) Do the same from [0, 1] to (0, 1).",
+      "(c) Prove |[0,1]| = |(0,1)| a second way, using the Schröder–Bernstein theorem."
+     ]
+    }
+   ],
+   "answer": "(a) 1/n ↦ 1/(n+1), others fixed (b) 0 ↦ ½, 1/n ↦ 1/(n+2), others fixed (c) injections both ways + Schröder–Bernstein",
+   "solution": [
+    {
+     "type": "p",
+     "text": "(a) Define f(1/n) = 1/(n + 1) for n = 1, 2, 3, …, and f(x) = x for every other x. It shifts the sequence 1, ½, ⅓, … one step along, the way Hilbert’s hotel does."
+    },
+    {
+     "type": "list",
+     "items": [
+      "<b>Injective:</b> f is injective on S = {1/n : n ≥ 1} and on its complement, and the images f(S) = {1/n : n ≥ 2} and (0,1] − S don’t overlap.",
+      "<b>Surjective:</b> take y ∈ (0, 1). If y = 1/m with m ≥ 2, then y = f(1/(m − 1)). Otherwise y ∉ S and y = f(y)."
+     ]
+    },
+    {
+     "type": "p",
+     "text": "(b) Send 0 ↦ ½, 1/n ↦ 1/(n + 2) for n ≥ 1, and fix everything else. The set {0, 1, ½, ⅓, …} goes onto {½, ⅓, ¼, …}, so the same two checks work."
+    },
+    {
+     "type": "p",
+     "text": "(c) Inclusion (0,1) → [0,1] is injective, and x ↦ x/2 + ¼ injects [0,1] into [¼, ¾] ⊂ (0,1). Schröder–Bernstein then gives a bijection."
+    },
+    {
+     "type": "tip",
+     "text": "<b>Tests:</b> absorbing extra points into a countable sequence. <b>Common mistake:</b> mapping 1 ↦ ½ and leaving ½ fixed, so two points collide."
+    }
+   ]
+  },
+  {
+   "title": "Five sets: countable or uncountable?",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "Classify each set, with proof."
+    },
+    {
+     "type": "list",
+     "items": [
+      "(a) All finite bit strings.",
+      "(b) All infinite bit strings with only finitely many 1s.",
+      "(c) All infinite bit strings with infinitely many 1s.",
+      "(d) All reals in (0,1) whose decimal expansion uses only the digits 3 and 7.",
+      "(e) All polynomials with integer coefficients."
+     ]
+    }
+   ],
+   "answer": "(a) countable (b) countable (c) uncountable (d) uncountable (e) countable",
+   "solution": [
+    {
+     "type": "p",
+     "text": "(a) <b>Countable.</b> List them by length, and within a length lexicographically: λ, 0, 1, 00, 01, …"
+    },
+    {
+     "type": "p",
+     "text": "(b) <b>Countable.</b> Such a string is determined by the finite set S of positions holding a 1. The map S ↦ Σ<sub>i∈S</sub> 2<sup>i</sup> is a bijection to ℕ, by uniqueness of binary expansions."
+    },
+    {
+     "type": "p",
+     "text": "(c) <b>Uncountable.</b> All infinite bit strings form an uncountable set (diagonal argument). That set is the union of (b) and (c). If (c) were countable, the union of two countable sets would be countable. Contradiction."
+    },
+    {
+     "type": "p",
+     "text": "(d) <b>Uncountable</b>, by a diagonal argument. Given any list r<sub>1</sub>, r<sub>2</sub>, … of such numbers, build d whose n-th digit is 3 if the n-th digit of r<sub>n</sub> is 7, and 7 otherwise. Then d uses only 3s and 7s, and it differs from every r<sub>n</sub> in the n-th digit. Since no expansion involves 0s or 9s, each of these numbers has only one decimal expansion, so a different digit really means a different number."
+    },
+    {
+     "type": "p",
+     "text": "(e) <b>Countable.</b> For each N, only finitely many polynomials have degree + Σ|coefficients| ≤ N. A countable union of finite sets is countable."
+    },
+    {
+     "type": "tip",
+     "text": "<b>Tests:</b> encoding into ℕ, complements inside an uncountable set, and a careful diagonal argument. <b>Common mistake:</b> “(b) is infinite, so it is uncountable”, or running a diagonal argument with digits 0 and 9 (0.0999… = 0.1000…)."
+    }
+   ]
+  },
+  {
+   "title": "Cantor’s theorem |A| &lt; |𝒫(A)|",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "Prove Cantor’s theorem: for any set A there is no surjection f: A → 𝒫(A). Then conclude that |A| &lt; |𝒫(A)|."
+    }
+   ],
+   "answer": "D = {a : a ∉ f(a)} is never in the range, so no surjection; a ↦ {a} injects, so |A| &lt; |𝒫(A)|.",
+   "solution": [
+    {
+     "type": "p",
+     "text": "Suppose f: A → 𝒫(A) is onto. Let D = {a ∈ A : a ∉ f(a)}. Then D ⊆ A, so D = f(d) for some d ∈ A."
+    },
+    {
+     "type": "list",
+     "items": [
+      "If d ∈ D, then by the definition of D, d ∉ f(d) = D.",
+      "If d ∉ D = f(d), then d satisfies the defining condition, so d ∈ D."
+     ]
+    },
+    {
+     "type": "p",
+     "text": "Both cases give a contradiction, so no surjection exists. ∎"
+    },
+    {
+     "type": "p",
+     "text": "The map a ↦ {a} is an injection A → 𝒫(A), so |A| ≤ |𝒫(A)|. Equality would mean a bijection, which is in particular a surjection. So |A| &lt; |𝒫(A)|. For example, 𝒫(ℕ) is uncountable."
+    },
+    {
+     "type": "tip",
+     "text": "<b>Tests:</b> the diagonal set D: “the elements that are not in their own image”. <b>Common mistake:</b> only handling finite A (2<sup>n</sup> > n). The proof has to work for every set."
+    }
+   ]
+  },
+  {
+   "title": "The bijections of ℕ are uncountable",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "Prove that the set of all <b>bijections</b> ℕ → ℕ is uncountable. (The naive diagonal g(n) = f<sub>n</sub>(n) + 1 doesn’t work. Why not?)"
+    }
+   ],
+   "answer": "Swap or fix each block {2n, 2n+1} so g differs from fₙ at 2n and stays a bijection.",
+   "solution": [
+    {
+     "type": "p",
+     "text": "The naive g need not be a bijection: it can repeat values or miss them."
+    },
+    {
+     "type": "p",
+     "text": "Suppose f<sub>0</sub>, f<sub>1</sub>, f<sub>2</sub>, … lists bijections of ℕ = {0, 1, 2, …}. Split ℕ into blocks {2n, 2n + 1}. On block n define:"
+    },
+    {
+     "type": "list",
+     "items": [
+      "if f<sub>n</sub>(2n) = 2n: g(2n) = 2n + 1 and g(2n + 1) = 2n (swap);",
+      "otherwise: g(2n) = 2n and g(2n + 1) = 2n + 1 (fix)."
+     ]
+    },
+    {
+     "type": "p",
+     "text": "g maps each block bijectively onto itself, and the blocks partition ℕ, so g is a bijection. In the first case g(2n) = 2n + 1 ≠ 2n = f<sub>n</sub>(2n). In the second, g(2n) = 2n ≠ f<sub>n</sub>(2n). So g ≠ f<sub>n</sub> for every n, and g is not on the list. No list contains every bijection. ∎"
+    },
+    {
+     "type": "tip",
+     "text": "<b>Tests:</b> adapting the diagonal argument so that the new object stays in the set. <b>Common mistake:</b> making g differ from each f<sub>n</sub> without checking that g is still a bijection."
+    }
+   ]
+  }
+ ],
+ "keyFacts": [
+  "∈ means “is an item of”, ⊆ means “every item is also in”; ∅ ⊆ every set; ∅ ≠ {∅}",
+  "|𝒫(A)| = 2^|A|, |A × B| = |A|·|B|, |A ∪ B| = |A| + |B| − |A ∩ B|",
+  "Set equality: element chasing with ⟺, double inclusion, or a membership table",
+  "Injective: f(a) = f(b) ⇒ a = b. Surjective: solve f(a) = b and check a is in the domain",
+  "g ∘ f injective ⇒ f injective; g ∘ f surjective ⇒ g surjective",
+  "⌊x⌋ = n ⟺ n ≤ x &lt; n + 1; ⌊x + n⌋ = ⌊x⌋ + n; ⌊−x⌋ = −⌈x⌉",
+  "|A| = |B| iff a bijection exists; countable = finite or listable",
+  "ℕ, ℤ, ℚ, ℤ × ℤ, finite strings are countable; ℝ, (0, 1), 𝒫(ℕ), infinite 0/1 sequences are not",
+  "Diagonal argument: change digit n of the n-th entry (use 5/4 to avoid 0.4999… = 0.5)",
+  "Cantor: |X| &lt; |𝒫(X)| via D = {x | x ∉ f(x)}"
+ ]
+}

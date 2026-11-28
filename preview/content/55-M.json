@@ -1,0 +1,1532 @@
+{
+ "id": "55-M",
+ "course": "55",
+ "title": "Recurrence relations",
+ "source": "Rosen 8.1–8.2 · Lec21–22",
+ "summary": "How to model counting problems with recurrences and how to solve linear recurrences with constant coefficients: the characteristic equation, distinct and repeated roots, higher degree, and nonhomogeneous recurrences including the resonance case. A final typically asks you to set up a recurrence from a counting problem and to solve one with initial conditions.",
+ "lesson": [
+  {
+   "title": "Recurrence relations and closed forms",
+   "blocks": [
+    {
+     "type": "tip",
+     "text": "A recurrence defines each term of a sequence from earlier terms. Add enough starting values and the whole sequence is determined."
+    },
+    {
+     "type": "list",
+     "items": [
+      "<b>Recurrence relation:</b> a rule giving a<sub>n</sub> in terms of a<sub>0</sub>, …, a<sub>n−1</sub>. Example: a<sub>n</sub> = a<sub>n−1</sub> + 3.",
+      "<b>Initial conditions:</b> the first few terms, given outright. Example: a<sub>0</sub> = 2.",
+      "<b>Solution:</b> any sequence that satisfies the rule. A <b>closed form</b> is a direct formula for a<sub>n</sub>, like a<sub>n</sub> = 2 + 3n."
+     ]
+    },
+    {
+     "type": "p",
+     "text": "To check a proposed closed form, plug it into the rule and the initial conditions. Or just compute the first few terms both ways and compare."
+    },
+    {
+     "type": "p",
+     "text": "<b>Example (iterate to guess a formula).</b> a<sub>n</sub> = a<sub>n−1</sub> + 3, a<sub>0</sub> = 2: terms 2, 5, 8, 11, … Each step adds 3, so a<sub>n</sub> = 2 + 3n."
+    },
+    {
+     "type": "warn",
+     "text": "A degree-k recurrence (a<sub>n</sub> uses the previous k terms) needs <b>k</b> initial conditions. One is not enough for a<sub>n</sub> = a<sub>n−1</sub> + a<sub>n−2</sub>."
+    },
+    {
+     "type": "example",
+     "title": "Verify a closed form by substitution",
+     "prompt": "Show that aₙ = n·2ⁿ satisfies aₙ = 4aₙ₋₁ − 4aₙ₋₂ with a₀ = 0, a₁ = 2.",
+     "steps": [
+      "Initial conditions: 0 · 2⁰ = 0 and 1 · 2¹ = 2. ✓",
+      "Right side: 4(n − 1)2ⁿ⁻¹ − 4(n − 2)2ⁿ⁻² = 2ⁿ[2(n − 1) − (n − 2)].",
+      "2(n − 1) − (n − 2) = n, so the right side is n·2ⁿ = aₙ. ✓",
+      "Since the recurrence plus two initial values determines the sequence, this is the solution."
+     ],
+     "answer": "aₙ = n·2ⁿ satisfies both the recurrence and the initial conditions"
+    }
+   ]
+  },
+  {
+   "title": "Setting up recurrences from counting problems",
+   "blocks": [
+    {
+     "type": "tip",
+     "text": "Ask: “How does a size-n object break into smaller ones?” Usually you split by the <b>last step</b> (or first step) and count each case using smaller sizes."
+    },
+    {
+     "type": "p",
+     "text": "<b>Example (compound interest).</b> An account starts at 1000 and earns 5% a year. If Pₙ is the amount after n years, Pₙ = 1.05Pₙ₋₁, P₀ = 1000, so Pₙ = 1000 · 1.05ⁿ (about 1628.89 after 10 years)."
+    },
+    {
+     "type": "example",
+     "title": "Tower of Hanoi",
+     "prompt": "Move n disks from peg 1 to peg 3, never putting a larger disk on a smaller one. H<sub>n</sub> = minimum moves.",
+     "steps": [
+      "Move the top n − 1 disks out of the way: H<sub>n−1</sub> moves.",
+      "Move the biggest disk: 1 move.",
+      "Move the n − 1 disks back on top of it: H<sub>n−1</sub> moves.",
+      "H<sub>n</sub> = 2H<sub>n−1</sub> + 1, H<sub>1</sub> = 1. Terms: 1, 3, 7, 15, 31 … which looks like 2<sup>n</sup> − 1."
+     ],
+     "answer": "Hₙ = 2Hₙ₋₁ + 1, H₁ = 1"
+    },
+    {
+     "type": "example",
+     "title": "Bit strings with no two consecutive 0s",
+     "prompt": "a<sub>n</sub> = number of length-n bit strings with no “00”. Split by the <b>last bit</b>:",
+     "steps": [
+      "<b>Ends in 1:</b> the first n − 1 bits can be any valid string. That’s a<sub>n−1</sub> strings.",
+      "<b>Ends in 0:</b> the bit before it must be 1 (otherwise “00”), so the string ends “10” and the first n − 2 bits are any valid string. That’s a<sub>n−2</sub> strings.",
+      "The cases don’t overlap, so add them (sum rule): a<sub>n</sub> = a<sub>n−1</sub> + a<sub>n−2</sub>.",
+      "Initial conditions by hand: a<sub>1</sub> = 2 (0, 1) and a<sub>2</sub> = 3 (01, 10, 11).",
+      "Then a<sub>3</sub> = 5, a<sub>4</sub> = 8, a<sub>5</sub> = 13: Fibonacci numbers."
+     ],
+     "answer": "aₙ = aₙ₋₁ + aₙ₋₂, a₁ = 2, a₂ = 3 (Fibonacci numbers)"
+    },
+    {
+     "type": "example",
+     "title": "Climbing stairs",
+     "prompt": "You climb n stairs taking 1 or 2 steps at a time. Let sₙ be the number of ways. Find a recurrence and s₁₀.",
+     "steps": [
+      "Split by the last move: a 1-step leaves n − 1 stairs (sₙ₋₁ ways); a 2-step leaves n − 2 stairs (sₙ₋₂ ways).",
+      "sₙ = sₙ₋₁ + sₙ₋₂ for n ≥ 3, with s₁ = 1, s₂ = 2 (1+1 or 2).",
+      "Terms: 1, 2, 3, 5, 8, 13, 21, 34, 55, 89.",
+      "With steps of 1, 2 or 3 the same idea gives sₙ = sₙ₋₁ + sₙ₋₂ + sₙ₋₃ (1, 2, 4, 7, 13, …)."
+     ],
+     "answer": "sₙ = sₙ₋₁ + sₙ₋₂, s₁ = 1, s₂ = 2; s₁₀ = 89"
+    },
+    {
+     "type": "example",
+     "title": "Domino tilings of a 2 × n board",
+     "prompt": "Let tₙ be the number of ways to tile a 2 × n board with 1 × 2 dominoes. Find a recurrence.",
+     "steps": [
+      "Look at the right end. Either one vertical domino covers the last column: tₙ₋₁ ways for the rest.",
+      "Or a horizontal domino covers the top of the last two columns; then another horizontal domino must sit directly below it: tₙ₋₂ ways for the rest.",
+      "These cases are disjoint and cover everything: tₙ = tₙ₋₁ + tₙ₋₂, with t₁ = 1, t₂ = 2.",
+      "Terms 1, 2, 3, 5, 8, 13, …"
+     ],
+     "answer": "tₙ = tₙ₋₁ + tₙ₋₂, t₁ = 1, t₂ = 2"
+    },
+    {
+     "type": "example",
+     "title": "Regions cut by lines",
+     "prompt": "n lines are drawn in the plane, no two parallel and no three through one point. Let Rₙ be the number of regions. Find a recurrence and solve it.",
+     "steps": [
+      "R₀ = 1 (the whole plane).",
+      "The n-th line crosses the other n − 1 lines in n − 1 distinct points, which cut it into n pieces.",
+      "Each piece splits one old region into two, so Rₙ = Rₙ₋₁ + n.",
+      "Iterate: Rₙ = 1 + (1 + 2 + ⋯ + n) = 1 + n(n + 1)/2 = (n² + n + 2)/2. For n = 10: 56."
+     ],
+     "answer": "Rₙ = Rₙ₋₁ + n, R₀ = 1; Rₙ = (n² + n + 2)/2"
+    },
+    {
+     "type": "warn",
+     "text": "Check that your cases are <b>disjoint</b> and <b>cover everything</b>, and compute the initial conditions by actually listing small cases."
+    }
+   ]
+  },
+  {
+   "title": "Linear homogeneous recurrences and the characteristic equation",
+   "blocks": [
+    {
+     "type": "tip",
+     "text": "For a certain nice kind of recurrence, guessing a<sub>n</sub> = r<sup>n</sup> turns the whole problem into solving a polynomial."
+    },
+    {
+     "type": "formula",
+     "text": "a<sub>n</sub> = c<sub>1</sub>a<sub>n−1</sub> + c<sub>2</sub>a<sub>n−2</sub> + ⋯ + c<sub>k</sub>a<sub>n−k</sub>"
+    },
+    {
+     "type": "p",
+     "text": "<b>Linear:</b> each earlier term appears to the first power, multiplied by a number. <b>Homogeneous:</b> no extra term that isn’t a multiple of some a<sub>j</sub>. <b>Constant coefficients:</b> the c’s are fixed numbers, not depending on n. <b>Degree k</b> (with c<sub>k</sub> ≠ 0)."
+    },
+    {
+     "type": "table",
+     "head": [
+      "Recurrence",
+      "Linear homogeneous, constant coeff.?"
+     ],
+     "rows": [
+      [
+       "a<sub>n</sub> = a<sub>n−1</sub> + a<sub>n−2</sub>",
+       "Yes, degree 2"
+      ],
+      [
+       "a<sub>n</sub> = a<sub>n−5</sub>",
+       "Yes, degree 5"
+      ],
+      [
+       "a<sub>n</sub> = a<sub>n−1</sub> + a<sub>n−2</sub><sup>2</sup>",
+       "No: not linear (squared term)"
+      ],
+      [
+       "H<sub>n</sub> = 2H<sub>n−1</sub> + 1",
+       "No: not homogeneous (the +1)"
+      ],
+      [
+       "B<sub>n</sub> = nB<sub>n−1</sub>",
+       "No: coefficient n isn’t constant"
+      ]
+     ]
+    },
+    {
+     "type": "p",
+     "text": "<b>Where the characteristic equation comes from</b>"
+    },
+    {
+     "type": "steps",
+     "title": "Method",
+     "items": [
+      "Guess a<sub>n</sub> = r<sup>n</sup> in a<sub>n</sub> = c<sub>1</sub>a<sub>n−1</sub> + c<sub>2</sub>a<sub>n−2</sub>.",
+      "You get r<sup>n</sup> = c<sub>1</sub>r<sup>n−1</sup> + c<sub>2</sub>r<sup>n−2</sup>.",
+      "Divide by r<sup>n−2</sup>: r² = c<sub>1</sub>r + c<sub>2</sub>."
+     ]
+    },
+    {
+     "type": "formula",
+     "text": "r² − c<sub>1</sub>r − c<sub>2</sub> = 0"
+    },
+    {
+     "type": "p",
+     "text": "The <b>characteristic equation</b>. Its solutions are the <b>characteristic roots</b>. Each root r gives a solution r<sup>n</sup>."
+    },
+    {
+     "type": "p",
+     "text": "Fast way to write it: replace a<sub>n</sub> by r<sup>k</sup>, a<sub>n−1</sub> by r<sup>k−1</sup>, …, a<sub>n−k</sub> by 1, then move everything to one side."
+    },
+    {
+     "type": "warn",
+     "text": "For a<sub>n</sub> = 5a<sub>n−1</sub> − 6a<sub>n−2</sub> the equation is r² − 5r + 6 = 0. Both signs flip when you move the terms over."
+    }
+   ]
+  },
+  {
+   "title": "Two distinct roots",
+   "blocks": [
+    {
+     "type": "formula",
+     "text": "roots r<sub>1</sub> ≠ r<sub>2</sub> ⟹ a<sub>n</sub> = α<sub>1</sub>r<sub>1</sub><sup>n</sup> + α<sub>2</sub>r<sub>2</sub><sup>n</sup>"
+    },
+    {
+     "type": "thm",
+     "name": "Distinct roots give every solution",
+     "text": "If r² − c₁r − c₂ = 0 has distinct roots r₁ ≠ r₂, then {aₙ} solves aₙ = c₁aₙ₋₁ + c₂aₙ₋₂ if and only if aₙ = α₁r₁ⁿ + α₂r₂ⁿ for some constants α₁, α₂.",
+     "proof": [
+      {
+       "type": "p",
+       "text": "<b>These are solutions.</b> c₁rᵢⁿ⁻¹ + c₂rᵢⁿ⁻² = rᵢⁿ⁻²(c₁rᵢ + c₂) = rᵢⁿ⁻²·rᵢ² = rᵢⁿ, because rᵢ is a root. A linear combination of solutions is again a solution, since the recurrence is linear."
+      },
+      {
+       "type": "p",
+       "text": "<b>They are all the solutions.</b> Given any solution, choose α₁, α₂ with α₁ + α₂ = a₀ and α₁r₁ + α₂r₂ = a₁. This system has the unique solution α₁ = (a₁ − a₀r₂)/(r₁ − r₂), α₂ = (a₀r₁ − a₁)/(r₁ − r₂); dividing by r₁ − r₂ is where r₁ ≠ r₂ is used."
+      },
+      {
+       "type": "p",
+       "text": "Then α₁r₁ⁿ + α₂r₂ⁿ and aₙ satisfy the same recurrence and agree at n = 0, 1, so by strong induction they agree for all n."
+      }
+     ]
+    },
+    {
+     "type": "p",
+     "text": "Every solution has this form. The constants α<sub>1</sub>, α<sub>2</sub> are pinned down by the two initial conditions."
+    },
+    {
+     "type": "p",
+     "text": "<b>The recipe</b>"
+    },
+    {
+     "type": "steps",
+     "title": "Method",
+     "items": [
+      "Write the characteristic equation and find its roots.",
+      "Write the general form a<sub>n</sub> = α<sub>1</sub>r<sub>1</sub><sup>n</sup> + α<sub>2</sub>r<sub>2</sub><sup>n</sup>.",
+      "Plug in n = 0 and n = 1 (or whichever initial conditions you’re given) to get two equations.",
+      "Solve for α<sub>1</sub>, α<sub>2</sub>.",
+      "<b>Check</b> by computing a<sub>2</sub> from the recurrence and from your formula."
+     ]
+    },
+    {
+     "type": "example",
+     "title": "Two distinct roots",
+     "prompt": "Solve aₙ = 5aₙ₋₁ − 6aₙ₋₂ with a₀ = 1, a₁ = 4.",
+     "steps": [
+      "r² − 5r + 6 = (r − 2)(r − 3) = 0, so r = 2, 3.",
+      "a<sub>n</sub> = α<sub>1</sub>2<sup>n</sup> + α<sub>2</sub>3<sup>n</sup>.",
+      "n = 0: α<sub>1</sub> + α<sub>2</sub> = 1. n = 1: 2α<sub>1</sub> + 3α<sub>2</sub> = 4.",
+      "Subtract twice the first from the second: α<sub>2</sub> = 2, then α<sub>1</sub> = −1.",
+      "a<sub>n</sub> = <b>2·3<sup>n</sup> − 2<sup>n</sup></b>. Check: recurrence gives a<sub>2</sub> = 20 − 6 = 14; formula gives 18 − 4 = 14. ✓"
+     ],
+     "answer": "2·3ⁿ − 2ⁿ"
+    },
+    {
+     "type": "example",
+     "title": "A negative root",
+     "prompt": "Solve aₙ = aₙ₋₁ + 2aₙ₋₂ with a₀ = 2, a₁ = 7.",
+     "steps": [
+      "r² − r − 2 = (r − 2)(r + 1) = 0, so r = 2, −1.",
+      "α<sub>1</sub> + α<sub>2</sub> = 2 and 2α<sub>1</sub> − α<sub>2</sub> = 7. Adding: 3α<sub>1</sub> = 9, so α<sub>1</sub> = 3, α<sub>2</sub> = −1.",
+      "a<sub>n</sub> = <b>3·2<sup>n</sup> − (−1)<sup>n</sup></b>. Check a<sub>2</sub>: 7 + 4 = 11 and 12 − 1 = 11. ✓"
+     ],
+     "answer": "3·2ⁿ − (−1)ⁿ"
+    },
+    {
+     "type": "example",
+     "title": "Fibonacci: irrational roots",
+     "prompt": "Solve fₙ = fₙ₋₁ + fₙ₋₂ with f₀ = 0, f₁ = 1.",
+     "steps": [
+      "Characteristic equation r² − r − 1 = 0, roots r₁ = (1 + √5)/2, r₂ = (1 − √5)/2.",
+      "n = 0: α₁ + α₂ = 0. n = 1: α₁r₁ + α₂r₂ = 1.",
+      "So α₂ = −α₁ and α₁(r₁ − r₂) = 1; since r₁ − r₂ = √5, α₁ = 1/√5.",
+      "Irrational roots are fine; the recipe is identical."
+     ],
+     "answer": "fₙ = (1/√5)((1 + √5)/2)ⁿ − (1/√5)((1 − √5)/2)ⁿ"
+    }
+   ]
+  },
+  {
+   "title": "Repeated roots",
+   "blocks": [
+    {
+     "type": "tip",
+     "text": "A degree-k recurrence needs k different solutions to fit k initial conditions. If the characteristic equation has fewer than k different roots, a repeated root supplies the missing ones by multiplying by powers of n."
+    },
+    {
+     "type": "tip",
+     "text": "If both roots are the same number r<sub>0</sub>, then α<sub>1</sub>r<sub>0</sub><sup>n</sup> + α<sub>2</sub>r<sub>0</sub><sup>n</sup> is really just one term, which can’t fit two initial conditions. The fix: the second solution is n·r<sub>0</sub><sup>n</sup>."
+    },
+    {
+     "type": "formula",
+     "text": "double root r<sub>0</sub> ⟹ a<sub>n</sub> = α<sub>1</sub>r<sub>0</sub><sup>n</sup> + α<sub>2</sub>·n·r<sub>0</sub><sup>n</sup> = (α<sub>1</sub> + α<sub>2</sub>n) r<sub>0</sub><sup>n</sup>"
+    },
+    {
+     "type": "thm",
+     "name": "Why n·r₀ⁿ is a solution",
+     "text": "If r₀ is a double root of r² − c₁r − c₂, then n·r₀ⁿ solves aₙ = c₁aₙ₋₁ + c₂aₙ₋₂, so every solution is (α₁ + α₂n)r₀ⁿ.",
+     "proof": [
+      {
+       "type": "p",
+       "text": "A double root means r² − c₁r − c₂ = (r − r₀)², so c₁ = 2r₀ and c₂ = −r₀²."
+      },
+      {
+       "type": "formula",
+       "text": "c₁(n − 1)r₀ⁿ⁻¹ + c₂(n − 2)r₀ⁿ⁻² = r₀ⁿ⁻²[2r₀²(n − 1) − r₀²(n − 2)] = r₀ⁿ⁻² · r₀² · n = n·r₀ⁿ"
+      },
+      {
+       "type": "p",
+       "text": "So n·r₀ⁿ is a solution, and r₀ⁿ is one too. The system α₁ = a₀, (α₁ + α₂)r₀ = a₁ always has a unique solution when r₀ ≠ 0, so as in the distinct case these give every solution."
+      }
+     ]
+    },
+    {
+     "type": "p",
+     "text": "You spot a repeated root when the quadratic is a perfect square, like r² − 4r + 4 = (r − 2)²."
+    },
+    {
+     "type": "example",
+     "title": "Double root",
+     "prompt": "Solve aₙ = 4aₙ₋₁ − 4aₙ₋₂ with a₀ = 1, a₁ = 6.",
+     "steps": [
+      "r² − 4r + 4 = (r − 2)² = 0: double root r<sub>0</sub> = 2.",
+      "a<sub>n</sub> = (α<sub>1</sub> + α<sub>2</sub>n)2<sup>n</sup>.",
+      "n = 0: α<sub>1</sub> = 1. n = 1: (1 + α<sub>2</sub>)·2 = 6, so α<sub>2</sub> = 2.",
+      "a<sub>n</sub> = <b>(1 + 2n)2<sup>n</sup></b>. Check a<sub>2</sub>: 24 − 4 = 20 and 5·4 = 20. ✓"
+     ],
+     "answer": "(1 + 2n)2ⁿ"
+    },
+    {
+     "type": "example",
+     "title": "Double root, second example",
+     "prompt": "Solve aₙ = 4aₙ₋₁ − 4aₙ₋₂ with a₀ = 2, a₁ = 12.",
+     "steps": [
+      "r² − 4r + 4 = (r − 2)² = 0: root 2, repeated twice.",
+      "General solution: a<sub>n</sub> = α<sub>1</sub>2<sup>n</sup> + α<sub>2</sub>n2<sup>n</sup>.",
+      "a<sub>0</sub> = 2 gives α<sub>1</sub> = 2. a<sub>1</sub> = 12 gives 12 = 2·2 + α<sub>2</sub>·2, so α<sub>2</sub> = 4.",
+      "a<sub>n</sub> = <b>2·2<sup>n</sup> + 4n·2<sup>n</sup></b>. Check a<sub>2</sub>: 48 − 8 = 40 and 8 + 32 = 40. ✓"
+     ],
+     "answer": "2·2ⁿ + 4n·2ⁿ = (2 + 4n)2ⁿ"
+    },
+    {
+     "type": "example",
+     "title": "Double root at 1",
+     "prompt": "Solve aₙ = 2aₙ₋₁ − aₙ₋₂ with a₀ = 2, a₁ = 4.",
+     "steps": [
+      "r² − 2r + 1 = (r − 1)² = 0: root 1, repeated twice.",
+      "a<sub>n</sub> = α<sub>1</sub>·1<sup>n</sup> + α<sub>2</sub>n·1<sup>n</sup> = α<sub>1</sub> + α<sub>2</sub>n.",
+      "α<sub>1</sub> = 2, and 4 = 2 + α<sub>2</sub>, so α<sub>2</sub> = 2.",
+      "a<sub>n</sub> = <b>2 + 2n</b>: 2, 4, 6, 8, … ✓"
+     ],
+     "answer": "2 + 2n"
+    },
+    {
+     "type": "warn",
+     "text": "Writing α<sub>1</sub>r<sub>0</sub><sup>n</sup> + α<sub>2</sub>r<sub>0</sub><sup>n</sup> for a repeated root. The equations will be inconsistent. You need the extra <b>n</b>."
+    }
+   ]
+  },
+  {
+   "title": "Degree 3 and higher",
+   "blocks": [
+    {
+     "type": "p",
+     "text": "Same recipe, bigger polynomial. A degree-k recurrence has a degree-k characteristic equation and needs k initial conditions."
+    },
+    {
+     "type": "formula",
+     "text": "root r with multiplicity m contributes"
+    },
+    {
+     "type": "formula",
+     "text": "(α<sub>0</sub> + α<sub>1</sub>n + ⋯ + α<sub>m−1</sub>n<sup>m−1</sup>) r<sup>n</sup>"
+    },
+    {
+     "type": "p",
+     "text": "Distinct roots: m = 1, a plain αr<sup>n</sup>. Double root: (α<sub>0</sub> + α<sub>1</sub>n)r<sup>n</sup>. Triple root: up to n². Add up the contributions of all roots."
+    },
+    {
+     "type": "example",
+     "title": "Degree 3, distinct roots",
+     "prompt": "Solve aₙ = 2aₙ₋₁ + aₙ₋₂ − 2aₙ₋₃ with a₀ = 3, a₁ = 2, a₂ = 6.",
+     "steps": [
+      "r³ − 2r² − r + 2 = r²(r − 2) − (r − 2) = (r − 2)(r − 1)(r + 1). Tip: try grouping, or test small integers like r = 1 first.",
+      "a<sub>n</sub> = α<sub>1</sub> + α<sub>2</sub>(−1)<sup>n</sup> + α<sub>3</sub>2<sup>n</sup>.",
+      "n = 0, 1, 2: α<sub>1</sub> + α<sub>2</sub> + α<sub>3</sub> = 3; α<sub>1</sub> − α<sub>2</sub> + 2α<sub>3</sub> = 2; α<sub>1</sub> + α<sub>2</sub> + 4α<sub>3</sub> = 6. Subtracting the first from the third: 3α<sub>3</sub> = 3, so α<sub>3</sub> = 1; then α<sub>1</sub> = α<sub>2</sub> = 1.",
+      "a<sub>n</sub> = <b>1 + (−1)<sup>n</sup> + 2<sup>n</sup></b>. Check a<sub>3</sub>: 12 + 2 − 6 = 8 and 1 − 1 + 8 = 8. ✓"
+     ],
+     "answer": "1 + (−1)ⁿ + 2ⁿ"
+    },
+    {
+     "type": "example",
+     "title": "Degree 3 with a repeated root",
+     "prompt": "Solve aₙ = 3aₙ₋₁ − 4aₙ₋₃ with a₀ = 2, a₁ = 3, a₂ = 13.",
+     "steps": [
+      "Characteristic equation r³ − 3r² + 4 = 0. Test small integers: r = −1 gives −1 − 3 + 4 = 0.",
+      "Divide by r + 1: r² − 4r + 4 = (r − 2)². Roots −1 and 2 (double).",
+      "General form aₙ = γ(−1)ⁿ + (α + βn)2ⁿ.",
+      "n = 0: γ + α = 2. n = 1: −γ + 2α + 2β = 3. n = 2: γ + 4α + 8β = 13.",
+      "Subtract the first from the third: 3α + 8β = 11. Add the first two: 3α + 2β = 5. So 6β = 6, β = 1, α = 1, γ = 1.",
+      "Check a₃ = 3 · 13 − 4 · 2 = 31 and (1 + 3) · 8 − 1 = 31. ✓"
+     ],
+     "answer": "aₙ = (1 + n)2ⁿ + (−1)ⁿ"
+    }
+   ]
+  },
+  {
+   "title": "Nonhomogeneous recurrences and resonance",
+   "blocks": [
+    {
+     "type": "tip",
+     "text": "When there’s an extra term F(n) (like the +1 in Hanoi), find <b>one</b> solution that handles F(n), then add the general solution of the recurrence without F(n)."
+    },
+    {
+     "type": "formula",
+     "text": "a<sub>n</sub> = c<sub>1</sub>a<sub>n−1</sub> + ⋯ + c<sub>k</sub>a<sub>n−k</sub> + F(n)"
+    },
+    {
+     "type": "formula",
+     "text": "all solutions = a<sub>n</sub><sup>(p)</sup> + a<sub>n</sub><sup>(h)</sup>"
+    },
+    {
+     "type": "p",
+     "text": "(p) = one <b>particular</b> solution. (h) = general solution of the <b>associated homogeneous</b> recurrence (drop F(n))."
+    },
+    {
+     "type": "p",
+     "text": "<b>The recipe</b>"
+    },
+    {
+     "type": "steps",
+     "title": "Method",
+     "items": [
+      "Solve the homogeneous part (drop F(n)) to get a<sub>n</sub><sup>(h)</sup> with unknown α’s.",
+      "Guess a particular solution shaped like F(n), with unknown coefficients (table below). Plug it in and solve for them.",
+      "Add the two, <b>then</b> use the initial conditions to find the α’s."
+     ]
+    },
+    {
+     "type": "table",
+     "head": [
+      "F(n)",
+      "Try"
+     ],
+     "rows": [
+      [
+       "constant",
+       "A"
+      ],
+      [
+       "polynomial of degree d, like 2n",
+       "polynomial of degree d, like An + B"
+      ],
+      [
+       "s<sup>n</sup>, s not a root",
+       "A·s<sup>n</sup>"
+      ],
+      [
+       "s<sup>n</sup>, s a root of multiplicity m",
+       "A·n<sup>m</sup>s<sup>n</sup>"
+      ]
+     ]
+    },
+    {
+     "type": "example",
+     "title": "Constant forcing: Tower of Hanoi",
+     "prompt": "Solve Hₙ = 2Hₙ₋₁ + 1 with H₁ = 1.",
+     "steps": [
+      "Homogeneous: H<sub>n</sub> = 2H<sub>n−1</sub> → α·2<sup>n</sup>.",
+      "F(n) = 1 is constant, so try A: A = 2A + 1 → A = −1.",
+      "General: H<sub>n</sub> = α·2<sup>n</sup> − 1. H<sub>1</sub> = 1 gives 2α − 1 = 1, α = 1.",
+      "H<sub>n</sub> = <b>2<sup>n</sup> − 1</b>, matching 1, 3, 7, 15, … ✓"
+     ],
+     "answer": "Hₙ = 2ⁿ − 1"
+    },
+    {
+     "type": "example",
+     "title": "Polynomial forcing",
+     "prompt": "Solve aₙ = 3aₙ₋₁ + 2n with a₁ = 3.",
+     "steps": [
+      "Homogeneous: α·3<sup>n</sup>.",
+      "F(n) = 2n is degree 1, so try cn + d: cn + d = 3(c(n−1) + d) + 2n. Match the n terms: c = 3c + 2 → c = −1. Match constants: d = −3c + 3d → d = −3/2.",
+      "General: a<sub>n</sub> = α·3<sup>n</sup> − n − 3/2. a<sub>1</sub> = 3 gives 3α − 5/2 = 3, α = 11/6.",
+      "a<sub>n</sub> = <b>(11/6)·3<sup>n</sup> − n − 3/2</b>. Check a<sub>2</sub>: 9 + 4 = 13 and 16.5 − 3.5 = 13. ✓"
+     ],
+     "answer": "(11/6)·3ⁿ − n − 3/2"
+    },
+    {
+     "type": "example",
+     "title": "Exponential forcing, no resonance",
+     "prompt": "Solve aₙ = 3aₙ₋₁ + 2ⁿ with a₀ = 1.",
+     "steps": [
+      "Homogeneous: α·3ⁿ.",
+      "F(n) = 2ⁿ and 2 is not a root, so try A·2ⁿ: A·2ⁿ = 3A·2ⁿ⁻¹ + 2ⁿ. Divide by 2ⁿ⁻¹: 2A = 3A + 2, so A = −2.",
+      "General: aₙ = α·3ⁿ − 2·2ⁿ. a₀ = 1 gives α − 2 = 1, α = 3.",
+      "Check a₁ = 3 · 1 + 2 = 5 and 9 − 4 = 5. ✓"
+     ],
+     "answer": "aₙ = 3ⁿ⁺¹ − 2ⁿ⁺¹"
+    },
+    {
+     "type": "example",
+     "title": "Resonance: the forcing base is a root",
+     "prompt": "Solve aₙ = 5aₙ₋₁ − 6aₙ₋₂ + 2ⁿ with a₀ = 1, a₁ = 0.",
+     "steps": [
+      "Homogeneous: roots 2 and 3, so α·2ⁿ + β·3ⁿ.",
+      "F(n) = 2ⁿ and 2 is a root of multiplicity 1, so A·2ⁿ cannot work (it solves the homogeneous part). Try A·n·2ⁿ.",
+      "Plug in and divide by 2ⁿ⁻²: 4An = 10A(n − 1) − 6A(n − 2) + 4 = 4An + 2A + 4, so A = −2.",
+      "General: aₙ = α·2ⁿ + β·3ⁿ − 2n·2ⁿ. n = 0: α + β = 1. n = 1: 2α + 3β − 4 = 0.",
+      "So β = 2, α = −1.",
+      "Check a₂ = 5 · 0 − 6 · 1 + 4 = −2 and −4 + 18 − 16 = −2. ✓"
+     ],
+     "answer": "aₙ = 2·3ⁿ − 2ⁿ − n·2ⁿ⁺¹"
+    },
+    {
+     "type": "example",
+     "title": "Constant forcing on a degree-2 recurrence",
+     "prompt": "Solve aₙ = aₙ₋₁ + 2aₙ₋₂ + 4 with a₀ = 0, a₁ = 1.",
+     "steps": [
+      "Homogeneous: r² − r − 2 = (r − 2)(r + 1), so α·2ⁿ + β(−1)ⁿ.",
+      "1 is not a root, so try a constant A: A = A + 2A + 4, A = −2.",
+      "General: aₙ = α·2ⁿ + β(−1)ⁿ − 2. n = 0: α + β = 2. n = 1: 2α − β = 3. So α = 5/3, β = 1/3.",
+      "Check a₂ = 1 + 0 + 4 = 5 and 20/3 + 1/3 − 2 = 5. ✓"
+     ],
+     "answer": "aₙ = (5/3)2ⁿ + (1/3)(−1)ⁿ − 2"
+    },
+    {
+     "type": "warn",
+     "text": "Use the initial conditions <b>after</b> adding the particular solution, never on the homogeneous part alone."
+    }
+   ]
+  }
+ ],
+ "cards": [
+  {
+   "front": "What is a recurrence relation? What are initial conditions, a solution and a closed form?",
+   "back": [
+    {
+     "type": "list",
+     "items": [
+      "<b>Recurrence relation:</b> a rule giving aₙ in terms of earlier terms a₀, …, aₙ₋₁. Example: aₙ = aₙ₋₁ + 3.",
+      "<b>Initial conditions:</b> the first few terms, given outright. Example: a₀ = 2.",
+      "<b>Solution:</b> any sequence that obeys the rule.",
+      "<b>Closed form:</b> a direct formula for aₙ, with no earlier terms."
+     ]
+    },
+    {
+     "type": "p",
+     "text": "<b>Example.</b> aₙ = aₙ₋₁ + 3, a₀ = 2 gives 2, 5, 8, 11, … Each step adds 3, so the closed form is aₙ = <b>2 + 3n</b>."
+    }
+   ]
+  },
+  {
+   "front": "How many initial conditions does a recurrence need? How do you check a proposed closed form?",
+   "back": [
+    {
+     "type": "p",
+     "text": "If aₙ depends on the previous <b>k</b> terms (degree k), you need <b>k</b> initial conditions. aₙ = aₙ₋₁ + aₙ₋₂ needs two, like a₀ and a₁."
+    },
+    {
+     "type": "p",
+     "text": "<b>Checking a formula.</b>"
+    },
+    {
+     "type": "list",
+     "items": [
+      "It must match the initial conditions.",
+      "It must satisfy the rule. A quick check: compute the next term from the recurrence and from the formula, and compare."
+     ]
+    }
+   ]
+  },
+  {
+   "front": "How do you set up a recurrence for a counting problem?",
+   "back": [
+    {
+     "type": "list",
+     "items": [
+      "Let aₙ = the answer for size n.",
+      "Split the size-n objects into cases by their <b>last step</b> (or first step): last bit, last move, last year, …",
+      "Count each case using smaller sizes (aₙ₋₁, aₙ₋₂, …).",
+      "Make sure the cases are disjoint and cover everything, then add them (sum rule).",
+      "Find the initial conditions by listing small cases by hand."
+     ]
+    }
+   ]
+  },
+  {
+   "front": "$1000 earns 5% interest per year. Write a recurrence and a closed form.",
+   "back": [
+    {
+     "type": "p",
+     "text": "Pₙ = amount after n years. Each year you keep Pₙ₋₁ and gain 5% of it:"
+    },
+    {
+     "type": "formula",
+     "text": "Pₙ = Pₙ₋₁ + 0.05Pₙ₋₁ = 1.05Pₙ₋₁, P₀ = 1000"
+    },
+    {
+     "type": "p",
+     "text": "Iterating: P₁ = 1.05·1000, P₂ = 1.05²·1000, …, so <b>Pₙ = 1000·1.05ⁿ</b> (≈ $1628.89 after 10 years)."
+    }
+   ]
+  },
+  {
+   "front": "Tower of Hanoi: find a recurrence for Hₙ, the minimum moves to move n disks.",
+   "back": [
+    {
+     "type": "p",
+     "text": "Rules: move one disk at a time, never put a bigger disk on a smaller one."
+    },
+    {
+     "type": "list",
+     "items": [
+      "Move the top n − 1 disks to the spare peg: Hₙ₋₁ moves.",
+      "Move the biggest disk to the target: 1 move.",
+      "Move the n − 1 disks onto it: Hₙ₋₁ moves."
+     ]
+    },
+    {
+     "type": "formula",
+     "text": "Hₙ = 2Hₙ₋₁ + 1, H₁ = 1"
+    },
+    {
+     "type": "p",
+     "text": "Terms: 1, 3, 7, 15, 31, … which looks like 2ⁿ − 1 (proved on a later card)."
+    }
+   ]
+  },
+  {
+   "front": "Find a recurrence for aₙ = number of bit strings of length n with no two consecutive 0s.",
+   "back": [
+    {
+     "type": "p",
+     "text": "Split by the <b>last bit</b>:"
+    },
+    {
+     "type": "list",
+     "items": [
+      "<b>Ends in 1:</b> the first n − 1 bits are any valid string: aₙ₋₁ ways.",
+      "<b>Ends in 0:</b> the bit before must be 1 (else “00”), so it ends “10” and the first n − 2 bits are any valid string: aₙ₋₂ ways."
+     ]
+    },
+    {
+     "type": "formula",
+     "text": "aₙ = aₙ₋₁ + aₙ₋₂, a₁ = 2, a₂ = 3"
+    },
+    {
+     "type": "p",
+     "text": "a₁: 0, 1. a₂: 01, 10, 11. Then a₃ = 5, a₄ = 8, a₅ = 13: Fibonacci numbers."
+    }
+   ]
+  },
+  {
+   "front": "What is a linear homogeneous recurrence relation of degree k with constant coefficients?",
+   "back": [
+    {
+     "type": "formula",
+     "text": "aₙ = c₁aₙ₋₁ + c₂aₙ₋₂ + ⋯ + cₖaₙ₋ₖ, cₖ ≠ 0"
+    },
+    {
+     "type": "list",
+     "items": [
+      "<b>Linear:</b> each earlier term appears to the first power, times a number. No squares, no products of terms.",
+      "<b>Homogeneous:</b> no extra term that isn’t a multiple of some aⱼ (no “+1”, no “+2n”).",
+      "<b>Constant coefficients:</b> the c’s are fixed numbers, not depending on n.",
+      "<b>Degree k:</b> reaches back k terms."
+     ]
+    },
+    {
+     "type": "p",
+     "text": "These are exactly the recurrences the characteristic equation can solve."
+    }
+   ]
+  },
+  {
+   "front": "Which are linear homogeneous with constant coefficients? (a) aₙ = aₙ₋₁ + aₙ₋₂ (b) aₙ = aₙ₋₅ (c) aₙ = aₙ₋₁ + aₙ₋₂² (d) Hₙ = 2Hₙ₋₁ + 1 (e) Bₙ = nBₙ₋₁",
+   "back": [
+    {
+     "type": "list",
+     "items": [
+      "<b>Yes</b>, degree 2.",
+      "<b>Yes</b>, degree 5.",
+      "<b>No</b>: not linear (squared term).",
+      "<b>No</b>: not homogeneous (the +1).",
+      "<b>No</b>: the coefficient n isn’t constant."
+     ]
+    }
+   ]
+  },
+  {
+   "front": "What is the characteristic equation, and where does it come from?",
+   "back": [
+    {
+     "type": "p",
+     "text": "<b>Where it comes from.</b>"
+    },
+    {
+     "type": "list",
+     "items": [
+      "Guess aₙ = rⁿ in aₙ = c₁aₙ₋₁ + c₂aₙ₋₂.",
+      "You get rⁿ = c₁rⁿ⁻¹ + c₂rⁿ⁻².",
+      "Divide by rⁿ⁻²: r² = c₁r + c₂."
+     ]
+    },
+    {
+     "type": "formula",
+     "text": "r² − c₁r − c₂ = 0"
+    },
+    {
+     "type": "p",
+     "text": "Its solutions are the <b>characteristic roots</b>. Each root r gives a solution rⁿ."
+    },
+    {
+     "type": "p",
+     "text": "<b>Fast way.</b> Replace aₙ by rᵏ, aₙ₋₁ by rᵏ⁻¹, …, aₙ₋ₖ by 1, then move everything to one side."
+    }
+   ]
+  },
+  {
+   "front": "Write the characteristic equation of aₙ = 5aₙ₋₁ − 6aₙ₋₂.",
+   "back": [
+    {
+     "type": "formula",
+     "text": "r² = 5r − 6 ⟹ r² − 5r + 6 = 0"
+    },
+    {
+     "type": "warn",
+     "text": "Both signs flip when you move the terms to the left. Writing r² + 5r − 6 is the classic mistake."
+    }
+   ]
+  },
+  {
+   "front": "How do you solve aₙ = c₁aₙ₋₁ + c₂aₙ₋₂ when the characteristic equation has two different roots r₁, r₂?",
+   "back": [
+    {
+     "type": "formula",
+     "text": "aₙ = α₁r₁ⁿ + α₂r₂ⁿ"
+    },
+    {
+     "type": "p",
+     "text": "Every solution has this form; the initial conditions pin down α₁ and α₂."
+    },
+    {
+     "type": "p",
+     "text": "<b>Recipe.</b>"
+    },
+    {
+     "type": "list",
+     "items": [
+      "Write the characteristic equation and find its roots.",
+      "Write the general form aₙ = α₁r₁ⁿ + α₂r₂ⁿ.",
+      "Plug in the two initial conditions (usually n = 0 and n = 1) to get two equations.",
+      "Solve for α₁, α₂.",
+      "<b>Check</b>: compute a₂ from the recurrence and from your formula."
+     ]
+    }
+   ]
+  },
+  {
+   "front": "Solve aₙ = 5aₙ₋₁ − 6aₙ₋₂ with a₀ = 1, a₁ = 4.",
+   "back": [
+    {
+     "type": "list",
+     "items": [
+      "r² − 5r + 6 = (r − 2)(r − 3) = 0, so r = 2, 3.",
+      "aₙ = α₁2ⁿ + α₂3ⁿ.",
+      "n = 0: α₁ + α₂ = 1. n = 1: 2α₁ + 3α₂ = 4.",
+      "Subtract twice the first from the second: α₂ = 2, so α₁ = −1."
+     ]
+    },
+    {
+     "type": "formula",
+     "text": "aₙ = 2·3ⁿ − 2ⁿ"
+    },
+    {
+     "type": "p",
+     "text": "Check a₂: recurrence 5·4 − 6·1 = 14; formula 18 − 4 = 14 ✓"
+    }
+   ]
+  },
+  {
+   "front": "solve aₙ = aₙ₋₁ + 2aₙ₋₂ with a₀ = 2, a₁ = 7.",
+   "back": [
+    {
+     "type": "list",
+     "items": [
+      "r² − r − 2 = (r − 2)(r + 1) = 0, so r = 2, −1.",
+      "aₙ = α₁2ⁿ + α₂(−1)ⁿ.",
+      "α₁ + α₂ = 2 and 2α₁ − α₂ = 7. Add them: 3α₁ = 9, so α₁ = 3, α₂ = −1."
+     ]
+    },
+    {
+     "type": "formula",
+     "text": "aₙ = 3·2ⁿ − (−1)ⁿ"
+    },
+    {
+     "type": "p",
+     "text": "Check a₂: 7 + 2·2 = 11 and 12 − 1 = 11 ✓"
+    }
+   ]
+  },
+  {
+   "front": "Solve aₙ = 7aₙ₋₁ − 10aₙ₋₂ with a₀ = 2, a₁ = 7.",
+   "back": [
+    {
+     "type": "list",
+     "items": [
+      "r² − 7r + 10 = (r − 2)(r − 5), so r = 2, 5.",
+      "α₁ + α₂ = 2 and 2α₁ + 5α₂ = 7, so α₂ = 1 and α₁ = 1."
+     ]
+    },
+    {
+     "type": "formula",
+     "text": "aₙ = 2ⁿ + 5ⁿ"
+    },
+    {
+     "type": "p",
+     "text": "Check a₂: 49 − 20 = 29 and 4 + 25 = 29 ✓"
+    }
+   ]
+  },
+  {
+   "front": "Fibonacci: fₙ = fₙ₋₁ + fₙ₋₂, f₀ = 0, f₁ = 1. What are the characteristic roots and the closed form?",
+   "back": [
+    {
+     "type": "p",
+     "text": "r² − r − 1 = 0, so r = (1 ± √5)/2 by the quadratic formula. Solving for the α’s from f₀ = 0, f₁ = 1 gives α₁ = 1/√5, α₂ = −1/√5:"
+    },
+    {
+     "type": "formula",
+     "text": "fₙ = (1/√5)((1 + √5)/2)ⁿ − (1/√5)((1 − √5)/2)ⁿ"
+    },
+    {
+     "type": "p",
+     "text": "Irrational roots are fine; the recipe is identical."
+    }
+   ]
+  },
+  {
+   "front": "How do you solve a degree-2 recurrence when the characteristic equation has only one (repeated) root r₀?",
+   "back": [
+    {
+     "type": "formula",
+     "text": "aₙ = α₁r₀ⁿ + α₂·n·r₀ⁿ = (α₁ + α₂n)·r₀ⁿ"
+    },
+    {
+     "type": "p",
+     "text": "<b>Why the extra n.</b> α₁r₀ⁿ + α₂r₀ⁿ is really just one term (α₁ + α₂)r₀ⁿ, which can’t fit two initial conditions. The second independent solution turns out to be <b>n·r₀ⁿ</b>."
+    },
+    {
+     "type": "p",
+     "text": "<b>How to spot it.</b> The quadratic is a perfect square, like r² − 4r + 4 = (r − 2)²."
+    },
+    {
+     "type": "warn",
+     "text": "Forgetting the n: the equations for α₁, α₂ come out inconsistent."
+    }
+   ]
+  },
+  {
+   "front": "Solve aₙ = 4aₙ₋₁ − 4aₙ₋₂ with a₀ = 1, a₁ = 6.",
+   "back": [
+    {
+     "type": "list",
+     "items": [
+      "r² − 4r + 4 = (r − 2)² = 0: double root 2.",
+      "aₙ = (α₁ + α₂n)2ⁿ.",
+      "n = 0: α₁ = 1. n = 1: (1 + α₂)·2 = 6, so α₂ = 2."
+     ]
+    },
+    {
+     "type": "formula",
+     "text": "aₙ = (1 + 2n)·2ⁿ"
+    },
+    {
+     "type": "p",
+     "text": "Check a₂: 4·6 − 4·1 = 20 and 5·4 = 20 ✓"
+    }
+   ]
+  },
+  {
+   "front": "solve aₙ = 2aₙ₋₁ − aₙ₋₂ with a₀ = 2, a₁ = 4.",
+   "back": [
+    {
+     "type": "list",
+     "items": [
+      "r² − 2r + 1 = (r − 1)²: double root 1.",
+      "aₙ = (α₁ + α₂n)·1ⁿ = α₁ + α₂n. α₁ = 2; 2 + α₂ = 4, so α₂ = 2."
+     ]
+    },
+    {
+     "type": "formula",
+     "text": "aₙ = 2 + 2n"
+    },
+    {
+     "type": "p",
+     "text": "Check: 2, 4, 6, 8, … and 2·4 − 2 = 6 ✓. A root of 1 makes 1ⁿ = 1, so the answer is just a line."
+    }
+   ]
+  },
+  {
+   "front": "Solve aₙ = −6aₙ₋₁ − 9aₙ₋₂ with a₀ = 1, a₁ = 0.",
+   "back": [
+    {
+     "type": "list",
+     "items": [
+      "r² + 6r + 9 = (r + 3)²: double root −3.",
+      "aₙ = (α₁ + α₂n)(−3)ⁿ. α₁ = 1; (1 + α₂)(−3) = 0, so α₂ = −1."
+     ]
+    },
+    {
+     "type": "formula",
+     "text": "aₙ = (1 − n)(−3)ⁿ"
+    },
+    {
+     "type": "p",
+     "text": "Check a₂: −6·0 − 9·1 = −9 and (−1)·9 = −9 ✓"
+    }
+   ]
+  },
+  {
+   "front": "What is the general solution for higher degree, including repeated roots?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Same recipe, bigger polynomial. Degree k → degree-k characteristic equation → k initial conditions."
+    },
+    {
+     "type": "formula",
+     "text": "root r of multiplicity m contributes (α₀ + α₁n + ⋯ + αₘ₋₁nᵐ⁻¹)·rⁿ"
+    },
+    {
+     "type": "p",
+     "text": "Add up the contributions of all the roots. A simple root (m = 1) gives αrⁿ; a double root gives (α₀ + α₁n)rⁿ; a triple root goes up to n²."
+    },
+    {
+     "type": "p",
+     "text": "The total number of α’s always equals the degree k."
+    }
+   ]
+  },
+  {
+   "front": "The characteristic roots are 2, 2, 2 and 5. What is the general form of aₙ?",
+   "back": [
+    {
+     "type": "formula",
+     "text": "aₙ = (α₀ + α₁n + α₂n²)·2ⁿ + α₃·5ⁿ"
+    },
+    {
+     "type": "p",
+     "text": "2 has multiplicity 3 (up to n²), and 5 is simple. That’s four constants for a degree-4 recurrence."
+    }
+   ]
+  },
+  {
+   "front": "Solve aₙ = 2aₙ₋₁ + aₙ₋₂ − 2aₙ₋₃ with a₀ = 3, a₁ = 2, a₂ = 6.",
+   "back": [
+    {
+     "type": "list",
+     "items": [
+      "r³ − 2r² − r + 2 = r²(r − 2) − (r − 2) = (r − 2)(r − 1)(r + 1). Roots 1, −1, 2.",
+      "aₙ = α₁ + α₂(−1)ⁿ + α₃2ⁿ.",
+      "n = 0, 1, 2: α₁ + α₂ + α₃ = 3; α₁ − α₂ + 2α₃ = 2; α₁ + α₂ + 4α₃ = 6. Subtract the first from the third: 3α₃ = 3, so α₃ = 1, then α₁ = α₂ = 1."
+     ]
+    },
+    {
+     "type": "formula",
+     "text": "aₙ = 1 + (−1)ⁿ + 2ⁿ"
+    },
+    {
+     "type": "p",
+     "text": "Check a₃: 2·6 + 2 − 2·3 = 8 and 1 − 1 + 8 = 8 ✓"
+    }
+   ]
+  },
+  {
+   "front": "What is a linear nonhomogeneous recurrence, and what do all its solutions look like?",
+   "back": [
+    {
+     "type": "formula",
+     "text": "aₙ = c₁aₙ₋₁ + ⋯ + cₖaₙ₋ₖ + F(n)"
+    },
+    {
+     "type": "p",
+     "text": "F(n) is an extra term that isn’t a multiple of any aⱼ, like the +1 in Hanoi. Dropping it gives the <b>associated homogeneous</b> recurrence."
+    },
+    {
+     "type": "formula",
+     "text": "all solutions = aₙ⁽ᵖ⁾ + aₙ⁽ʰ⁾"
+    },
+    {
+     "type": "p",
+     "text": "aₙ⁽ᵖ⁾ is <b>one particular</b> solution of the full recurrence. aₙ⁽ʰ⁾ is the <b>general</b> solution of the homogeneous one, with its α’s still unknown."
+    }
+   ]
+  },
+  {
+   "front": "What is the recipe for a nonhomogeneous recurrence, and what do you guess for the particular solution?",
+   "back": [
+    {
+     "type": "list",
+     "items": [
+      "Solve the homogeneous part (drop F(n)) to get aₙ⁽ʰ⁾ with unknown α’s.",
+      "Guess a particular solution shaped like F(n) with unknown coefficients; plug in and solve for them.",
+      "Add the two, <b>then</b> use the initial conditions to find the α’s."
+     ]
+    },
+    {
+     "type": "p",
+     "text": "<b>What to guess.</b>"
+    },
+    {
+     "type": "list",
+     "items": [
+      "F(n) constant → try A.",
+      "F(n) polynomial of degree d (like 2n) → polynomial of degree d (An + B).",
+      "F(n) = sⁿ, s not a characteristic root → A·sⁿ.",
+      "F(n) = sⁿ, s a root of multiplicity m → A·nᵐ·sⁿ."
+     ]
+    },
+    {
+     "type": "warn",
+     "text": "Using the initial conditions on the homogeneous part alone, before adding the particular solution."
+    }
+   ]
+  },
+  {
+   "front": "Solve the Tower of Hanoi recurrence Hₙ = 2Hₙ₋₁ + 1 with H₁ = 1.",
+   "back": [
+    {
+     "type": "list",
+     "items": [
+      "Homogeneous Hₙ = 2Hₙ₋₁: root 2, so α·2ⁿ.",
+      "F(n) = 1 is constant; try A: A = 2A + 1, so A = −1.",
+      "General: Hₙ = α·2ⁿ − 1. H₁ = 1 gives 2α − 1 = 1, so α = 1."
+     ]
+    },
+    {
+     "type": "formula",
+     "text": "Hₙ = 2ⁿ − 1"
+    },
+    {
+     "type": "p",
+     "text": "Matches 1, 3, 7, 15, … ✓"
+    }
+   ]
+  },
+  {
+   "front": "solve aₙ = 3aₙ₋₁ + 2n with a₁ = 3.",
+   "back": [
+    {
+     "type": "list",
+     "items": [
+      "Homogeneous: α·3ⁿ.",
+      "F(n) = 2n has degree 1, so try cn + d: cn + d = 3(c(n − 1) + d) + 2n.",
+      "Match n terms: c = 3c + 2, so c = −1. Match constants: d = −3c + 3d, so 2d = 3c and d = −3/2.",
+      "General: aₙ = α·3ⁿ − n − 3/2. a₁ = 3 gives 3α − 5/2 = 3, so α = 11/6."
+     ]
+    },
+    {
+     "type": "formula",
+     "text": "aₙ = (11/6)·3ⁿ − n − 3/2"
+    },
+    {
+     "type": "p",
+     "text": "Check a₂: 3·3 + 4 = 13 and 16.5 − 3.5 = 13 ✓"
+    }
+   ]
+  },
+  {
+   "front": "Solve aₙ = 2aₙ₋₁ + 3 with a₀ = 1.",
+   "back": [
+    {
+     "type": "list",
+     "items": [
+      "Homogeneous: α·2ⁿ.",
+      "Particular: A = 2A + 3, so A = −3.",
+      "General: α·2ⁿ − 3. a₀ = 1 gives α − 3 = 1, so α = 4."
+     ]
+    },
+    {
+     "type": "formula",
+     "text": "aₙ = 4·2ⁿ − 3"
+    },
+    {
+     "type": "p",
+     "text": "Check: 1, 5, 13, 29 from both ✓"
+    }
+   ]
+  },
+  {
+   "front": "Why do repeated characteristic roots need a special fix, and what is it?",
+   "back": [
+    {
+     "type": "p",
+     "text": "<b>The problem.</b> A degree-k recurrence needs k different solutions so the α’s can match k initial conditions. If a root r is repeated, rⁿ only counts once, leaving you short."
+    },
+    {
+     "type": "p",
+     "text": "<b>The fix.</b>"
+    },
+    {
+     "type": "formula",
+     "text": "root r repeated m times ⟹ rⁿ, n·rⁿ, …, nᵐ⁻¹rⁿ are all solutions"
+    },
+    {
+     "type": "p",
+     "text": "For a double root r₀ of a degree-2 recurrence: <b>aₙ = α₁r₀ⁿ + α₂·n·r₀ⁿ</b>."
+    },
+    {
+     "type": "warn",
+     "text": "Writing α₁r₀ⁿ + α₂r₀ⁿ. That’s really one term, (α₁ + α₂)r₀ⁿ, and can’t fit two initial conditions."
+    }
+   ]
+  },
+  {
+   "front": "Solve aₙ = 8aₙ₋₁ − 16aₙ₋₂ with a₀ = 1, a₁ = 8.",
+   "back": [
+    {
+     "type": "list",
+     "items": [
+      "r² − 8r + 16 = (r − 4)²: root 4 twice.",
+      "aₙ = (α₁ + α₂n)4ⁿ. α₁ = 1; (1 + α₂)·4 = 8, so α₂ = 1."
+     ]
+    },
+    {
+     "type": "formula",
+     "text": "aₙ = (1 + n)·4ⁿ"
+    },
+    {
+     "type": "p",
+     "text": "Check a₂: 64 − 16 = 48 and 3·16 = 48 ✓"
+    }
+   ]
+  },
+  {
+   "front": "Why is every solution of a linear homogeneous recurrence (distinct roots) a combination α₁r₁ⁿ + α₂r₂ⁿ?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Each rᵢⁿ solves it (plug in and use rᵢ² = c₁rᵢ + c₂), combinations of solutions are solutions, and any two initial values can be matched because r₁ ≠ r₂. A sequence is determined by its recurrence and initial values, so it equals the matching combination."
+    }
+   ]
+  },
+  {
+   "front": "Resonance: what particular solution do you try for F(n) = C·sⁿ when s is a root of multiplicity m?",
+   "back": [
+    {
+     "type": "formula",
+     "text": "A·nᵐ·sⁿ"
+    },
+    {
+     "type": "p",
+     "text": "If you try A·sⁿ when s is a root, you get a contradiction like A = A + 2: that is the signal to multiply by n."
+    }
+   ]
+  },
+  {
+   "front": "More generally, F(n) = (polynomial of degree t)·sⁿ: what is the trial particular solution?",
+   "back": [
+    {
+     "type": "formula",
+     "text": "nᵐ(pₜnᵗ + ⋯ + p₁n + p₀)sⁿ"
+    },
+    {
+     "type": "p",
+     "text": "m = multiplicity of s as a characteristic root (m = 0 if s is not a root). A plain polynomial F(n) is the case s = 1."
+    }
+   ]
+  }
+ ],
+ "hard": [
+  {
+   "title": "Ternary strings with no 00",
+   "level": "hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "Let a<sub>n</sub> be the number of strings of length n over {0, 1, 2} with no two consecutive 0s. Find a recurrence and initial conditions, compute a<sub>4</sub>, and solve the recurrence."
+    }
+   ],
+   "answer": "aₙ = 2aₙ₋₁ + 2aₙ₋₂, a₀ = 1, a₁ = 3; a₄ = 60; aₙ = ((√3 + 2)/(2√3))(1 + √3)ⁿ + ((√3 − 2)/(2√3))(1 − √3)ⁿ",
+   "solution": [
+    {
+     "type": "p",
+     "text": "Look at the last character. If it is 1 or 2, the first n − 1 characters are any valid string: 2a<sub>n−1</sub>. If it is 0, the character before it must be 1 or 2, and the first n − 2 characters are any valid string: 2a<sub>n−2</sub>."
+    },
+    {
+     "type": "formula",
+     "text": "a<sub>n</sub> = 2a<sub>n−1</sub> + 2a<sub>n−2</sub>, a<sub>0</sub> = 1, a<sub>1</sub> = 3"
+    },
+    {
+     "type": "p",
+     "text": "a<sub>2</sub> = 8 (= 9 − 1 ✓), a<sub>3</sub> = 22, <b>a<sub>4</sub> = 60</b>."
+    },
+    {
+     "type": "p",
+     "text": "The characteristic equation r² − 2r − 2 = 0 has roots r = 1 ± √3. Write a<sub>n</sub> = α(1+√3)<sup>n</sup> + β(1−√3)<sup>n</sup>. From a<sub>0</sub>: α + β = 1. From a<sub>1</sub>: (α + β) + √3(α − β) = 3, so α − β = 2/√3."
+    },
+    {
+     "type": "p",
+     "text": "<b>Answer:</b> a<sub>n</sub> = ((√3 + 2)/(2√3))(1+√3)<sup>n</sup> + ((√3 − 2)/(2√3))(1−√3)<sup>n</sup>"
+    },
+    {
+     "type": "tip",
+     "text": "<b>Tests:</b> sorting by the last character, and irrational roots. <b>Common mistake:</b> writing 2a<sub>n−1</sub> + a<sub>n−2</sub>, which forgets that the character before the final 0 has 2 choices."
+    }
+   ]
+  },
+  {
+   "title": "Tiling with dominoes and squares",
+   "level": "hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "Let t<sub>n</sub> be the number of ways to tile a 2 × n board with 1 × 2 dominoes (in either orientation) and 2 × 2 squares. Find a recurrence, solve it, and give t<sub>10</sub>."
+    }
+   ],
+   "answer": "tₙ = tₙ₋₁ + 2tₙ₋₂; tₙ = (2ⁿ⁺¹ + (−1)ⁿ)/3; t₁₀ = 683",
+   "solution": [
+    {
+     "type": "p",
+     "text": "Look at the right end. Either a vertical domino covers the last column (t<sub>n−1</sub> ways), or the last two columns are covered by two stacked horizontal dominoes or by one 2 × 2 square (2t<sub>n−2</sub> ways). A single horizontal domino at the end forces a second one directly above or below it."
+    },
+    {
+     "type": "formula",
+     "text": "t<sub>n</sub> = t<sub>n−1</sub> + 2t<sub>n−2</sub>, t<sub>0</sub> = t<sub>1</sub> = 1"
+    },
+    {
+     "type": "p",
+     "text": "r² − r − 2 = (r − 2)(r + 1), so t<sub>n</sub> = α2<sup>n</sup> + β(−1)<sup>n</sup>. The conditions α + β = 1 and 2α − β = 1 give α = 2/3, β = 1/3."
+    },
+    {
+     "type": "p",
+     "text": "<b>Answer:</b> t<sub>n</sub> = (2<sup>n+1</sup> + (−1)<sup>n</sup>)/3, and t<sub>10</sub> = 683."
+    },
+    {
+     "type": "tip",
+     "text": "<b>Tests:</b> case analysis on the right end that is exhaustive and doesn’t double count. <b>Common mistake:</b> counting “one horizontal domino” as a separate case of width 1."
+    }
+   ]
+  },
+  {
+   "title": "Cubic with a double root",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "Solve a<sub>n</sub> = 5a<sub>n−1</sub> − 8a<sub>n−2</sub> + 4a<sub>n−3</sub> with a<sub>0</sub> = 1, a<sub>1</sub> = 3, a<sub>2</sub> = 9."
+    }
+   ],
+   "answer": "aₙ = 1 + n·2ⁿ",
+   "solution": [
+    {
+     "type": "p",
+     "text": "r³ − 5r² + 8r − 4: r = 1 is a root (1 − 5 + 8 − 4 = 0). Dividing leaves r² − 4r + 4 = (r − 2)². So the characteristic polynomial is (r − 1)(r − 2)², and a<sub>n</sub> = α + (β + γn)2<sup>n</sup>."
+    },
+    {
+     "type": "list",
+     "items": [
+      "n = 0: α + β = 1",
+      "n = 1: α + 2β + 2γ = 3",
+      "n = 2: α + 4β + 8γ = 9"
+     ]
+    },
+    {
+     "type": "p",
+     "text": "Subtracting consecutive equations: β + 2γ = 2 and 2β + 6γ = 6, so γ = 1, β = 0, α = 1."
+    },
+    {
+     "type": "p",
+     "text": "<b>Answer:</b> a<sub>n</sub> = 1 + n·2<sup>n</sup>"
+    },
+    {
+     "type": "p",
+     "text": "Check: a<sub>3</sub> = 5·9 − 8·3 + 4·1 = 25 = 1 + 3·8. ✓"
+    },
+    {
+     "type": "tip",
+     "text": "<b>Tests:</b> factoring a cubic by testing small integer roots, and handling a repeated root. <b>Common mistake:</b> writing α + β2<sup>n</sup> + γ2<sup>n</sup>, which has no n·2<sup>n</sup> term and is really only two parameters."
+    }
+   ]
+  },
+  {
+   "title": "Resonant and polynomial forcing",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "list",
+     "items": [
+      "(a) Solve a<sub>n</sub> = 3a<sub>n−1</sub> + 2·3<sup>n</sup>, a<sub>0</sub> = 1.",
+      "(b) Solve a<sub>n</sub> = 2a<sub>n−1</sub> + n, a<sub>0</sub> = 0."
+     ]
+    }
+   ],
+   "answer": "(a) aₙ = (1 + 2n)3ⁿ (b) aₙ = 2ⁿ⁺¹ − n − 2",
+   "solution": [
+    {
+     "type": "p",
+     "text": "(a) The homogeneous part gives α3<sup>n</sup>. The forcing term 2·3<sup>n</sup> uses 3, which is a root of multiplicity 1, so try p<sub>n</sub> = Cn3<sup>n</sup>: Cn3<sup>n</sup> = 3C(n−1)3<sup>n−1</sup> + 2·3<sup>n</sup>. Dividing by 3<sup>n</sup>: Cn = C(n − 1) + 2, so C = 2. With a<sub>0</sub> = 1, α = 1. <b>a<sub>n</sub> = (1 + 2n)3<sup>n</sup></b>."
+    },
+    {
+     "type": "p",
+     "text": "(b) Try p<sub>n</sub> = cn + d: cn + d = 2c(n − 1) + 2d + n. Comparing n-coefficients: c = 2c + 1, so c = −1. Comparing constants: d = −2c + 2d, so d = 2c = −2. Then a<sub>n</sub> = α2<sup>n</sup> − n − 2, and a<sub>0</sub> = 0 gives α = 2. <b>a<sub>n</sub> = 2<sup>n+1</sup> − n − 2</b>."
+    },
+    {
+     "type": "tip",
+     "text": "<b>Tests:</b> when the forcing base is a characteristic root, multiply the guess by n<sup>m</sup>. <b>Common mistake:</b> in (a), trying C·3<sup>n</sup>, which leads to C = C + 2 (no solution). That failure is the sign of resonance."
+    }
+   ]
+  },
+  {
+   "title": "Double resonance",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "Solve a<sub>n</sub> = 4a<sub>n−1</sub> − 4a<sub>n−2</sub> + 2<sup>n</sup> with a<sub>0</sub> = a<sub>1</sub> = 0."
+    }
+   ],
+   "answer": "aₙ = n(n − 1)2ⁿ⁻¹",
+   "solution": [
+    {
+     "type": "p",
+     "text": "The characteristic polynomial is (r − 2)², so 2 is a double root and the forcing base 2 resonates twice. Try p<sub>n</sub> = Cn²2<sup>n</sup>. Dividing by 2<sup>n</sup>:"
+    },
+    {
+     "type": "formula",
+     "text": "Cn² = 2C(n−1)² − C(n−2)² + 1 = Cn² − 2C + 1"
+    },
+    {
+     "type": "p",
+     "text": "So C = 1/2. The general solution is a<sub>n</sub> = (α + βn + n²/2)2<sup>n</sup>. a<sub>0</sub> = 0 gives α = 0, and a<sub>1</sub> = (β + ½)·2 = 0 gives β = −½."
+    },
+    {
+     "type": "p",
+     "text": "<b>Answer:</b> a<sub>n</sub> = ((n² − n)/2)·2<sup>n</sup> = n(n − 1)2<sup>n−1</sup>"
+    },
+    {
+     "type": "p",
+     "text": "Check: a<sub>2</sub> = 0 − 0 + 4 = 4 = 2·1·2 ✓, a<sub>3</sub> = 16 + 8 = 24 = 3·2·4 ✓."
+    },
+    {
+     "type": "tip",
+     "text": "<b>Tests:</b> multiplicity 2 means the guess gets a factor n². <b>Common mistake:</b> using Cn2<sup>n</sup>. Its terms cancel completely, leaving 0 = 1."
+    }
+   ]
+  },
+  {
+   "title": "Hanoi with neighbouring pegs only",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "Tower of Hanoi with three pegs in a row, A–B–C, where disks may move only between <b>neighboring</b> pegs (A↔B or B↔C). Find the minimum number of moves a<sub>n</sub> to transfer n disks from A to C. Set up the recurrence by arguing what must happen, then solve it."
+    }
+   ],
+   "answer": "aₙ = 3aₙ₋₁ + 2, a₁ = 2; aₙ = 3ⁿ − 1",
+   "solution": [
+    {
+     "type": "p",
+     "text": "The largest disk must go A → B → C. When it moves A → B, all n − 1 smaller disks must be on C (they can’t be on A or B). When it moves B → C, they must all be on A. So the moves are forced into this pattern:"
+    },
+    {
+     "type": "steps",
+     "title": "Method",
+     "items": [
+      "n − 1 disks A → C (a<sub>n−1</sub>)",
+      "largest A → B (1)",
+      "n − 1 disks C → A (a<sub>n−1</sub>, by symmetry)",
+      "largest B → C (1)",
+      "n − 1 disks A → C (a<sub>n−1</sub>)"
+     ]
+    },
+    {
+     "type": "formula",
+     "text": "a<sub>n</sub> = 3a<sub>n−1</sub> + 2, a<sub>1</sub> = 2"
+    },
+    {
+     "type": "p",
+     "text": "A constant particular solution c = 3c + 2 gives c = −1, so a<sub>n</sub> = α3<sup>n</sup> − 1, and a<sub>1</sub> = 2 gives α = 1. <b>a<sub>n</sub> = 3<sup>n</sup> − 1</b>. (Checked by computer search for n ≤ 6.)"
+    },
+    {
+     "type": "tip",
+     "text": "<b>Tests:</b> justifying that the structure is <i>forced</i>, which proves minimality, not just a count of moves. <b>Common mistake:</b> writing 2a<sub>n−1</sub> + 1 as in ordinary Hanoi, forgetting that the big disk now needs two moves."
+    }
+   ]
+  },
+  {
+   "title": "Calls made by naive recursive Fibonacci",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "Naive recursive <b>fib</b>(n) calls <b>fib</b>(n − 1) and <b>fib</b>(n − 2) for n ≥ 2 and returns directly for n = 0, 1. Let a<sub>n</sub> be the total number of calls made by <b>fib</b>(n), counting the first one."
+    },
+    {
+     "type": "list",
+     "items": [
+      "(a) Show that a<sub>n</sub> = a<sub>n−1</sub> + a<sub>n−2</sub> + 1 with a<sub>0</sub> = a<sub>1</sub> = 1, and prove a<sub>n</sub> = 2F<sub>n+1</sub> − 1 (F<sub>0</sub> = 0, F<sub>1</sub> = 1).",
+      "(b) Prove Cassini’s identity F<sub>n+1</sub>F<sub>n−1</sub> − F<sub>n</sub>² = (−1)<sup>n</sup> for n ≥ 1."
+     ]
+    }
+   ],
+   "answer": "(a) aₙ = 2Fₙ₊₁ − 1 by strong induction (b) Cassini’s identity by induction using Fₙ₊₂ = Fₙ₊₁ + Fₙ",
+   "solution": [
+    {
+     "type": "p",
+     "text": "(a) The call fib(n) itself, plus every call made by fib(n − 1), plus every call made by fib(n − 2). <b>Bases:</b> 2F<sub>1</sub> − 1 = 1 and 2F<sub>2</sub> − 1 = 1. <b>Step (strong induction):</b> a<sub>n</sub> = (2F<sub>n</sub> − 1) + (2F<sub>n−1</sub> − 1) + 1 = 2F<sub>n+1</sub> − 1."
+    },
+    {
+     "type": "p",
+     "text": "(b) <b>Base n = 1:</b> F<sub>2</sub>F<sub>0</sub> − F<sub>1</sub>² = 0 − 1 = −1. <b>Step:</b> F<sub>n+2</sub>F<sub>n</sub> − F<sub>n+1</sub>² = (F<sub>n+1</sub> + F<sub>n</sub>)F<sub>n</sub> − F<sub>n+1</sub>(F<sub>n</sub> + F<sub>n−1</sub>) = F<sub>n</sub>² − F<sub>n+1</sub>F<sub>n−1</sub> = −(−1)<sup>n</sup> = (−1)<sup>n+1</sup>."
+    },
+    {
+     "type": "tip",
+     "text": "<b>Tests:</b> guessing a closed form and confirming it by induction. <b>Common mistake:</b> forgetting the “+1” for the call itself."
+    }
+   ]
+  },
+  {
+   "title": "Why distinct roots give all solutions",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "Let r² − c<sub>1</sub>r − c<sub>2</sub> have two distinct roots r<sub>1</sub> ≠ r<sub>2</sub>. Prove that a sequence satisfies a<sub>n</sub> = c<sub>1</sub>a<sub>n−1</sub> + c<sub>2</sub>a<sub>n−2</sub> for all n ≥ 2 <b>if and only if</b> a<sub>n</sub> = α<sub>1</sub>r<sub>1</sub><sup>n</sup> + α<sub>2</sub>r<sub>2</sub><sup>n</sup> for some constants α<sub>1</sub>, α<sub>2</sub>. Point out exactly where r<sub>1</sub> ≠ r<sub>2</sub> is used."
+    }
+   ],
+   "answer": "rᵢⁿ solve it and combinations do too; α₁, α₂ matching a₀, a₁ exist because r₁ ≠ r₂ (division by r₁ − r₂); strong induction gives equality.",
+   "solution": [
+    {
+     "type": "p",
+     "text": "<b>(⇐)</b> c<sub>1</sub>r<sub>i</sub><sup>n−1</sup> + c<sub>2</sub>r<sub>i</sub><sup>n−2</sup> = r<sub>i</sub><sup>n−2</sup>(c<sub>1</sub>r<sub>i</sub> + c<sub>2</sub>) = r<sub>i</sub><sup>n−2</sup>·r<sub>i</sub>² = r<sub>i</sub><sup>n</sup>. So each r<sub>i</sub><sup>n</sup> satisfies the recurrence, and since the recurrence is linear, so does any combination of them."
+    },
+    {
+     "type": "p",
+     "text": "<b>(⇒)</b> Pick α<sub>1</sub>, α<sub>2</sub> to match the first two terms: α<sub>1</sub> + α<sub>2</sub> = a<sub>0</sub> and α<sub>1</sub>r<sub>1</sub> + α<sub>2</sub>r<sub>2</sub> = a<sub>1</sub>. The solution is"
+    },
+    {
+     "type": "formula",
+     "text": "α<sub>1</sub> = (a<sub>1</sub> − a<sub>0</sub>r<sub>2</sub>)/(r<sub>1</sub> − r<sub>2</sub>), α<sub>2</sub> = (a<sub>0</sub>r<sub>1</sub> − a<sub>1</sub>)/(r<sub>1</sub> − r<sub>2</sub>)"
+    },
+    {
+     "type": "p",
+     "text": "Dividing by r<sub>1</sub> − r<sub>2</sub> is exactly where r<sub>1</sub> ≠ r<sub>2</sub> is needed."
+    },
+    {
+     "type": "p",
+     "text": "Let b<sub>n</sub> = α<sub>1</sub>r<sub>1</sub><sup>n</sup> + α<sub>2</sub>r<sub>2</sub><sup>n</sup>. By (⇐), b satisfies the same recurrence, and b<sub>0</sub> = a<sub>0</sub>, b<sub>1</sub> = a<sub>1</sub>. Strong induction: if a<sub>k</sub> = b<sub>k</sub> for all k &lt; n (n ≥ 2), then a<sub>n</sub> = c<sub>1</sub>a<sub>n−1</sub> + c<sub>2</sub>a<sub>n−2</sub> = c<sub>1</sub>b<sub>n−1</sub> + c<sub>2</sub>b<sub>n−2</sub> = b<sub>n</sub>. ∎"
+    },
+    {
+     "type": "tip",
+     "text": "<b>Tests:</b> the two halves (it satisfies the recurrence; it is determined by two initial values) and the role of distinct roots. <b>Common mistake:</b> proving only (⇐) and calling it done. That shows these are solutions, not that they are all of them."
+    }
+   ]
+  },
+  {
+   "title": "Solve a recurrence and model “no 01”",
+   "level": "hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "<b>(a)</b> Solve a<sub>n</sub> = a<sub>n−1</sub> + 6a<sub>n−2</sub> with a<sub>0</sub> = 3, a<sub>1</sub> = 4."
+    },
+    {
+     "type": "p",
+     "text": "<b>(b)</b> Let s<sub>n</sub> be the number of strings of length n over {0, 1, 2} in which no 0 is immediately followed by a 1 (no “01”). Find a recurrence for s<sub>n</sub> with initial conditions, and compute s<sub>5</sub>."
+    }
+   ],
+   "answer": "(a) aₙ = 2·3ⁿ + (−2)ⁿ (b) sₙ = 3sₙ₋₁ − sₙ₋₂, s₀ = 1, s₁ = 3; s₅ = 144",
+   "solution": [
+    {
+     "type": "p",
+     "text": "<b>(a)</b>"
+    },
+    {
+     "type": "steps",
+     "title": "Method",
+     "items": [
+      "Characteristic equation: r² − r − 6 = 0, (r − 3)(r + 2) = 0, roots 3 and −2.",
+      "General solution: a<sub>n</sub> = α·3<sup>n</sup> + β·(−2)<sup>n</sup>.",
+      "a<sub>0</sub>: α + β = 3. a<sub>1</sub>: 3α − 2β = 4. Adding 2×(first): 5α = 10, α = 2, β = 1.",
+      "<b>a<sub>n</sub> = 2·3<sup>n</sup> + (−2)<sup>n</sup></b>. Check a<sub>2</sub>: recurrence 4 + 18 = 22; formula 18 + 4 = 22. ✓"
+     ]
+    },
+    {
+     "type": "p",
+     "text": "<b>(b)</b> Split valid strings of length n ≥ 2 by their last character."
+    },
+    {
+     "type": "steps",
+     "title": "Method",
+     "items": [
+      "Ends in 0 or 2: any valid string of length n − 1, then that character (appending 0 or 2 can’t create “01”): 2s<sub>n−1</sub>.",
+      "Ends in 1: a valid string of length n − 1 that does <b>not</b> end in 0, then 1. Valid strings of length n − 1 ending in 0 are just valid strings of length n − 2 followed by 0: there are s<sub>n−2</sub> of them. So this case gives s<sub>n−1</sub> − s<sub>n−2</sub>.",
+      "Total: <b>s<sub>n</sub> = 3s<sub>n−1</sub> − s<sub>n−2</sub></b> for n ≥ 2, with <b>s<sub>0</sub> = 1</b> (empty string), <b>s<sub>1</sub> = 3</b>.",
+      "Check s<sub>2</sub> = 9 − 1 = 8: all 9 strings except 01. ✓",
+      "s<sub>3</sub> = 24 − 3 = 21, s<sub>4</sub> = 63 − 8 = 55, <b>s<sub>5</sub> = 165 − 21 = 144</b>."
+     ]
+    },
+    {
+     "type": "p",
+     "text": "(Fun: these are every other Fibonacci number.)"
+    },
+    {
+     "type": "tip",
+     "text": "Solving a linear homogeneous recurrence with distinct roots, and building a recurrence by conditioning on the last character."
+    },
+    {
+     "type": "warn",
+     "text": "In (b), claiming the strings ending in 1 number 2s<sub>n−2</sub> or s<sub>n−1</sub>. Always test the recurrence on a case you can count by hand (s<sub>2</sub> = 8). If you start from s<sub>1</sub>, s<sub>2</sub> instead of s<sub>0</sub>, that’s fine too."
+    }
+   ]
+  }
+ ],
+ "keyFacts": [
+  "Degree-k recurrence needs k initial conditions; check a closed form by plugging in",
+  "Model by splitting on the last (or first) step into disjoint cases",
+  "aₙ = c₁aₙ₋₁ + ⋯ + cₖaₙ₋ₖ → characteristic equation rᵏ − c₁rᵏ⁻¹ − ⋯ − cₖ = 0",
+  "Distinct roots: aₙ = α₁r₁ⁿ + ⋯ + αₖrₖⁿ",
+  "Root r of multiplicity m contributes (α₀ + α₁n + ⋯ + αₘ₋₁nᵐ⁻¹)rⁿ",
+  "Nonhomogeneous: aₙ = particular + homogeneous; apply initial conditions last",
+  "F(n) = p(n)sⁿ: try nᵐ·q(n)sⁿ, m = multiplicity of s as a root (resonance)",
+  "Hanoi Hₙ = 2ⁿ − 1; no-00 bit strings and 2 × n domino tilings are Fibonacci"
+ ]
+}

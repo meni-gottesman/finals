@@ -1,0 +1,1691 @@
+{
+ "id": "55-B",
+ "course": "55",
+ "title": "Proofs: direct, contrapositive, contradiction, cases",
+ "source": "Rosen 1.7–1.8 · Lec03–04",
+ "summary": "How to write a proof: direct proofs from definitions, contraposition, contradiction (√2 is irrational, infinitely many primes), cases, if-and-only-if, existence and uniqueness, counterexamples, and spotting flaws. Every proof question on the final uses one of these templates, so the opening line and structure matter as much as the algebra.",
+ "lesson": [
+  {
+   "title": "Proof vocabulary and direct proof",
+   "blocks": [
+    {
+     "type": "tip",
+     "text": "A proof is an argument built from definitions. A direct proof assumes the “if” part and works forward to the “then” part."
+    },
+    {
+     "type": "table",
+     "head": [
+      "Word",
+      "Meaning"
+     ],
+     "rows": [
+      [
+       "<b>Theorem</b>",
+       "A proposition we can prove is true; usually signals importance. (“Thm”)"
+      ],
+      [
+       "<b>Lemma</b>",
+       "A proven helper result used to prove a bigger theorem."
+      ],
+      [
+       "<b>Corollary</b>",
+       "Something that follows easily from a theorem just proved. (“Cor”)"
+      ],
+      [
+       "<b>Proposition</b>",
+       "Also (confusingly) used for a less important theorem."
+      ],
+      [
+       "<b>Conjecture</b>",
+       "Believed true but not yet proved (e.g. the Twin Prime Conjecture)."
+      ],
+      [
+       "<b>Proof</b>",
+       "The argument for why it's true; often ends with □ (the “Halmos” tombstone)."
+      ],
+      [
+       "Axiom",
+       "A statement assumed true without proof (Rosen)."
+      ]
+     ]
+    },
+    {
+     "type": "p",
+     "text": "The most common theorem shape is ∀x (P(x) → Q(x)): “every object of type P has property Q.” The Pythagorean theorem (every right triangle satisfies a² + b² = c²), Fermat's Last Theorem, and the Four Color Theorem all have this form."
+    },
+    {
+     "type": "def",
+     "term": "even",
+     "text": "An integer n is <b>even</b> if there exists an integer k such that n = 2k, and <b>odd</b> if there exists an integer k such that n = 2k + 1."
+    },
+    {
+     "type": "p",
+     "text": "Two integers have the <b>same parity</b> if both are even or both are odd, and <b>opposite parity</b> otherwise. Every integer is even or odd, and none is both. (This can be proved by induction.)"
+    },
+    {
+     "type": "def",
+     "term": "rational",
+     "text": "A real number r is <b>rational</b> if there exist integers p and q with q ≠ 0 such that r = p/q. A real number that is not rational is <b>irrational</b>."
+    },
+    {
+     "type": "def",
+     "term": "direct proof",
+     "text": "A <b>direct proof</b> of p → q: assume p is true, then use definitions, known facts and logic to show q must be true."
+    },
+    {
+     "type": "p",
+     "text": "To prove ∀x (P(x) → Q(x)) directly: let x be an <b>arbitrary</b> element of the domain satisfying P(x), then prove Q(x)."
+    },
+    {
+     "type": "tip",
+     "text": "Most early proofs are just “plug in the definition and simplify.”"
+    },
+    {
+     "type": "list",
+     "items": [
+      "Write down what you're assuming, <b>unpacked with the definition</b>: “n is odd, so n = 2k + 1 for some integer k.”",
+      "Write down what you want, also unpacked: “I need n² = 2(something) + 1.”",
+      "Do algebra until the thing you have looks like the thing you want."
+     ]
+    },
+    {
+     "type": "thm",
+     "name": "Theorem",
+     "text": "For all integers n, if n is even then n² is even.",
+     "proof": [
+      {
+       "type": "p",
+       "text": "Assume n is even, so n = 2k for some integer k. Then n² = (2k)² = 4k² = 2(2k²). Since 2k² is an integer, n² is even."
+      }
+     ]
+    },
+    {
+     "type": "thm",
+     "name": "Theorem",
+     "text": "If n is odd, then n² is odd.",
+     "proof": [
+      {
+       "type": "p",
+       "text": "Assume n is odd, so n = 2k + 1 for some integer k. Then n² = 4k² + 4k + 1 = 2(2k² + 2k) + 1, so n² is odd."
+      }
+     ]
+    },
+    {
+     "type": "thm",
+     "name": "Theorem",
+     "text": "If a, b, c are odd integers, then a + b + c is odd.",
+     "proof": [
+      {
+       "type": "p",
+       "text": "Assume a, b, c are odd. By definition a = 2k + 1, b = 2m + 1, c = 2n + 1 for some integers k, m, n. So a + b + c = 2(k + m + n) + 3 = 2(k + m + n + 1) + 1, which is odd."
+      }
+     ]
+    },
+    {
+     "type": "warn",
+     "text": "Notice the last proof uses <b>three different letters</b> k, m, n. If you wrote a = 2k + 1 and b = 2k + 1 with the same k, you'd be secretly assuming a = b. Each number gets its own fresh variable."
+    },
+    {
+     "type": "thm",
+     "name": "Theorem",
+     "text": "If r and s are rational, then r + s is rational.",
+     "proof": [
+      {
+       "type": "p",
+       "text": "Assume r, s are rational. By definition r = p/q and s = n/m for integers p, q, m, n with q ≠ 0 and m ≠ 0. Then r + s = mp/(mq) + nq/(mq) = (mp + nq)/(mq). Since mp + nq and mq are integers and mq ≠ 0, r + s is rational by definition."
+      }
+     ]
+    },
+    {
+     "type": "p",
+     "text": "<b>Two degenerate kinds of proof</b>"
+    },
+    {
+     "type": "p",
+     "text": "A <b>vacuous proof</b> shows p → q by showing p is false (e.g. “if n > 1 then n² > n” is vacuously true for n = 0). A <b>trivial proof</b> shows p → q by showing q is true, without using p."
+    },
+    {
+     "type": "thm",
+     "name": "Model proof (direct): the square of an odd integer is odd",
+     "text": "For every integer n, if n is odd then n² is odd.",
+     "proof": [
+      {
+       "type": "p",
+       "text": "Let n be an arbitrary odd integer. By definition, n = 2k + 1 for some integer k."
+      },
+      {
+       "type": "p",
+       "text": "Then n² = (2k + 1)² = 4k² + 4k + 1 = 2(2k² + 2k) + 1."
+      },
+      {
+       "type": "p",
+       "text": "Since 2k² + 2k is an integer, n² has the form 2(integer) + 1, so n² is odd. □"
+      }
+     ]
+    },
+    {
+     "type": "steps",
+     "title": "Write a direct proof from the definitions",
+     "items": [
+      "<b>Find p and q.</b> Rewrite the claim as “for every n, if <i>p</i> then <i>q</i>.” Example: “the product of two odd numbers is odd” means “if m and n are odd, then mn is odd.”",
+      "<b>First line:</b> “Assume <i>p</i>.” Name the objects: “Let m and n be odd integers.” Do not pick a specific number like 3. They must be arbitrary.",
+      "<b>Unpack p with the definition.</b> Odd means = 2(integer) + 1. Even means = 2(integer). Rational means = p/q with integers p, q and q ≠ 0. Write “for some integer k.”",
+      "<b>Write the target on scratch paper.</b> What does q look like unpacked? “I need mn = 2(something) + 1.”",
+      "<b>Do algebra.</b> Substitute, expand, then factor out a 2 (or combine into one fraction) so it matches the target shape.",
+      "<b>Say why the “something” qualifies.</b> “Since 2ab + a + b is an integer, …” or “since the bottom is a nonzero integer, …”.",
+      "<b>Last line:</b> “so mn is odd.” That is q, word for word.",
+      "<b>Check:</b> plug in a small number (like k = 1) to test your algebra. This is a check only, never the proof."
+     ]
+    },
+    {
+     "type": "steps",
+     "title": "Use fresh variables",
+     "items": [
+      "List every number in the hypothesis: a, b, c, ….",
+      "Give each one its <b>own</b> letter when you unpack it: a = 2k + 1, b = 2j + 1. Never reuse k.",
+      "Do not reuse a letter that already means something. If n is in the theorem, do not write “m = 2n.” Pick a new letter.",
+      "Say what each letter is: “for some integers k and j.”",
+      "<b>Check:</b> could your setup describe two <i>different</i> numbers, like a = 3 and b = 7? If it forces a = b, you reused a letter."
+     ]
+    },
+    {
+     "type": "steps",
+     "title": "Prove a number is rational",
+     "items": [
+      "Unpack each rational with its own letters: x = a/b, y = c/d, where a, b, c, d are integers, b ≠ 0, d ≠ 0.",
+      "Combine into <b>one</b> fraction: (top)/(bottom).",
+      "Say the top and bottom are integers (sums and products of integers are integers).",
+      "Say the bottom is not 0. A product of nonzero numbers is nonzero.",
+      "Conclude: “so it is rational by definition.” You do <b>not</b> need lowest terms."
+     ]
+    },
+    {
+     "type": "example",
+     "title": "two different odd numbers",
+     "prompt": "<b>Thm.</b> If m and n are odd integers, then mn is odd.",
+     "steps": [
+      "Assume m and n are odd integers. — <i>first line: assume p</i>",
+      "Then m = 2a + 1 and n = 2b + 1 for some integers a, b. — <i>definition of odd, two fresh letters</i>",
+      "mn = (2a + 1)(2b + 1) = 4ab + 2a + 2b + 1 — <i>expand (FOIL)</i>",
+      "= 2(2ab + a + b) + 1 — <i>factor a 2 out of everything but the 1</i>",
+      "2ab + a + b is an integer. — <i>built from integers by + and ×</i>",
+      "So mn is odd. □ — <i>matches 2(integer) + 1</i>",
+      "Check with a = 1, b = 2: m = 3, n = 5, mn = 15 = 2(7) + 1, and 2ab + a + b = 4 + 1 + 2 = 7. ✓"
+     ],
+     "answer": "So mn is odd. □"
+    },
+    {
+     "type": "example",
+     "title": "a quotient of rationals",
+     "prompt": "<b>Thm.</b> If x and y are rational and y ≠ 0, then x/y is rational.",
+     "steps": [
+      "Assume x, y are rational and y ≠ 0. — <i>assume p (all of it)</i>",
+      "x = a/b and y = c/d for integers a, b, c, d with b ≠ 0, d ≠ 0. — <i>definition of rational, fresh letters</i>",
+      "c ≠ 0 — <i>if c = 0 then y = 0, but y ≠ 0</i>",
+      "x/y = (a/b) · (d/c) = ad/(bc) — <i>dividing = multiplying by the flip</i>",
+      "ad and bc are integers. — <i>products of integers</i>",
+      "bc ≠ 0 — <i>b ≠ 0 and c ≠ 0</i>",
+      "So x/y is rational. □ — <i>integer over nonzero integer</i>",
+      "The step “c ≠ 0” is where the hypothesis y ≠ 0 gets used. If a proof never uses a hypothesis, ask why it was there."
+     ],
+     "answer": "So x/y is rational. □"
+    },
+    {
+     "type": "warn",
+     "text": "<b>Wrong:</b> “Let n = 3. Then n² = 9 is odd. □” <b>Right:</b> “Let n be odd, so n = 2k + 1 for some integer k.” (Examples check a few cases. A “for all” proof must cover every n.)"
+    },
+    {
+     "type": "warn",
+     "text": "<b>Wrong:</b> starting from the conclusion: “mn is odd, so mn = 2k + 1, so …”. <b>Right:</b> start from what you are given and work toward the conclusion. (Starting from q proves q → p, the converse.)"
+    },
+    {
+     "type": "warn",
+     "text": "<b>Wrong:</b> “n = 2k + 1” with no comment. <b>Right:</b> “n = 2k + 1 <b>for some integer k</b>.” (If k could be 1/2, then 2k + 1 = 2 would count as odd.)"
+    },
+    {
+     "type": "warn",
+     "text": "<b>Wrong:</b> stopping at “n² = 2(2k² + 2k) + 1.” <b>Right:</b> add “since 2k² + 2k is an integer, n² is odd.” (The proof is not done until you say the definition is met.)"
+    },
+    {
+     "type": "warn",
+     "text": "<b>Wrong:</b> “irrational means it has infinitely many decimals.” <b>Right:</b> irrational means real and <b>not</b> of the form p/q. (1/3 = 0.333… has infinitely many decimals and is rational.)"
+    }
+   ]
+  },
+  {
+   "title": "Proof by contraposition",
+   "blocks": [
+    {
+     "type": "tip",
+     "text": "Two indirect strategies: prove the contrapositive (¬q → ¬p), or assume the statement is false and reach something impossible."
+    },
+    {
+     "type": "def",
+     "term": "proof by contraposition",
+     "text": "Since p → q ≡ ¬q → ¬p, to prove p implies q we can instead prove ¬q implies ¬p. This is <b>proof by contraposition</b>."
+    },
+    {
+     "type": "p",
+     "text": "<b>Start the proof with “By contraposition.”</b> and state the contrapositive you're proving."
+    },
+    {
+     "type": "tip",
+     "text": "Use contraposition when the <b>hypothesis is hard to unpack but the negated conclusion is easy</b>. “n² is even” gives you nothing about n directly. “n is not even,” i.e. “n is odd,” gives you n = 2k + 1, which you can work with."
+    },
+    {
+     "type": "steps",
+     "title": "Template: proof by contraposition",
+     "items": [
+      "Write the claim as “if p, then q”.",
+      "First line: “We prove the contrapositive: if ¬q, then ¬p.” (in words)",
+      "Assume ¬q and unpack it with a definition.",
+      "Work forward to ¬p.",
+      "Last line: “So ¬p, which proves the contrapositive and hence the claim. □”"
+     ]
+    },
+    {
+     "type": "thm",
+     "name": "Theorem",
+     "text": "If n² is even, then n is even.",
+     "proof": [
+      {
+       "type": "p",
+       "text": "By contraposition. We show: if n is not even, then n² is not even. Assume n is not even, so n is odd. By the earlier theorem, n² is odd, so n² is not even."
+      }
+     ]
+    },
+    {
+     "type": "thm",
+     "name": "Theorem",
+     "text": "If a, b are reals and ab ≠ 0, then a ≠ 0 and b ≠ 0.",
+     "proof": [
+      {
+       "type": "p",
+       "text": "By contraposition. We need: if it's not the case that (a ≠ 0 and b ≠ 0), then ab = 0. By De Morgan, that hypothesis is “a = 0 or b = 0.” If a = 0 then ab = 0, and if b = 0 then ab = 0. So a = 0 or b = 0 implies ab = 0."
+      }
+     ]
+    },
+    {
+     "type": "thm",
+     "name": "Theorem",
+     "text": "If n, m are integers and n² + 2m is odd, then n is odd.",
+     "proof": [
+      {
+       "type": "p",
+       "text": "By contraposition. We show: if n is even then n² + 2m is even. If n = 2k, then n² + 2m = 4k² + 2m = 2(2k² + m), which is even."
+      }
+     ]
+    },
+    {
+     "type": "steps",
+     "title": "Proof by contraposition",
+     "items": [
+      "<b>Find p and q</b> in “if p, then q.”",
+      "<b>Negate both, in plain words.</b> “not even” = odd, “not irrational” = rational, “not (A and B)” = “not A or not B” (De Morgan).",
+      "<b>Write the contrapositive</b> ¬q → ¬p. The negated <i>conclusion</i> goes first.",
+      "<b>First line:</b> “By contraposition, we prove: if ¬q, then ¬p.” (Write out the actual words.)",
+      "<b>Assume ¬q</b> and unpack it with a definition.",
+      "<b>Work forward</b> with algebra until you reach ¬p exactly.",
+      "<b>Last line:</b> “So ¬p. This proves the contrapositive, so p → q is true.”",
+      "<b>Check:</b> did you start at the negated conclusion and end at the negated hypothesis? If you started at p or ended at q, it is a different proof."
+     ]
+    },
+    {
+     "type": "example",
+     "title": "contraposition with a fraction",
+     "prompt": "<b>Thm.</b> For every nonzero real x, if x is irrational, then 1/x is irrational.",
+     "steps": [
+      "By contraposition, we prove: if 1/x is rational, then x is rational. — <i>¬q → ¬p, said in the first line</i>",
+      "Assume 1/x is rational, so 1/x = p/q for integers p, q with q ≠ 0. — <i>unpack ¬q with the definition</i>",
+      "p ≠ 0 — <i>1/x is never 0, so its top isn't 0</i>",
+      "x = q/p — <i>flip both sides</i>",
+      "q, p are integers and p ≠ 0. — <i>checks the definition</i>",
+      "So x is rational. □ — <i>reached ¬p exactly</i>",
+      "Why not direct? “x is irrational” only tells you what x is <i>not</i>. There is no formula to plug in. The negated conclusion “1/x = p/q” gives you a formula."
+     ],
+     "answer": "So x is rational. □"
+    },
+    {
+     "type": "warn",
+     "text": "<b>Wrong:</b> contrapositive of “if p then q” is “if ¬p then ¬q.” <b>Right:</b> it is “if ¬q then ¬p.” (“If ¬p then ¬q” is the inverse, and it is <i>not</i> equivalent. Flip <i>and</i> negate.)"
+    }
+   ]
+  },
+  {
+   "title": "Proof by contradiction: √2 and the primes",
+   "blocks": [
+    {
+     "type": "def",
+     "term": "Proof by contradiction",
+     "text": "To prove p, assume ¬p and derive something false (a contradiction). This works because (¬p → F) ≡ p."
+    },
+    {
+     "type": "p",
+     "text": "<b>Begin with “Assume for a contradiction that …”</b> and end with <b>“Contradiction!”</b> plus a sentence saying what the contradiction is."
+    },
+    {
+     "type": "steps",
+     "title": "Template: proof by contradiction",
+     "items": [
+      "First line: “Assume for a contradiction that …” (for p → q: assume p and ¬q).",
+      "Unpack every assumption with definitions.",
+      "Derive two facts that clash (even and odd, lowest terms but both even, a prime dividing 1, …).",
+      "Last line: “Contradiction! [name the clash]. So the statement is true. □”"
+     ]
+    },
+    {
+     "type": "warn",
+     "text": "The negation of p → q is p ∧ ¬q, not “¬p → ¬q.” So you assume <b>p is true and q is false</b>."
+    },
+    {
+     "type": "warn",
+     "text": "Example: to prove “if x + y is irrational, then x is irrational or y is irrational” by contradiction, assume x + y is irrational <b>and</b> x is rational <b>and</b> y is rational. (De Morgan turned “not (x irrational or y irrational)” into “x rational and y rational.”)"
+    },
+    {
+     "type": "thm",
+     "name": "Theorem",
+     "text": "If a, b, c are integers, then at least one of a + b, a + c, b + c is even.",
+     "proof": [
+      {
+       "type": "p",
+       "text": "Assume for a contradiction that a, b, c are integers and a + b, a + c, b + c are all odd. A sum of three odd integers is odd, so (a + b) + (a + c) + (b + c) is odd. But it equals 2a + 2b + 2c = 2(a + b + c), which is even. Contradiction! It can't be both even and odd."
+      }
+     ]
+    },
+    {
+     "type": "thm",
+     "name": "Model proof (contradiction): √2 is irrational",
+     "text": "√2 is irrational.",
+     "proof": [
+      {
+       "type": "p",
+       "text": "Suppose for a contradiction that √2 is rational. Then we can write √2 = p/q as a fraction <b>in lowest terms</b>, so p and q share no common factors; in particular p and q are not both even. Squaring, 2 = p²/q², so p² = 2q², so p² is even. Since p² is even, p is even (theorem above), so p = 2k for some k. Then (2k)² = 2q², so 4k² = 2q², so q² = 2k², so q² is even, so q is even. Contradiction! p and q are both even, but p/q was in lowest terms. So √2 is irrational. □"
+      }
+     ]
+    },
+    {
+     "type": "thm",
+     "name": "Model proof (contradiction): there are infinitely many primes",
+     "text": "There are infinitely many prime numbers.",
+     "proof": [
+      {
+       "type": "p",
+       "text": "Assume for a contradiction that there are only finitely many primes, p₁, p₂, …, pₙ."
+      },
+      {
+       "type": "p",
+       "text": "Let N = p₁p₂⋯pₙ + 1. Since N > 1, N has at least one prime factor q (every integer > 1 is a product of primes)."
+      },
+      {
+       "type": "p",
+       "text": "q is one of the pᵢ, so q | p₁p₂⋯pₙ. Also q | N. So q divides N − p₁p₂⋯pₙ = 1."
+      },
+      {
+       "type": "p",
+       "text": "Contradiction! No prime divides 1. So there are infinitely many primes. □"
+      }
+     ]
+    },
+    {
+     "type": "warn",
+     "text": "<b>Wrong:</b> “N = p₁⋯pₙ + 1 is prime.” <b>Right:</b> N just has a prime factor not on the list. Example: 2·3·5·7·11·13 + 1 = 30031 = 59 · 509 is not prime, but 59 and 509 are new primes."
+    },
+    {
+     "type": "tip",
+     "text": "Fermat’s Last Theorem (proved by Andrew Wiles in 1995) says xⁿ + yⁿ = zⁿ has no positive integer solutions for n > 2. It gives a slick proof that ∛2 is irrational (if ∛2 = p/q then q³ + q³ = p³), but on an exam prove such facts directly, the way √2 is done below."
+    },
+    {
+     "type": "table",
+     "head": [
+      "",
+      "Contraposition",
+      "Contradiction"
+     ],
+     "rows": [
+      [
+       "Proves",
+       "an implication p → q",
+       "any statement p"
+      ],
+      [
+       "You assume",
+       "¬q",
+       "¬p (for p → q: assume p ∧ ¬q)"
+      ],
+      [
+       "You must reach",
+       "specifically ¬p",
+       "anything false"
+      ],
+      [
+       "First words",
+       "“By contraposition, …”",
+       "“Assume for a contradiction that …”"
+      ]
+     ]
+    },
+    {
+     "type": "warn",
+     "text": "Direct proof of ∀x (P(x) → Q(x)): start with “Assume x is such that P(x) is true” and end with “so Q(x) is true.”"
+    },
+    {
+     "type": "warn",
+     "text": "By contraposition: <b>say so</b> (“We prove this by contraposition”)."
+    },
+    {
+     "type": "warn",
+     "text": "By contradiction: start “Assume for a contradiction that …” and end “Contradiction!” with an explanation."
+    },
+    {
+     "type": "warn",
+     "text": "Don't prove the <b>converse</b> by accident. Assuming the conclusion and deriving the hypothesis proves q → p, not p → q."
+    },
+    {
+     "type": "steps",
+     "title": "Proof by contradiction",
+     "items": [
+      "<b>Write what you want to prove.</b> If it is “if p, then q,” its negation is p ∧ ¬q.",
+      "<b>First line:</b> “Assume for a contradiction that p and not q.” For a plain statement like “√3 is irrational,” assume its opposite: “√3 is rational.”",
+      "<b>Unpack</b> everything you assumed with definitions.",
+      "<b>Hunt for a clash</b>: a number that is both even and odd, a fraction in lowest terms whose top and bottom are both even, a rational that is also irrational, an integer strictly between 0 and 1.",
+      "<b>Last line:</b> “Contradiction! [Say exactly which two facts clash.] So the original statement is true.”"
+     ]
+    },
+    {
+     "type": "steps",
+     "title": "Pick the method",
+     "items": [
+      "<b>Try direct first.</b> Does the hypothesis unpack into a formula (n = 2k + 1, r = p/q) that you can push forward? Then go direct.",
+      "<b>Hypothesis is useless, but ¬(conclusion) is easy?</b> Use contraposition. Signs: hypothesis is about n², 3n + 2, or 7n + 4, and the conclusion is about n.",
+      "<b>Conclusion says “irrational,” “not,” “no,” or “infinitely many”?</b> Its negation is a positive fact you can unpack (“rational,” “there is one,” “finitely many”). Use contradiction.",
+      "<b>Not an “if…then” at all</b> (like “√2 is irrational”)? Contraposition doesn't apply. Use contradiction."
+     ]
+    },
+    {
+     "type": "steps",
+     "title": "√2 is irrational, from memory",
+     "items": [
+      "Assume for a contradiction that √2 is rational.",
+      "Write √2 = p/q, integers, q ≠ 0, <b>in lowest terms</b>, so p and q are not both even.",
+      "Square and clear the fraction: p² = 2q². So p² is even.",
+      "So p is even (by “n² even → n even”). Write p = 2k.",
+      "Plug in: 4k² = 2q², so q² = 2k². So q² is even, so q is even.",
+      "Contradiction! p and q are both even, but the fraction was in lowest terms."
+     ]
+    },
+    {
+     "type": "p",
+     "text": "Memory hook: <b>lowest terms, square, p even, plug in, q even, clash.</b>"
+    },
+    {
+     "type": "example",
+     "title": "contradiction: rational + irrational",
+     "prompt": "<b>Thm.</b> If r is rational and x is irrational, then r + x is irrational.",
+     "steps": [
+      "Assume for a contradiction that r is rational, x is irrational, and r + x is rational. — <i>p ∧ ¬q</i>",
+      "r = c/d and r + x = a/b, integers, b ≠ 0, d ≠ 0. — <i>unpack both rationals, fresh letters</i>",
+      "x = (r + x) − r = a/b − c/d — <i>solve for x</i>",
+      "= (ad − bc)/(bd) — <i>common denominator</i>",
+      "ad − bc and bd are integers, and bd ≠ 0. — <i>b ≠ 0 and d ≠ 0</i>",
+      "So x is rational. — <i>definition of rational</i>",
+      "Contradiction! x is both rational and irrational. □ — <i>name the clash</i>",
+      "Use it: √2 is irrational, so 3 + √2 and −5 + √2 are irrational right away."
+     ],
+     "answer": "Contradiction! x is both rational and irrational. □"
+    },
+    {
+     "type": "warn",
+     "text": "<b>Wrong:</b> for a contradiction proof of p → q, assuming “p → ¬q” or “¬p.” <b>Right:</b> assume <b>p and ¬q</b>. (¬(p → q) ≡ p ∧ ¬q. You keep the hypothesis and deny the conclusion.)"
+    },
+    {
+     "type": "warn",
+     "text": "<b>Wrong:</b> negating “a ≠ 0 and b ≠ 0” as “a = 0 and b = 0.” <b>Right:</b> “a = 0 or b = 0.” (De Morgan flips ∧ to ∨.)"
+    },
+    {
+     "type": "warn",
+     "text": "<b>Wrong:</b> in the √2 proof, leaving out “lowest terms.” <b>Right:</b> say it on the line where you write √2 = p/q. (Without it, “p and q are both even” is not a contradiction at all. 2/2 is a fine fraction.)"
+    },
+    {
+     "type": "warn",
+     "text": "<b>Wrong:</b> no opening phrase, so the grader can't tell which method you are using. <b>Right:</b> “By contraposition, …” or “Assume for a contradiction that …”. (Graders expect it.)"
+    }
+   ]
+  },
+  {
+   "title": "Proof by cases",
+   "blocks": [
+    {
+     "type": "tip",
+     "text": "Split into cases that cover everything. To show something exists, find it (or show it must exist). One counterexample kills a “for all.”"
+    },
+    {
+     "type": "def",
+     "term": "Proof by cases",
+     "text": "To prove (p₁ ∨ p₂ ∨ … ∨ pₙ) → q, use [(p₁ ∨ … ∨ pₙ) → q] ≡ [(p₁ → q) ∧ … ∧ (pₙ → q)]: show each case separately implies q."
+    },
+    {
+     "type": "p",
+     "text": "Often the hypothesis isn't an “or” yet. Then first split it into cases that cover every possibility (n even / n odd; x ≥ 0 / x &lt; 0; n mod 3 = 0, 1, 2), and handle each."
+    },
+    {
+     "type": "thm",
+     "name": "Theorem",
+     "text": "If n is even or m is even, then nm is even.",
+     "proof": [
+      {
+       "type": "p",
+       "text": "Case 1: n is even, so n = 2k and nm = 2(km), even. Case 2: m is even, so m = 2k and nm = 2(nk), even."
+      }
+     ]
+    },
+    {
+     "type": "thm",
+     "name": "Model proof (cases on parity)",
+     "text": "For every integer n, n(n + 1) is even.",
+     "proof": [
+      {
+       "type": "p",
+       "text": "By cases on n's parity. Case 1: n = 2k. Then n(n + 1) = 2k(2k + 1) = 2(2k² + k), even. Case 2: n = 2k + 1. Then n(n + 1) = (2k + 1)(2k + 2) = 4k² + 6k + 2 = 2(2k² + 3k + 1), even."
+      }
+     ]
+    },
+    {
+     "type": "thm",
+     "name": "Theorem",
+     "text": "n² + n + 1 is odd for every integer n.",
+     "proof": [
+      {
+       "type": "p",
+       "text": "Case n = 2k: n² + n + 1 = 4k² + 2k + 1 = 2(2k² + k) + 1. Case n = 2k + 1: 4k² + 4k + 1 + 2k + 1 + 1 = 4k² + 6k + 3 = 2(2k² + 3k + 1) + 1. Odd either way."
+      }
+     ]
+    },
+    {
+     "type": "def",
+     "term": "absolute value",
+     "text": "The <b>absolute value</b> of a real number x is |x| = x if x ≥ 0, and |x| = −x if x &lt; 0."
+    },
+    {
+     "type": "thm",
+     "name": "Lemma",
+     "text": "For all real x: −|x| ≤ x ≤ |x|.",
+     "proof": [
+      {
+       "type": "p",
+       "text": "Case 1: x ≥ 0. Then |x| = x, so x ≤ |x|, and −|x| = −x ≤ 0 ≤ x. Case 2: x &lt; 0. Then |x| = −x > 0, so x &lt; 0 &lt; |x|, and −|x| = x. □"
+      }
+     ]
+    },
+    {
+     "type": "thm",
+     "name": "Triangle inequality",
+     "text": "For all real x, y: |x + y| ≤ |x| + |y|.",
+     "proof": [
+      {
+       "type": "p",
+       "text": "Case 1: x + y ≥ 0. Then |x + y| = x + y ≤ |x| + |y|, since x ≤ |x| and y ≤ |y|. Case 2: x + y &lt; 0. Then |x + y| = −x − y. By the previous theorem −x ≤ |x| and −y ≤ |y|, so |x + y| ≤ |x| + |y|. □"
+      }
+     ]
+    },
+    {
+     "type": "thm",
+     "name": "Model proof (cases mod 3, inside a contrapositive)",
+     "text": "If 3 | ab, then 3 | a or 3 | b.",
+     "proof": [
+      {
+       "type": "p",
+       "text": "By contraposition: assume 3 ∤ a and 3 ∤ b, i.e. a, b ≢ 0 (mod 3). Four cases: (a, b) ≡ (1, 1) gives ab ≡ 1; (1, 2) gives 2; (2, 1) gives 2; (2, 2) gives 4 ≡ 1 (mod 3). In every case ab ≢ 0 (mod 3), so 3 ∤ ab."
+      }
+     ]
+    },
+    {
+     "type": "steps",
+     "title": "Proof by cases",
+     "items": [
+      "<b>Pick what to split on.</b> Even/odd stuff: parity (n = 2k, n = 2k + 1). Absolute values: sign (x ≥ 0, x &lt; 0). Divisibility by 3: remainders (n = 3k, 3k + 1, 3k + 2).",
+      "<b>Check the cases cover everything.</b> Every possible n must land in some case. Don't forget 0 when splitting on sign.",
+      "<b>First line:</b> “We split into cases.” Label each one: “Case 1: n = 3k for some integer k.”",
+      "<b>Prove the goal in each case separately.</b> Each case is a mini direct proof. You may use only that case's assumption.",
+      "<b>Symmetric cases?</b> Say “WLOG” (without loss of generality) and do just one, explaining that the other is the same with the roles swapped.",
+      "<b>Last line:</b> “In every case, [goal]. □”"
+     ]
+    },
+    {
+     "type": "example",
+     "title": "cases on remainders mod 3",
+     "prompt": "<b>Thm.</b> For every integer n, n² has the form 3j or 3j + 1 for some integer j. (So n² never has remainder 2 when divided by 3.)",
+     "steps": [
+      "Every integer is 3k, 3k + 1, or 3k + 2 for some integer k. — <i>division by 3: remainder 0, 1, or 2</i>",
+      "Case 1: n = 3k. n² = 9k² = 3(3k²). — <i>form 3j with j = 3k²</i>",
+      "Case 2: n = 3k + 1. n² = 9k² + 6k + 1 = 3(3k² + 2k) + 1. — <i>form 3j + 1 with j = 3k² + 2k</i>",
+      "Case 3: n = 3k + 2. n² = 9k² + 12k + 4 = 3(3k² + 4k + 1) + 1. — <i>pull 3 out of the 4: 4 = 3 + 1</i>",
+      "In every case n² is 3j or 3j + 1. □ — <i>the cases covered every n</i>",
+      "Spot check: 5 = 3(1) + 2, and 5² = 25 = 3(8) + 1. ✓"
+     ],
+     "answer": "In every case n² is 3j or 3j + 1. □"
+    },
+    {
+     "type": "example",
+     "title": "cases on sign, with WLOG",
+     "prompt": "<b>Thm.</b> For all real x, y: |xy| = |x| |y|.",
+     "steps": [
+      "Split on the signs of x and y. — <i>|·| is defined by sign</i>",
+      "Case 1: x ≥ 0, y ≥ 0. Then xy ≥ 0, so |xy| = xy = |x| |y|. — <i>|x| = x, |y| = y</i>",
+      "Case 2: x ≥ 0, y &lt; 0. Then xy ≤ 0, so |xy| = −xy = x(−y) = |x| |y|. — <i>|z| = −z also works when z = 0</i>",
+      "Case 3: x &lt; 0, y ≥ 0. Same as Case 2 with x and y swapped. — <i>WLOG: symmetric case</i>",
+      "Case 4: x &lt; 0, y &lt; 0. Then xy > 0, so |xy| = xy = (−x)(−y) = |x| |y|. — <i>negative × negative is positive</i>",
+      "In every case |xy| = |x| |y|. □ — <i>four cases cover all signs</i>"
+     ],
+     "answer": "In every case |xy| = |x| |y|. □"
+    },
+    {
+     "type": "warn",
+     "text": "<b>Wrong:</b> cases “x > 0” and “x &lt; 0.” <b>Right:</b> “x ≥ 0” and “x &lt; 0.” (x = 0 fell through the cracks. Cases must cover everything.)"
+    }
+   ]
+  },
+  {
+   "title": "If-and-only-if proofs",
+   "blocks": [
+    {
+     "type": "p",
+     "text": "Many theorems say “p if and only if q” (p ↔ q). Since p ↔ q ≡ (p → q) ∧ (q → p), an iff proof is <b>two proofs</b>. The exact step where you need two directions: after finishing “(⇒) assume p, prove q”, you must start over with “(⇐) assume q, prove p”. Each direction may use a different method."
+    },
+    {
+     "type": "steps",
+     "title": "Template: if-and-only-if proof",
+     "items": [
+      "State the two directions: “(⇒) If p then q” and “(⇐) If q then p”.",
+      "(⇒) Prove p → q by any method (direct, contrapositive, contradiction, cases).",
+      "(⇐) Prove q → p, again by any method. The converse is a genuinely new claim.",
+      "Conclude: “Both directions hold, so p ↔ q. □”",
+      "For a chain “TFAE (a), (b), (c)”, proving (a) → (b) → (c) → (a) is enough."
+     ]
+    },
+    {
+     "type": "thm",
+     "name": "Model proof (iff): n is even iff n² is even",
+     "text": "For every integer n, n is even if and only if n² is even.",
+     "proof": [
+      {
+       "type": "p",
+       "text": "(⇒) Direct. Assume n is even, so n = 2k for some integer k. Then n² = 4k² = 2(2k²), which is even."
+      },
+      {
+       "type": "p",
+       "text": "(⇐) Contrapositive. We show: if n is not even then n² is not even. If n is odd, n = 2k + 1, and n² = 2(2k² + 2k) + 1 is odd."
+      },
+      {
+       "type": "p",
+       "text": "Both directions hold, so n is even ⇔ n² is even. □"
+      }
+     ]
+    },
+    {
+     "type": "example",
+     "title": "An iff with two different methods",
+     "prompt": "Prove: for every integer n, n is odd if and only if n² + 2n is odd.",
+     "steps": [
+      "(⇒) Direct. Assume n is odd. Then n² + 2n = n(n + 2), and n + 2 is also odd, so it is a product of two odd numbers, which is odd.",
+      "(⇐) Contrapositive. Assume n is not odd, so n = 2k. Then n² + 2n = 4k² + 4k = 2(2k² + 2k), even, so not odd.",
+      "Both directions are done, so the iff holds. (Spot check: n = 3 gives 15, odd; n = 4 gives 24, even.)"
+     ],
+     "answer": "Proved: (⇒) direct, (⇐) by contraposition"
+    },
+    {
+     "type": "warn",
+     "text": "<b>Wrong:</b> proving the same direction twice in different words. <b>Right:</b> label (⇒) and (⇐), and check that the second one starts from q."
+    },
+    {
+     "type": "warn",
+     "text": "<b>Wrong:</b> in (⇐), assuming p again. <b>Right:</b> in (⇐) your hypothesis is q, and p is the goal."
+    }
+   ]
+  },
+  {
+   "title": "Existence, uniqueness and counterexamples",
+   "blocks": [
+    {
+     "type": "p",
+     "text": "<b>Existence proofs</b>"
+    },
+    {
+     "type": "def",
+     "term": "constructive",
+     "text": "To prove ∃x P(x): a <b>constructive</b> proof exhibits a specific x and checks P(x). A <b>nonconstructive</b> proof shows some x must exist without saying which one (often by contradiction or by cases)."
+    },
+    {
+     "type": "example",
+     "title": "Constructive existence",
+     "prompt": "Show there are irrational x, y with x + y rational, and a rational x and irrational y with xʸ rational.",
+     "steps": [
+      "Try simple values: x = √2, y = −√2. Both are irrational and x + y = 0 = 0/1 is rational (so is xy = −2).",
+      "For the second, take x = 1 (rational) and y = √2 (irrational): 1^√2 = 1, rational.",
+      "Each witness is named and checked, which is what makes the proof constructive."
+     ],
+     "answer": "x = √2, y = −√2; and x = 1, y = √2"
+    },
+    {
+     "type": "p",
+     "text": "Mersenne claimed in 1644 that 2⁶⁷ − 1 is prime. In 1903 Frank Nelson Cole silently wrote 2⁶⁷ − 1 = 147,573,952,589,676,412,927 = 193,707,721 × 761,838,257,287 on the board, multiplied it out, and sat down to a standing ovation. A constructive disproof by one example."
+    },
+    {
+     "type": "thm",
+     "name": "Model proof (nonconstructive existence)",
+     "text": "There exist irrational numbers x, y such that xʸ is rational.",
+     "proof": [
+      {
+       "type": "p",
+       "text": "Case 1: √2^√2 is rational. Take x = y = √2. Case 2: √2^√2 is irrational. Take x = √2^√2 and y = √2. Then xʸ = (√2^√2)^√2 = √2^(√2·√2) = (√2)² = 2, rational."
+      }
+     ]
+    },
+    {
+     "type": "p",
+     "text": "We never learn which case holds; that's what makes it nonconstructive. (In fact √2^√2 is irrational, by the Gelfond–Schneider theorem.)"
+    },
+    {
+     "type": "p",
+     "text": "<b>Counterexamples</b>"
+    },
+    {
+     "type": "def",
+     "term": "counterexample",
+     "text": "If ∀x P(x) is false, there must be some x with ¬P(x): a <b>counterexample</b>. One counterexample disproves a “for all.”"
+    },
+    {
+     "type": "example",
+     "title": "Disprove with a counterexample",
+     "prompt": "Disprove: (a) “If x, y are irrational then x + y is irrational.” (b) “n² − n + 41 is prime for every positive integer n.”",
+     "steps": [
+      "(a) Need x, y satisfying the hypothesis (both irrational) but failing the conclusion. x = √2, y = −√2: both irrational, x + y = 0 is rational.",
+      "(b) Small n all give primes (41, 43, 47, 53, …), and in fact every n from 1 to 40 does. That proves nothing about all n.",
+      "Look for a value that makes the expression factor: n = 41 gives 41² − 41 + 41 = 41², which is not prime."
+     ],
+     "answer": "(a) x = √2, y = −√2; (b) n = 41 gives 41²"
+    },
+    {
+     "type": "p",
+     "text": "When asked to disprove, give the specific counterexample <b>and verify it</b> satisfies the hypotheses but not the conclusion."
+    },
+    {
+     "type": "tip",
+     "text": "Counterexamples happen in real research: mathematicians expected every convex solid of uniform density to have at least two stable resting positions, until the Gömböc (2006), a convex solid with exactly one stable and one unstable equilibrium."
+    },
+    {
+     "type": "p",
+     "text": "<b>Uniqueness proofs</b>"
+    },
+    {
+     "type": "def",
+     "term": "Uniqueness proof",
+     "text": "To prove “there is a <b>unique</b> x with P(x)”, do two steps:"
+    },
+    {
+     "type": "list",
+     "items": [
+      "<b>Existence:</b> show ∃x P(x).",
+      "<b>Uniqueness:</b> show that if P(x) and P(y), then x = y."
+     ]
+    },
+    {
+     "type": "thm",
+     "name": "Model proof (existence and uniqueness)",
+     "text": "If n, m are integers and n ≠ 0, there is a unique rational r with nr + m = 0.",
+     "proof": [
+      {
+       "type": "p",
+       "text": "<b>Existence.</b> Let r = −m/n, which is rational since m, n are integers and n ≠ 0. Then nr + m = −m + m = 0."
+      },
+      {
+       "type": "p",
+       "text": "<b>Uniqueness.</b> Suppose nr + m = 0 and ns + m = 0. Then nr = −m = ns, and dividing by n ≠ 0 gives r = s. □"
+      }
+     ]
+    },
+    {
+     "type": "p",
+     "text": "Proofs often use <b>“without loss of generality” (WLOG)</b>: when two cases are symmetric (e.g. x ≤ y vs y ≤ x), prove one and say the other is the same with the roles swapped."
+    },
+    {
+     "type": "steps",
+     "title": "Constructive existence",
+     "items": [
+      "Goal is ∃x P(x). Play with small or simple values (0, 1, 2, √2, −√2) until one works.",
+      "Write it: “Let x = ….”",
+      "<b>Verify P(x)</b> by plugging in, showing the arithmetic.",
+      "Check every condition in P, like “positive,” “distinct,” or “irrational.”"
+     ]
+    },
+    {
+     "type": "steps",
+     "title": "Nonconstructive existence",
+     "items": [
+      "Use this when you can prove something exists but can't point to it.",
+      "<b>Option A, cases:</b> “Either A or not A.” Show that each case hands you a valid example, even though you don't know which case holds.",
+      "<b>Option B, contradiction:</b> “Assume for a contradiction that no such x exists,” and derive something false.",
+      "End by saying such an x exists. You do not have to say which one."
+     ]
+    },
+    {
+     "type": "steps",
+     "title": "Disprove with a counterexample",
+     "items": [
+      "Write the claim as “for all x, if P(x) then Q(x).”",
+      "You need one x where P(x) is true and Q(x) is false.",
+      "Try small numbers, 0, negatives, 2 (the even prime), √2, and the edges of the domain.",
+      "<b>Verify both halves:</b> “x satisfies P because …” and “Q(x) fails because …”.",
+      "Write: “So the claim is false.” One example is enough."
+     ]
+    },
+    {
+     "type": "steps",
+     "title": "Prove uniqueness",
+     "items": [
+      "<b>Existence:</b> find an x with P(x) and verify it.",
+      "<b>Uniqueness:</b> “Suppose P(x) and P(y).” Use both facts to show x = y.",
+      "Don't assume x = y anywhere. That is what you are proving.",
+      "If you are dividing or cancelling, say why it's allowed (“since n ≠ 0”).",
+      "<b>Check:</b> try to find a second solution, like −2 for x² = 4. If one exists, the uniqueness claim is false."
+     ]
+    },
+    {
+     "type": "warn",
+     "text": "<b>Wrong:</b> “It works for n = 1, 2, 3, 4, so it's true for all n.” <b>Right:</b> examples prove “there exists,” and disprove “for all.” They never prove “for all.” (n² − n + 11 is prime for n = 1 to 10, then fails at n = 11.)"
+    },
+    {
+     "type": "warn",
+     "text": "<b>Wrong:</b> a counterexample that breaks the hypothesis. Disproving “if x, y are irrational, then xy is irrational” with x = 2, y = 3. <b>Right:</b> x = y = √2: both irrational, and xy = 2 is rational. (The example must satisfy P and fail Q.)"
+    },
+    {
+     "type": "warn",
+     "text": "<b>Wrong:</b> proving uniqueness by just showing one solution works. <b>Right:</b> also show that any two solutions are equal. (“There is a solution” and “there is only one” are different claims.)"
+    },
+    {
+     "type": "warn",
+     "text": "<b>Wrong:</b> |x + y| = |x| + |y|. <b>Right:</b> |x + y| ≤ |x| + |y|. (x = 1, y = −1 gives 0 on the left and 2 on the right.)"
+    }
+   ]
+  },
+  {
+   "title": "Find the flaw",
+   "blocks": [
+    {
+     "type": "p",
+     "text": "Exams often show a “proof” and ask what is wrong. Check each line against these classic errors."
+    },
+    {
+     "type": "steps",
+     "title": "Checklist: find the flaw",
+     "items": [
+      "<b>Division by zero</b> (or by something that might be 0).",
+      "<b>Assuming the conclusion</b> (circular reasoning), or starting from the conclusion and reaching something true.",
+      "<b>Proving the converse</b> instead of the claim.",
+      "<b>Reused variable</b>: writing a = 2k + 1 and b = 2k + 1 forces a = b.",
+      "<b>Proof by example</b> for a “for all” claim.",
+      "<b>Wrong negation</b> in a contrapositive or contradiction setup.",
+      "<b>Cases that do not cover everything</b> (forgot 0, forgot negatives).",
+      "Then say whether the claim is true anyway, with a correct proof or a counterexample."
+     ]
+    },
+    {
+     "type": "example",
+     "title": "The “proof” that 2 = 1",
+     "prompt": "Let a = b. Then a² = ab, so a² − b² = ab − b², so (a + b)(a − b) = b(a − b), so a + b = b, so 2b = b, so 2 = 1. Find the error.",
+     "steps": [
+      "Every step up to (a + b)(a − b) = b(a − b) is valid algebra.",
+      "The next step cancels the factor a − b. But a = b, so a − b = 0: this divides by zero.",
+      "Cancelling is only allowed for a nonzero factor. The conclusion 2 = 1 is false, as it must be."
+     ],
+     "answer": "Cancelling a − b divides by zero, since a = b"
+    },
+    {
+     "type": "example",
+     "title": "Same letter for two numbers",
+     "prompt": "“Claim: the sum of two odd integers is divisible by 4. Proof: let a = 2k + 1 and b = 2k + 1. Then a + b = 4k + 2 … hmm, so actually it is 2(2k + 1).” A student then “proves” a + b is always 2 mod 4. What is wrong, and is the claim true?",
+     "steps": [
+      "Using the same k for a and b secretly assumes a = b.",
+      "Correct setup: a = 2k + 1, b = 2j + 1, so a + b = 2(k + j + 1). That is even, nothing more.",
+      "Counterexample to “divisible by 4”: 1 + 1 = 2. Counterexample to “always 2 mod 4”: 1 + 3 = 4."
+     ],
+     "answer": "Reused variable; the sum is even, but neither claim holds (1 + 1 = 2, 1 + 3 = 4)"
+    },
+    {
+     "type": "example",
+     "title": "Starting from the conclusion",
+     "prompt": "Claim: for real a, b ≥ 0, (a + b)/2 ≥ √(ab). “Proof: assume (a + b)/2 ≥ √(ab). Square: (a + b)² ≥ 4ab, so (a − b)² ≥ 0, which is true.” What is wrong? Fix it.",
+     "steps": [
+      "The argument assumes the conclusion and derives a true statement. That proves nothing: a false statement can also imply a true one.",
+      "Fix by running it forward: 0 ≤ (√a − √b)² = a − 2√(ab) + b.",
+      "Rearranging gives a + b ≥ 2√(ab), i.e. (a + b)/2 ≥ √(ab). Every step now goes from known to new."
+     ],
+     "answer": "It assumes what it wants; the claim is true, proved forward from (√a − √b)² ≥ 0"
+    }
+   ]
+  },
+  {
+   "title": "Games and strategy stealing",
+   "blocks": [
+    {
+     "type": "tip",
+     "text": "In finite two-player games with no draws, someone has a winning strategy. In Chomp, player 1 wins by “stealing” player 2's strategy."
+    },
+    {
+     "type": "thm",
+     "name": "Zermelo's theorem on finite games",
+     "text": "Suppose two players alternate moves m₁, n₁, m₂, n₂, …, m_k, n_k, each sees all earlier moves, and after k rounds exactly one player is declared the winner (no draws). Then <b>either player I or player II has a winning strategy</b>: a rule that says how to move on each turn, depending on the opponent's moves, that guarantees a win."
+    },
+    {
+     "type": "p",
+     "text": "Examples: Armageddon chess (draws count as wins for Black), Go with a half-point komi."
+    },
+    {
+     "type": "tip",
+     "text": "Let W(m₁, n₁, …, m_k, n_k) mean “player I wins.” Player I has a winning strategy iff<br>∃m₁ ∀n₁ ∃m₂ ∀n₂ … ∃m_k ∀n_k W(…)<br>Negate it: ∀m₁ ∃n₁ … ∀m_k ∃n_k ¬W(…), which says exactly that player II has a winning strategy. A statement or its negation is true, so one of them has a winning strategy. Quantifiers really are a game: ∃ is your move, ∀ is your opponent's."
+    },
+    {
+     "type": "thm",
+     "name": "Chomp: the first player wins (strategy stealing)",
+     "text": "A grid of cookies whose top-left cookie is poisoned. On each turn a player picks a remaining cookie and eats it along with every cookie below and/or to the right of it. Whoever eats the poisoned cookie loses.",
+     "proof": [
+      {
+       "type": "p",
+       "text": "By contradiction. Suppose player I has no winning strategy. By Zermelo, player II has one. Player I imagines opening by eating only the bottom-right cookie, and looks up the bite X that II's winning strategy answers with. Every bite eats the bottom-right cookie too, so the board after “bottom-right, then X” is the same as the board after X alone. So player I really opens with X, and from then on follows II's strategy. Player I is now sitting in II's winning seat, so player I has a winning strategy. Contradiction: both players can't have winning strategies."
+      }
+     ]
+    },
+    {
+     "type": "p",
+     "text": "<b>The first player has a winning strategy on every n × m board except 1 × 1.</b>"
+    },
+    {
+     "type": "p",
+     "text": "This <b>strategy-stealing</b> proof is nonconstructive. It's an open problem to describe the winning strategy explicitly for all board sizes."
+    },
+    {
+     "type": "steps",
+     "title": "Check if Zermelo's theorem applies",
+     "items": [
+      "<b>Two players taking turns?</b> Not simultaneous moves like rock-paper-scissors.",
+      "<b>Everyone sees every earlier move?</b> No hidden cards, no secret moves.",
+      "<b>Finite?</b> The game must end within some fixed number of moves. (Chomp: every bite eats at least one cookie, so an n × m board ends within nm moves.)",
+      "<b>No draws?</b> Every finished game has exactly one winner.",
+      "All four yes? Then exactly one player has a winning strategy. Zermelo doesn't tell you <i>which</i> player or <i>what</i> the strategy is."
+     ]
+    },
+    {
+     "type": "steps",
+     "title": "Write and negate the quantifier statement",
+     "items": [
+      "Player I's moves get <b>∃</b> (I gets to choose). Player II's moves get <b>∀</b> (I must survive every reply).",
+      "Write them in order: ∃m₁ ∀n₁ ∃m₂ ∀n₂ … W, where W means “I wins.”",
+      "Read it aloud: “I has a first move such that for every reply, I has a second move such that … I wins.”",
+      "To negate: flip every ∃ to ∀ and every ∀ to ∃, keep the order, and change W to ¬W.",
+      "Read the result: ∀m₁ ∃n₁ … ¬W = “whatever I does, II has an answer, and II wins.” That is II's winning strategy."
+     ]
+    },
+    {
+     "type": "steps",
+     "title": "The strategy-stealing proof (Chomp)",
+     "items": [
+      "<b>Set up:</b> “By Zermelo, someone has a winning strategy. Assume for a contradiction that it is player II.”",
+      "<b>Find a harmless move:</b> eating only the bottom-right cookie. Every later bite also removes that cookie, so this move can be “absorbed” into any other bite.",
+      "<b>Imagine</b> I opens with that move. II's winning strategy answers with some bite X.",
+      "<b>Steal:</b> the board after “bottom-right, then X” is the same as after X alone. So I simply opens with X.",
+      "<b>Swap seats:</b> now II faces the exact board II would have handed to I. I copies II's winning strategy from there on and wins.",
+      "<b>Contradiction!</b> Both players would have winning strategies. So player I has one. □"
+     ]
+    },
+    {
+     "type": "steps",
+     "title": "Find the winner of a small game by working backward",
+     "items": [
+      "Start from the end positions and label each one W (player to move wins) or L (player to move loses).",
+      "A position is <b>W</b> if <b>some</b> move leads to an L position. (∃ a good move.)",
+      "A position is <b>L</b> if <b>every</b> move leads to a W position. (∀ moves are bad.)",
+      "Work back to the starting position. W means player I wins. L means player II wins.",
+      "The winning strategy: always move to an L position."
+     ]
+    },
+    {
+     "type": "p",
+     "text": "This is exactly why Zermelo's theorem is true: every position gets a W or L label, so someone is guaranteed a win."
+    },
+    {
+     "type": "example",
+     "title": "an explicit strategy on a square board",
+     "prompt": "On n × n Chomp with n ≥ 2, strategy stealing says player I wins. On a square we can actually say how.",
+     "steps": [
+      "I eats the cookie diagonally below-right of the poison (row 2, column 2). — <i>this removes everything except row 1 and column 1</i>",
+      "What's left: the poison, plus an arm of n − 1 cookies going right and an arm of n − 1 going down. — <i>an L shape with equal arms</i>",
+      "II must bite from one arm (or eat the poison and lose). — <i>no other cookies remain</i>",
+      "I bites the same number of cookies off the other arm. — <i>mirror move: arms are equal again</i>",
+      "Repeat. The arms keep shrinking. — <i>finite game, so it must end</i>",
+      "When both arms are empty, it is II's turn, and only the poison is left. II loses. □ — <i>I always restores equal arms, so II faces the empty L</i>",
+      "Brute force confirms this is the <i>only</i> winning first move on a 3 × 3 board. So “eat the bottom-right cookie” is a tool for the proof, not the winning move."
+     ],
+     "answer": "When both arms are empty, it is II's turn, and only the poison is left. II loses. □"
+    },
+    {
+     "type": "example",
+     "title": "working backward",
+     "prompt": "There are 7 stones. Players alternate taking 1 or 2 stones. Whoever takes the last stone wins. Who has a winning strategy?",
+     "steps": [
+      "0 stones: L — <i>your opponent just took the last stone</i>",
+      "1, 2 stones: W — <i>take them all, landing on 0 (an L)</i>",
+      "3 stones: L — <i>you leave 2 or 1, both W for your opponent</i>",
+      "4, 5: W (leave 3). 6: L — <i>same pattern: multiples of 3 are L</i>",
+      "7 stones: W, by taking 1 to leave 6 — <i>a move to an L position exists</i>",
+      "After that, if II takes t, I takes 3 − t. — <i>keeps the pile a multiple of 3</i>",
+      "Player I wins. The game is finite with no draws, so Zermelo said someone wins. Working backward told us who and how."
+     ],
+     "answer": "Player I wins: take 1 to leave 6, then always leave a multiple of 3"
+    },
+    {
+     "type": "warn",
+     "text": "<b>Wrong:</b> “By Zermelo, the first player wins.” <b>Right:</b> “By Zermelo, <i>one</i> of the players has a winning strategy.” (In the 9-stone version of the game above, player II wins.)"
+    },
+    {
+     "type": "warn",
+     "text": "<b>Wrong:</b> using Zermelo on tic-tac-toe. <b>Right:</b> check for draws first. (Tic-tac-toe can end in a draw, so this version of the theorem doesn't apply.)"
+    },
+    {
+     "type": "warn",
+     "text": "<b>Wrong:</b> “Strategy stealing says: open by eating the bottom-right cookie.” <b>Right:</b> that move is only imagined in the proof. (On 3 × 3 the bottom-right opening loses. The proof doesn't tell you the real winning move.)"
+    },
+    {
+     "type": "warn",
+     "text": "<b>Wrong:</b> negating ∃m₁ ∀n₁ W as ∃m₁ ∀n₁ ¬W. <b>Right:</b> ∀m₁ ∃n₁ ¬W. (Every quantifier flips, not just W.)"
+    },
+    {
+     "type": "warn",
+     "text": "<b>Wrong:</b> forgetting the 1 × 1 board. <b>Right:</b> on 1 × 1 the only cookie is poison, so player I loses. (The harmless bottom-right move doesn't exist there, so the stealing proof fails.)"
+    }
+   ]
+  }
+ ],
+ "cards": [
+  {
+   "front": "Prove the sum of two even integers is even.",
+   "back": [
+    {
+     "type": "p",
+     "text": "2a + 2b = 2(a + b), and a + b is an integer."
+    }
+   ]
+  },
+  {
+   "front": "Prove: if n is odd, then 3n + 1 is even.",
+   "back": [
+    {
+     "type": "p",
+     "text": "n = 2k + 1, so 3n + 1 = 6k + 4 = 2(3k + 2)."
+    }
+   ]
+  },
+  {
+   "front": "What's the contrapositive of “if n² is odd then n is odd”?",
+   "back": [
+    {
+     "type": "p",
+     "text": "If n is even, then n² is even."
+    }
+   ]
+  },
+  {
+   "front": "Prove by contradiction that there's no largest integer.",
+   "back": [
+    {
+     "type": "p",
+     "text": "N + 1 is an integer bigger than N. Contradiction!"
+    }
+   ]
+  },
+  {
+   "front": "Proving p → q by contradiction: what's your first line?",
+   "back": [
+    {
+     "type": "p",
+     "text": "“Assume for a contradiction that p is true and q is false.”"
+    }
+   ]
+  },
+  {
+   "front": "Prove n² + n is even for every integer n.",
+   "back": [
+    {
+     "type": "p",
+     "text": "n = 2k: 4k² + 2k = 2(2k² + k). n = 2k + 1: 4k² + 6k + 2 = 2(2k² + 3k + 1)."
+    }
+   ]
+  },
+  {
+   "front": "Disprove: “every prime is odd.”",
+   "back": [
+    {
+     "type": "p",
+     "text": "2 is prime and even. One counterexample is enough."
+    }
+   ]
+  },
+  {
+   "front": "Is the √2^√2 proof constructive?",
+   "back": [
+    {
+     "type": "p",
+     "text": "No. It shows x, y exist without telling you which case is true."
+    }
+   ]
+  },
+  {
+   "front": "Chomp on a 1×2 board (the poisoned cookie plus one more). Who wins?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Player 1: eat the safe cookie, and player 2 is left with the poison."
+    }
+   ]
+  },
+  {
+   "front": "Why is the strategy-stealing argument nonconstructive?",
+   "back": [
+    {
+     "type": "p",
+     "text": "It proves player 1 has a winning strategy without saying what it is."
+    }
+   ]
+  },
+  {
+   "front": "Definitions of even, odd, rational.",
+   "back": [
+    {
+     "type": "list",
+     "items": [
+      "even: n = 2k for some integer k",
+      "odd: n = 2k + 1 for some integer k",
+      "rational: r = p/q for integers p, q with q ≠ 0"
+     ]
+    }
+   ]
+  },
+  {
+   "front": "How does a direct proof of ∀x (P(x) → Q(x)) start and end?",
+   "back": [
+    {
+     "type": "p",
+     "text": "“Let x be arbitrary with P(x).” Unpack P with definitions, do algebra, and end with “so Q(x)”, saying why the definition of Q is met."
+    }
+   ]
+  },
+  {
+   "front": "When is contraposition better than a direct proof?",
+   "back": [
+    {
+     "type": "p",
+     "text": "When the hypothesis gives you nothing to plug in (“n² is even”, “x is irrational”) but the negated conclusion does (“n = 2k + 1”, “1/x = p/q”)."
+    }
+   ]
+  },
+  {
+   "front": "For a proof of p → q by contradiction, what do you assume?",
+   "back": [
+    {
+     "type": "formula",
+     "text": "p ∧ ¬q"
+    },
+    {
+     "type": "warn",
+     "text": "Not ¬p, and not p → ¬q."
+    }
+   ]
+  },
+  {
+   "front": "Contraposition vs contradiction: what do you assume and what must you reach?",
+   "back": [
+    {
+     "type": "table",
+     "head": [
+      "",
+      "Contraposition",
+      "Contradiction"
+     ],
+     "rows": [
+      [
+       "assume",
+       "¬q",
+       "¬p (for p → q: p ∧ ¬q)"
+      ],
+      [
+       "reach",
+       "exactly ¬p",
+       "anything false"
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "front": "Prove √2 is irrational (outline).",
+   "back": [
+    {
+     "type": "list",
+     "items": [
+      "Assume √2 = p/q in lowest terms.",
+      "p² = 2q², so p² even, so p even: p = 2k.",
+      "4k² = 2q², so q² = 2k², so q even.",
+      "Both even contradicts lowest terms."
+     ]
+    }
+   ]
+  },
+  {
+   "front": "Prove there are infinitely many primes (outline).",
+   "back": [
+    {
+     "type": "p",
+     "text": "Suppose p₁, …, pₙ are all the primes. N = p₁⋯pₙ + 1 has a prime factor q, which must be some pᵢ, so q divides N − p₁⋯pₙ = 1. Contradiction."
+    }
+   ]
+  },
+  {
+   "front": "What exactly does a proof of p ↔ q require?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Two proofs: (⇒) p → q and (⇐) q → p. After the first, you must start again from q. Each may use a different method."
+    }
+   ]
+  },
+  {
+   "front": "Constructive vs nonconstructive existence?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Constructive: name a specific x and verify P(x). Nonconstructive: show some x must exist without saying which (by cases or contradiction), e.g. irrational x, y with xʸ rational via √2^√2."
+    }
+   ]
+  },
+  {
+   "front": "How do you prove uniqueness?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Existence (find one) plus uniqueness: assume P(x) and P(y) and show x = y."
+    }
+   ]
+  },
+  {
+   "front": "What makes a valid counterexample to “∀x (P(x) → Q(x))”?",
+   "back": [
+    {
+     "type": "p",
+     "text": "An x with P(x) true and Q(x) false, with both halves checked."
+    }
+   ]
+  },
+  {
+   "front": "Proof by cases: what are the rules?",
+   "back": [
+    {
+     "type": "p",
+     "text": "The cases must cover every possibility (parity, sign including 0, remainders mod 3), and each case is proved using only its own assumption."
+    }
+   ]
+  },
+  {
+   "front": "Why can’t examples prove a “for all” statement? Classic example?",
+   "back": [
+    {
+     "type": "p",
+     "text": "They check finitely many cases. n² − n + 41 is prime for n = 1 to 40 but not for n = 41."
+    }
+   ]
+  },
+  {
+   "front": "Name four classic flaws in bogus proofs.",
+   "back": [
+    {
+     "type": "list",
+     "items": [
+      "dividing by zero",
+      "assuming the conclusion / proving the converse",
+      "reusing a variable (a = 2k + 1, b = 2k + 1)",
+      "proof by example; cases that miss a value"
+     ]
+    }
+   ]
+  },
+  {
+   "front": "Zermelo’s theorem and its hypotheses.",
+   "back": [
+    {
+     "type": "p",
+     "text": "A finite two-player game with alternating moves, perfect information and no draws: exactly one player has a winning strategy. It does not say which."
+    }
+   ]
+  },
+  {
+   "front": "Strategy stealing in Chomp, in one paragraph.",
+   "back": [
+    {
+     "type": "p",
+     "text": "If player II had a winning strategy, player I could open with the bottom-right cookie, see II’s reply X, and realise that opening with X directly gives the same board; then I plays II’s strategy. Both would win, contradiction. So I wins (on every board except 1 × 1)."
+    }
+   ]
+  }
+ ],
+ "hard": [
+  {
+   "title": "Six claims: prove or give a counterexample",
+   "level": "hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "Prove each statement or give a counterexample. All letters are integers unless stated otherwise."
+    },
+    {
+     "type": "list",
+     "items": [
+      "(a) If a | bc and a ∤ b, then a | c.",
+      "(b) The product of two irrational numbers is irrational.",
+      "(c) If x > 0 is irrational, then √x is irrational.",
+      "(d) n² − n + 41 is prime for every n ≥ 1.",
+      "(e) If 6 | n², then 6 | n.",
+      "(f) If 4 | n², then 4 | n."
+     ]
+    }
+   ],
+   "answer": "(a) F: a=4, b=c=2 (b) F: √2·√2 (c) T (d) F: n=41 (e) T (f) F: n=2",
+   "solution": [
+    {
+     "type": "list",
+     "items": [
+      "(a) <b>False.</b> a = 4, b = c = 2: 4 | 4, 4 ∤ 2, and 4 ∤ 2.",
+      "(b) <b>False.</b> √2 · √2 = 2.",
+      "(c) <b>True</b> (contrapositive). If √x = p/q is rational, then x = p²/q² is rational.",
+      "(d) <b>False.</b> n = 41 gives 41², which is not prime.",
+      "(e) <b>True.</b> If 2 | n², then n is even (an odd n gives an odd n²). If 3 | n², then 3 | n, because 3 is prime and divides n·n (Euclid’s lemma). Since gcd(2, 3) = 1 and both divide n, 6 | n.",
+      "(f) <b>False.</b> n = 2."
+     ]
+    },
+    {
+     "type": "tip",
+     "text": "<b>Tests:</b> one counterexample kills a universal claim; a true one needs a real proof. <b>Common mistake:</b> on (e), arguing “6 | n·n, so 6 | n” as if 6 were prime. That is exactly the argument that fails in (f)."
+    }
+   ]
+  },
+  {
+   "title": "Squares mod 4: x² + y² ≠ 4z + 3",
+   "level": "hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "Prove that x² + y² = 4z + 3 has no integer solutions. Conclude that 2027 is not a sum of two squares."
+    }
+   ],
+   "answer": "Squares are 0 or 1 mod 4, so x² + y² ∈ {0,1,2} mod 4, never 3; 2027 ≡ 3 (mod 4) is not a sum of two squares.",
+   "solution": [
+    {
+     "type": "p",
+     "text": "<b>Lemma.</b> Every square is ≡ 0 or 1 (mod 4). If n = 2k, then n² = 4k². If n = 2k + 1, then n² = 4(k² + k) + 1."
+    },
+    {
+     "type": "p",
+     "text": "So x² + y² ≡ 0 + 0, 0 + 1, or 1 + 1, that is, 0, 1 or 2 (mod 4), and never 3. But 4z + 3 ≡ 3. No solution. ∎"
+    },
+    {
+     "type": "p",
+     "text": "2027 = 4·506 + 3, so it is not a sum of two squares."
+    },
+    {
+     "type": "tip",
+     "text": "<b>Tests:</b> choosing a modulus that makes the cases finite. <b>Common mistake:</b> splitting into 4 cases (x and y each even or odd) and then making an algebra error. Use the lemma once instead."
+    }
+   ]
+  },
+  {
+   "title": "Perfect square iff odd number of divisors",
+   "level": "hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "Prove: a positive integer n is a perfect square <b>if and only if</b> it has an odd number of positive divisors."
+    }
+   ],
+   "answer": "Pair d with n/d; only d = √n is unpaired, so the count is odd exactly when n is a square (both directions).",
+   "solution": [
+    {
+     "type": "p",
+     "text": "Pair each divisor d of n with n/d, which is also a divisor. This pairing is its own inverse: the partner of n/d is d. A divisor is paired with itself exactly when d = n/d, that is, d² = n."
+    },
+    {
+     "type": "p",
+     "text": "(⇐) Suppose n is not a square. Then no divisor is paired with itself, the divisors split into pairs {d, n/d} with d ≠ n/d, and their number is even. Contrapositive: an odd number of divisors means n is a square."
+    },
+    {
+     "type": "p",
+     "text": "(⇒) Suppose n = m² with m > 0. The only divisor paired with itself is m (the positive solution of d² = n). Every other divisor sits in a pair of two distinct divisors, so the count is 2·(number of pairs) + 1, which is odd. ∎"
+    },
+    {
+     "type": "tip",
+     "text": "<b>Tests:</b> an iff needs both directions; a pairing (involution) argument proves a parity claim. <b>Common mistake:</b> proving one direction twice, phrased differently."
+    }
+   ]
+  },
+  {
+   "title": "√2 + √3 is irrational",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "Prove that √2 + √3 is irrational. (Prove any lemma you use.)"
+    }
+   ],
+   "answer": "If √2 + √3 = r then √6 = (r² − 5)/2 is rational, contradicting the (proved) irrationality of √6.",
+   "solution": [
+    {
+     "type": "p",
+     "text": "<b>Lemma: √6 is irrational.</b> Suppose √6 = a/b in lowest terms. Then a² = 6b², so a² is even and a is even. Write a = 2c: 4c² = 6b², so 2c² = 3b². Then 3b² is even, so b² is even and b is even. Both a and b are even, contradicting lowest terms."
+    },
+    {
+     "type": "p",
+     "text": "<b>Main proof.</b> Suppose √2 + √3 = r with r rational. Squaring: r² = 5 + 2√6, so √6 = (r² − 5)/2, which is rational. This contradicts the lemma. ∎"
+    },
+    {
+     "type": "tip",
+     "text": "<b>Tests:</b> reducing to a simpler irrationality and proving it in full. <b>Common mistake:</b> claiming “a sum of irrationals is irrational”, which is false (√2 + (−√2) = 0)."
+    }
+   ]
+  },
+  {
+   "title": "log₂ 3 is irrational",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "Prove that log<sub>2</sub> 3 is irrational."
+    }
+   ],
+   "answer": "log₂3 = a/b with a, b ≥ 1 gives 2ᵃ = 3ᵇ, even = odd, contradiction.",
+   "solution": [
+    {
+     "type": "p",
+     "text": "Since 3 > 1, log<sub>2</sub>3 > 0. Suppose log<sub>2</sub>3 = a/b with a, b positive integers. Then 2<sup>a/b</sup> = 3, and raising both sides to the power b gives 2<sup>a</sup> = 3<sup>b</sup>. Since a ≥ 1 the left side is even, and the right side is odd. Contradiction. ∎"
+    },
+    {
+     "type": "tip",
+     "text": "<b>Tests:</b> getting rid of logs and roots by exponentiating, then using parity. <b>Common mistake:</b> forgetting to justify a, b > 0. With a = 0 the left side would be 1, which is odd."
+    }
+   ]
+  },
+  {
+   "title": "Three broken proofs",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "Each “proof” below is wrong. Find the error and say whether the claim is true anyway."
+    },
+    {
+     "type": "list",
+     "items": [
+      "(a) <i>Claim:</i> if 4 | n² then 4 | n. <i>Proof:</i> Let n = 4k. Then n² = 16k² = 4(4k²), so 4 | n².",
+      "(b) <i>Claim:</i> for real x, if x² > 4 then x > 2. <i>Proof (contrapositive):</i> If x ≤ 2, then x² ≤ 4.",
+      "(c) <i>Claim:</i> a + b ≥ 2√(ab) for a, b ≥ 0. <i>Proof:</i> Assume a + b ≥ 2√(ab). Squaring, a² + 2ab + b² ≥ 4ab, so (a − b)² ≥ 0, which is true. Done."
+     ]
+    }
+   ],
+   "answer": "(a) proves the converse; claim false (n = 2) (b) false contrapositive; claim false (x = −3) (c) assumes the conclusion; claim true via (√a − √b)² ≥ 0",
+   "solution": [
+    {
+     "type": "list",
+     "items": [
+      "(a) It proves the <b>converse</b> (4 | n ⇒ 4 | n²). The claim itself is <b>false</b>: n = 2.",
+      "(b) “x ≤ 2 ⇒ x² ≤ 4” is false for x = −3. The claim is <b>false</b>: x = −3 has x² = 9 > 4.",
+      "(c) It starts from the conclusion and reaches something true. That proves nothing, since true statements follow from false ones too. The claim is <b>true</b>. A correct proof: 0 ≤ (√a − √b)² = a − 2√(ab) + b. Here every step goes in the forward direction."
+     ]
+    },
+    {
+     "type": "tip",
+     "text": "<b>Tests:</b> the direction of implication. <b>Common mistake:</b> (c) is how many students write proofs. If you work backward on scratch paper, write the final proof forward."
+    }
+   ]
+  },
+  {
+   "title": "2ⁿ + 1 prime forces n a power of 2",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "Prove: if 2<sup>n</sup> + 1 is prime (n ≥ 1), then n is a power of 2. Is the converse true?"
+    }
+   ],
+   "answer": "If n = mk with m ≥ 3 odd, then 2ᵏ + 1 is a proper factor of 2ⁿ + 1. Converse false: 2³² + 1 = 641 · 6700417.",
+   "solution": [
+    {
+     "type": "p",
+     "text": "<b>Contrapositive:</b> if n is not a power of 2, then 2<sup>n</sup> + 1 is composite. A number that is not a power of 2 has an odd factor m > 1, so write n = mk with m odd, m ≥ 3, k ≥ 1."
+    },
+    {
+     "type": "p",
+     "text": "For odd m, x<sup>m</sup> + 1 = (x + 1)(x<sup>m−1</sup> − x<sup>m−2</sup> + ⋯ − x + 1). Multiply it out: the terms telescope. Put x = 2<sup>k</sup>: (2<sup>k</sup> + 1) | (2<sup>n</sup> + 1). Since 1 ≤ k &lt; n, we have 1 &lt; 2<sup>k</sup> + 1 &lt; 2<sup>n</sup> + 1, a proper factor. So 2<sup>n</sup> + 1 is composite. ∎"
+    },
+    {
+     "type": "p",
+     "text": "<b>Converse: false.</b> 2<sup>32</sup> + 1 = 641 · 6700417."
+    },
+    {
+     "type": "tip",
+     "text": "<b>Tests:</b> spotting a factorization identity, and checking that the factor is proper. <b>Common mistake:</b> using x<sup>m</sup> + 1 with m even, where (x + 1) does not divide it."
+    }
+   ]
+  },
+  {
+   "title": "Three flavors of existence and uniqueness",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "list",
+     "items": [
+      "(a) <b>Constructive existence.</b> Prove there are 100 consecutive composite positive integers.",
+      "(b) <b>Uniqueness.</b> Prove that for every real x there is at most one integer n with n ≤ x &lt; n + 1.",
+      "(c) <b>Nonconstructive existence.</b> Prove that if 7 real numbers sum to 50, at least one of them is greater than 7."
+     ]
+    }
+   ],
+   "answer": "(a) 101! + 2, …, 101! + 101 (b) |n − m| &lt; 1 forces n = m (c) if all ≤ 7 the sum is ≤ 49 &lt; 50",
+   "solution": [
+    {
+     "type": "p",
+     "text": "(a) Consider 101! + j for j = 2, 3, …, 101. Since 2 ≤ j ≤ 101, j divides 101!, so j divides 101! + j, and 1 &lt; j &lt; 101! + j. So all 100 numbers are composite."
+    },
+    {
+     "type": "p",
+     "text": "(b) Suppose n and m both work. From n ≤ x &lt; m + 1 we get n &lt; m + 1, and symmetrically m &lt; n + 1. So |n − m| &lt; 1, and since n − m is an integer, n = m."
+    },
+    {
+     "type": "p",
+     "text": "(c) Suppose not: every x<sub>i</sub> ≤ 7. Then the sum is at most 49 &lt; 50. Contradiction. (We never find which number is big.)"
+    },
+    {
+     "type": "tip",
+     "text": "<b>Tests:</b> the three flavors: build it, show two candidates must be equal, argue by contradiction. <b>Common mistake:</b> in (a), using 100! + j for j up to 101. The last one, 100! + 101, need not be composite."
+    }
+   ]
+  },
+  {
+   "title": "Divisor-erasing game: strategy stealing",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "The numbers 1, 2, …, n (n ≥ 2) are on a board. Two players alternate. A move is: pick a number still on the board and erase it <b>and all of its divisors</b> still on the board. The player who erases the last number wins. Prove that the first player has a winning strategy. (You may use: in a finite game with no draws, one player has a winning strategy.)"
+    }
+   ],
+   "answer": "First player wins: if II had a winning reply m to the opening “1”, I could open with m directly (1 | m) and steal the strategy.",
+   "solution": [
+    {
+     "type": "p",
+     "text": "The game is finite (each move erases at least one number) and cannot be drawn, so one of the players has a winning strategy. Suppose, for contradiction, that it is the <b>second</b> player."
+    },
+    {
+     "type": "p",
+     "text": "Let the first player open by picking 1. That erases only 1. The second player’s winning strategy now gives a reply: pick some m, erasing m and its divisors. Call the resulting position X. From X, the second player (who just moved) can force a win against any play."
+    },
+    {
+     "type": "p",
+     "text": "Now the first player could instead have opened by picking m. Since 1 | m, that single move erases 1, m and every divisor of m, reaching exactly the same position X. The first player is then the one who just moved into X, and so can follow the strategy that wins from X. So the first player can force a win, which contradicts the assumption that the second player has a winning strategy."
+    },
+    {
+     "type": "p",
+     "text": "Therefore the first player has a winning strategy. ∎ (The proof doesn’t say what the strategy is.)"
+    },
+    {
+     "type": "tip",
+     "text": "<b>Tests:</b> strategy stealing: a “do-nothing” move that can be absorbed into any reply. <b>Common mistake:</b> forgetting why the stolen move reaches the <i>same</i> position. Here it is because 1 divides everything."
+    }
+   ]
+  },
+  {
+   "title": "Infinite descent: a² + b² = 3c²",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "Prove that a² + b² = 3c² has no solution in positive integers. Deduce that the circle x² + y² = 3 contains no point with both coordinates rational."
+    }
+   ],
+   "answer": "A minimal solution forces 3 | a, b, c, giving a smaller one; so no positive solutions and no rational points on x² + y² = 3.",
+   "solution": [
+    {
+     "type": "p",
+     "text": "Squares mod 3 are 0 (if 3 | n) or 1 (n ≡ ±1 gives n² ≡ 1)."
+    },
+    {
+     "type": "p",
+     "text": "Suppose solutions exist. By well-ordering, choose one with c as small as possible. Then a² + b² ≡ 0 (mod 3). The only way to get 0 from two values in {0, 1} is 0 + 0, so 3 | a and 3 | b. Write a = 3a′, b = 3b′: 9(a′² + b′²) = 3c², so c² = 3(a′² + b′²). Then 3 | c², so 3 | c. Write c = 3c′: a′² + b′² = 3c′². This is a solution in positive integers with c′ = c/3 &lt; c, which contradicts minimality. ∎"
+    },
+    {
+     "type": "p",
+     "text": "<b>Circle.</b> If x = p/r and y = q/r (common denominator r > 0) satisfy x² + y² = 3, then p² + q² = 3r². By the above, p and q can’t both be positive. If either is 0, say q = 0, we get p² = 3r², which would make √3 rational. Signs don’t matter since only squares appear. So there are no rational points."
+    },
+    {
+     "type": "tip",
+     "text": "<b>Tests:</b> descent: a solution produces a smaller one, contradicting well-ordering. <b>Common mistake:</b> forgetting to set up the minimal counterexample, which leaves the descent unfinished."
+    }
+   ]
+  }
+ ],
+ "keyFacts": [
+  "Direct: assume p, unpack with definitions (n = 2k + 1 for some integer k), reach q",
+  "Contraposition: prove ¬q → ¬p; open with “We prove the contrapositive”",
+  "Contradiction for p → q: assume p ∧ ¬q, reach a clash, write “Contradiction!”",
+  "√2 irrational: lowest terms, p² = 2q², p even, q even, clash",
+  "Infinitely many primes: p₁⋯pₙ + 1 has a prime factor not on the list",
+  "Iff = two proofs, (⇒) and (⇐); each may use a different method",
+  "Cases must cover everything (parity, sign incl. 0, remainders mod 3)",
+  "Uniqueness: assume P(x) and P(y), show x = y",
+  "One checked counterexample disproves “for all”; examples never prove it",
+  "Zermelo: finite, perfect-information, no-draw games have a winning strategy for exactly one player"
+ ]
+}

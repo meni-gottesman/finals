@@ -1,0 +1,1033 @@
+{
+ "id": "55-F",
+ "course": "55",
+ "title": "Chinese Remainder Theorem, Fermat, RSA",
+ "source": "Rosen 4.4, 4.6 · Lec11",
+ "summary": "Solving systems of congruences with the Chinese Remainder Theorem, shrinking huge powers with Fermat’s little theorem, the Fermat primality test and its pseudoprimes, and RSA. Expect a CRT system, a big-power computation and an RSA encrypt/decrypt, plus the proof of why RSA decryption works.",
+ "lesson": [
+  {
+   "title": "The Chinese Remainder Theorem",
+   "blocks": [
+    {
+     "type": "tip",
+     "text": "If you know a number's remainders for several coprime moduli, you know the number itself, up to their product."
+    },
+    {
+     "type": "thm",
+     "name": "Chinese Remainder Theorem",
+     "text": "Let m₁, …, mₙ be <b>pairwise relatively prime</b> positive integers greater than 1, and a₁, …, aₙ any integers. Then the system x ≡ a₁ (mod m₁), …, x ≡ aₙ (mod mₙ) has a <b>unique solution modulo M = m₁m₂⋯mₙ</b>: there is a solution with 0 ≤ x &lt; M, and every other solution is congruent to it mod M.",
+     "proof": [
+      {
+       "type": "p",
+       "text": "<b>Existence:</b> the construction below produces a solution."
+      },
+      {
+       "type": "p",
+       "text": "<b>Uniqueness:</b> if x and y both solve the system, then mᵢ | x − y for every i. The mᵢ are pairwise coprime, so their product M divides x − y (apply “gcd(a, b) = 1, a | c, b | c ⇒ ab | c” repeatedly). So x ≡ y (mod M). ∎"
+      }
+     ]
+    },
+    {
+     "type": "tip",
+     "text": "Think of a combination lock with several dials, of sizes 3, 7 and 10, that all click forward together. After x clicks, the dials read x mod 3, x mod 7, x mod 10. CRT says that when the dial sizes share no common factor, the readings determine x exactly, up to a full cycle of 3·7·10 = 210 clicks."
+    },
+    {
+     "type": "steps",
+     "title": "CRT construction (formula)",
+     "items": [
+      "M = m₁⋯mₙ, and for each i, Mᵢ = M / mᵢ (the product of all the <i>other</i> moduli).",
+      "Find yᵢ = an inverse of Mᵢ mod mᵢ: Mᵢyᵢ ≡ 1 (mod mᵢ). It exists because gcd(Mᵢ, mᵢ) = 1.",
+      "x = a₁M₁y₁ + a₂M₂y₂ + ⋯ + aₙMₙyₙ, then reduce mod M."
+     ]
+    },
+    {
+     "type": "p",
+     "text": "<b>Why it works:</b> mod mᵢ, every term except the i-th has a factor of mᵢ inside Mⱼ (j ≠ i), so it's ≡ 0. The i-th term is aᵢ·(Mᵢyᵢ) ≡ aᵢ·1. So x ≡ aᵢ (mod mᵢ) for every i. Each term is a “switch” that is 1 on its own dial and 0 on all the others."
+    },
+    {
+     "type": "example",
+     "title": "CRT construction with three moduli",
+     "prompt": "Solve x ≡ 2 (mod 3), x ≡ 5 (mod 7), x ≡ 3 (mod 10).",
+     "steps": [
+      "3, 7, 10 are pairwise coprime; M = 210.",
+      "M₁ = 70 ≡ 1 (mod 3), so y₁ = 1.",
+      "M₂ = 30 ≡ 2 (mod 7); 2·4 = 8 ≡ 1, so y₂ = 4.",
+      "M₃ = 21 ≡ 1 (mod 10), so y₃ = 1.",
+      "x = 2·70·1 + 5·30·4 + 3·21·1 = 140 + 600 + 63 = 803 ≡ 173 (mod 210).",
+      "Check: 173 = 57·3 + 2 ✓, 173 = 24·7 + 5 ✓, 173 ends in 3 ✓."
+     ],
+     "answer": "x ≡ 173 (mod 210)"
+    },
+    {
+     "type": "p",
+     "text": "A smaller one: x ≡ 1 (mod 2), x ≡ 2 (mod 3), x ≡ 4 (mod 5) has M = 30, and the solution is x ≡ 29 (mod 30)."
+    },
+    {
+     "type": "example",
+     "title": "Back-substitution",
+     "prompt": "Solve x ≡ 2 (mod 5), x ≡ 3 (mod 7) by substitution.",
+     "steps": [
+      "The first says x = 2 + 5t.",
+      "Plug in: 2 + 5t ≡ 3 (mod 7), so 5t ≡ 1 (mod 7).",
+      "5·3 = 15 ≡ 1, so t ≡ 3 (mod 7): t = 3 + 7u.",
+      "x = 2 + 5(3 + 7u) = 17 + 35u."
+     ],
+     "answer": "x ≡ 17 (mod 35)"
+    },
+    {
+     "type": "warn",
+     "text": "The moduli must be pairwise relatively prime. x ≡ 0 (mod 2) and x ≡ 1 (mod 4) has no solution: the first makes x even, the second makes x odd."
+    },
+    {
+     "type": "p",
+     "text": "<b>Lock it down</b>"
+    },
+    {
+     "type": "steps",
+     "title": "The CRT construction",
+     "items": [
+      "Check that the moduli are <b>pairwise</b> coprime: test every pair, not just all of them together.",
+      "Draw a table with one row per congruence and columns mᵢ, aᵢ, Mᵢ, Mᵢ mod mᵢ, yᵢ, aᵢMᵢyᵢ.",
+      "Compute M = m₁m₂⋯mₙ. For each row, Mᵢ = product of the <i>other</i> moduli (cover up your own and multiply the rest).",
+      "Shrink Mᵢ mod mᵢ to a small number. Find its inverse mod mᵢ by trying 1, 2, 3, …. That inverse is yᵢ.",
+      "Fill in the last column and add it up: x = Σ aᵢMᵢyᵢ. Reduce mod M.",
+      "<b>Check:</b> divide your x by each mᵢ and confirm the remainder is aᵢ. Write the answer as x ≡ … (mod M)."
+     ]
+    },
+    {
+     "type": "steps",
+     "title": "Back-substitution",
+     "items": [
+      "If a congruence has a coefficient, like cx ≡ a (mod m), first multiply by c̄ to get it into the form x ≡ … (mod m).",
+      "Start with the congruence that has the <b>biggest</b> modulus (fewer steps later). Turn it into an equation: x = a₁ + m₁t.",
+      "Plug that into the next congruence: a₁ + m₁t ≡ a₂ (mod m₂). Reduce the numbers mod m₂ and solve for t, using the recipe. You get t ≡ t₀ (mod m₂).",
+      "Write t = t₀ + m₂u and substitute back: x = (a₁ + m₁t₀) + m₁m₂u. You now know x mod m₁m₂.",
+      "Treat this as your new “first” congruence and repeat with the next one, until all are used.",
+      "<b>Check:</b> test the final x in every original congruence (including any with a coefficient)."
+     ]
+    },
+    {
+     "type": "example",
+     "title": "construction with nontrivial inverses",
+     "prompt": "Solve x ≡ 3 (mod 4), x ≡ 4 (mod 5), x ≡ 2 (mod 7).",
+     "steps": [
+      "M = 4·5·7 = 140 — <i>4, 5, 7 are pairwise coprime</i>",
+      "M₁ = 35 ≡ 3 (mod 4); 3·3 = 9 ≡ 1, so y₁ = 3 — <i>inverse of M₁ mod 4</i>",
+      "M₂ = 28 ≡ 3 (mod 5); 3·2 = 6 ≡ 1, so y₂ = 2 — <i>inverse of M₂ mod 5</i>",
+      "M₃ = 20 ≡ 6 (mod 7); 6·6 = 36 ≡ 1, so y₃ = 6 — <i>inverse of M₃ mod 7</i>",
+      "x = 3·35·3 + 4·28·2 + 2·20·6 — <i>one term aᵢMᵢyᵢ per congruence</i>",
+      "= 315 + 224 + 240 = 779 — <i>add</i>",
+      "779 − 5·140 = 79 — <i>reduce mod M = 140</i>"
+     ],
+     "answer": "x ≡ 79 (mod 140). Check: 79 = 19·4 + 3 ✓, 79 = 15·5 + 4 ✓, 79 = 11·7 + 2 ✓."
+    },
+    {
+     "type": "example",
+     "title": "back-substitution with a coefficient",
+     "prompt": "Solve 2x ≡ 3 (mod 5), x ≡ 5 (mod 8), x ≡ 1 (mod 3).",
+     "steps": [
+      "x ≡ 3·3 = 9 ≡ 4 (mod 5) — <i>inverse of 2 mod 5 is 3; multiply both sides by it</i>",
+      "x = 5 + 8t — <i>start with the biggest modulus, 8</i>",
+      "5 + 8t ≡ 4 (mod 5), so 3t ≡ 4 (mod 5) — <i>5 ≡ 0 and 8 ≡ 3 mod 5</i>",
+      "t ≡ 2·4 = 8 ≡ 3 (mod 5) — <i>inverse of 3 mod 5 is 2</i>",
+      "x = 5 + 8(3 + 5u) = 29 + 40u — <i>substitute t = 3 + 5u; now x is known mod 40</i>",
+      "29 + 40u ≡ 1 (mod 3), so 2 + u ≡ 1, so u ≡ 2 (mod 3) — <i>29 ≡ 2 and 40 ≡ 1 mod 3</i>",
+      "x = 29 + 40(2 + 3v) = 109 + 120v — <i>substitute u = 2 + 3v</i>"
+     ],
+     "answer": "x ≡ 109 (mod 120). Check: 2·109 = 218 ≡ 3 (mod 5) ✓, 109 = 13·8 + 5 ✓, 109 = 36·3 + 1 ✓."
+    },
+    {
+     "type": "warn",
+     "text": "<b>Wrong:</b> taking yᵢ = Mᵢ mod mᵢ, e.g. y₂ = 2 in the first example (where M₂ = 30 ≡ 2 mod 7). <b>Right:</b> yᵢ is the <i>inverse</i> of that number, so y₂ = 4. (yᵢ is the thing that turns Mᵢ into 1 mod mᵢ.)"
+    },
+    {
+     "type": "warn",
+     "text": "<b>Wrong:</b> finding the inverse of Mᵢ mod M, or the inverse of mᵢ mod Mᵢ. <b>Right:</b> the inverse of Mᵢ mod the small modulus mᵢ. (The “switch” only has to read 1 on its own dial.)"
+    },
+    {
+     "type": "warn",
+     "text": "<b>Wrong:</b> giving 779 as the final answer. <b>Right:</b> reduce mod M: x ≡ 79 (mod 140). (The answer is a whole class mod M, so always give the modulus too.)"
+    },
+    {
+     "type": "warn",
+     "text": "<b>Wrong:</b> “6, 10, 15 have gcd 1, so CRT applies.” <b>Right:</b> CRT needs every pair coprime, and gcd(6, 10) = 2. (Shared factors can make the congruences contradict each other.)"
+    },
+    {
+     "type": "warn",
+     "text": "<b>Wrong:</b> in back-substitution, solving 5 + 8t ≡ 4 mod 8. <b>Right:</b> solve it mod 5, the modulus of the congruence you are plugging into. (Mod 8 the 8t just disappears and you learn nothing.)"
+    },
+    {
+     "type": "tip",
+     "text": "Non-coprime moduli: x ≡ a (mod m), x ≡ b (mod n) is solvable iff a ≡ b (mod gcd(m, n)), and then the solution is unique mod lcm(m, n). Example: x ≡ 5 (mod 12), x ≡ 11 (mod 18) gives x ≡ 29 (mod 36)."
+    }
+   ]
+  },
+  {
+   "title": "Fermat’s little theorem: shrinking powers and inverses",
+   "blocks": [
+    {
+     "type": "tip",
+     "text": "Mod a prime p, a<sup>p−1</sup> ≡ 1 (when p ∤ a). So exponents can be shrunk mod p − 1."
+    },
+    {
+     "type": "def",
+     "term": "Binomial theorem",
+     "text": "(x + y)ⁿ = Σₖ C(n, k) xⁿ⁻ᵏyᵏ where C(n, k) = n! / (k!(n − k)!), the rows of Pascal's triangle."
+    },
+    {
+     "type": "p",
+     "text": "E.g. (x + y)⁷ = x⁷ + 7x⁶y + 21x⁵y² + 35x⁴y³ + 35x³y⁴ + 21x²y⁵ + 7xy⁶ + y⁷. Notice 7 divides every middle coefficient."
+    },
+    {
+     "type": "thm",
+     "name": "Freshman’s dream",
+     "text": "If p is prime and 1 ≤ k ≤ p − 1, then p | C(p, k). Hence (x + y)ᵖ ≡ xᵖ + yᵖ (mod p).",
+     "proof": [
+      {
+       "type": "p",
+       "text": "C(p, k) = p! / (k!(p − k)!). The prime p appears in the numerator p! but not in k! or (p − k)!, since all their factors are less than p. So p survives in C(p, k). In the binomial expansion of (x + y)ᵖ only the two end terms are not multiples of p."
+      }
+     ]
+    },
+    {
+     "type": "thm",
+     "name": "Fermat's little theorem (Rosen Thm 3)",
+     "text": "If p is prime and a is an integer not divisible by p, then aᵖ⁻¹ ≡ 1 (mod p). Furthermore, for every integer a, aᵖ ≡ a (mod p).",
+     "proof": [
+      {
+       "type": "p",
+       "text": "(For a ≥ 1; negative a follow by reducing mod p.) Write a = 1 + 1 + ⋯ + 1 (a ones) and apply the Freshman's dream over and over: aᵖ = (1 + (a − 1))ᵖ ≡ 1ᵖ + (a − 1)ᵖ ≡ 1ᵖ + 1ᵖ + (a − 2)ᵖ ≡ ⋯ ≡ 1ᵖ + ⋯ + 1ᵖ = a (mod p). So aᵖ ≡ a. If p ∤ a, then gcd(a, p) = 1, so we can cancel one a (cancellation law): aᵖ⁻¹ ≡ 1 (mod p)."
+      }
+     ]
+    },
+    {
+     "type": "tip",
+     "text": "Mod a prime p (and p ∤ a), exponents only matter <b>mod p − 1</b>. Write the exponent as q(p − 1) + r; then aⁿ = (aᵖ⁻¹)^q · aʳ ≡ 1^q · aʳ = aʳ."
+    },
+    {
+     "type": "example",
+     "title": "Shrinking exponents with Fermat",
+     "prompt": "Compute 3¹⁰⁰ mod 7 and 2¹⁰⁰⁰ mod 11.",
+     "steps": [
+      "7 is prime and 7 ∤ 3, so 3⁶ ≡ 1 (mod 7).",
+      "100 = 16·6 + 4, so 3¹⁰⁰ ≡ 3⁴ = 81 ≡ 4 (mod 7).",
+      "11 is prime, so 2¹⁰ ≡ 1 (mod 11); 1000 = 100·10, so 2¹⁰⁰⁰ ≡ 1."
+     ],
+     "answer": "3¹⁰⁰ ≡ 4 (mod 7); 2¹⁰⁰⁰ ≡ 1 (mod 11)"
+    },
+    {
+     "type": "warn",
+     "text": "Reduce the exponent mod <b>p − 1</b>, not mod p. And it needs <b>p prime</b> and <b>p ∤ a</b>."
+    },
+    {
+     "type": "thm",
+     "name": "Inverses via Fermat",
+     "text": "If p is prime and p ∤ a, then a⁻¹ ≡ aᵖ⁻² (mod p).",
+     "proof": [
+      {
+       "type": "p",
+       "text": "a · aᵖ⁻² = aᵖ⁻¹ ≡ 1 (mod p) by Fermat."
+      }
+     ]
+    },
+    {
+     "type": "example",
+     "title": "Inverse and a congruence via Fermat",
+     "prompt": "Use Fermat to find 4⁻¹ mod 13, then solve 4x ≡ 5 (mod 13).",
+     "steps": [
+      "4⁻¹ ≡ 4¹¹ (mod 13).",
+      "4² = 16 ≡ 3, 4⁴ ≡ 9, 4⁸ ≡ 81 ≡ 3.",
+      "4¹¹ = 4⁸·4²·4 ≡ 3·3·4 = 36 ≡ 10.",
+      "Check: 4·10 = 40 = 3·13 + 1 ✓.",
+      "x ≡ 10·5 = 50 ≡ 11 (mod 13). Check: 4·11 = 44 = 3·13 + 5 ✓."
+     ],
+     "answer": "4⁻¹ ≡ 10, x ≡ 11 (mod 13)"
+    },
+    {
+     "type": "steps",
+     "title": "Shrink a big power aⁿ mod a prime p",
+     "items": [
+      "Make sure p is <b>prime</b>. If it isn't, Fermat does not apply: use repeated squaring, or split the modulus into primes and use CRT.",
+      "Reduce the base: replace a by a mod p. If that is 0, the answer is 0. Stop.",
+      "Divide the exponent by <b>p − 1</b>: n = q(p − 1) + r. Throw away q and keep only r. The q copies of aᵖ⁻¹ each equal 1, like full laps around a track that put you back at the start.",
+      "If r = 0, the answer is 1. Otherwise compute aʳ mod p, reducing after every multiplication.",
+      "Shortcut: look for a small power that is ±1, like 3³ = 27 ≡ −1 (mod 7). Then big powers become powers of −1.",
+      "<b>Check:</b> multiply back, q(p − 1) + r must equal the original exponent n, and your answer must be in 0 to p − 1."
+     ]
+    },
+    {
+     "type": "example",
+     "title": "exponent shrink plus the −1 trick",
+     "prompt": "Compute 5²⁰²⁶ mod 13.",
+     "steps": [
+      "13 is prime and 13 ∤ 5 — <i>so Fermat gives 5¹² ≡ 1 (mod 13)</i>",
+      "2026 = 168·12 + 10 — <i>divide the exponent by p − 1 = 12</i>",
+      "5²⁰²⁶ ≡ 5¹⁰ (mod 13) — <i>the 168 copies of 5¹² are each ≡ 1</i>",
+      "5² = 25 ≡ 12 ≡ −1 (mod 13) — <i>look for a small power that is ±1</i>",
+      "5¹⁰ = (5²)⁵ ≡ (−1)⁵ = −1 — <i>odd power of −1</i>",
+      "−1 ≡ 12 (mod 13) — <i>bring the answer into 0 to 12</i>"
+     ],
+     "answer": "5²⁰²⁶ ≡ 12 (mod 13). Check: 168·12 = 2016 and 2016 + 10 = 2026 ✓."
+    },
+    {
+     "type": "warn",
+     "text": "<b>Wrong:</b> reducing the exponent mod p: for 3¹⁰⁰ mod 7, using 100 mod 7 = 2 to get 3² ≡ 2. <b>Right:</b> 100 mod <b>6</b> = 4, so 3⁴ = 81 ≡ 4. (The cycle length is p − 1, because that is the exponent Fermat makes equal to 1.)"
+    },
+    {
+     "type": "warn",
+     "text": "<b>Wrong:</b> 21⁵⁰ ≡ 1 (mod 7) “by Fermat.” <b>Right:</b> 21 ≡ 0 (mod 7), so 21⁵⁰ ≡ 0. (Fermat needs p ∤ a. Always reduce the base first.)"
+    },
+    {
+     "type": "warn",
+     "text": "<b>Wrong:</b> for 6⁴⁰ mod 11, “40 leaves remainder 0 mod 10, so the answer is 0.” <b>Right:</b> 40 = 4·10 + 0, so the answer is 6⁰ = <b>1</b>. (Remainder 0 in the exponent means “exactly some full laps,” which lands on 1.)"
+    },
+    {
+     "type": "warn",
+     "text": "<b>Wrong:</b> treating 15 like a prime: 2¹⁰⁰ mod 15 with 100 mod 14 = 2, giving 4. <b>Right:</b> the real answer is 1 (2⁴ = 16 ≡ 1 mod 15). (Fermat's shortcut only works for a prime modulus.)"
+    }
+   ]
+  },
+  {
+   "title": "Fermat test, pseudoprimes and Carmichael numbers",
+   "blocks": [
+    {
+     "type": "thm",
+     "name": "Fermat test",
+     "text": "Given n, pick a with 0 &lt; a &lt; n. If aⁿ⁻¹ ≢ 1 (mod n), then n is <b>definitely not prime</b> (contrapositive of Fermat). If aⁿ⁻¹ ≡ 1, n may or may not be prime."
+    },
+    {
+     "type": "p",
+     "text": "Example: 2¹⁴ mod 15 = 4 ≠ 1 (since 2⁴ ≡ 1, 2¹⁴ ≡ 2² = 4), so 15 is composite, without finding a factor."
+    },
+    {
+     "type": "p",
+     "text": "Modern primality tests (e.g. Miller–Rabin, used to find huge primes for cryptography) are built on this: pass many such tests and the probability n is prime is provably very high."
+    },
+    {
+     "type": "def",
+     "term": "pseudoprime to the base b",
+     "text": "A composite n with bⁿ⁻¹ ≡ 1 (mod n) is a <b>pseudoprime to the base b</b>. A composite n that is a pseudoprime to <b>every</b> base b with gcd(b, n) = 1 is a <b>Carmichael number</b>; the smallest is 561 = 3·11·17. So the Fermat test alone can be fooled."
+    },
+    {
+     "type": "thm",
+     "name": "Undoing powers mod p",
+     "text": "If p is prime and gcd(e, p − 1) = 1, then f(m) = mᵉ mod p is a one-to-one function on {0, …, p − 1}. Its inverse is g(c) = cᵈ mod p, where de − k(p − 1) = 1 (Bézout).",
+     "proof": [
+      {
+       "type": "p",
+       "text": "g(f(m)) ≡ mᵈᵉ = m^{1 + k(p−1)} = m·(mᵖ⁻¹)ᵏ ≡ m·1ᵏ = m (mod p) by Fermat, for p ∤ m; and if m = 0 both sides are 0. So g undoes f, which forces f to be injective."
+      }
+     ]
+    },
+    {
+     "type": "p",
+     "text": "Example: p = 7, e = 5 (gcd(5, 6) = 1). 5·5 = 25 = 4·6 + 1, so d = 5. Then f(3) = 3⁵ mod 7 = 5 and g(5) = 5⁵ mod 7 = 3. ✓ Modular powers otherwise behave “randomly” enough to be used in pseudorandom number generators."
+    },
+    {
+     "type": "p",
+     "text": "With e = 2 (gcd(2, 6) = 2) it fails: 1² ≡ 6² ≡ 1 (mod 7). The fifth powers of 0, …, 6 mod 7 are 0, 1, 4, 5, 2, 3, 6, all different. This is RSA with a single prime."
+    },
+    {
+     "type": "steps",
+     "title": "The Fermat test (prove n is composite)",
+     "items": [
+      "Pick a base a with 1 &lt; a &lt; n; 2 is the usual choice. If gcd(a, n) > 1 you have already found a factor, so n is composite.",
+      "Compute aⁿ⁻¹ mod n by repeated squaring: list a, a², a⁴, a⁸, … mod n, write n − 1 as a sum of powers of 2, and multiply the matching entries.",
+      "Do <b>not</b> shrink the exponent mod n − 1. That trick assumes n is prime, which is exactly what you are testing.",
+      "If the result is <b>not 1</b>: n is composite. Say why: “if n were prime, Fermat's little theorem would give 1.”",
+      "If the result <b>is 1</b>: the test is inconclusive. n is prime or a pseudoprime to base a. You may try another base (Carmichael numbers pass every coprime base).",
+      "<b>Check:</b> recheck the squares table; each entry must be the one above it squared, mod n."
+     ]
+    },
+    {
+     "type": "example",
+     "title": "Fermat test on n = 21, base 2",
+     "prompt": "Use the Fermat test with base 2 to decide whether 21 is prime.",
+     "steps": [
+      "Need 2²⁰ mod 21 — <i>a = 2, n − 1 = 20; gcd(2, 21) = 1</i>",
+      "2¹ = 2, 2² = 4, 2⁴ = 16 — <i>squares table mod 21</i>",
+      "2⁸ = 16² = 256 ≡ 4 — <i>256 − 12·21 = 4</i>",
+      "2¹⁶ = 4² = 16 — <i>square again</i>",
+      "20 = 16 + 4 — <i>n − 1 as a sum of powers of 2</i>",
+      "2²⁰ = 2¹⁶·2⁴ ≡ 16·16 = 256 ≡ 4 — <i>multiply the matching entries</i>"
+     ],
+     "answer": "2²⁰ ≡ 4 ≢ 1 (mod 21), so 21 is composite. If 21 were prime, Fermat would force the answer 1. We never had to find the factors 3 and 7."
+    },
+    {
+     "type": "warn",
+     "text": "<b>Wrong:</b> “2⁵⁶⁰ ≡ 1 (mod 561), so 561 is prime.” <b>Right:</b> 561 = 3·11·17. (Passing the test proves nothing. Only failing it proves something: that n is composite.)"
+    },
+    {
+     "type": "example",
+     "title": "A pseudoprime caught by another base",
+     "prompt": "Show 341 = 11·31 passes the Fermat test to base 2 but fails it to base 3.",
+     "steps": [
+      "Base 2: 2¹⁰ = 1024 = 3·341 + 1, so 2¹⁰ ≡ 1 (mod 341).",
+      "2³⁴⁰ = (2¹⁰)³⁴ ≡ 1 (mod 341): 341 passes base 2, so it is a pseudoprime to the base 2.",
+      "Base 3: repeated squaring gives 3³⁴⁰ ≡ 56 (mod 341) ≠ 1.",
+      "So base 3 proves 341 is composite. Carmichael numbers like 561 pass every coprime base, so no number of Fermat tests can certify primality."
+     ],
+     "answer": "341 is a base-2 pseudoprime; 3³⁴⁰ ≡ 56 (mod 341) shows it is composite"
+    }
+   ]
+  },
+  {
+   "title": "RSA public-key cryptography",
+   "blocks": [
+    {
+     "type": "tip",
+     "text": "Anyone can encrypt with the public key (n, e). Only someone who knows how n factors can compute d and decrypt."
+    },
+    {
+     "type": "tip",
+     "text": "Alice hands out open padlocks to everyone (the <b>public</b> encryption function f) but keeps the only key (the <b>secret</b> decryption function g, with g(f(m)) = m). Anyone can snap a message shut, but only Alice can open it. Knowing how to compute f and seeing f(m) should not let an eavesdropper (Eve) recover m. Scary fact: <b>nobody has proved this is actually hard.</b> It's a very important open problem."
+    },
+    {
+     "type": "steps",
+     "title": "The RSA system",
+     "items": [
+      "Alice privately picks two large primes p, q and sets n = pq.",
+      "She chooses e with gcd(e, (p − 1)(q − 1)) = 1.",
+      "<b>Public key:</b> (n, e). Encryption: c = f(m) = mᵉ mod n.",
+      "<b>Private key:</b> using extended Euclid she finds d with de ≡ 1 (mod (p − 1)(q − 1)). Decryption: m = g(c) = cᵈ mod n.",
+      "She keeps p, q, d and (p − 1)(q − 1) secret."
+     ]
+    },
+    {
+     "type": "p",
+     "text": "Encrypting and decrypting both use fast modular exponentiation."
+    },
+    {
+     "type": "thm",
+     "name": "RSA decryption works",
+     "text": "With n = pq (p ≠ q primes), de ≡ 1 (mod (p − 1)(q − 1)): g(f(m)) = m for all 0 ≤ m &lt; n.",
+     "proof": [
+      {
+       "type": "p",
+       "text": "Write de = 1 + k(p − 1)(q − 1) with k ≥ 0. Then g(f(m)) ≡ (mᵉ)ᵈ = m · m^{k(p−1)(q−1)} (mod n)."
+      },
+      {
+       "type": "p",
+       "text": "<b>Mod p (Fermat):</b> if p ∤ m, Fermat gives mᵖ⁻¹ ≡ 1, so m^{k(p−1)(q−1)} = (mᵖ⁻¹)^{k(q−1)} ≡ 1 and mᵈᵉ ≡ m (mod p). If p | m, both sides are 0 mod p."
+      },
+      {
+       "type": "p",
+       "text": "<b>Mod q:</b> the same argument with p and q swapped gives mᵈᵉ ≡ m (mod q)."
+      },
+      {
+       "type": "p",
+       "text": "<b>Combine (CRT uniqueness):</b> mᵈᵉ and m solve the same system mod p and mod q, with p, q coprime, so mᵈᵉ ≡ m (mod pq = n)."
+      },
+      {
+       "type": "p",
+       "text": "Both g(f(m)) and m lie in {0, …, n − 1}, so they are equal. ∎"
+      }
+     ]
+    },
+    {
+     "type": "example",
+     "title": "Tiny RSA: keys, encrypt, decrypt",
+     "prompt": "p = 3, q = 11, e = 3. Find the keys, encrypt m = 4 and decrypt the result.",
+     "steps": [
+      "n = 33, (p − 1)(q − 1) = 2·10 = 20; gcd(3, 20) = 1, so e = 3 is allowed. Public key (33, 3).",
+      "d: 3d ≡ 1 (mod 20) → d = 7 (3·7 = 21 = 20 + 1).",
+      "Encrypt: c = 4³ = 64 ≡ 31 (mod 33).",
+      "Decrypt c = 31: 31² = 961 ≡ 4, 31⁴ ≡ 4² = 16 (mod 33).",
+      "7 = 4 + 2 + 1, so 31⁷ ≡ 16·4·31 = 1984 = 60·33 + 4 ≡ 4 ✓."
+     ],
+     "answer": "Public (33, 3), d = 7, c = 31, decrypts back to 4"
+    },
+    {
+     "type": "tip",
+     "text": "Security: anyone who could factor n into p·q could compute (p − 1)(q − 1), then d, and decrypt. RSA’s security rests on factoring huge n being infeasible, so real keys use primes with hundreds of digits. A large quantum computer running Shor’s algorithm would break RSA."
+    },
+    {
+     "type": "p",
+     "text": "<b>Lock it down</b>"
+    },
+    {
+     "type": "p",
+     "text": "Below, φ is short for (p − 1)(q − 1)."
+    },
+    {
+     "type": "steps",
+     "title": "Set up an RSA key",
+     "items": [
+      "Pick two different primes p and q. Compute n = pq.",
+      "Compute φ = (p − 1)(q − 1). This number is secret.",
+      "Pick e with 1 &lt; e &lt; φ and gcd(e, φ) = 1. Quick screen: φ is always even, so e must be odd; also rule out any e sharing a prime factor with φ.",
+      "Run extended Euclid on φ and e to get 1 = d·e + t·φ. d is the coefficient on e. Reduce it so 0 &lt; d &lt; φ (if negative, add φ).",
+      "<b>Check:</b> d·e mod φ = 1.",
+      "Publish (n, e). Keep p, q, φ and d secret."
+     ]
+    },
+    {
+     "type": "steps",
+     "title": "Encrypt or decrypt (repeated squaring)",
+     "items": [
+      "Encrypt: c = mᵉ mod n (the message must satisfy 0 ≤ m &lt; n). Decrypt: m = cᵈ mod n. Same machine, different exponent.",
+      "Write the exponent as a sum of powers of 2, e.g. 23 = 16 + 4 + 2 + 1.",
+      "Make a squares table: x, x², x⁴, x⁸, …, each line the one above squared, reduced mod n. Negative stand-ins are fine and save work (49 ≡ −2 mod 51).",
+      "Multiply the table entries you need, reducing mod n after each multiplication so numbers stay small.",
+      "<b>Check:</b> after decrypting, re-encrypt your m with e. You must get c back."
+     ]
+    },
+    {
+     "type": "steps",
+     "title": "Explain why decryption works (proof outline)",
+     "items": [
+      "Since de ≡ 1 (mod φ), write de = 1 + k(p − 1)(q − 1) for some integer k.",
+      "Then cᵈ ≡ (mᵉ)ᵈ = m · m^{k(p−1)(q−1)} (mod n).",
+      "<b>Mod p:</b> if p ∤ m, Fermat gives mᵖ⁻¹ ≡ 1, so m^{k(p−1)(q−1)} = (mᵖ⁻¹)^{k(q−1)} ≡ 1, and mᵉᵈ ≡ m (mod p). If p | m, both sides are 0 mod p.",
+      "<b>Mod q:</b> the same argument with the roles of p and q swapped.",
+      "So mᵉᵈ and m both solve x ≡ m (mod p), x ≡ m (mod q). p and q are distinct primes, so CRT uniqueness gives mᵉᵈ ≡ m (mod n).",
+      "Both cᵈ mod n and m lie in 0 to n − 1, so they are equal.",
+      "<b>Check yourself:</b> can you say where Fermat is used (steps 3 and 4) and where CRT is used (step 5)? Those are the two ideas graders look for."
+     ]
+    },
+    {
+     "type": "example",
+     "title": "build a key with Euclid, then encrypt",
+     "prompt": "p = 5, q = 11, e = 7. Find the public and private keys, then encrypt m = 2.",
+     "steps": [
+      "n = 5·11 = 55, φ = 4·10 = 40 — <i>the formulas</i>",
+      "gcd(7, 40) = 1 — <i>7 is prime and does not divide 40, so e is valid</i>",
+      "40 = 5·7 + 5, 7 = 1·5 + 2, 5 = 2·2 + 1 — <i>Euclid on 40 and 7</i>",
+      "1 = 5 − 2·2 = 5 − 2(7 − 5) = 3·5 − 2·7 — <i>back-substitute, swap 2</i>",
+      "= 3(40 − 5·7) − 2·7 = 3·40 − 17·7 — <i>swap 5, collect the 7s</i>",
+      "d = −17 + 40 = 23 — <i>coefficient on e, made positive</i>",
+      "c = 2⁷ = 128 = 2·55 + 18, so c = 18 — <i>encrypt: mᵉ mod n</i>"
+     ],
+     "answer": "public key (55, 7), private d = 23, ciphertext c = 18. Check: 7·23 = 161 = 4·40 + 1 ✓."
+    },
+    {
+     "type": "example",
+     "title": "play Eve: factor n, find d, decrypt",
+     "prompt": "Eve sees the public key (n, e) = (51, 5) and the ciphertext c = 7. Since n is tiny, she can factor it. Recover m.",
+     "steps": [
+      "51 = 3·17 — <i>trial division by small primes</i>",
+      "φ = 2·16 = 32 — <i>(p − 1)(q − 1)</i>",
+      "5·13 = 65 = 2·32 + 1, so d = 13 — <i>inverse of e mod φ</i>",
+      "7² = 49 ≡ −2 (mod 51) — <i>squares table, using a negative stand-in</i>",
+      "7⁴ ≡ (−2)² = 4, 7⁸ ≡ 4² = 16 — <i>keep squaring</i>",
+      "13 = 8 + 4 + 1 — <i>d as a sum of powers of 2</i>",
+      "7¹³ ≡ 16·4·7 = 448 ≡ 40 (mod 51) — <i>448 − 8·51 = 40</i>"
+     ],
+     "answer": "m = 40. Check by re-encrypting: 40 ≡ −11, (−11)² = 121 ≡ 19, 19² = 361 ≡ 4, so 40⁵ ≡ 4·40 = 160 ≡ 7 = c ✓. This is exactly why real RSA uses primes hundreds of digits long."
+    },
+    {
+     "type": "warn",
+     "text": "<b>Wrong:</b> d = inverse of e mod n. <b>Right:</b> d = inverse of e mod φ = (p − 1)(q − 1). (Exponents cycle with Fermat's p − 1 and q − 1, not with n.)"
+    },
+    {
+     "type": "warn",
+     "text": "<b>Wrong:</b> φ = n − 1, e.g. 54 for n = 55. <b>Right:</b> φ = (5 − 1)(11 − 1) = 40. (n − 1 would be right only if n were prime.)"
+    },
+    {
+     "type": "warn",
+     "text": "<b>Wrong:</b> choosing e = 3 when p = 7, q = 13. <b>Right:</b> φ = 72 = 2³·3², so e = 3 shares a factor with φ and no d exists. Pick something like e = 5. (gcd(e, φ) = 1 is what makes d exist.)"
+    },
+    {
+     "type": "warn",
+     "text": "<b>Wrong:</b> decrypting with e (computing cᵉ), or reducing mod φ instead of mod n. <b>Right:</b> m = cᵈ mod n. (φ is only for the exponent arithmetic; the message lives mod n.)"
+    },
+    {
+     "type": "warn",
+     "text": "<b>Wrong:</b> keeping d = −17 from Bézout. <b>Right:</b> add φ to get d = 23. (Repeated squaring needs a positive exponent.)"
+    }
+   ]
+  }
+ ],
+ "cards": [
+  {
+   "front": "Solve x ≡ 2 (mod 3), x ≡ 3 (mod 4).",
+   "back": [
+    {
+     "type": "p",
+     "text": "x ≡ 11 (mod 12)."
+    }
+   ]
+  },
+  {
+   "front": "Why doesn't the CRT apply to x ≡ 1 (mod 4), x ≡ 2 (mod 6)?",
+   "back": [
+    {
+     "type": "p",
+     "text": "4 and 6 aren't coprime. In fact there's no solution: the first makes x odd, the second makes it even."
+    }
+   ]
+  },
+  {
+   "front": "Compute 2¹⁰⁰ mod 7.",
+   "back": [
+    {
+     "type": "p",
+     "text": "100 = 16·6 + 4, so 2¹⁰⁰ ≡ 2⁴ = 16 ≡ 2."
+    }
+   ]
+  },
+  {
+   "front": "Why can't you use Fermat to compute 3¹⁰⁰ mod 9?",
+   "back": [
+    {
+     "type": "p",
+     "text": "9 isn't prime (and 3 divides 9 anyway)."
+    }
+   ]
+  },
+  {
+   "front": "2¹⁴ mod 15 = 4. What does that prove?",
+   "back": [
+    {
+     "type": "p",
+     "text": "15 is composite. A prime p would give 2^(p−1) ≡ 1."
+    }
+   ]
+  },
+  {
+   "front": "p = 3, q = 11, e = 7. Find n, (p − 1)(q − 1), and d.",
+   "back": [
+    {
+     "type": "p",
+     "text": "n = 33, (p − 1)(q − 1) = 20, and d = 3 since 7·3 = 21 ≡ 1 (mod 20)."
+    }
+   ]
+  },
+  {
+   "front": "Encrypt m = 2 with the public key (33, 7).",
+   "back": [
+    {
+     "type": "p",
+     "text": "2⁷ = 128 = 3·33 + 29, so c = 29. (Decrypt check: 29³ ≡ (−4)³ = −64 ≡ 2.)"
+    }
+   ]
+  },
+  {
+   "front": "What would Eve need in order to find d?",
+   "back": [
+    {
+     "type": "p",
+     "text": "(p − 1)(q − 1), which means factoring n."
+    }
+   ]
+  },
+  {
+   "front": "State the Chinese Remainder Theorem.",
+   "back": [
+    {
+     "type": "p",
+     "text": "If m₁, …, mₙ are pairwise relatively prime, the system x ≡ aᵢ (mod mᵢ) has a unique solution mod M = m₁⋯mₙ."
+    }
+   ]
+  },
+  {
+   "front": "CRT construction formula?",
+   "back": [
+    {
+     "type": "formula",
+     "text": "x = Σ aᵢMᵢyᵢ mod M, Mᵢ = M/mᵢ, yᵢ = Mᵢ⁻¹ mod mᵢ"
+    },
+    {
+     "type": "p",
+     "text": "Each term is ≡ aᵢ mod mᵢ and ≡ 0 mod every other modulus."
+    }
+   ]
+  },
+  {
+   "front": "Why does CRT need pairwise coprime moduli?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Uniqueness uses “each mᵢ | x − y ⇒ M | x − y”, which needs coprimality; existence needs Mᵢ invertible mod mᵢ. With shared factors the congruences can contradict: x ≡ 0 (mod 2), x ≡ 1 (mod 4)."
+    }
+   ]
+  },
+  {
+   "front": "CRT with non-coprime moduli m, n?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Solvable iff a ≡ b (mod gcd(m, n)); then unique mod lcm(m, n)."
+    }
+   ]
+  },
+  {
+   "front": "Fermat’s little theorem?",
+   "back": [
+    {
+     "type": "formula",
+     "text": "p prime, p ∤ a ⇒ aᵖ⁻¹ ≡ 1 (mod p); always aᵖ ≡ a (mod p)"
+    }
+   ]
+  },
+  {
+   "front": "How do you reduce aⁿ mod a prime p?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Reduce a mod p; reduce n mod p − 1 (not mod p); compute a^r. Remainder 0 gives 1 (if p ∤ a)."
+    }
+   ]
+  },
+  {
+   "front": "Inverse of a mod a prime p via Fermat?",
+   "back": [
+    {
+     "type": "formula",
+     "text": "a⁻¹ ≡ aᵖ⁻² (mod p)"
+    }
+   ]
+  },
+  {
+   "front": "What does the Fermat test prove?",
+   "back": [
+    {
+     "type": "p",
+     "text": "If aⁿ⁻¹ ≢ 1 (mod n) then n is composite. If aⁿ⁻¹ ≡ 1 the test is inconclusive."
+    }
+   ]
+  },
+  {
+   "front": "Pseudoprime to base b? Carmichael number?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Composite n with bⁿ⁻¹ ≡ 1 (mod n). A Carmichael number is a pseudoprime to every coprime base; smallest is 561 = 3·11·17. Smallest base-2 pseudoprime: 341 = 11·31."
+    }
+   ]
+  },
+  {
+   "front": "RSA key setup?",
+   "back": [
+    {
+     "type": "list",
+     "items": [
+      "n = pq",
+      "φ = (p − 1)(q − 1)",
+      "gcd(e, φ) = 1",
+      "d = e⁻¹ mod φ",
+      "public (n, e), private d"
+     ]
+    },
+    {
+     "type": "warn",
+     "text": "d is the inverse of e mod φ, not mod n."
+    }
+   ]
+  },
+  {
+   "front": "Why does RSA decryption recover m? Where are Fermat and CRT used?",
+   "back": [
+    {
+     "type": "p",
+     "text": "de = 1 + k(p − 1)(q − 1). Mod p, Fermat (or p | m) gives m^{de} ≡ m; same mod q. CRT uniqueness (p, q coprime) gives m^{de} ≡ m (mod n)."
+    }
+   ]
+  },
+  {
+   "front": "Why is RSA secure (as far as we know)?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Computing d needs (p − 1)(q − 1), which is as hard as factoring n; knowing φ and n gives p + q = n − φ + 1 and so p, q."
+    }
+   ]
+  },
+  {
+   "front": "Freshman’s dream?",
+   "back": [
+    {
+     "type": "formula",
+     "text": "(a + b)ᵖ ≡ aᵖ + bᵖ (mod p) for p prime"
+    },
+    {
+     "type": "p",
+     "text": "Every middle binomial coefficient C(p, k) is divisible by p."
+    }
+   ]
+  }
+ ],
+ "hard": [
+  {
+   "title": "CRT with moduli 5, 7, 11",
+   "level": "hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "Solve x ≡ 2 (mod 5), x ≡ 3 (mod 7), x ≡ 10 (mod 11) using the CRT construction (not trial and error)."
+    }
+   ],
+   "answer": "x ≡ 87 (mod 385)",
+   "solution": [
+    {
+     "type": "p",
+     "text": "m = 385. Let M<sub>1</sub> = 77, M<sub>2</sub> = 55, M<sub>3</sub> = 35. Inverses: 77 ≡ 2 (mod 5), and its inverse is 3. 55 ≡ 6 (mod 7), inverse 6. 35 ≡ 2 (mod 11), inverse 6."
+    },
+    {
+     "type": "p",
+     "text": "x ≡ 2·77·3 + 3·55·6 + 10·35·6 = 462 + 990 + 2100 = 3552 ≡ <b>87 (mod 385)</b>."
+    },
+    {
+     "type": "p",
+     "text": "Check: 87 = 17·5 + 2 = 12·7 + 3 = 7·11 + 10. ✓"
+    },
+    {
+     "type": "tip",
+     "text": "<b>Tests:</b> the CRT formula Σ a<sub>k</sub>M<sub>k</sub>y<sub>k</sub>. <b>Common mistake:</b> using the inverse of M<sub>k</sub> modulo m instead of modulo m<sub>k</sub>."
+    }
+   ]
+  },
+  {
+   "title": "CRT with non-coprime moduli",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "list",
+     "items": [
+      "(a) Solve x ≡ 5 (mod 12), x ≡ 11 (mod 18).",
+      "(b) Show that x ≡ 3 (mod 12), x ≡ 8 (mod 18) has no solution.",
+      "(c) State the general rule."
+     ]
+    }
+   ],
+   "answer": "(a) x ≡ 29 (mod 36) (b) contradiction mod 6 (3 vs 2) (c) solvable iff a ≡ b (mod gcd(m, n)); then unique mod lcm(m, n)",
+   "solution": [
+    {
+     "type": "p",
+     "text": "(a) Substitute x = 5 + 12k: 12k ≡ 6 (mod 18). Divide by 6: 2k ≡ 1 (mod 3), so k ≡ 2 (mod 3). That gives x = 5 + 12(2 + 3j) = <b>29 + 36j</b>, i.e. x ≡ 29 (mod 36)."
+    },
+    {
+     "type": "p",
+     "text": "(b) The first congruence gives x ≡ 3 (mod 6), since 6 | 12. The second gives x ≡ 2 (mod 6), since 6 | 18. These contradict each other."
+    },
+    {
+     "type": "p",
+     "text": "(c) x ≡ a (mod m), x ≡ b (mod n) is solvable iff a ≡ b (mod gcd(m, n)), and then the solution is unique mod lcm(m, n)."
+    },
+    {
+     "type": "tip",
+     "text": "<b>Tests:</b> CRT when the moduli aren’t coprime. <b>Common mistake:</b> answering mod 12·18 = 216 instead of lcm = 36."
+    }
+   ]
+  },
+  {
+   "title": "Square roots of 1 mod 1001",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "How many x in [0, 1000] satisfy x² ≡ 1 (mod 1001)? Find them all. (1001 = 7·11·13.)"
+    }
+   ],
+   "answer": "8 solutions: 1, 155, 274, 428, 573, 727, 846, 1000",
+   "solution": [
+    {
+     "type": "p",
+     "text": "By CRT, x² ≡ 1 (mod 1001) ⇔ x² ≡ 1 mod 7, mod 11 and mod 13. Modulo a prime p, p | (x − 1)(x + 1) forces x ≡ ±1. That is 2 choices for each prime, 2³ = <b>8</b> combinations, and CRT turns each combination into exactly one residue mod 1001."
+    },
+    {
+     "type": "p",
+     "text": "Example, (+1, +1, −1): x = 1 + 77k ≡ −1 (mod 13). Since 77 ≡ −1 (mod 13), 1 − k ≡ −1, so k ≡ 2 and x = 155. Check: 155² = 24025 = 24·1001 + 1. ✓"
+    },
+    {
+     "type": "p",
+     "text": "<b>Answer:</b> x ∈ {1, 155, 274, 428, 573, 727, 846, 1000}"
+    },
+    {
+     "type": "p",
+     "text": "They come in pairs x ↔ 1001 − x, i.e. flipping all three signs."
+    },
+    {
+     "type": "tip",
+     "text": "<b>Tests:</b> CRT as a bijection between residues mod 1001 and triples of residues. <b>Common mistake:</b> answering 2 (only ±1). Modulo a composite number, a polynomial can have more roots than its degree."
+    }
+   ]
+  },
+  {
+   "title": "Towers and huge exponents with Fermat",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "list",
+     "items": [
+      "(a) Compute 3<sup>10<sup>100</sup></sup> mod 13.",
+      "(b) 2027 is prime. Compute 2<sup>2026</sup> mod 2027 and 2<sup>2028</sup> mod 2027."
+     ]
+    }
+   ],
+   "answer": "(a) 3 (b) 2²⁰²⁶ ≡ 1, 2²⁰²⁸ ≡ 4 (mod 2027)",
+   "solution": [
+    {
+     "type": "p",
+     "text": "(a) Fermat: 3<sup>12</sup> ≡ 1 (mod 13), so reduce the exponent mod 12. Since 10² = 100 ≡ 4 (mod 12) and 4·10 = 40 ≡ 4, every 10<sup>k</sup> with k ≥ 2 is ≡ 4 (mod 12). So 3<sup>10<sup>100</sup></sup> ≡ 3⁴ = 81 ≡ <b>3</b>."
+    },
+    {
+     "type": "p",
+     "text": "(b) Fermat gives 2<sup>2026</sup> ≡ <b>1</b> directly. Then 2<sup>2028</sup> ≡ 2² = <b>4</b>."
+    },
+    {
+     "type": "tip",
+     "text": "<b>Tests:</b> reducing exponents mod p − 1, never mod p. <b>Common mistake:</b> in (a), concluding “10<sup>100</sup> ≡ 0 (mod 12) because it’s a power of 10”. 12 = 4·3 and 3 ∤ 10."
+    }
+   ]
+  },
+  {
+   "title": "2730 divides n¹³ − n",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "Prove that 2730 | n<sup>13</sup> − n for every integer n. (2730 = 2·3·5·7·13.) Why can’t 11 be added to this list?"
+    }
+   ],
+   "answer": "Proved: for p ∈ {2, 3, 5, 7, 13}, p − 1 | 12 so n¹³ ≡ n (mod p); 11 fails since 10 ∤ 12 (2¹³ − 2 = 8190 is not a multiple of 11).",
+   "solution": [
+    {
+     "type": "p",
+     "text": "Fix p ∈ {2, 3, 5, 7, 13}. Note that p − 1 ∈ {1, 2, 4, 6, 12} always divides 12."
+    },
+    {
+     "type": "list",
+     "items": [
+      "If p | n, then both n<sup>13</sup> and n are ≡ 0.",
+      "Otherwise Fermat gives n<sup>p−1</sup> ≡ 1, so n<sup>12</sup> = (n<sup>p−1</sup>)<sup>12/(p−1)</sup> ≡ 1 and n<sup>13</sup> ≡ n."
+     ]
+    },
+    {
+     "type": "p",
+     "text": "So each of these five distinct primes divides n<sup>13</sup> − n, and so does their product 2730. ∎"
+    },
+    {
+     "type": "p",
+     "text": "For 11, p − 1 = 10 doesn’t divide 12. Concretely, 2<sup>13</sup> − 2 = 8190 = 2·3²·5·7·13, which is not a multiple of 11."
+    },
+    {
+     "type": "tip",
+     "text": "<b>Tests:</b> spotting “p − 1 | exponent − 1”. <b>Common mistake:</b> forgetting the case p | n, where Fermat’s hypothesis fails."
+    }
+   ]
+  },
+  {
+   "title": "561 is a Carmichael number",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "Prove that a<sup>560</sup> ≡ 1 (mod 561) for every a with gcd(a, 561) = 1, even though 561 = 3·11·17 is composite. What does this say about using Fermat’s theorem as a primality test?"
+    }
+   ],
+   "answer": "Proved: a² ≡ 1 (mod 3), a¹⁰ ≡ 1 (mod 11), a¹⁶ ≡ 1 (mod 17) and 2, 10, 16 | 560; CRT gives a⁵⁶⁰ ≡ 1 (mod 561). The Fermat test can be fooled.",
+   "solution": [
+    {
+     "type": "p",
+     "text": "gcd(a, 561) = 1 means a is coprime to 3, to 11 and to 17. Fermat gives a² ≡ 1 (mod 3), a<sup>10</sup> ≡ 1 (mod 11), a<sup>16</sup> ≡ 1 (mod 17). Since 560 = 2·280 = 10·56 = 16·35, raising to those powers gives a<sup>560</sup> ≡ 1 modulo each of 3, 11, 17. Because they are pairwise coprime, a<sup>560</sup> ≡ 1 (mod 561). ∎"
+    },
+    {
+     "type": "p",
+     "text": "So the converse of Fermat is false: a composite number can pass the test a<sup>n−1</sup> ≡ 1 for <i>every</i> coprime base. Such numbers are called Carmichael numbers."
+    },
+    {
+     "type": "tip",
+     "text": "<b>Tests:</b> applying Fermat prime by prime, then combining with CRT. <b>Common mistake:</b> applying Fermat with modulus 561 itself, which is not prime."
+    }
+   ]
+  },
+  {
+   "title": "RSA end-to-end with CRT decryption",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "RSA with p = 17, q = 23, e = 3. (a) Find n, (p − 1)(q − 1) and d. (b) Encrypt M = 42. (c) Decrypt your ciphertext using CRT (mod 17 and mod 23 separately)."
+    }
+   ],
+   "answer": "(a) n = 391, φ = 352, d = 235 (b) C = 189 (c) decrypts to 42",
+   "solution": [
+    {
+     "type": "p",
+     "text": "(a) n = 391 and (p − 1)(q − 1) = 16·22 = 352. Since 352 = 117·3 + 1, we have 3·(−117) ≡ 1, so d ≡ −117 ≡ <b>235</b>. Check: 3·235 = 705 = 2·352 + 1. ✓"
+    },
+    {
+     "type": "p",
+     "text": "(b) 42² = 1764 ≡ 1764 − 4·391 = 200, and 200·42 = 8400 ≡ 8400 − 21·391 = 189. <b>C = 189</b>."
+    },
+    {
+     "type": "p",
+     "text": "(c) <b>Mod 17:</b> 189 ≡ 2. Since 235 ≡ 11 (mod 16), 189<sup>235</sup> ≡ 2<sup>11</sup> = 2048 ≡ 8. <b>Mod 23:</b> 189 ≡ 5. Since 235 ≡ 15 (mod 22), 5<sup>15</sup> = 5⁸·5⁴·5²·5 ≡ 16·4·2·5 = 640 ≡ 19. Now solve x ≡ 8 (mod 17), x ≡ 19 (mod 23): x = 19 + 23k ≡ 8 (mod 17), so 2 + 6k ≡ 8, 6k ≡ 6, k ≡ 1, and <b>x = 42</b>. ✓"
+    },
+    {
+     "type": "tip",
+     "text": "<b>Tests:</b> every RSA step, plus CRT as a shortcut. <b>Common mistake:</b> computing d as an inverse mod n instead of mod (p − 1)(q − 1)."
+    }
+   ]
+  },
+  {
+   "title": "Leaked φ breaks RSA",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "An RSA modulus is n = 4189 = pq. Someone leaks (p − 1)(q − 1) = 4060. Recover p and q. With e = 3, find d."
+    }
+   ],
+   "answer": "p, q = 71, 59; d = 2707",
+   "solution": [
+    {
+     "type": "p",
+     "text": "(p − 1)(q − 1) = pq − (p + q) + 1, so p + q = 4189 − 4060 + 1 = 130. So p and q are the roots of x² − 130x + 4189 = 0. The discriminant is 16900 − 16756 = 144 = 12², so x = (130 ± 12)/2: <b>p, q = 71, 59</b>. Check: 71·59 = 4189. ✓"
+    },
+    {
+     "type": "p",
+     "text": "d: 4060 = 3·1353 + 1, so 3·(−1353) ≡ 1, and d ≡ −1353 ≡ <b>2707</b>. Check: 3·2707 = 8121 = 2·4060 + 1. ✓"
+    },
+    {
+     "type": "tip",
+     "text": "<b>Tests:</b> understanding that knowing (p − 1)(q − 1) is as good as knowing the factorization. <b>Common mistake:</b> trying to factor 4189 by trial division (which works here, but not on an exam with large numbers) instead of using the sum-and-product trick."
+    }
+   ]
+  },
+  {
+   "title": "RSA works for every message",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "Prove that RSA decryption works for <b>every</b> message 0 ≤ M &lt; n = pq, including M that share a factor with n: if ed ≡ 1 (mod (p − 1)(q − 1)), then M<sup>ed</sup> ≡ M (mod n)."
+    }
+   ],
+   "answer": "Proved: M^{ed} ≡ M mod p and mod q in both cases p | M and p ∤ M (Fermat), so pq | M^{ed} − M.",
+   "solution": [
+    {
+     "type": "p",
+     "text": "Write ed = 1 + k(p − 1)(q − 1) with k ≥ 0."
+    },
+    {
+     "type": "p",
+     "text": "<b>Mod p.</b> If p | M, both M<sup>ed</sup> and M are ≡ 0. Otherwise Fermat gives M<sup>p−1</sup> ≡ 1, so M<sup>ed</sup> = M · (M<sup>p−1</sup>)<sup>k(q−1)</sup> ≡ M. In both cases p | M<sup>ed</sup> − M."
+    },
+    {
+     "type": "p",
+     "text": "<b>Mod q.</b> The same argument gives q | M<sup>ed</sup> − M."
+    },
+    {
+     "type": "p",
+     "text": "p and q are distinct primes, so pq | M<sup>ed</sup> − M. Since 0 ≤ M &lt; n, decryption returns exactly M. ∎"
+    },
+    {
+     "type": "tip",
+     "text": "<b>Tests:</b> splitting into prime moduli to get around the coprimality hypothesis. <b>Common mistake:</b> using a Fermat/Euler-type result modulo n directly. That needs gcd(M, n) = 1, which the problem explicitly doesn’t assume."
+    }
+   ]
+  }
+ ],
+ "keyFacts": [
+  "CRT: pairwise coprime mᵢ ⇒ unique x mod M = ∏ mᵢ; x = Σ aᵢMᵢyᵢ with yᵢ = Mᵢ⁻¹ mod mᵢ",
+  "Non-coprime: solvable iff a ≡ b (mod gcd(m, n)), unique mod lcm(m, n)",
+  "Fermat: p prime, p ∤ a ⇒ aᵖ⁻¹ ≡ 1 (mod p); reduce exponents mod p − 1",
+  "a⁻¹ ≡ aᵖ⁻² (mod p)",
+  "aⁿ⁻¹ ≢ 1 (mod n) proves n composite; ≡ 1 proves nothing (pseudoprimes, Carmichael 561)",
+  "RSA: n = pq, φ = (p − 1)(q − 1), gcd(e, φ) = 1, d = e⁻¹ mod φ; c = mᵉ mod n, m = cᵈ mod n",
+  "RSA works: Fermat mod p and mod q, then CRT uniqueness mod pq",
+  "Freshman’s dream: (a + b)ᵖ ≡ aᵖ + bᵖ (mod p)"
+ ]
+}

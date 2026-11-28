@@ -1,0 +1,1431 @@
+{
+ "id": "55-J",
+ "course": "55",
+ "title": "Binomial theorem, combinatorial proofs, stars & bars, repeated letters",
+ "source": "Rosen 6.4–6.5 · Lec15",
+ "summary": "Binomial coefficients in action: the binomial theorem and coefficient extraction, identities proved by counting one set two ways (Pascal, Vandermonde, Σ k·C(n,k)), choosing with repetition by stars and bars, arrangements with repeated letters, distributions into boxes and lattice paths. Expect at least one coefficient computation, one stars-and-bars count with bounds, and one combinatorial proof on the final.",
+ "lesson": [
+  {
+   "title": "Binomial coefficients and the binomial theorem",
+   "blocks": [
+    {
+     "type": "p",
+     "text": "C(n, k), read “n choose k”, is the number of k-element subsets of an n-element set: C(n, k) = n!/(k!(n − k)!). These numbers have two famous homes: Pascal’s triangle and the binomial theorem."
+    },
+    {
+     "type": "thm",
+     "name": "Binomial theorem",
+     "text": "(x + y)ⁿ = Σⱼ₌₀ⁿ C(n, j) xⁿ⁻ʲ yʲ",
+     "proof": [
+      {
+       "type": "p",
+       "text": "Multiply out n copies of (x + y). Each term of the expansion comes from choosing x or y in each copy. You get xⁿ⁻ʲyʲ exactly when y is chosen in j of the copies, and there are C(n, j) ways to choose which j copies. E.g. (x + y)³ = x³ + 3x²y + 3xy² + y³."
+      }
+     ]
+    },
+    {
+     "type": "example",
+     "title": "Coefficient with constants inside the terms",
+     "prompt": "Find the coefficient of z⁴w⁶ in (3z + 2w²)⁷.",
+     "steps": [
+      "Name the whole terms: x = 3z, y = 2w², n = 7.",
+      "General term: C(7, j)(3z)⁷⁻ʲ(2w²)ʲ = C(7, j)·3⁷⁻ʲ·2ʲ·z⁷⁻ʲ·w²ʲ.",
+      "Match exponents: 2j = 6 gives j = 3, and then z⁷⁻³ = z⁴ ✓.",
+      "Coefficient: C(7, 3)·3⁴·2³ = 35·81·8 = 22,680."
+     ],
+     "answer": "22,680"
+    },
+    {
+     "type": "steps",
+     "title": "Find a coefficient with the binomial theorem",
+     "items": [
+      "<b>Name the two terms.</b> Write the power as (a + b)ⁿ, where a and b are the <i>whole</i> terms, constants and signs included. In (2x − 5)⁶, a = 2x and b = −5.",
+      "<b>Write the general term:</b> C(n, j)·aⁿ⁻ʲ·bʲ.",
+      "<b>Track the variable's exponent.</b> Write the power of x in that term as a formula in j. Watch powers like (x²)ⁿ⁻ʲ = x²⁽ⁿ⁻ʲ⁾ and (1/x)ʲ = x⁻ʲ.",
+      "<b>Solve for j.</b> Set that exponent equal to the one you want. If j is not a whole number from 0 to n, the coefficient is 0.",
+      "<b>Multiply it all out:</b> C(n, j) times each constant raised to <i>its</i> power, signs included. A negative term to an odd power gives a minus sign."
+     ]
+    },
+    {
+     "type": "p",
+     "text": "<b>Sanity check:</b> the two powers must add to n. In (x + y)² the middle term is C(2, 1)xy = 2xy, and indeed (x + y)² = x² + 2xy + y²."
+    },
+    {
+     "type": "example",
+     "title": "Coefficient with a 1/x term",
+     "prompt": "Find the coefficient of x⁵ in (x² − 3/x)⁷.",
+     "steps": [
+      "a = x², b = −3/x, n = 7 — <i>name the whole terms, sign included</i>",
+      "C(7, j)·(x²)⁷⁻ʲ·(−3/x)ʲ — <i>general term</i>",
+      "= C(7, j)·(−3)ʲ·x¹⁴⁻²ʲ⁻ʲ = C(7, j)·(−3)ʲ·x¹⁴⁻³ʲ — <i>(x²)⁷⁻ʲ = x¹⁴⁻²ʲ and (1/x)ʲ = x⁻ʲ</i>",
+      "14 − 3j = 5, so j = 3 — <i>match the exponent we want</i>",
+      "C(7, 3)·(−3)³ = 35·(−27) — <i>plug in j; odd power keeps the minus</i>"
+     ],
+     "answer": "−945 (and there is no constant term)"
+    },
+    {
+     "type": "warn",
+     "text": "<b>Wrong:</b> the coefficient of x³y in (3x + y)⁴ is C(4, 1) = 4. <b>Right:</b> C(4, 1)·3³ = 108. (The constant 3 is part of the term, so it gets raised to the same power as x.)"
+    },
+    {
+     "type": "warn",
+     "text": "<b>Wrong:</b> in (x − 2)⁵ the x³ coefficient is C(5, 2)·2² = 40 and the x² coefficient is C(5, 3)·2³ = 80. <b>Right:</b> b = −2, so it's (−2)² and (−2)³: 40 and −80. (The minus sign travels with the term.)"
+    },
+    {
+     "type": "warn",
+     "text": "<b>Wrong:</b> in (x² + 1)⁸, the x⁶ term has n − j = 6. <b>Right:</b> (x²)ⁿ⁻ʲ = x²⁽ⁿ⁻ʲ⁾, so 2(8 − j) = 6, j = 5. (Always write the exponent of the variable, not of the term.)"
+    },
+    {
+     "type": "table",
+     "head": [
+      "n",
+      "row n of Pascal’s triangle: C(n, 0), …, C(n, n)"
+     ],
+     "rows": [
+      [
+       "0",
+       "1"
+      ],
+      [
+       "1",
+       "1 1"
+      ],
+      [
+       "2",
+       "1 2 1"
+      ],
+      [
+       "3",
+       "1 3 3 1"
+      ],
+      [
+       "4",
+       "1 4 6 4 1"
+      ],
+      [
+       "5",
+       "1 5 10 10 5 1"
+      ],
+      [
+       "6",
+       "1 6 15 20 15 6 1"
+      ]
+     ]
+    },
+    {
+     "type": "p",
+     "text": "Each interior entry is the sum of the two entries above it (Pascal’s identity, which has a one-line counting proof), and row n gives the coefficients of (x + y)ⁿ."
+    },
+    {
+     "type": "thm",
+     "name": "Sum of a row",
+     "text": "Σₖ₌₀ⁿ C(n, k) = 2ⁿ.",
+     "proof": [
+      {
+       "type": "p",
+       "text": "Algebra: set x = y = 1 in the binomial theorem. Counting: both sides count all subsets of an n-set, the left side grouped by size, the right side by deciding in/out for each element."
+      }
+     ]
+    },
+    {
+     "type": "steps",
+     "title": "Evaluate a sum of binomial coefficients",
+     "items": [
+      "Look for the shape Σₖ C(n, k)·aⁿ⁻ᵏ·bᵏ. Anything not in that shape can often be fixed by pulling out a constant.",
+      "By the binomial theorem the whole sum is (a + b)ⁿ. So just pick a and b.",
+      "Example: Σₖ C(n, k)·4ᵏ has a = 1, b = 4, so it equals (1 + 4)ⁿ = 5ⁿ."
+     ]
+    },
+    {
+     "type": "p",
+     "text": "<b>Sanity check:</b> try n = 1. The sum is C(1, 0) + C(1, 1)·4 = 5 = 5¹. ✓"
+    },
+    {
+     "type": "example",
+     "title": "Evaluate a binomial sum",
+     "prompt": "Evaluate (a) Σₖ C(n, k)·4ᵏ, (b) Σₖ (−1)ᵏ C(n, k) for n ≥ 1, (c) Σₖ C(10, k)·2ᵏ·3¹⁰⁻ᵏ.",
+     "steps": [
+      "(a) Shape C(n, k)·1ⁿ⁻ᵏ·4ᵏ, so a = 1, b = 4: (1 + 4)ⁿ = 5ⁿ.",
+      "(b) a = 1, b = −1: (1 − 1)ⁿ = 0 for n ≥ 1.",
+      "(c) a = 3, b = 2: (3 + 2)¹⁰ = 5¹⁰ = 9,765,625."
+     ],
+     "answer": "(a) 5ⁿ (b) 0 (c) 5¹⁰ = 9,765,625"
+    }
+   ]
+  },
+  {
+   "title": "Combinatorial proofs: Pascal, Vandermonde and friends",
+   "blocks": [
+    {
+     "type": "tip",
+     "text": "To prove two quantities are equal, show they count the same thing in two ways. The numbers C(n, k) build Pascal's triangle and are the coefficients of (x + y)ⁿ."
+    },
+    {
+     "type": "def",
+     "term": "Definition",
+     "text": "Prove A = B by finding one collection of objects and counting it two different ways, one giving A and the other giving B."
+    },
+    {
+     "type": "steps",
+     "title": "Write a combinatorial proof",
+     "items": [
+      "<b>Pick a story.</b> Look at the simpler side. A single C(m, r) usually means \"choose an r-person group from m people.\" That group is the one thing you will count.",
+      "<b>Set the scene.</b> Say exactly who the people are, for example \"a club of n boys and n girls.\" Use the shape of the other side to decide the scene.",
+      "<b>Count it the direct way.</b> Explain in one sentence why this gives one side.",
+      "<b>Count it a second way.</b> Read the other side as instructions: a <b>sum</b> means split into cases (sum rule). The cases must not overlap and must cover everything.; a <b>product</b> means do it in steps (product rule).; a factor like n or k in front often means \"pick one special person first\" (a chair, a leader).; 2ⁿ means \"each of n people is in or out.\"",
+      "<b>Conclude.</b> \"Both expressions count the same set, so they are equal.\" Algebra alone does not count as a combinatorial proof."
+     ]
+    },
+    {
+     "type": "p",
+     "text": "<b>Sanity check:</b> plug in a tiny n (like n = 2 or 3) and check both sides give the same number before you write the story."
+    },
+    {
+     "type": "thm",
+     "name": "Symmetry",
+     "text": "C(n, r) = C(n, n − r).",
+     "proof": [
+      {
+       "type": "p",
+       "text": "Algebra: plug into the formula. Combinatorial proof: choosing the r people who are in is the same as choosing the n − r people who are out (match each subset with its complement)."
+      }
+     ]
+    },
+    {
+     "type": "thm",
+     "name": "Committee–chair identity",
+     "text": "k·C(n, k) = n·C(n − 1, k − 1).",
+     "proof": [
+      {
+       "type": "p",
+       "text": "Count k-person committees from n people with one member named chair. Pick the committee, then the chair: C(n, k)·k. Or pick the chair first (n ways), then the other k − 1 members from the remaining n − 1: n·C(n − 1, k − 1). Same set, so the counts are equal. ∎"
+      }
+     ]
+    },
+    {
+     "type": "p",
+     "text": "<b>Corollary:</b> if p is prime and 0 &lt; k &lt; p, then <b>p | C(p, k)</b>. Since k·C(p, k) = p·C(p − 1, k − 1) is divisible by p and p ∤ k, p must divide C(p, k). This is what powers the Freshman's dream and Fermat."
+    },
+    {
+     "type": "thm",
+     "name": "Pascal’s identity",
+     "text": "C(n + 1, k) = C(n, k − 1) + C(n, k) for n ≥ k ≥ 1.",
+     "proof": [
+      {
+       "type": "p",
+       "text": "Count the k-person groups chosen from n + 1 people, one of whom is Alice: C(n + 1, k). Split into two cases that do not overlap. Groups containing Alice: choose the other k − 1 from the remaining n, C(n, k − 1). Groups without Alice: choose all k from the other n, C(n, k). By the sum rule the totals agree. ∎"
+      }
+     ]
+    },
+    {
+     "type": "thm",
+     "name": "Vandermonde’s identity",
+     "text": "Σₖ C(m, k)·C(n, r − k) = C(m + n, r).",
+     "proof": [
+      {
+       "type": "p",
+       "text": "<b>Story:</b> a club has m men and n women. Count the r-person committees."
+      },
+      {
+       "type": "p",
+       "text": "<b>Way 1:</b> choose any r of the m + n people: C(m + n, r)."
+      },
+      {
+       "type": "p",
+       "text": "<b>Way 2:</b> split by k = the number of men on the committee. For a fixed k, choose the men in C(m, k) ways and the r − k women in C(n, r − k) ways (product rule). The cases k = 0, 1, …, r do not overlap and cover every committee, so add them (sum rule): Σₖ C(m, k)C(n, r − k)."
+      },
+      {
+       "type": "p",
+       "text": "Both count the same committees, so the two sides are equal. ∎ (Taking m = r = n and using C(n, n − k) = C(n, k) gives Σ C(n, k)² = C(2n, n).)"
+      }
+     ]
+    },
+    {
+     "type": "thm",
+     "name": "Σ k·C(n, k) = n·2ⁿ⁻¹",
+     "text": "For n ≥ 1, Σₖ₌₀ⁿ k·C(n, k) = n·2ⁿ⁻¹.",
+     "proof": [
+      {
+       "type": "p",
+       "text": "<b>Story:</b> count pairs (committee, chair) where the committee is any subset of n people and the chair is one of its members."
+      },
+      {
+       "type": "p",
+       "text": "<b>Way 1:</b> split by the committee size k: C(n, k) committees of size k, each with k choices of chair. Total Σ k·C(n, k)."
+      },
+      {
+       "type": "p",
+       "text": "<b>Way 2:</b> pick the chair first (n ways); each of the other n − 1 people is in or out (2ⁿ⁻¹ ways). Total n·2ⁿ⁻¹."
+      },
+      {
+       "type": "p",
+       "text": "Same set counted twice, so the sums are equal. ∎ Check n = 3: 0 + 3 + 6 + 3 = 12 = 3·4."
+      }
+     ]
+    },
+    {
+     "type": "example",
+     "title": "Combinatorial proof of a sum identity",
+     "prompt": "Prove combinatorially: Σₖ₌₀ⁿ C(n, k)² = C(2n, n).",
+     "steps": [
+      "Scene: a club of n women and n men. Count n-person committees. — <i>the single C(2n, n) suggests \"choose n from 2n\"</i>",
+      "Way 1: choose any n of the 2n people: C(2n, n) — <i>direct count, the right side</i>",
+      "Way 2: split by k = number of women on the committee, k = 0, 1, …, n — <i>the left side is a sum, so use cases; they don't overlap and cover everything</i>",
+      "With k women: C(n, k) ways to pick the women, C(n, n − k) ways to pick the n − k men — <i>product rule inside one case</i>",
+      "C(n, n − k) = C(n, k), so case k gives C(n, k)² — <i>symmetry</i>",
+      "Total: Σₖ C(n, k)² — <i>sum rule over the cases</i>",
+      "Both count the same committees, so they are equal — <i>the conclusion sentence</i>",
+      "Sanity check n = 2: 1² + 2² + 1² = 6 = C(4, 2). ✓"
+     ],
+     "answer": "Σ C(n, k)² = C(2n, n): both sides count n-person committees from n women and n men"
+    },
+    {
+     "type": "example",
+     "title": "Writing a combinatorial proof from scratch",
+     "prompt": "Prove combinatorially that C(n, 2) + C(n + 1, 2) = n².",
+     "steps": [
+      "n² suggests ordered pairs (a, b) with a, b ∈ {1, …, n} (repeats allowed): n² of them.",
+      "Split by a &lt; b, a = b, a > b. Pairs with a &lt; b: C(n, 2). Pairs with a ≥ b: think of them as choosing 2 different numbers from {1, …, n + 1} and mapping (a, b) with a > b to {a, b}, and (a, a) to {a, n + 1}.",
+      "That map is a bijection from the pairs with a ≥ b onto the 2-subsets of {1, …, n + 1}, so there are C(n + 1, 2) of them.",
+      "Total: C(n, 2) + C(n + 1, 2) = n². Check n = 3: 3 + 6 = 9 ✓."
+     ],
+     "answer": "Both sides count the n² ordered pairs from {1, …, n}"
+    },
+    {
+     "type": "warn",
+     "text": "<b>Wrong:</b> proving an identity by expanding factorials and calling it a combinatorial proof. <b>Right:</b> name one set and explain in words how each side counts it. (The question asks for the counting argument.)"
+    },
+    {
+     "type": "warn",
+     "text": "<b>Wrong:</b> n | C(n, k) for every n. <b>Right:</b> only for a <b>prime</b> p and 0 &lt; k &lt; p. C(4, 2) = 6 is not divisible by 4. (The proof needs p ∤ k.)"
+    }
+   ]
+  },
+  {
+   "title": "Choosing with repetition: stars and bars",
+   "blocks": [
+    {
+     "type": "tip",
+     "text": "Two questions pick the formula: does order matter, and is repetition allowed? Identical items into different bins means stars and bars. Arrangements of repeated letters means divide by the repeats."
+    },
+    {
+     "type": "table",
+     "head": [
+      "Picking r of n distinct objects",
+      "Order matters",
+      "Order doesn't matter"
+     ],
+     "rows": [
+      [
+       "<b>Repetition not allowed</b>",
+       "P(n, r) = n!/(n − r)!",
+       "C(n, r) = n!/((n − r)! r!)"
+      ],
+      [
+       "<b>Repetition allowed</b>",
+       "nʳ",
+       "C(n + r − 1, r) (stars & bars)"
+      ]
+     ]
+    },
+    {
+     "type": "steps",
+     "title": "Pick the right formula",
+     "items": [
+      "<b>Rephrase it</b> as \"pick r things from n options.\" Ask: what are the options (n), and how many picks (r)?",
+      "<b>Does order matter?</b> Would swapping two picks give a different answer? A PIN 12 vs 21: yes. A bag of donuts: no.",
+      "<b>Can an option be picked twice?</b> PIN digits can repeat. A committee member can't be picked twice.",
+      "<b>Read the table cell:</b> order + no repeats: P(n, r). Order + repeats: nʳ. No order + no repeats: C(n, r). No order + repeats: C(n + r − 1, r)."
+     ]
+    },
+    {
+     "type": "p",
+     "text": "<b>Sanity check:</b> options {a, b}, pick 2. Order + repeats: aa, ab, ba, bb = 4 = 2². No order + repeats: aa, ab, bb = 3 = C(3, 2). ✓"
+    },
+    {
+     "type": "tip",
+     "text": "<b>How many collections of eight bills using 1-dollar, 5-dollar, 10-dollar, 20-dollar</b> (bills of the same type are identical)? Write the collection as stars (bills) split by bars into 4 types: *|****||*** means one 1-dollar, four 5-dollar, zero 10-dollar, three 20-dollar. Every arrangement of 8 stars and 3 bars is one collection, so choose where the 8 stars go among 11 spots: <b>C(11, 8) = 165</b>.<br>General rule: r identical items into n types uses r stars and n − 1 bars: <b>C(n + r − 1, r)</b> = C(n + r − 1, n − 1)."
+    },
+    {
+     "type": "thm",
+     "name": "Stars and bars",
+     "text": "The number of ways to choose r objects from n types, with repetition allowed and order irrelevant, equals the number of nonnegative integer solutions of x₁ + ⋯ + xₙ = r, which is C(n + r − 1, r) = C(n + r − 1, n − 1).",
+     "proof": [
+      {
+       "type": "p",
+       "text": "Encode a choice as a row of r stars (the objects) and n − 1 bars (the walls between the n types): stars before the first bar are type 1, stars between bars 1 and 2 are type 2, and so on. For example, with n = 4, ★|★★★★||★★★ means x = (1, 4, 0, 3)."
+      },
+      {
+       "type": "p",
+       "text": "Every choice gives exactly one row and every row gives exactly one choice, so this is a bijection. A row has r + n − 1 positions, and it is determined by which r of them hold stars: C(n + r − 1, r) rows. ∎"
+      },
+      {
+       "type": "p",
+       "text": "Why n − 1 and not n: n bins need only n − 1 walls between them."
+      }
+     ]
+    },
+    {
+     "type": "example",
+     "title": "Stars and bars with a lower bound and with ≤",
+     "prompt": "Count the nonnegative integer solutions of (a) x₁ + x₂ + x₃ = 17, (b) x₁ + x₂ + x₃ ≤ 17, (c) y₁ + y₂ + y₃ = 14 with every yᵢ ≥ 1.",
+     "steps": [
+      "(a) 17 stars, 2 bars: C(19, 2) = 171.",
+      "(b) Add a slack variable x₄ = 17 − (x₁ + x₂ + x₃) ≥ 0: now x₁ + x₂ + x₃ + x₄ = 17, 17 stars and 3 bars: C(20, 3) = 1140.",
+      "(c) Give each yᵢ its 1 first: zᵢ = yᵢ − 1 ≥ 0 and z₁ + z₂ + z₃ = 11. 11 stars, 2 bars: C(13, 2) = 78."
+     ],
+     "answer": "(a) 171 (b) 1140 (c) 78"
+    },
+    {
+     "type": "p",
+     "text": "Tricks: “≤” means add a slack variable; “at least 1” (or at least c) means subtract it off first."
+    },
+    {
+     "type": "steps",
+     "title": "Stars and bars with bounds",
+     "items": [
+      "<b>Find the stars and the bins.</b> Stars = the identical things (or the total in x₁ + ⋯ + xₙ = r). Bins = the variables or types. n bins need <b>n − 1 bars</b>.",
+      "<b>Lower bounds (\"at least c\"):</b> hand out the required amount first, then subtract it from the total. Do this for every variable that has a bound.",
+      "<b>\"≤ r\" instead of \"= r\":</b> add one slack variable for the leftover. That's one more bin.",
+      "<b>Upper bounds (\"at most c\"):</b> count everything, then subtract the bad cases where that variable is <b>at least c + 1</b>. The bad cases are a lower-bound problem from step 2.",
+      "<b>Count:</b> C(stars + bars, bars), which is the same as C(stars + bars, stars)."
+     ]
+    },
+    {
+     "type": "p",
+     "text": "<b>Sanity check:</b> x₁ + x₂ = 2 has solutions (0, 2), (1, 1), (2, 0): 3 of them. Formula: 2 stars, 1 bar, C(3, 1) = 3. ✓"
+    },
+    {
+     "type": "example",
+     "title": "Lower and upper bounds together",
+     "prompt": "How many integer solutions does x₁ + x₂ + x₃ + x₄ = 17 have with x₁ ≥ 1, x₂ ≥ 2, 0 ≤ x₃ ≤ 4, x₄ ≥ 0?",
+     "steps": [
+      "Give 1 to x₁ and 2 to x₂. New total: 17 − 3 = 14 — <i>lower bounds first</i>",
+      "Ignore x₃ ≤ 4: 14 stars, 3 bars: C(17, 3) = 680 — <i>4 bins means 3 bars</i>",
+      "Bad cases: x₃ ≥ 5. Give 5 more to x₃: total 9 — <i>\"at most 4\" fails exactly when x₃ ≥ 5</i>",
+      "Bad count: 9 stars, 3 bars: C(12, 3) = 220 — <i>same stars and bars</i>",
+      "680 − 220 — <i>good = all − bad</i>"
+     ],
+     "answer": "460"
+    },
+    {
+     "type": "warn",
+     "text": "<b>Wrong:</b> 9 identical pencils to 4 students is C(12, 4) or C(13, 4). <b>Right:</b> 4 students means 3 bars, so C(9 + 3, 3) = C(12, 3) = 220. (The bottom number is either the bars, n − 1, or the stars, r. Never n.)"
+    },
+    {
+     "type": "warn",
+     "text": "<b>Wrong:</b> 7 different books given to 3 friends is C(9, 2) by stars and bars. <b>Right:</b> 3⁷ = 2187. (Stars and bars only works when the objects are <b>identical</b>. Each book independently picks a friend.)"
+    },
+    {
+     "type": "warn",
+     "text": "<b>Wrong:</b> for x₁ ≤ 4, subtract the cases with x₁ ≥ 4. <b>Right:</b> subtract the cases with x₁ ≥ 5. (x₁ = 4 is allowed, so it's not a bad case.)"
+    },
+    {
+     "type": "warn",
+     "text": "<b>Wrong:</b> with \"each xᵢ ≥ 2,\" subtract 2 from the total once. <b>Right:</b> subtract 2 for <b>each</b> variable: 3 variables means subtract 6. (Every variable gets its own head start.)"
+    }
+   ]
+  },
+  {
+   "title": "Permutations with repeated letters",
+   "blocks": [
+    {
+     "type": "thm",
+     "name": "Arrangements with repeated objects",
+     "text": "n = n₁ + ⋯ + nₖ objects of k types (identical within a type) have n!/(n₁! n₂! ⋯ nₖ!) different arrangements in a row.",
+     "proof": [
+      {
+       "type": "p",
+       "text": "Label the copies so that all n objects are different: n! arrangements. Permuting the n₁ copies of type 1 among their own positions (n₁! ways), and likewise for every type, does not change the word once the labels are erased. So every word is counted exactly n₁!·n₂!⋯nₖ! times; divide (division rule). ∎"
+      }
+     ]
+    },
+    {
+     "type": "example",
+     "title": "Repeated letters",
+     "prompt": "How many arrangements do the letters of SENSELESSNESS have? Of LETTER?",
+     "steps": [
+      "SENSELESSNESS: 13 letters, tallies S 6, E 4, N 2, L 1 (6 + 4 + 2 + 1 = 13).",
+      "13!/(6!·4!·2!·1!) = 180,180.",
+      "LETTER: 6 letters with E 2, T 2, L 1, R 1: 6!/(2!·2!) = 180."
+     ],
+     "answer": "180,180 and 180"
+    },
+    {
+     "type": "steps",
+     "title": "Arrangements with repeated letters (multinomial)",
+     "items": [
+      "<b>Tally each letter.</b> Make sure the tallies add up to the word length n.",
+      "<b>Divide:</b> n!/(n₁!·n₂!⋯nₖ!). Letters that appear once contribute 1! = 1.",
+      "<b>\"These letters must be together\":</b> glue them into one block, then count arrangements of the blocks and leftover letters the same way.",
+      "<b>\"Must not be together\":</b> total minus the \"together\" count (complement).",
+      "<b>Same number, other disguises:</b> the coefficient of x₁ⁿ¹⋯xₖⁿᵏ in (x₁ + ⋯ + xₖ)ⁿ (multinomial theorem), and dealing n <i>different</i> objects into boxes that must hold n₁, …, nₖ of them."
+     ]
+    },
+    {
+     "type": "p",
+     "text": "<b>Sanity check:</b> AAB has 3!/2! = 3 arrangements: AAB, ABA, BAA. ✓"
+    },
+    {
+     "type": "example",
+     "title": "Repeated letters with a \"not together\" rule",
+     "prompt": "How many arrangements of BANANA have the two N's <b>not</b> next to each other?",
+     "steps": [
+      "Tally: B 1, A 3, N 2. Total 6!/(3!·2!) = 60 — <i>divide by the repeats</i>",
+      "N's together: glue NN into one block — <i>the complement is easier</i>",
+      "Now arrange B, A, A, A, [NN]: 5!/3! = 20 — <i>5 items, the A's still repeat</i>",
+      "60 − 20 — <i>not together = all − together</i>"
+     ],
+     "answer": "40"
+    },
+    {
+     "type": "example",
+     "title": "Distinct objects into labeled boxes with given sizes",
+     "prompt": "In how many ways can 9 different books be given to 3 students so that each gets 3?",
+     "steps": [
+      "Line the books up in a row of 9 positions and label the positions A A A B B B C C C in some order: a word with three A’s, three B’s, three C’s.",
+      "Each such word is one way to hand out the books, so the count is 9!/(3!·3!·3!) = 1680.",
+      "Same answer step by step: C(9, 3) for student A, then C(6, 3) for B, then C(3, 3) for C: 84·20·1 = 1680."
+     ],
+     "answer": "1680"
+    },
+    {
+     "type": "warn",
+     "text": "<b>Wrong:</b> BOOKKEEPER (O, K, E repeated) is 10!/3!. <b>Right:</b> 10!/(2!·2!·3!), since there are two O's, two K's, and three E's. (Divide by a factorial for <b>each</b> repeated letter, not by the number of repeated letters.)"
+    }
+   ]
+  },
+  {
+   "title": "Objects into boxes and lattice paths",
+   "blocks": [
+    {
+     "type": "p",
+     "text": "Distributing n objects into k boxes splits into four cases, depending on whether the objects are distinguishable (people, numbered balls) or identical (bills, cookies), and whether the boxes are distinguishable (labeled students) or identical (unlabeled piles)."
+    },
+    {
+     "type": "table",
+     "head": [
+      "",
+      "Distinguishable boxes",
+      "Indistinguishable boxes"
+     ],
+     "rows": [
+      [
+       "Distinguishable objects",
+       "kⁿ (each object picks a box); with prescribed sizes n₁, …, nₖ: n!/(n₁!⋯nₖ!)",
+       "count set partitions into at most k blocks (list them for small cases)"
+      ],
+      [
+       "Indistinguishable objects",
+       "C(n + k − 1, n) (stars and bars)",
+       "count partitions of n into at most k parts (list them)"
+      ]
+     ]
+    },
+    {
+     "type": "example",
+     "title": "All four cases",
+     "prompt": "(a) 5 different balls into 3 different boxes; (b) 5 identical balls into 3 different boxes; (c) 4 different balls into 2 identical boxes (empty allowed); (d) 5 identical balls into 3 identical boxes (empty allowed).",
+     "steps": [
+      "(a) Each ball independently picks a box: 3⁵ = 243.",
+      "(b) Stars and bars: 5 stars, 2 bars: C(7, 2) = 21.",
+      "(c) Only the grouping matters. All 4 in one box: 1 way. Split 3 + 1: choose the single ball, 4 ways. Split 2 + 2: ball 1 picks its partner, 3 ways. Total 1 + 4 + 3 = 8.",
+      "(d) Only the multiset of box sizes matters: partitions of 5 into at most 3 parts: 5, 4+1, 3+2, 3+1+1, 2+2+1. Total 5."
+     ],
+     "answer": "(a) 243 (b) 21 (c) 8 (d) 5"
+    },
+    {
+     "type": "warn",
+     "text": "Identical boxes kill the labels: divide by symmetries only between boxes of the <b>same</b> size, or just list the possible groupings. 8 different balls into unlabeled groups of sizes 3, 3, 2 is 560/2 = 280, not 560/3!."
+    },
+    {
+     "type": "def",
+     "term": "lattice path",
+     "text": "A path in the grid from (0, 0) to (a, b) using unit steps R (right) and U (up)."
+    },
+    {
+     "type": "thm",
+     "name": "Counting lattice paths",
+     "text": "There are C(a + b, a) lattice paths from (0, 0) to (a, b).",
+     "proof": [
+      {
+       "type": "p",
+       "text": "A path is a word of a + b letters with exactly a R’s and b U’s, and every such word is a path. Choose which a of the a + b steps are R: C(a + b, a). (Equivalently, it is a repeated-letters count (a + b)!/(a!·b!).)"
+      }
+     ]
+    },
+    {
+     "type": "steps",
+     "title": "Lattice paths with conditions",
+     "items": [
+      "<b>Through a point P:</b> (paths start → P) × (paths P → end), each counted by the formula on the shifted rectangle.",
+      "<b>Avoiding a point:</b> total − paths through it.",
+      "<b>Through two points:</b> check they can be visited in order (both coordinates must not decrease), then multiply three segment counts."
+     ]
+    },
+    {
+     "type": "example",
+     "title": "Lattice paths through and around a point",
+     "prompt": "How many lattice paths go from (0, 0) to (5, 3)? How many pass through (2, 1)? How many avoid (2, 1)?",
+     "steps": [
+      "All paths: 8 steps with 5 R’s: C(8, 3) = 56.",
+      "To (2, 1): C(3, 1) = 3. From (2, 1) to (5, 3) is a 3 × 2 rectangle: C(5, 2) = 10.",
+      "Through (2, 1): 3·10 = 30.",
+      "Avoiding (2, 1): 56 − 30 = 26 (checked by listing all 56 paths)."
+     ],
+     "answer": "56 paths; 30 through (2, 1); 26 avoid it"
+    }
+   ]
+  }
+ ],
+ "cards": [
+  {
+   "front": "How many ways can you choose r identical items from n types? Why?",
+   "back": [
+    {
+     "type": "formula",
+     "text": "C(r + n − 1, r) = C(r + n − 1, n − 1)"
+    },
+    {
+     "type": "p",
+     "text": "<b>Why.</b> Write a choice as a row of r stars (the items) and n − 1 bars (dividers between the types). Stars before the 1st bar are type 1, between bars 1 and 2 are type 2, and so on."
+    },
+    {
+     "type": "p",
+     "text": "Every choice gives exactly one row, and every row gives one choice. A row has r + n − 1 symbols, and you pick which r of them are stars."
+    },
+    {
+     "type": "warn",
+     "text": "Bars = number of <b>types</b> − 1, not the number of types."
+    }
+   ]
+  },
+  {
+   "front": "How many ways to pick 8 bills from 1-dollar, 5-dollar, 10-dollar and 20-dollar (bills of the same type are identical)?",
+   "back": [
+    {
+     "type": "formula",
+     "text": "C(11, 8) = C(11, 3) = 165"
+    },
+    {
+     "type": "p",
+     "text": "<b>How.</b>"
+    },
+    {
+     "type": "list",
+     "items": [
+      "8 items ⟹ 8 stars. 4 types ⟹ 3 bars.",
+      "11 symbols in total; choose the 3 bar positions."
+     ]
+    },
+    {
+     "type": "p",
+     "text": "★★|★★★★||★★ = two 1-dollars, four 5-dollars, no 10-dollars, two 20-dollars."
+    }
+   ]
+  },
+  {
+   "front": "How many solutions does x₁ + x₂ + x₃ = 17 have with every xᵢ ≥ 0 an integer?",
+   "back": [
+    {
+     "type": "formula",
+     "text": "C(19, 2) = 171"
+    },
+    {
+     "type": "p",
+     "text": "<b>How.</b> Each xᵢ is “how many items of type i”: 17 identical stars split into 3 groups by 2 bars. 19 symbols, choose the 2 bar spots."
+    }
+   ]
+  },
+  {
+   "front": "How many solutions does y₁ + y₂ + y₃ = 14 have with every yᵢ ≥ 1?",
+   "back": [
+    {
+     "type": "formula",
+     "text": "C(13, 2) = 78"
+    },
+    {
+     "type": "p",
+     "text": "<b>How (handle lower bounds first).</b>"
+    },
+    {
+     "type": "list",
+     "items": [
+      "Give each variable its required 1 up front: zᵢ = yᵢ − 1 ≥ 0.",
+      "Then z₁ + z₂ + z₃ = 14 − 3 = 11.",
+      "Stars and bars: 11 stars, 2 bars ⟹ C(13, 2)."
+     ]
+    },
+    {
+     "type": "warn",
+     "text": "Stars and bars needs every variable ≥ 0. Always shift lower bounds away first."
+    }
+   ]
+  },
+  {
+   "front": "Choosing r things from n: what are the four formulas?",
+   "back": [
+    {
+     "type": "p",
+     "text": "<b>Order matters, no repeats:</b> P(n, r) = n!/(n − r)! (e.g. officers chosen from a club)"
+    },
+    {
+     "type": "p",
+     "text": "<b>Order matters, repeats allowed:</b> nʳ (e.g. strings, PINs)"
+    },
+    {
+     "type": "p",
+     "text": "<b>Order doesn’t matter, no repeats:</b> C(n, r) (e.g. committees, hands)"
+    },
+    {
+     "type": "p",
+     "text": "<b>Order doesn’t matter, repeats allowed:</b> C(n + r − 1, r) (e.g. a bag of donuts)"
+    },
+    {
+     "type": "p",
+     "text": "Ask two questions: does order matter (swap test)? Can the same thing be picked twice?"
+    }
+   ]
+  },
+  {
+   "front": "How many arrangements of n objects when some are identical? Why?",
+   "back": [
+    {
+     "type": "formula",
+     "text": "n! / (n₁! n₂! ⋯ nₖ!)"
+    },
+    {
+     "type": "p",
+     "text": "<b>Why.</b>"
+    },
+    {
+     "type": "list",
+     "items": [
+      "Pretend every object is different (label the copies): n! arrangements.",
+      "Rearranging the n₁ copies of type 1 among their own spots gives the same word: n₁! ways for each word. Same for each other type.",
+      "So each real word was counted n₁! n₂! ⋯ nₖ! times. Divide."
+     ]
+    },
+    {
+     "type": "p",
+     "text": "<b>SENSELESSNESS:</b> 13 letters with 6 S, 4 E, 2 N, 1 L ⟹ 13!/(6!·4!·2!·1!) = 180,180."
+    }
+   ]
+  },
+  {
+   "front": "What is a combinatorial proof, and what’s the template?",
+   "back": [
+    {
+     "type": "p",
+     "text": "<b>Idea.</b> Prove two expressions are equal by showing they <b>count the same collection</b> in two different ways."
+    },
+    {
+     "type": "p",
+     "text": "<b>Template.</b>"
+    },
+    {
+     "type": "list",
+     "items": [
+      "Name a specific collection (“committees of k people from n, with a chair”).",
+      "Count it one way and explain each factor ⟹ the left side.",
+      "Count it another way ⟹ the right side.",
+      "Same collection ⟹ the two counts are equal."
+     ]
+    },
+    {
+     "type": "warn",
+     "text": "Algebra doesn’t count as a combinatorial proof. You must explain what is being counted."
+    }
+   ]
+  },
+  {
+   "front": "Prove C(n, r) = C(n, n − r) combinatorially.",
+   "back": [
+    {
+     "type": "p",
+     "text": "<b>Collection:</b> ways to choose r of n objects."
+    },
+    {
+     "type": "p",
+     "text": "Choosing the r objects you <b>take</b> is the same as choosing the n − r you <b>leave out</b>."
+    },
+    {
+     "type": "p",
+     "text": "The two counts are C(n, r) and C(n, n − r). Matching each chosen set with its complement is a bijection, so they’re equal."
+    },
+    {
+     "type": "p",
+     "text": "Algebra also works: n!/(r!(n − r)!) is symmetric in r and n − r."
+    }
+   ]
+  },
+  {
+   "front": "Prove the committee–chair identity k · C(n, k) = n · C(n − 1, k − 1).",
+   "back": [
+    {
+     "type": "p",
+     "text": "<b>Collection:</b> committees of k people from n, with one member named chair."
+    },
+    {
+     "type": "p",
+     "text": "<b>Way 1:</b> choose the committee (C(n, k)), then choose its chair from the k members (k) ⟹ k · C(n, k)."
+    },
+    {
+     "type": "p",
+     "text": "<b>Way 2:</b> choose the chair first from all n people (n), then the other k − 1 members from the remaining n − 1 (C(n − 1, k − 1)) ⟹ n · C(n − 1, k − 1)."
+    },
+    {
+     "type": "p",
+     "text": "Same collection ⟹ equal."
+    }
+   ]
+  },
+  {
+   "front": "State and prove Pascal’s identity.",
+   "back": [
+    {
+     "type": "formula",
+     "text": "C(n + 1, k) = C(n, k − 1) + C(n, k)"
+    },
+    {
+     "type": "p",
+     "text": "<b>Collection:</b> groups of k people from n + 1 people, one of whom is Alice. There are C(n + 1, k) of them."
+    },
+    {
+     "type": "p",
+     "text": "Split by whether Alice is in the group, two cases that don’t overlap:"
+    },
+    {
+     "type": "list",
+     "items": [
+      "<b>Alice is in:</b> pick the other k − 1 from the remaining n ⟹ C(n, k − 1).",
+      "<b>Alice is out:</b> pick all k from the other n ⟹ C(n, k)."
+     ]
+    },
+    {
+     "type": "p",
+     "text": "Sum rule ⟹ the identity."
+    }
+   ]
+  },
+  {
+   "front": "Why is C(n, 0) + C(n, 1) + ⋯ + C(n, n) = 2ⁿ?",
+   "back": [
+    {
+     "type": "p",
+     "text": "<b>Collection:</b> all subsets of an n-element set."
+    },
+    {
+     "type": "p",
+     "text": "<b>Way 1:</b> group by size. There are C(n, k) subsets of size k, for k = 0, …, n; add them."
+    },
+    {
+     "type": "p",
+     "text": "<b>Way 2:</b> each element is in or out ⟹ 2ⁿ."
+    },
+    {
+     "type": "p",
+     "text": "Or: put x = y = 1 in the binomial theorem: (1 + 1)ⁿ = Σ C(n, k)."
+    }
+   ]
+  },
+  {
+   "front": "How is Pascal’s triangle built, and what are its rows?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Row n lists C(n, 0), C(n, 1), …, C(n, n). Each inside number is the sum of the two above it, which is Pascal’s identity. Each row starts and ends with 1."
+    },
+    {
+     "type": "formula",
+     "text": "1"
+    },
+    {
+     "type": "formula",
+     "text": "1 1"
+    },
+    {
+     "type": "formula",
+     "text": "1 2 1"
+    },
+    {
+     "type": "formula",
+     "text": "1 3 3 1"
+    },
+    {
+     "type": "formula",
+     "text": "1 4 6 4 1"
+    },
+    {
+     "type": "formula",
+     "text": "1 5 10 10 5 1"
+    },
+    {
+     "type": "p",
+     "text": "Row 3 gives (x + y)³ = x³ + 3x²y + 3xy² + y³."
+    }
+   ]
+  },
+  {
+   "front": "If p is prime and 0 &lt; k &lt; p, why does p divide C(p, k)?",
+   "back": [
+    {
+     "type": "list",
+     "items": [
+      "Committee–chair identity: k · C(p, k) = p · C(p − 1, k − 1). So p divides k · C(p, k).",
+      "p is prime: if p divides a product, it divides one of the factors.",
+      "p doesn’t divide k, because 0 &lt; k &lt; p.",
+      "So p divides C(p, k)."
+     ]
+    },
+    {
+     "type": "p",
+     "text": "Example: row 5 is 1 5 10 10 5 1, and all the middle numbers are multiples of 5. This was used to prove the freshman’s dream and Fermat’s little theorem."
+    }
+   ]
+  },
+  {
+   "front": "State the binomial theorem.",
+   "back": [
+    {
+     "type": "formula",
+     "text": "(x + y)ⁿ = Σ<sub>j=0</sub><sup>n</sup> C(n, j) xⁿ⁻ʲ yʲ"
+    },
+    {
+     "type": "p",
+     "text": "The exponents always add to n, and the coefficient of xⁿ⁻ʲyʲ is C(n, j)."
+    },
+    {
+     "type": "p",
+     "text": "(x + y)³ = x³ + 3x²y + 3xy² + y³ (coefficients from row 3 of Pascal’s triangle)."
+    }
+   ]
+  },
+  {
+   "front": "Why does C(n, j) show up in the binomial theorem?",
+   "back": [
+    {
+     "type": "list",
+     "items": [
+      "(x + y)ⁿ = (x + y)(x + y) ⋯ (x + y), n factors.",
+      "Expanding means picking x <b>or</b> y from each factor and multiplying.",
+      "You get xⁿ⁻ʲyʲ exactly when y is picked from j of the factors and x from the rest.",
+      "There are C(n, j) ways to choose which j factors give the y, so xⁿ⁻ʲyʲ appears C(n, j) times."
+     ]
+    }
+   ]
+  },
+  {
+   "front": "What is the coefficient of x³y² in (2x − y)⁵?",
+   "back": [
+    {
+     "type": "formula",
+     "text": "C(5, 2) · 2³ · (−1)² = 10 · 8 · 1 = 80"
+    },
+    {
+     "type": "p",
+     "text": "<b>How.</b>"
+    },
+    {
+     "type": "list",
+     "items": [
+      "Treat it as (A + B)⁵ with A = 2x and B = −y.",
+      "y² needs B²; the exponents add to 5, so it pairs with A³.",
+      "That term is C(5, 2) · A³ · B² = 10 · (2x)³ · (−y)² = 10 · 8x³ · y²."
+     ]
+    },
+    {
+     "type": "warn",
+     "text": "Raise the <b>whole</b> term, including its number and sign: (2x)³ = 8x³, and (−y)² = +y² (an odd power would make it negative)."
+    }
+   ]
+  },
+  {
+   "front": "what is the coefficient of z⁴w⁶ in (3z + 2w²)⁷?",
+   "back": [
+    {
+     "type": "formula",
+     "text": "C(7, 3) · 3⁴ · 2³ = 35 · 81 · 8 = 22,680"
+    },
+    {
+     "type": "p",
+     "text": "<b>How.</b>"
+    },
+    {
+     "type": "list",
+     "items": [
+      "Let x = 3z and y = 2w², so it’s (x + y)⁷.",
+      "w⁶ = (w²)³ needs y³, which pairs with x⁴ (4 + 3 = 7). That also gives z⁴. ✓",
+      "The term is C(7, 3) x⁴ y³ = C(7, 3)(3z)⁴(2w²)³ = C(7, 3) · 3⁴ · 2³ · z⁴w⁶."
+     ]
+    },
+    {
+     "type": "warn",
+     "text": "Match the exponent on the <b>variable</b>, not the term: w⁶ comes from (w²)³, so j = 3, not 6."
+    }
+   ]
+  },
+  {
+   "front": "Coefficient of x²y³ in (x + y)⁵? And in (2x − y)⁵?",
+   "back": [
+    {
+     "type": "p",
+     "text": "C(5, 3) = 10. Then C(5, 3)·2²·(−1)³ = −40."
+    }
+   ]
+  },
+  {
+   "front": "Outline the combinatorial proof of Pascal's identity.",
+   "back": [
+    {
+     "type": "p",
+     "text": "Count k-groups from n + 1 people including Alice: C(n + 1, k) = (groups with Alice) C(n, k − 1) + (groups without) C(n, k)."
+    }
+   ]
+  },
+  {
+   "front": "What is Σₖ C(6, k)?",
+   "back": [
+    {
+     "type": "p",
+     "text": "2⁶ = 64."
+    }
+   ]
+  },
+  {
+   "front": "Why does a prime p divide C(p, k) for 0 &lt; k &lt; p?",
+   "back": [
+    {
+     "type": "p",
+     "text": "k·C(p, k) = p·C(p − 1, k − 1) is divisible by p, and p ∤ k, so p | C(p, k)."
+    }
+   ]
+  },
+  {
+   "front": "10 identical cookies to 3 kids: how many ways?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Stars and bars: C(12, 2) = 66."
+    }
+   ]
+  },
+  {
+   "front": "Same, but each kid gets at least 2?",
+   "back": [
+    {
+     "type": "p",
+     "text": "4 cookies left: C(6, 2) = 15."
+    }
+   ]
+  },
+  {
+   "front": "Arrangements of the letters in LETTER?",
+   "back": [
+    {
+     "type": "p",
+     "text": "6!/(2!·2!) = 180 (two E's and two T's)."
+    }
+   ]
+  },
+  {
+   "front": "Which table cell? (a) 4-digit PINs (b) 3 scoops from 5 flavors, repeats OK, order irrelevant.",
+   "back": [
+    {
+     "type": "p",
+     "text": "(a) order matters, repetition allowed: 10⁴. (b) no order, repetition: C(7, 3) = 35."
+    }
+   ]
+  },
+  {
+   "front": "State and prove Vandermonde’s identity with a story.",
+   "back": [
+    {
+     "type": "formula",
+     "text": "Σₖ C(m, k)·C(n, r − k) = C(m + n, r)"
+    },
+    {
+     "type": "p",
+     "text": "r-person committees from m men and n women: directly C(m + n, r); or split by the number k of men, C(m, k)C(n, r − k) each."
+    }
+   ]
+  },
+  {
+   "front": "Prove Σ k·C(n, k) = n·2ⁿ⁻¹ combinatorially.",
+   "back": [
+    {
+     "type": "p",
+     "text": "Count (committee, chair) pairs. By committee size: Σ k·C(n, k). Chair first (n ways), then everyone else in or out (2ⁿ⁻¹)."
+    }
+   ]
+  },
+  {
+   "front": "How many lattice paths from (0, 0) to (a, b) with R and U steps?",
+   "back": [
+    {
+     "type": "formula",
+     "text": "C(a + b, a)"
+    },
+    {
+     "type": "p",
+     "text": "Through P: multiply the counts to and from P. Avoiding P: total − through."
+    }
+   ]
+  },
+  {
+   "front": "Objects into boxes: the four cases.",
+   "back": [
+    {
+     "type": "list",
+     "items": [
+      "distinct objects, distinct boxes: kⁿ",
+      "identical objects, distinct boxes: C(n + k − 1, n)",
+      "distinct objects, identical boxes: set partitions (list them)",
+      "identical objects, identical boxes: integer partitions (list them)"
+     ]
+    }
+   ]
+  },
+  {
+   "front": "How do you handle an upper bound xᵢ ≤ c in stars and bars?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Count all solutions, then subtract the bad ones with xᵢ ≥ c + 1 (a lower-bound problem: give xᵢ its c + 1 first)."
+    },
+    {
+     "type": "p",
+     "text": "x₁ + ⋯ + x₄ = 17 with x₁ ≥ 1, x₂ ≥ 2, x₃ ≤ 4: C(17, 3) − C(12, 3) = 680 − 220 = 460."
+    }
+   ]
+  }
+ ],
+ "hard": [
+  {
+   "title": "Three binomial coefficients",
+   "level": "hard",
+   "prompt": [
+    {
+     "type": "list",
+     "items": [
+      "(a) The coefficient of x⁵y⁸ in (2x − 3y)<sup>13</sup>.",
+      "(b) The coefficient of x<sup>10</sup> in (x² − 1/x)<sup>14</sup>.",
+      "(c) The constant term of (x² − 1/x)<sup>12</sup>."
+     ]
+    }
+   ],
+   "answer": "(a) 270,208,224 (b) C(14,6) = 3003 (c) C(12,8) = 495",
+   "solution": [
+    {
+     "type": "p",
+     "text": "(a) C(13,5)·2⁵·(−3)⁸ = 1287·32·6561 = <b>270208224</b>."
+    },
+    {
+     "type": "p",
+     "text": "(b) The general term is C(14,k)(x²)<sup>14−k</sup>(−1/x)<sup>k</sup> = (−1)<sup>k</sup>C(14,k)x<sup>28−3k</sup>. Setting 28 − 3k = 10 gives k = 6: <b>C(14,6) = 3003</b>."
+    },
+    {
+     "type": "p",
+     "text": "(c) The exponent is 24 − 3k = 0, so k = 8: <b>C(12,8) = 495</b>."
+    },
+    {
+     "type": "tip",
+     "text": "<b>Tests:</b> writing the general term with its sign before solving for k. <b>Common mistake:</b> dropping the (−3)⁸ (or the sign in general), or using k for the wrong factor."
+    }
+   ]
+  },
+  {
+   "title": "Σ k²·C(n,k) by double counting",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "Prove Σ<sub>k=0</sub><sup>n</sup> k²·C(n,k) = n(n + 1)2<sup>n−2</sup> (n ≥ 2) by counting one set in two ways. No algebra."
+    }
+   ],
+   "answer": "Count (committee, chair, secretary), roles may coincide: Σ k²C(n,k) = n2ⁿ⁻¹ + n(n − 1)2ⁿ⁻² = n(n + 1)2ⁿ⁻²",
+   "solution": [
+    {
+     "type": "p",
+     "text": "Count triples (S, c, s): a committee S ⊆ {1..n}, a chair c ∈ S and a secretary s ∈ S. The same person may hold both roles."
+    },
+    {
+     "type": "p",
+     "text": "<b>Left side:</b> choose |S| = k (C(n,k) ways), then c and s from S (k² ways)."
+    },
+    {
+     "type": "p",
+     "text": "<b>Right side:</b> if c = s, pick that person (n ways), and the rest of S is any subset of the other n − 1 people: n2<sup>n−1</sup>. If c ≠ s, pick them in order (n(n − 1) ways), and the rest is any subset of the other n − 2: n(n − 1)2<sup>n−2</sup>. Total n2<sup>n−2</sup>(2 + n − 1) = n(n + 1)2<sup>n−2</sup>. ∎"
+    },
+    {
+     "type": "tip",
+     "text": "<b>Tests:</b> reading k² as “two choices from S with repetition”. <b>Common mistake:</b> saying in words what is being counted, but then counting something different on one side."
+    }
+   ]
+  },
+  {
+   "title": "Hockey stick and Vandermonde",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "Prove the hockey-stick identity Σ<sub>k=r</sub><sup>n</sup> C(k, r) = C(n + 1, r + 1) combinatorially. Then prove Vandermonde’s identity Σ<sub>k</sub> C(m, k)C(n, r − k) = C(m + n, r) the same way."
+    }
+   ],
+   "answer": "Hockey stick: sort (r+1)-subsets of {1..n+1} by largest element; Vandermonde: sort r-committees by number of men",
+   "solution": [
+    {
+     "type": "p",
+     "text": "<b>Hockey stick.</b> The right side counts (r + 1)-subsets of {1, …, n + 1}. Sort them by their <b>largest</b> element, call it k + 1 (r ≤ k ≤ n). The other r elements come from {1, …, k}: C(k, r) ways. Adding over k gives the left side."
+    },
+    {
+     "type": "p",
+     "text": "<b>Vandermonde.</b> Choose r people from m men and n women. Sorting by the number k of men gives C(m, k)C(n, r − k) for each k."
+    },
+    {
+     "type": "tip",
+     "text": "<b>Tests:</b> sorting by a feature (the largest element, or how many come from one group). <b>Common mistake:</b> sorting by the smallest element and getting the index range wrong."
+    }
+   ]
+  },
+  {
+   "title": "Slack variables, weights and ordered triples",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "list",
+     "items": [
+      "(a) The number of nonnegative integer solutions of x<sub>1</sub> + x<sub>2</sub> + x<sub>3</sub> + x<sub>4</sub> ≤ 12.",
+      "(b) The number of nonnegative integer solutions of 2x<sub>1</sub> + x<sub>2</sub> + x<sub>3</sub> = 12.",
+      "(c) The number of solutions of x + y + z = 30 with 0 &lt; x &lt; y &lt; z (integers)."
+     ]
+    }
+   ],
+   "answer": "(a) C(16,4) = 1820 (b) 49 (c) 61",
+   "solution": [
+    {
+     "type": "p",
+     "text": "(a) Add a slack variable: x<sub>1</sub> + ⋯ + x<sub>4</sub> + x<sub>5</sub> = 12, which has <b>C(16,4) = 1820</b> solutions."
+    },
+    {
+     "type": "p",
+     "text": "(b) Fix x<sub>1</sub> = j (0 ≤ j ≤ 6). Then x<sub>2</sub> + x<sub>3</sub> = 12 − 2j has 13 − 2j solutions. Sum: 13 + 11 + 9 + 7 + 5 + 3 + 1 = <b>49</b>."
+    },
+    {
+     "type": "p",
+     "text": "(c) Positive solutions: C(29,2) = 406. Solutions with x = y: 2x + z = 30 with x = 1, …, 14, so 14; the same for the other two pairs. x = y = z = 10 is 1. By inclusion–exclusion, the number with at least one equality is 3·14 − 3·1 + 1 = 40, so 366 have all three values distinct. Each set of 3 distinct values appears in 3! = 6 orders: <b>366/6 = 61</b>."
+    },
+    {
+     "type": "tip",
+     "text": "<b>Tests:</b> slack variables, fixing a coefficient, and unordered-from-ordered. <b>Common mistake:</b> in (c), dividing 406 by 6. Solutions with repeated values don’t come in groups of 6."
+    }
+   ]
+  },
+  {
+   "title": "Balls into boxes: all four cases",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "list",
+     "items": [
+      "(a) 12 identical balls into 5 distinct boxes, none empty.",
+      "(b) 8 distinct balls into 3 distinct boxes holding 3, 3 and 2 balls.",
+      "(c) 8 distinct balls split into groups of sizes 3, 3, 2, where the groups are unlabeled (identical boxes).",
+      "(d) 6 distinct balls into 3 identical boxes (empty boxes allowed).",
+      "(e) 7 identical balls into 4 identical boxes (empty allowed)."
+     ]
+    }
+   ],
+   "answer": "(a) 330 (b) 560 (c) 280 (d) 122 (e) 11",
+   "solution": [
+    {
+     "type": "p",
+     "text": "(a) Put one ball in each box first, then distribute 7 freely: <b>C(11,4) = 330</b>."
+    },
+    {
+     "type": "p",
+     "text": "(b) <b>8!/(3!3!2!) = 560</b>."
+    },
+    {
+     "type": "p",
+     "text": "(c) The two groups of size 3 are now interchangeable: <b>560/2 = 280</b>."
+    },
+    {
+     "type": "p",
+     "text": "(d) Stirling numbers: S(6,1) + S(6,2) + S(6,3) = 1 + 31 + 90 = <b>122</b>. Here S(6,2) = (2⁶ − 2)/2 = 31, and S(6,3) = (onto maps 6 → 3)/3! = (3⁶ − 3·2⁶ + 3)/6 = 540/6 = 90."
+    },
+    {
+     "type": "p",
+     "text": "(e) Partitions of 7 into at most 4 parts: 7, 61, 52, 511, 43, 421, 4111, 331, 322, 3211, 2221, which is <b>11</b>."
+    },
+    {
+     "type": "tip",
+     "text": "<b>Tests:</b> deciding whether the balls and the boxes are distinct. <b>Common mistake:</b> in (c), dividing by 3!. Only the two groups of the <i>same</i> size can be swapped."
+    }
+   ]
+  },
+  {
+   "title": "Sub-words of BANANA and ABRACADABRA",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "list",
+     "items": [
+      "(a) How many 4-letter strings can be made from the letters of BANANA (each letter used at most as often as it appears)?",
+      "(b) How many arrangements of ABRACADABRA are there, and how many have no two A’s next to each other?"
+     ]
+    }
+   ],
+   "answer": "(a) 38 (b) 83160 arrangements, 3780 with no two A’s adjacent",
+   "solution": [
+    {
+     "type": "p",
+     "text": "(a) Available: B×1, A×3, N×2. Split by the letter counts (B, A, N) adding to 4:"
+    },
+    {
+     "type": "table",
+     "head": [
+      "(B,A,N)",
+      "1,3,0",
+      "1,2,1",
+      "1,1,2",
+      "0,3,1",
+      "0,2,2"
+     ],
+     "rows": [
+      [
+       "strings",
+       "4",
+       "12",
+       "12",
+       "4",
+       "6"
+      ]
+     ]
+    },
+    {
+     "type": "p",
+     "text": "Total <b>38</b>."
+    },
+    {
+     "type": "p",
+     "text": "(b) A×5, B×2, R×2, C, D: 11!/(5!2!2!) = <b>83160</b>. For no adjacent A’s: arrange B, B, R, R, C, D in 6!/(2!2!) = 180 ways, then put the 5 A’s in 5 of the 7 gaps: C(7,5) = 21. Total <b>3780</b>."
+    },
+    {
+     "type": "tip",
+     "text": "<b>Tests:</b> splitting into cases by letter counts when the length is less than the word. <b>Common mistake:</b> using 6!/(3!2!) style formulas for strings shorter than the word."
+    }
+   ]
+  },
+  {
+   "title": "Lattice paths with required and forbidden points",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "Paths from (0,0) to (8,6) use unit steps right (R) or up (U). How many pass through (5,2) but avoid both (6,4) and (3,3)?"
+    }
+   ],
+   "answer": "357",
+   "solution": [
+    {
+     "type": "p",
+     "text": "Through (5,2): C(7,2)·C(7,3) = 21·35 = 735."
+    },
+    {
+     "type": "p",
+     "text": "A path through (5,2) can’t also visit (3,3): (3,3) is higher than (5,2) but further left, and paths only move up and right. So that condition removes nothing."
+    },
+    {
+     "type": "p",
+     "text": "Through (5,2) and (6,4): 21·C(3,1)·C(4,2) = 21·3·6 = 378."
+    },
+    {
+     "type": "p",
+     "text": "<b>Answer:</b> 735 − 378 = 357."
+    },
+    {
+     "type": "tip",
+     "text": "<b>Tests:</b> splitting paths at the points they must pass through, and noticing when a forbidden point can’t be reached at all. <b>Common mistake:</b> subtracting “paths through (5,2) and (3,3)” as if that were a nonzero number, for example by multiplying segment counts without checking that the points come in an order a path can follow."
+    }
+   ]
+  },
+  {
+   "title": "Ternary strings and even subsets",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "list",
+     "items": [
+      "(a) Prove Σ<sub>k</sub> C(n,k)2<sup>k</sup> = 3<sup>n</sup> by counting.",
+      "(b) For n ≥ 1, prove with a bijection that {1..n} has as many even-size subsets as odd-size ones, and deduce Σ (−1)<sup>k</sup>C(n,k) = 0.",
+      "(c) Find Σ<sub>k even</sub> C(n,k)2<sup>k</sup> in closed form."
+     ]
+    }
+   ],
+   "answer": "(a) strings over {0,1,2} by number of nonzero entries (b) toggle element 1 (c) (3ⁿ + (−1)ⁿ)/2",
+   "solution": [
+    {
+     "type": "p",
+     "text": "(a) Count strings of length n over {0, 1, 2}. On one side, each position has 3 choices. On the other, choose the k positions that are nonzero (C(n,k) ways), and each of them is a 1 or a 2 (2<sup>k</sup> ways)."
+    },
+    {
+     "type": "p",
+     "text": "(b) The map S ↦ S Δ {1} (add 1 if it is missing, remove it if present) is its own inverse, so it is a bijection, and it changes |S| by exactly 1. So it swaps even-size and odd-size subsets. Therefore Σ<sub>even</sub> C(n,k) = Σ<sub>odd</sub> C(n,k), i.e. Σ (−1)<sup>k</sup>C(n,k) = 0."
+    },
+    {
+     "type": "p",
+     "text": "(c) Add (1 + 2)<sup>n</sup> = Σ C(n,k)2<sup>k</sup> and (1 − 2)<sup>n</sup> = Σ C(n,k)(−2)<sup>k</sup>. The odd terms cancel: <b>(3<sup>n</sup> + (−1)<sup>n</sup>)/2</b>."
+    },
+    {
+     "type": "tip",
+     "text": "<b>Tests:</b> using x = ±1, ±2 in the binomial theorem, and toggling bijections. <b>Common mistake:</b> in (b), forgetting n ≥ 1. For n = 0 there is one even subset and no odd ones."
+    }
+   ]
+  },
+  {
+   "title": "Subsets of subsets and Fermat via binomials",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "list",
+     "items": [
+      "(a) Prove Σ<sub>k=m</sub><sup>n</sup> C(n,k)C(k,m) = C(n,m)2<sup>n−m</sup> combinatorially.",
+      "(b) Prove k·C(n,k) = n·C(n−1,k−1) combinatorially, and deduce that p | C(p,k) for a prime p and 0 &lt; k &lt; p.",
+      "(c) Deduce (a + b)<sup>p</sup> ≡ a<sup>p</sup> + b<sup>p</sup> (mod p), and from that, Fermat’s a<sup>p</sup> ≡ a for all a ≥ 0 (by induction on a)."
+     ]
+    }
+   ],
+   "answer": "(a) count pairs M ⊆ K two ways (b) committee–chair identity + Euclid’s lemma (c) middle binomial terms vanish mod p; induction on a gives aᵖ ≡ a",
+   "solution": [
+    {
+     "type": "p",
+     "text": "(a) Count pairs (K, M) with M ⊆ K ⊆ {1..n} and |M| = m. Choosing K first (size k) and then M inside it gives the left side. Choosing M first, then deciding for each of the other n − m elements whether it is in K, gives the right side."
+    },
+    {
+     "type": "p",
+     "text": "(b) Count committees of size k with a chair. Choose the committee, then the chair: k·C(n,k). Or choose the chair, then the other k − 1 members: n·C(n−1,k−1). With n = p: k·C(p,k) = p·C(p−1,k−1), so p | k·C(p,k). Since 0 &lt; k &lt; p, p ∤ k, and Euclid’s lemma gives p | C(p,k)."
+    },
+    {
+     "type": "p",
+     "text": "(c) In the expansion of (a + b)<sup>p</sup>, every middle term C(p,k)a<sup>k</sup>b<sup>p−k</sup> with 0 &lt; k &lt; p is ≡ 0, which leaves a<sup>p</sup> + b<sup>p</sup>. For Fermat: 0<sup>p</sup> = 0, and if a<sup>p</sup> ≡ a then (a + 1)<sup>p</sup> ≡ a<sup>p</sup> + 1 ≡ a + 1. ∎"
+    },
+    {
+     "type": "tip",
+     "text": "<b>Tests:</b> double counting, Euclid’s lemma and induction together. <b>Common mistake:</b> in (b), claiming p | C(p,k) “because p is in the numerator p!/(k!(p−k)!)” without explaining why nothing in the denominator cancels it."
+    }
+   ]
+  }
+ ],
+ "keyFacts": [
+  "(x + y)ⁿ = Σ C(n, j) xⁿ⁻ʲ yʲ; raise the whole term (constant and sign) to its power",
+  "Pascal: C(n + 1, k) = C(n, k − 1) + C(n, k) (Alice in or out)",
+  "Vandermonde: Σ C(m, k)C(n, r − k) = C(m + n, r); Σ k·C(n, k) = n·2ⁿ⁻¹; Σ C(n, k) = 2ⁿ",
+  "Combinatorial proof: one set, two counts, explained in words",
+  "Stars and bars: r identical items into n types = C(n + r − 1, r) (n − 1 bars)",
+  "Lower bound: hand it out first; ≤: slack variable; upper bound: subtract cases with xᵢ ≥ c + 1",
+  "Repeated letters: n!/(n₁!⋯nₖ!); “not together” = total − glued",
+  "Lattice paths (0,0) → (a,b): C(a + b, a); through P: multiply segments",
+  "Order matters + repeats: nʳ; order + no repeats: P(n, r); no order + no repeats: C(n, r); no order + repeats: C(n + r − 1, r)"
+ ]
+}

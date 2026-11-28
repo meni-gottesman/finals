@@ -1,0 +1,983 @@
+{
+ "id": "55-D",
+ "course": "55",
+ "title": "Divisibility & modular arithmetic",
+ "source": "Rosen 4.1–4.2 · Lec07",
+ "summary": "Divisibility, the division algorithm (including negative numbers), congruences and modular arithmetic, base b expansions and fast modular exponentiation. These are the computational tools behind all of number theory and RSA, and they appear on the final both as quick computations and as short proofs.",
+ "lesson": [
+  {
+   "title": "Divisibility and divisibility proofs",
+   "blocks": [
+    {
+     "type": "tip",
+     "text": "a | b means b is a multiple of a. a mod m is the remainder. a ≡ b (mod m) means same remainder, and congruences can be added and multiplied like equations."
+    },
+    {
+     "type": "def",
+     "term": "a divides b",
+     "text": "If a and b are integers with a ≠ 0, then <b>a divides b</b>, written a | b, if there is an integer c such that b = ac. Then a is a <b>factor</b> (divisor) of b and b is a <b>multiple</b> of a. a ∤ b means a does not divide b."
+    },
+    {
+     "type": "p",
+     "text": "<b>Example.</b> 3 | 12 T (12 = 3·4). 2 | 7 F (7 ≠ 2c for any integer c). 6 | 2 F. 2 | 0 T (0 = 2·0). 2 | −6 T (−6 = 2·(−3))."
+    },
+    {
+     "type": "warn",
+     "text": "a | b is a <b>statement</b> (true or false), not a number. Don't write “3 | 12 = 4.” The number is 12/3 = 4."
+    },
+    {
+     "type": "p",
+     "text": "<b>Corollary (used constantly):</b> if a | b and a | c, then a | (mb + nc) for all integers m, n."
+    },
+    {
+     "type": "example",
+     "title": "How every divisibility proof goes",
+     "prompt": "<b>Claim:</b> if 3 | x and 3 | y, then 3 | 5x − 2y.",
+     "steps": [
+      "<b>Unpack the definition:</b> x = 3s and y = 3t for some integers s, t.",
+      "<b>Substitute:</b> 5x − 2y = 15s − 6t.",
+      "<b>Factor the 3 back out:</b> = 3(5s − 2t). Since 5s − 2t is an integer, 3 | 5x − 2y. □",
+      "Turn “divides” into “= a·(integer)”, do algebra, then factor a out."
+     ],
+     "answer": "5x − 2y = 3(5s − 2t), so 3 | 5x − 2y"
+    },
+    {
+     "type": "steps",
+     "title": "Prove a divisibility fact",
+     "items": [
+      "<b>Write what you assume</b>, e.g. “Suppose 5 | a and 5 | b.”",
+      "<b>Unpack every “|”</b> into an equation with a <b>new letter</b> each time: a = 5s and b = 5t for integers s, t.",
+      "<b>Unpack every “≡” too:</b> a ≡ b (mod m) becomes a − b = mk (same as a = b + mk).",
+      "<b>Write the target expression</b> (say 2a + 7b) and substitute: 2(5s) + 7(5t).",
+      "<b>Factor the divisor out front:</b> = 5(2s + 7t).",
+      "<b>Finish with one sentence:</b> “2s + 7t is an integer, so 5 | 2a + 7b.” □ If the goal was a congruence, repack it: m | a − b means a ≡ b (mod m).",
+      "<b>Asked “is it always true?” and you think no?</b> One counterexample settles it. Give specific numbers and show the claim fails.",
+      "<b>Check:</b> you never plugged in specific numbers in a “prove” question, and the thing in parentheses is built from integers using only +, −, ×."
+     ]
+    },
+    {
+     "type": "warn",
+     "text": "<b>Wrong:</b> in a proof, writing x = 3k and y = 3k. <b>Right:</b> x = 3s and y = 3t, with different letters. (using the same letter secretly forces x = y)"
+    },
+    {
+     "type": "warn",
+     "text": "<b>Wrong:</b> “It works for x = 3 and y = 6, so 3 | 5x − 2y.” <b>Right:</b> use general x = 3s, y = 3t. (examples can disprove a for-all claim, but can never prove one)"
+    },
+    {
+     "type": "example",
+     "title": "Divisibility proof with a factorization",
+     "prompt": "Prove that 6 | n³ − n for every integer n.",
+     "steps": [
+      "Factor: n³ − n = (n − 1)n(n + 1), a product of three consecutive integers.",
+      "Among two consecutive integers one is even, so 2 | n³ − n.",
+      "Among three consecutive integers one is a multiple of 3 (they have remainders 0, 1, 2 mod 3 in some order), so 3 | n³ − n.",
+      "So n³ − n = 2a = 3b. Then 3b is even, and since 3 is odd, b is even: b = 2c, and n³ − n = 6c. So 6 | n³ − n. □",
+      "The last step is needed: 2 | x and 3 | x give 6 | x only because 2 and 3 share no factor (4 | 12 and 6 | 12, but 24 ∤ 12)."
+     ],
+     "answer": "Proved: 2 and 3 both divide (n − 1)n(n + 1), hence 6 does"
+    }
+   ]
+  },
+  {
+   "title": "The division algorithm, div and mod",
+   "blocks": [
+    {
+     "type": "thm",
+     "name": "The division algorithm",
+     "text": "Let a be an integer and d a positive integer. Then there are <b>unique</b> integers q and r with 0 ≤ r &lt; d such that a = dq + r."
+    },
+    {
+     "type": "p",
+     "text": "q is the <b>quotient</b> and r the <b>remainder</b>: q = a div d, r = a mod d. (Uniqueness: if dq + r = dq′ + r′ then d | r′ − r, and |r′ − r| &lt; d forces r = r′.)"
+    },
+    {
+     "type": "p",
+     "text": "<b>Examples.</b> 47 = 4·10 + 7, so 47 mod 10 = 7. 25 = 6·4 + 1, so 25 mod 4 = 1. 3 = 0·10 + 3, so 3 mod 10 = 3. −11 = (−2)·10 + 9, so −11 mod 10 = 9 (not −1!)."
+    },
+    {
+     "type": "warn",
+     "text": "The remainder is <b>never negative</b>: 0 ≤ r &lt; d. For negative a, round the quotient <i>down</i>. −11 = (−1)·10 − 1 is not the division algorithm because r = −1 &lt; 0."
+    },
+    {
+     "type": "tip",
+     "text": "a mod d is where you land on a clock with d hours (labeled 0 to d − 1) after moving a steps from 0. Negative a means walking backwards: 11 steps back on a 10-hour clock lands on 9."
+    },
+    {
+     "type": "steps",
+     "title": "A div d and a mod d (any sign of a)",
+     "items": [
+      "<b>Divide</b> a by d as a decimal (calculator or head).",
+      "<b>Round DOWN</b> to get q = a div d. Down means toward −∞: −14.3 rounds down to −15, not −14.",
+      "<b>Get the remainder:</b> r = a − d·q.",
+      "<b>Check the range</b> 0 ≤ r &lt; d. If r came out negative, you rounded the wrong way: use q − 1 and r + d instead.",
+      "<b>Shortcut for negative a:</b> find s = (−a) mod d. If s = 0 the answer is 0. Otherwise a mod d = d − s. Example: 100 mod 7 = 2, so −100 mod 7 = 7 − 2 = 5, and −100 div 7 = −15.",
+      "<b>Check your answer:</b> d·q + r must give back a exactly. Here 7·(−15) + 5 = −100 ✓."
+     ]
+    },
+    {
+     "type": "example",
+     "title": "Division algorithm with negative numbers",
+     "prompt": "Find q = a div d and r = a mod d for (a) a = −47, d = 6 and (b) a = −2026, d = 17.",
+     "steps": [
+      "(a) −47/6 ≈ −7.83. Round down (toward −∞): q = −8.",
+      "r = a − dq = −47 − 6(−8) = −47 + 48 = 1, and 0 ≤ 1 &lt; 6. ✓",
+      "(b) 2026 = 17·119 + 3, so −2026 = 17·(−119) − 3. The remainder −3 is negative, so move one more step down: −2026 = 17·(−120) + 14.",
+      "Check: 17·(−120) + 14 = −2040 + 14 = −2026, and 0 ≤ 14 &lt; 17. ✓"
+     ],
+     "answer": "(a) q = −8, r = 1; (b) q = −120, r = 14"
+    },
+    {
+     "type": "warn",
+     "text": "<b>Wrong:</b> −17 mod 5 = 2 (dropping the minus sign and finding 17 mod 5). <b>Right:</b> −17 = 5·(−4) + 3, so −17 mod 5 = 3. (walking 17 steps backwards on a 5-hour clock does not land where walking forwards does)"
+    }
+   ]
+  },
+  {
+   "title": "Congruences and modular arithmetic",
+   "blocks": [
+    {
+     "type": "def",
+     "term": "a is congruent to b modulo m",
+     "text": "If a, b are integers and m is a positive integer, then <b>a is congruent to b modulo m</b>, written a ≡ b (mod m), if m | (a − b). m is the <b>modulus</b>."
+    },
+    {
+     "type": "thm",
+     "name": "Three ways to say a ≡ b (mod m)",
+     "text": "a ≡ b (mod m) ⟺ a mod m = b mod m (same remainder) ⟺ a = b + km for some integer k."
+    },
+    {
+     "type": "p",
+     "text": "<b>Example.</b> 5 ≡ 3 (mod 2) since 2 | 2. 7 ≡ 11 (mod 4) since 4 | −4. 7 ≡ −1 (mod 4) since 4 | 8."
+    },
+    {
+     "type": "warn",
+     "text": "a mod m is a <b>function</b> that outputs a number in {0, …, m − 1}. a ≡ b (mod m) is a <b>statement</b> that's true or false. “17 mod 5 = 2” and “17 ≡ 2 (mod 5)” and “17 ≡ −3 (mod 5)” are all true, but “17 mod 5 = −3” is false."
+    },
+    {
+     "type": "thm",
+     "name": "Congruences can be added and multiplied",
+     "text": "If a ≡ b (mod m) and c ≡ d (mod m), then a + c ≡ b + d (mod m) and ac ≡ bd (mod m).",
+     "proof": [
+      {
+       "type": "p",
+       "text": "m | (a − b) and m | (c − d), so m | (a − b) + (c − d) = (a + c) − (b + d). For products: ac − bd = c(a − b) + b(c − d), and m divides both terms, so m divides the sum. Transitivity: a − c = (a − b) + (b − c)."
+      }
+     ]
+    },
+    {
+     "type": "p",
+     "text": "Also: a ≡ a; if a ≡ b then b ≡ a; if a ≡ b and b ≡ c then a ≡ c (mod m)."
+    },
+    {
+     "type": "p",
+     "text": "<b>Upshot:</b> you can add, multiply, reorder and chain congruences just like equations. In remainder form: (a + b) mod m = ((a mod m) + (b mod m)) mod m and ab mod m = ((a mod m)(b mod m)) mod m."
+    },
+    {
+     "type": "p",
+     "text": "<b>Example (reduce early).</b> (101 · 47) mod 9: 101 ≡ 2 and 47 ≡ 2 (mod 9), so the product ≡ 4. No need to compute 4747. (Check: 4747 = 527·9 + 4.)"
+    },
+    {
+     "type": "p",
+     "text": "Parity in mod language: n even ⟺ n ≡ 0 (mod 2), n odd ⟺ n ≡ 1 (mod 2). If n ≡ 1 then n² ≡ 1·1 = 1 (mod 2), so odd squares are odd, in one line."
+    },
+    {
+     "type": "warn",
+     "text": "ac ≡ bc (mod m) does <b>not</b> imply a ≡ b (mod m), even if c ≢ 0. Example: 2·3 ≡ 4·3 (mod 6) (6 ≡ 12) but 2 ≢ 4 (mod 6). Cancellation works when gcd(c, m) = 1."
+    },
+    {
+     "type": "thm",
+     "name": "Freshman's dream mod 2",
+     "text": "(a + b)² ≡ a² + b² (mod 2), since (a + b)² = a² + 2ab + b² and 2ab ≡ 0. False over the integers, true mod 2. Later: (a + b)ᵖ ≡ aᵖ + bᵖ (mod p) for every prime p (the Frobenius identity), which matters for cryptography and primality testing."
+    },
+    {
+     "type": "steps",
+     "title": "Reduce a big expression mod m",
+     "items": [
+      "<b>Shrink every number first.</b> Replace each one by its remainder mod m. If a number sits just below a multiple of m, a small negative is easier: 23 ≡ −1 (mod 8), 99 ≡ −1 (mod 10).",
+      "<b>Powers: shrink the base, never the exponent.</b> Look for a small power that is ≡ 1 or ≡ −1, then split the exponent around it. Mod 7, 2³ = 8 ≡ 1, so 2¹⁰⁰ = (2³)³³·2 ≡ 1³³·2 = 2.",
+      "<b>Combine</b> with +, −, ×, reducing after every step so the numbers stay small.",
+      "<b>Clean up:</b> an answer to “x mod m” must be in {0, 1, …, m − 1}. If you ended with a negative number, add m. If it is ≥ m, reduce again.",
+      "<b>Check:</b> redo one step with a different stand-in (e.g. 7 instead of −1 mod 8) and confirm you land on the same final remainder."
+     ]
+    },
+    {
+     "type": "example",
+     "title": "Last-digit problems",
+     "prompt": "Find the last digit of (a) 7²⁰²⁶ and (b) 2²⁰²⁶ + 3²⁰²⁶.",
+     "steps": [
+      "The last digit is the value mod 10.",
+      "(a) Powers of 7 mod 10: 7, 49 ≡ 9, 63 ≡ 3, 21 ≡ 1. So 7⁴ ≡ 1 (mod 10).",
+      "2026 = 4·506 + 2, so 7²⁰²⁶ = (7⁴)⁵⁰⁶·7² ≡ 1·49 ≡ 9.",
+      "(b) Mod 10, 2⁴ = 16 ≡ 6 and 6·6 ≡ 6, so 2⁴ᵏ ≡ 6 for k ≥ 1; then 2²⁰²⁶ = 2²⁰²⁴·2² ≡ 6·4 = 24 ≡ 4.",
+      "3⁴ = 81 ≡ 1, so 3²⁰²⁶ ≡ 3² = 9. Sum: 4 + 9 = 13 ≡ 3."
+     ],
+     "answer": "(a) 9; (b) 3"
+    },
+    {
+     "type": "steps",
+     "title": "Decide whether a ≡ b (mod m)",
+     "items": [
+      "<b>Subtract:</b> compute a − b.",
+      "<b>Ask:</b> is a − b a multiple of m? Zero and negative multiples count. Yes means true, no means false.",
+      "<b>Or</b> compute a mod m and b mod m. Same remainder means true.",
+      "<b>Check:</b> is −8 ≡ 13 (mod 7)? −8 − 13 = −21 = 7·(−3), so true. Both sides have remainder 6, which agrees."
+     ]
+    },
+    {
+     "type": "example",
+     "title": "negatives in one expression",
+     "prompt": "Compute (17³·23 − 45) mod 8 without a calculator.",
+     "steps": [
+      "17 ≡ 1 (mod 8) — <i>17 = 2·8 + 1</i>",
+      "23 ≡ −1 (mod 8) — <i>23 = 24 − 1, and −1 is easier to cube or multiply than 7</i>",
+      "45 ≡ 5 (mod 8) — <i>45 = 5·8 + 5</i>",
+      "17³·23 − 45 ≡ 1³·(−1) − 5 — <i>swap each number for its small stand-in (Thm 5)</i>",
+      "≡ −6 — <i>plain arithmetic</i>",
+      "≡ 2 (mod 8) — <i>−6 + 8 = 2, now inside {0, …, 7}</i>"
+     ],
+     "answer": "2 (check: 112954 = 8·14119 + 2)"
+    },
+    {
+     "type": "example",
+     "title": "a proof with ≡",
+     "prompt": "Prove: if a ≡ b (mod m) and d is a positive divisor of m, then a ≡ b (mod d).",
+     "steps": [
+      "a − b = mk for some integer k — <i>unpack a ≡ b (mod m)</i>",
+      "m = dj for some integer j — <i>unpack d | m, with a new letter</i>",
+      "a − b = (dj)k = d(jk) — <i>substitute and regroup</i>",
+      "jk is an integer, so d | a − b — <i>definition of divides</i>",
+      "a ≡ b (mod d) □ — <i>repack the definition of ≡</i>",
+      "Read it back: 29 ≡ 5 (mod 12) because 24 = 2·12, so automatically 29 ≡ 5 mod 2, 3, 4 and 6 as well. A smaller clock that fits evenly inside the big one agrees with it."
+     ],
+     "answer": "Proved: a − b = d(jk), so a ≡ b (mod d)"
+    },
+    {
+     "type": "warn",
+     "text": "<b>Wrong:</b> “17 ≡ 12 (mod 5) is false, because 17 mod 5 = 2, not 12.” <b>Right:</b> It is true: 17 − 12 = 5 is a multiple of 5. (in a ≡ b, neither side has to be the remainder; you compare the remainders of both sides)"
+    },
+    {
+     "type": "warn",
+     "text": "<b>Wrong:</b> 2¹⁰ mod 7: “10 mod 7 = 3, so the answer is 2³ = 8 ≡ 1.” <b>Right:</b> 2¹⁰ = (2³)³·2 ≡ 1·2 = 2. Indeed 1024 = 146·7 + 2. (congruence lets you swap the base for something congruent, not the exponent)"
+    }
+   ]
+  },
+  {
+   "title": "Base b expansions",
+   "blocks": [
+    {
+     "type": "tip",
+     "text": "Base b writes numbers using powers of b. Repeated squaring computes huge powers mod m in a handful of steps."
+    },
+    {
+     "type": "thm",
+     "name": "Base b expansion",
+     "text": "Let b be an integer greater than 1. Every positive integer n can be written <b>uniquely</b> as"
+    },
+    {
+     "type": "formula",
+     "text": "n = aₖbᵏ + aₖ₋₁bᵏ⁻¹ + ⋯ + a₁b + a₀"
+    },
+    {
+     "type": "p",
+     "text": "where each digit satisfies 0 ≤ aᵢ &lt; b and the leading digit aₖ ≠ 0. This is the <b>base b expansion</b> of n, written (aₖ … a₁a₀)<sub>b</sub>."
+    },
+    {
+     "type": "p",
+     "text": "Decimal: 3978 = 3·10³ + 9·10² + 7·10 + 8. Hexadecimal uses digits 0–9, A–F (A = 10, …, F = 15)."
+    },
+    {
+     "type": "tip",
+     "text": "Dividing by 10 peels off the last digit: 3978 = 397·10 + <b>8</b>. The remainder is the last digit and the quotient is everything else. The same works in any base, so <b>repeatedly divide by b; the remainders are the digits, last digit first.</b>"
+    },
+    {
+     "type": "example",
+     "title": "Decimal to binary",
+     "prompt": "Write 116 in base 2.",
+     "steps": [
+      "116 = 58·2 + <b>0</b> ← last digit",
+      "58 = 29·2 + <b>0</b>",
+      "29 = 14·2 + <b>1</b>",
+      "14 = 7·2 + <b>0</b>",
+      "7 = 3·2 + <b>1</b>",
+      "3 = 1·2 + <b>1</b>",
+      "1 = 0·2 + <b>1</b> ← first digit (quotient 0, stop)",
+      "Read the remainders bottom-up. Check: 64 + 32 + 16 + 4 = 116."
+     ],
+     "answer": "116 = (1110100)₂"
+    },
+    {
+     "type": "p",
+     "text": "Another: 200 in base 3. 200 = 66·3 + 2, 66 = 22·3 + 0, 22 = 7·3 + 1, 7 = 2·3 + 1, 2 = 0·3 + 2. Reading remainders bottom-up: 200 = (21102)₃. Check: 2·81 + 1·27 + 1·9 + 0·3 + 2 = 200."
+    },
+    {
+     "type": "steps",
+     "title": "Decimal to base b",
+     "items": [
+      "<b>Divide n by b:</b> n = q·b + r with 0 ≤ r &lt; b. Write r down on the right.",
+      "<b>Replace n by the quotient q</b> and divide by b again.",
+      "<b>Keep going until the quotient is 0.</b> The last line (like 1 = 0·2 + 1) still gives a digit.",
+      "<b>Read the remainders from the bottom up.</b> The last remainder you found is the leftmost digit.",
+      "<b>Base above 10:</b> write remainders 10, 11, 12, 13, 14, 15 as A, B, C, D, E, F.",
+      "<b>Check:</b> expand back (digit × power of b, then add) and make sure you get n."
+     ]
+    },
+    {
+     "type": "steps",
+     "title": "Base b to decimal",
+     "items": [
+      "<b>Number the digits from the right, starting at 0.</b> The rightmost digit is in the b⁰ = 1 place.",
+      "<b>Multiply</b> each digit by b raised to its position number.",
+      "<b>Add</b> them up.",
+      "<b>Faster way (Horner):</b> start with the leftmost digit. Repeatedly multiply by b and add the next digit. (2A3)₁₆: 2, then 2·16 + 10 = 42, then 42·16 + 3 = 675.",
+      "<b>Check:</b> every digit must be less than b. A digit 7 in base 6 means something went wrong."
+     ]
+    },
+    {
+     "type": "steps",
+     "title": "Binary to hex or octal (and back)",
+     "items": [
+      "<b>Group the bits</b> in blocks of 4 (hex) or 3 (octal), <b>starting from the right</b>.",
+      "<b>Pad</b> the leftmost block with 0s on its left if it is short.",
+      "<b>Turn each block into one digit:</b> 1010 = A, 0111 = 7. This works because 16 = 2⁴ and 8 = 2³.",
+      "<b>Going back:</b> replace each hex digit by its 4 bits (each octal digit by 3 bits).",
+      "<b>Check:</b> (110100111)₂ groups as 1 | 1010 | 0111 = (1A7)₁₆. Both equal 423: 256 + 160 + 7 = 256 + 128 + 32 + 4 + 2 + 1 ✓."
+     ]
+    },
+    {
+     "type": "example",
+     "title": "2026 to hex, checked in binary",
+     "prompt": "Write 2026 in hexadecimal, then in binary and octal.",
+     "steps": [
+      "2026 = 126·16 + 10 — <i>divide by 16; remainder 10 is the digit A</i>",
+      "126 = 7·16 + 14 — <i>divide the quotient; 14 is the digit E</i>",
+      "7 = 0·16 + 7 — <i>quotient is 0, so this is the last line</i>",
+      "2026 = (7EA)₁₆ — <i>read the remainders bottom-up: 7, E, A</i>",
+      "7 | E | A → 0111 | 1110 | 1010 — <i>each hex digit becomes 4 bits</i>",
+      "2026 = (11111101010)₂ — <i>drop the leading 0</i>",
+      "11 | 111 | 101 | 010 → (3752)₈ — <i>regroup the bits in 3s from the right for octal</i>",
+      "Read-back: 7·256 + 14·16 + 10 = 1792 + 224 + 10 = 2026 ✓."
+     ],
+     "answer": "(7EA)₁₆ = (11111101010)₂ = (3752)₈"
+    },
+    {
+     "type": "warn",
+     "text": "<b>Wrong:</b> reading the remainders top-down: 6 → 0, 1, 1, so 6 = (011)₂. <b>Right:</b> read bottom-up: 6 = (110)₂ = 4 + 2. (the first remainder you find is the ones digit, so it goes on the far right)"
+    },
+    {
+     "type": "warn",
+     "text": "<b>Wrong:</b> stopping at 3 = 1·2 + 1 and forgetting the final line 1 = 0·2 + 1. <b>Right:</b> keep dividing until the quotient is 0. (otherwise you drop the leading digit and the answer is about half as big)"
+    },
+    {
+     "type": "warn",
+     "text": "<b>Wrong:</b> (1011)₂ = 1·2⁴ + 0·2³ + 1·2² + 1·2¹ = 22. <b>Right:</b> 8 + 0 + 2 + 1 = 11. (positions start at 0 on the right; starting at 1 doubles the answer)"
+    },
+    {
+     "type": "warn",
+     "text": "<b>Wrong:</b> grouping from the left: (101101)₂ → 1011 | 01 → (B1)₁₆. <b>Right:</b> group from the right: 10 | 1101 → (2D)₁₆ = 45. (the ones digit must stay in the ones block)"
+    }
+   ]
+  },
+  {
+   "title": "Fast modular exponentiation",
+   "blocks": [
+    {
+     "type": "tip",
+     "text": "This takes about 2·log₂(n) multiplications instead of n, and numbers never get bigger than m². It is the workhorse behind RSA and other modern algorithms."
+    },
+    {
+     "type": "list",
+     "items": [
+      "Square repeatedly, reducing mod m each time: a, a², a⁴, a⁸, a¹⁶, … (each is the previous one squared).",
+      "Write the exponent in binary, i.e. as a sum of powers of 2.",
+      "Multiply together the matching powers, reducing mod m as you go."
+     ]
+    },
+    {
+     "type": "example",
+     "title": "3⁷⁹ mod 7 by repeated squaring",
+     "prompt": "Compute 3⁷⁹ mod 7.",
+     "steps": [
+      "Table of squares mod 7: 3¹ ≡ 3, 3² ≡ 9 ≡ 2, 3⁴ ≡ 2² = 4, 3⁸ ≡ 16 ≡ 2, 3¹⁶ ≡ 4, 3³² ≡ 2, 3⁶⁴ ≡ 4.",
+      "79 = 64 + 8 + 4 + 2 + 1 = (1001111)₂.",
+      "3⁷⁹ = 3⁶⁴·3⁸·3⁴·3²·3¹ ≡ 4·2·4·2·3 = 192.",
+      "192 = 27·7 + 3."
+     ],
+     "answer": "3⁷⁹ mod 7 = 3"
+    },
+    {
+     "type": "example",
+     "title": "5⁴³ mod 11, with a Fermat check",
+     "prompt": "Compute 5⁴³ mod 11.",
+     "steps": [
+      "Squares: 5¹ ≡ 5, 5² = 25 ≡ 3, 5⁴ ≡ 9, 5⁸ ≡ 81 ≡ 4, 5¹⁶ ≡ 16 ≡ 5, 5³² ≡ 25 ≡ 3.",
+      "43 = 32 + 8 + 2 + 1, so 5⁴³ ≡ 3·4·3·5 = 180 = 16·11 + 4 ≡ 4.",
+      "Check with Fermat’s little theorem: 5¹⁰ ≡ 1 (mod 11), so 5⁴³ ≡ 5³ = 125 = 11·11 + 4 ≡ 4. ✓"
+     ],
+     "answer": "5⁴³ mod 11 = 4"
+    },
+    {
+     "type": "steps",
+     "title": "Aⁿ mod m by repeated squaring",
+     "items": [
+      "<b>Break n into powers of 2.</b> Subtract the biggest power of 2 that fits, then repeat on what is left. 50 = 32 + 16 + 2.",
+      "<b>Build the squaring table:</b> a¹, a², a⁴, a⁸, … up to the biggest power you need. Each new row = (previous row)², reduced mod m.",
+      "<b>Pick</b> only the rows whose exponents appear in step 1.",
+      "<b>Multiply</b> the picked rows, reducing mod m after every multiplication.",
+      "<b>Shortcuts:</b> once a row is 1, every later row is 1. If a row is m − 1 (that is, −1), the next row is 1.",
+      "<b>Check:</b> the exponents you picked add up to exactly n."
+     ]
+    },
+    {
+     "type": "example",
+     "title": "7⁵⁰ mod 13",
+     "prompt": "Compute 7⁵⁰ mod 13 by repeated squaring.",
+     "steps": [
+      "50 = 32 + 16 + 2 — <i>binary (110010)₂</i>",
+      "7¹ ≡ 7 — <i>first row of the table</i>",
+      "7² = 49 ≡ 10 — <i>49 − 39 = 10</i>",
+      "7⁴ ≡ 10² = 100 ≡ 9 — <i>100 − 91 = 9</i>",
+      "7⁸ ≡ 9² = 81 ≡ 3 — <i>81 − 78 = 3</i>",
+      "7¹⁶ ≡ 3² = 9 — <i>square the previous row</i>",
+      "7³² ≡ 9² = 81 ≡ 3 — <i>square again</i>",
+      "7⁵⁰ = 7³²·7¹⁶·7² ≡ 3·9·10 — <i>pick the rows for 32, 16, 2</i>",
+      "3·9 = 27 ≡ 1 — <i>reduce after each multiplication</i>",
+      "1·10 = 10 — <i>last factor</i>"
+     ],
+     "answer": "7⁵⁰ mod 13 = 10 (5 squarings and 2 multiplications instead of 49)"
+    },
+    {
+     "type": "warn",
+     "text": "<b>Wrong:</b> building the table by doubling (3⁸ = 2·3⁴) or multiplying every row together. <b>Right:</b> each row is the previous row <b>squared</b>, and only the rows matching the 1s of n in binary get multiplied. (a²ᵏ = (aᵏ)², and the picked exponents must add to n)"
+    },
+    {
+     "type": "example",
+     "title": "Running-product version",
+     "prompt": "Compute 11³⁷ mod 17, keeping a running product as you read the bits of 37 from the right.",
+     "steps": [
+      "37 = (100101)₂ = 32 + 4 + 1.",
+      "Powers: 11¹ ≡ 11, 11² = 121 ≡ 2, 11⁴ ≡ 4, 11⁸ ≡ 16, 11¹⁶ ≡ 256 ≡ 1, 11³² ≡ 1.",
+      "Bit 1 (2⁰): x = 11. Bit 0, bit 1 (2²): x = 11·4 = 44 ≡ 10. Bits for 2³, 2⁴ are 0. Bit for 2⁵ is 1: x = 10·1 = 10.",
+      "Shortcut noticed: once a power is 1 (here 11¹⁶ ≡ 1), all later squares are 1."
+     ],
+     "answer": "11³⁷ mod 17 = 10"
+    }
+   ]
+  }
+ ],
+ "cards": [
+  {
+   "front": "Find 45 div 7 and 45 mod 7. Then find −45 mod 7.",
+   "back": [
+    {
+     "type": "p",
+     "text": "45 = 7·6 + 3, so 6 and 3. −45 = 7(−7) + 4, so 4."
+    }
+   ]
+  },
+  {
+   "front": "True or false: 23 ≡ −5 (mod 7)?",
+   "back": [
+    {
+     "type": "p",
+     "text": "True: 28 = 4·7."
+    }
+   ]
+  },
+  {
+   "front": "Compute (123·456) mod 5 without multiplying.",
+   "back": [
+    {
+     "type": "p",
+     "text": "123 ≡ 3 and 456 ≡ 1, so the answer is 3."
+    }
+   ]
+  },
+  {
+   "front": "If 4 | a and 4 | b, must 4 | 3a − 2b?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Yes. a = 4s and b = 4t, so 3a − 2b = 4(3s − 2t)."
+    }
+   ]
+  },
+  {
+   "front": "Convert (10110)₂ to decimal.",
+   "back": [
+    {
+     "type": "p",
+     "text": "16 + 4 + 2 = 22."
+    }
+   ]
+  },
+  {
+   "front": "Convert 50 to binary.",
+   "back": [
+    {
+     "type": "p",
+     "text": "(110010)₂ = 32 + 16 + 2."
+    }
+   ]
+  },
+  {
+   "front": "Compute 3¹⁰ mod 11 by repeated squaring.",
+   "back": [
+    {
+     "type": "p",
+     "text": "3² = 9, 3⁴ ≡ 81 ≡ 4, 3⁸ ≡ 16 ≡ 5, so 3¹⁰ ≡ 5·9 = 45 ≡ 1."
+    }
+   ]
+  },
+  {
+   "front": "Definition of a | b, and the key corollary.",
+   "back": [
+    {
+     "type": "p",
+     "text": "a | b (a ≠ 0) means b = ac for some integer c."
+    },
+    {
+     "type": "formula",
+     "text": "a | b and a | c ⇒ a | (mb + nc) for all integers m, n"
+    }
+   ]
+  },
+  {
+   "front": "State the division algorithm.",
+   "back": [
+    {
+     "type": "p",
+     "text": "For integer a and positive integer d there are unique integers q, r with a = dq + r and 0 ≤ r &lt; d. q = a div d, r = a mod d."
+    }
+   ]
+  },
+  {
+   "front": "How do you find a mod d for negative a?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Divide and round the quotient <b>down</b> (toward −∞), then r = a − dq. Shortcut: if (−a) mod d = s ≠ 0, then a mod d = d − s. Example: −11 mod 10 = 9."
+    }
+   ]
+  },
+  {
+   "front": "Three equivalent meanings of a ≡ b (mod m).",
+   "back": [
+    {
+     "type": "list",
+     "items": [
+      "m | (a − b)",
+      "a mod m = b mod m",
+      "a = b + km for some integer k"
+     ]
+    }
+   ]
+  },
+  {
+   "front": "Why can you reduce before adding or multiplying mod m?",
+   "back": [
+    {
+     "type": "p",
+     "text": "If a ≡ b and c ≡ d then a + c ≡ b + d and ac ≡ bd, since (a + c) − (b + d) = (a − b) + (c − d) and ac − bd = c(a − b) + b(c − d) are multiples of m."
+    }
+   ]
+  },
+  {
+   "front": "Why can’t you cancel or divide freely mod m?",
+   "back": [
+    {
+     "type": "p",
+     "text": "ac ≡ bc does not give a ≡ b: 2·3 ≡ 4·3 (mod 6) but 2 ≢ 4. Cancelling c is allowed only when gcd(c, m) = 1."
+    }
+   ]
+  },
+  {
+   "front": "Can you reduce an exponent mod m?",
+   "back": [
+    {
+     "type": "p",
+     "text": "No. Reduce the base, never the exponent: 2¹⁰ mod 7 = 2, not 2³ mod 7 = 1. To shrink exponents, find a power ≡ 1 (e.g. 2³ ≡ 1 mod 7) and split the exponent around it."
+    }
+   ]
+  },
+  {
+   "front": "How do you find the last digit / last two digits of a power?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Work mod 10 / mod 100. Find a small k with aᵏ ≡ 1, write the exponent as qk + r, and answer aʳ. Example: 7⁴ ≡ 1 (mod 10), so 7²⁰²⁶ ≡ 7² ≡ 9."
+    }
+   ]
+  },
+  {
+   "front": "Convert decimal to base b.",
+   "back": [
+    {
+     "type": "p",
+     "text": "Repeatedly divide by b; the remainders are the digits, read bottom-up (the first remainder is the units digit). Stop when the quotient is 0."
+    }
+   ]
+  },
+  {
+   "front": "Binary ↔ hex / octal.",
+   "back": [
+    {
+     "type": "p",
+     "text": "Group bits in 4s (hex) or 3s (octal) from the right; each group is one digit. (110100111)₂ = (1A7)₁₆ = 423."
+    }
+   ]
+  },
+  {
+   "front": "Repeated squaring for aⁿ mod m.",
+   "back": [
+    {
+     "type": "list",
+     "items": [
+      "Write n in binary (sum of powers of 2).",
+      "Table a, a², a⁴, a⁸, … each the previous squared, mod m.",
+      "Multiply the rows for the 1-bits, reducing each time."
+     ]
+    },
+    {
+     "type": "p",
+     "text": "About 2 log₂ n multiplications."
+    }
+   ]
+  },
+  {
+   "front": "Why does the digit sum test for 9 (and 3) work? The alternating test for 11?",
+   "back": [
+    {
+     "type": "p",
+     "text": "10 ≡ 1 (mod 9), so n = Σ aᵢ10ⁱ ≡ Σ aᵢ. 10 ≡ −1 (mod 11), so n ≡ Σ (−1)ⁱaᵢ. In base b the same works mod b − 1 and b + 1."
+    }
+   ]
+  }
+ ],
+ "hard": [
+  {
+   "title": "Negative division and uniqueness of q, r",
+   "level": "hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "Find −2026 <b>div</b> 17 and −2026 <b>mod</b> 17. Then prove the uniqueness half of the division algorithm: if a = dq + r = dq′ + r′ with 0 ≤ r, r′ &lt; d, then q = q′ and r = r′."
+    }
+   ],
+   "answer": "−2026 div 17 = −120, −2026 mod 17 = 14; uniqueness from |r′ − r| &lt; d and d | r′ − r",
+   "solution": [
+    {
+     "type": "p",
+     "text": "2026 = 17·119 + 3, so −2026 = 17·(−119) − 3 = 17·(−120) + 14. Since 0 ≤ 14 &lt; 17: <b>div = −120, mod = 14</b>."
+    },
+    {
+     "type": "p",
+     "text": "<b>Uniqueness.</b> Subtracting, d(q − q′) = r′ − r. Since 0 ≤ r, r′ &lt; d, we have |r′ − r| &lt; d. The only multiple of d with absolute value less than d is 0. So r = r′, then d(q − q′) = 0 and q = q′. ∎"
+    },
+    {
+     "type": "tip",
+     "text": "<b>Tests:</b> the remainder is never negative. <b>Common mistake:</b> answering q = −119, r = −3 (what many programming languages return)."
+    }
+   ]
+  },
+  {
+   "title": "Base expansions and digit-sum tests",
+   "level": "hard",
+   "prompt": [
+    {
+     "type": "list",
+     "items": [
+      "(a) Write 2026 in base 7, base 16 and base 2. Convert (3201)<sub>5</sub> to decimal.",
+      "(b) Prove: in base b, n ≡ (sum of its digits) (mod b − 1), and n ≡ (alternating digit sum, starting from the units digit) (mod b + 1).",
+      "(c) Using only the base-5 digits, decide whether (3201)<sub>5</sub> is divisible by 4 and by 6."
+     ]
+    }
+   ],
+   "answer": "(a) (5623)₇, (7EA)₁₆, (11111101010)₂, (3201)₅ = 426 (b) b ≡ 1 mod b − 1, b ≡ −1 mod b + 1 (c) not divisible by 4, divisible by 6",
+   "solution": [
+    {
+     "type": "p",
+     "text": "(a) 2026 = 5·343 + 311, 311 = 6·49 + 17, 17 = 2·7 + 3, so <b>(5623)<sub>7</sub></b>. Next, 2026 = 7·256 + 234 and 234 = 14·16 + 10, so <b>(7EA)<sub>16</sub></b>. In binary: <b>(11111101010)<sub>2</sub></b>. Finally, (3201)<sub>5</sub> = 3·125 + 2·25 + 0·5 + 1 = <b>426</b>."
+    },
+    {
+     "type": "p",
+     "text": "(b) n = Σ a<sub>i</sub>b<sup>i</sup>. Since b ≡ 1 (mod b − 1), every b<sup>i</sup> ≡ 1, so n ≡ Σ a<sub>i</sub>. Since b ≡ −1 (mod b + 1), b<sup>i</sup> ≡ (−1)<sup>i</sup>, so n ≡ Σ (−1)<sup>i</sup>a<sub>i</sub>."
+    },
+    {
+     "type": "p",
+     "text": "(c) Digit sum 3 + 2 + 0 + 1 = 6 ≡ 2 (mod 4), so it is <b>not</b> divisible by 4. Alternating sum from the right: 1 − 0 + 2 − 3 = 0, so it <b>is</b> divisible by 6. Check: 426 = 4·106 + 2 = 6·71. ✓"
+    },
+    {
+     "type": "tip",
+     "text": "<b>Tests:</b> base conversion, and why the divisibility tests work. <b>Common mistake:</b> starting the alternating sum from the leftmost digit. That can flip the sign, which is harmless for divisibility but wrong for the remainder."
+    }
+   ]
+  },
+  {
+   "title": "Repeated squaring trace: 5¹¹⁷ mod 19",
+   "level": "hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "Compute 5<sup>117</sup> mod 19 with the binary (repeated squaring) method, showing every step. Then explain the answer with Fermat’s little theorem."
+    }
+   ],
+   "answer": "5¹¹⁷ ≡ 1 (mod 19)",
+   "solution": [
+    {
+     "type": "p",
+     "text": "117 = (1110101)<sub>2</sub>. Read the bits from the right. At each step, multiply x by the current power if the bit is 1, then square the power."
+    },
+    {
+     "type": "table",
+     "head": [
+      "bit",
+      "power 5<sup>2<sup>i</sup></sup> mod 19",
+      "x after step"
+     ],
+     "rows": [
+      [
+       "1",
+       "5",
+       "5"
+      ],
+      [
+       "0",
+       "25 ≡ 6",
+       "5"
+      ],
+      [
+       "1",
+       "36 ≡ 17",
+       "5·17 = 85 ≡ 9"
+      ],
+      [
+       "0",
+       "289 ≡ 4",
+       "9"
+      ],
+      [
+       "1",
+       "16",
+       "9·16 = 144 ≡ 11"
+      ],
+      [
+       "1",
+       "256 ≡ 9",
+       "11·9 = 99 ≡ 4"
+      ],
+      [
+       "1",
+       "81 ≡ 5",
+       "4·5 = 20 ≡ 1"
+      ]
+     ]
+    },
+    {
+     "type": "p",
+     "text": "<b>Answer:</b> 5<sup>117</sup> ≡ 1 (mod 19)."
+    },
+    {
+     "type": "p",
+     "text": "<b>Fermat check.</b> 19 is prime, so 5<sup>18</sup> ≡ 1. Since 117 = 6·18 + 9, 5<sup>117</sup> ≡ 5<sup>9</sup> = 5<sup>8</sup>·5. The table’s rows hold 5<sup>1</sup>, 5<sup>2</sup>, 5<sup>4</sup>, 5<sup>8</sup>, …, so 5<sup>8</sup> ≡ 4 and 5<sup>9</sup> ≡ 20 ≡ 1. ✓ (5 has order 9 mod 19.)"
+    },
+    {
+     "type": "tip",
+     "text": "<b>Tests:</b> keeping the “current power” column apart from the running product. <b>Common mistake:</b> losing track of which power a row holds. Label the rows 5<sup>1</sup>, 5<sup>2</sup>, 5<sup>4</sup>, 5<sup>8</sup>, … and confirm the answer a second way, here with Fermat."
+    }
+   ]
+  },
+  {
+   "title": "Which congruence rules survive?",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "Here m, n ≥ 2. Prove each statement or give a counterexample."
+    },
+    {
+     "type": "list",
+     "items": [
+      "(a) If a ≡ b and c ≡ d (mod m), then a<sup>c</sup> ≡ b<sup>d</sup> (mod m) (with c, d ≥ 0).",
+      "(b) If ac ≡ bc (mod m) and c ≢ 0 (mod m), then a ≡ b (mod m).",
+      "(c) If a ≡ b (mod m), then a² ≡ b² (mod m²).",
+      "(d) If a ≡ b (mod m), then gcd(a, m) = gcd(b, m).",
+      "(e) If a ≡ b (mod m) and a ≡ b (mod n), then a ≡ b (mod mn).",
+      "(f) If ac ≡ bc (mod m) and gcd(c, m) = 1, then a ≡ b (mod m)."
+     ]
+    }
+   ],
+   "answer": "(a) F (b) F (c) F (d) T (e) F (f) T",
+   "solution": [
+    {
+     "type": "list",
+     "items": [
+      "(a) <b>False.</b> m = 3, a = b = 2, c = 1, d = 4: 2¹ = 2, but 2⁴ = 16 ≡ 1.",
+      "(b) <b>False.</b> m = 6, c = 2, a = 0, b = 3: 0 ≡ 6 (mod 6), but 0 ≢ 3.",
+      "(c) <b>False.</b> m = 3, a = 4, b = 1: 16 − 1 = 15, and 9 ∤ 15.",
+      "(d) <b>True.</b> a = b + km. Any common divisor of b and m divides a, and any common divisor of a and m divides b = a − km. Same common divisors, so the same gcd.",
+      "(e) <b>False.</b> m = n = 2, a = 0, b = 2. (It is true when gcd(m, n) = 1.)",
+      "(f) <b>True.</b> m | c(a − b) and gcd(m, c) = 1, so m | (a − b) (Euclid’s lemma; or multiply by the inverse of c)."
+     ]
+    },
+    {
+     "type": "tip",
+     "text": "<b>Tests:</b> which algebra rules survive mod m. You may add and multiply, but exponents and cancellation need care. <b>Common mistake:</b> reducing an exponent mod m, as in (a)."
+    }
+   ]
+  },
+  {
+   "title": "30 divides n⁵ − n",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "Prove that 30 | n⁵ − n for every integer n."
+    }
+   ],
+   "answer": "n⁵ − n = n(n − 1)(n + 1)(n² + 1) is divisible by 2, 3 and 5 (cases mod 5), hence by 30.",
+   "solution": [
+    {
+     "type": "p",
+     "text": "Factor: n⁵ − n = n(n − 1)(n + 1)(n² + 1)."
+    },
+    {
+     "type": "list",
+     "items": [
+      "<b>2:</b> n(n − 1) is a product of consecutive integers, so it is even.",
+      "<b>3:</b> (n − 1)n(n + 1) contains a multiple of 3.",
+      "<b>5:</b> if n ≡ 0, 1 or 4 (mod 5), one of n, n − 1, n + 1 is ≡ 0. If n ≡ ±2, then n² + 1 ≡ 4 + 1 ≡ 0."
+     ]
+    },
+    {
+     "type": "p",
+     "text": "Since 2, 3, 5 are distinct primes that all divide n⁵ − n, their product 30 divides it (unique factorization). ∎"
+    },
+    {
+     "type": "tip",
+     "text": "<b>Tests:</b> splitting a composite modulus into prime moduli. <b>Common mistake:</b> concluding “2 | x, 3 | x, 5 | x ⇒ 30 | x” without noting the factors are pairwise coprime. The same reasoning with 2, 4 would be wrong."
+    }
+   ]
+  },
+  {
+   "title": "Factorial sum mod 12 and last two digits",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "list",
+     "items": [
+      "(a) Find (1! + 2! + 3! + ⋯ + 100!) mod 12.",
+      "(b) Find the last two digits of 3<sup>2026</sup>."
+     ]
+    }
+   ],
+   "answer": "(a) 9 (b) 29",
+   "solution": [
+    {
+     "type": "p",
+     "text": "(a) For k ≥ 4, k! is a multiple of 4! = 24, so ≡ 0 (mod 12). The sum is ≡ 1 + 2 + 6 = <b>9</b>."
+    },
+    {
+     "type": "p",
+     "text": "(b) Work mod 100: 3⁵ = 243 ≡ 43, 3<sup>10</sup> ≡ 43² = 1849 ≡ 49, 3<sup>20</sup> ≡ 49² = 2401 ≡ 1. Since 2026 = 20·101 + 6, 3<sup>2026</sup> ≡ 3⁶ = 729 ≡ <b>29</b>."
+    },
+    {
+     "type": "tip",
+     "text": "<b>Tests:</b> finding a power that is ≡ 1 and reducing the exponent by it. <b>Common mistake:</b> reducing the exponent mod 100 (the modulus) instead of mod 20 (the period)."
+    }
+   ]
+  },
+  {
+   "title": "Sums of three squares mod 8",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "Prove that no integer of the form 8k + 7 is a sum of three squares. Is 2023 a sum of three squares?"
+    }
+   ],
+   "answer": "Squares are 0, 1, 4 mod 8 and no three sum to 7; 2023 ≡ 7 (mod 8), so no.",
+   "solution": [
+    {
+     "type": "p",
+     "text": "Squares mod 8: 0² ≡ 0, (±1)² ≡ 1, (±2)² ≡ 4, (±3)² ≡ 1, 4² ≡ 0. So every square is ≡ 0, 1 or 4 (mod 8)."
+    },
+    {
+     "type": "p",
+     "text": "Sums of three values from {0, 1, 4}, reduced mod 8: 0, 1, 2, 3, 4, 5, 6, 0, 1, 4. The value 7 never appears. ∎"
+    },
+    {
+     "type": "p",
+     "text": "2023 = 8·252 + 7, so <b>no</b>."
+    },
+    {
+     "type": "tip",
+     "text": "<b>Tests:</b> choosing the modulus (mod 4 isn’t enough here; mod 8 is). <b>Common mistake:</b> listing residues 0–7 for each of three variables (512 cases) instead of reducing first to the 3 possible square values."
+    }
+   ]
+  },
+  {
+   "title": "7 | 2ⁿ⁺² + 3²ⁿ⁺¹ two ways",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "Prove in two different ways that 7 | 2<sup>n+2</sup> + 3<sup>2n+1</sup> for all n ≥ 0: once with congruences and once by induction."
+    }
+   ],
+   "answer": "Mod 7: 4·2ⁿ + 3·9ⁿ ≡ 7·2ⁿ ≡ 0; induction: aₙ₊₁ = 2aₙ + 7·3²ⁿ⁺¹.",
+   "solution": [
+    {
+     "type": "p",
+     "text": "<b>Congruences.</b> 2<sup>n+2</sup> + 3<sup>2n+1</sup> = 4·2<sup>n</sup> + 3·9<sup>n</sup>. Since 9 ≡ 2 (mod 7), this is ≡ 4·2<sup>n</sup> + 3·2<sup>n</sup> = 7·2<sup>n</sup> ≡ 0."
+    },
+    {
+     "type": "p",
+     "text": "<b>Induction.</b> Let a<sub>n</sub> = 2<sup>n+2</sup> + 3<sup>2n+1</sup>. Base case: a<sub>0</sub> = 4 + 3 = 7. Step: a<sub>n+1</sub> = 2·2<sup>n+2</sup> + 9·3<sup>2n+1</sup> = 2a<sub>n</sub> + 7·3<sup>2n+1</sup>. If 7 | a<sub>n</sub>, both terms are multiples of 7."
+    },
+    {
+     "type": "tip",
+     "text": "<b>Tests:</b> rewriting a<sub>n+1</sub> in terms of a<sub>n</sub>. <b>Common mistake:</b> in the induction step, writing a<sub>n+1</sub> = 9a<sub>n</sub> + … and getting lost. Pick the multiplier (2 or 9) that leaves a clean leftover."
+    }
+   ]
+  },
+  {
+   "title": "Last two digits of a power tower",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "Find the last two digits of 7<sup>7<sup>7</sup></sup>."
+    }
+   ],
+   "answer": "43",
+   "solution": [
+    {
+     "type": "p",
+     "text": "Mod 100: 7² = 49, 7⁴ = 49² = 2401 ≡ 1. So we only need the exponent 7⁷ mod 4."
+    },
+    {
+     "type": "p",
+     "text": "7 ≡ −1 (mod 4) and 7 is odd, so 7⁷ ≡ (−1)⁷ = −1 ≡ 3 (mod 4). Write 7⁷ = 4k + 3."
+    },
+    {
+     "type": "p",
+     "text": "Then 7<sup>7<sup>7</sup></sup> = (7⁴)<sup>k</sup> · 7³ ≡ 1 · 343 ≡ <b>43</b> (mod 100)."
+    },
+    {
+     "type": "tip",
+     "text": "<b>Tests:</b> nested reduction: the modulus 100 sets the period 4, and the period is the modulus for the exponent. <b>Common mistake:</b> computing 7⁷ = 823543 and then reducing the exponent mod 100 (giving 7<sup>43</sup>), which is wrong."
+    }
+   ]
+  }
+ ],
+ "keyFacts": [
+  "a | b ⟺ b = ac for some integer c; a | b and a | c ⇒ a | (mb + nc)",
+  "a = dq + r with 0 ≤ r &lt; d, unique; for negative a round q down (−11 mod 10 = 9)",
+  "a ≡ b (mod m) ⟺ m | a − b ⟺ same remainder ⟺ a = b + km",
+  "Congruences add and multiply; reduce bases early, never exponents",
+  "Cancel c from ac ≡ bc (mod m) only if gcd(c, m) = 1",
+  "Last digit = value mod 10; find aᵏ ≡ 1 and reduce the exponent mod k",
+  "Base b: divide by b repeatedly, read remainders bottom-up; hex = groups of 4 bits",
+  "Repeated squaring: a, a², a⁴, … mod m; multiply the rows for the 1-bits of n"
+ ]
+}

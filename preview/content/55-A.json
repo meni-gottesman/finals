@@ -1,0 +1,2182 @@
+{
+ "id": "55-A",
+ "course": "55",
+ "title": "Logic: propositions, equivalences, quantifiers, inference",
+ "source": "Rosen 1.1–1.6 · Lec01–02",
+ "summary": "The language every later proof is written in: connectives and truth tables, logical equivalences, quantifiers and how to negate them, and the rules of inference that make an argument valid. On the final this shows up as translation, negation, equivalence and valid-or-fallacy questions, and it underlies every proof you write.",
+ "lesson": [
+  {
+   "title": "Propositions, connectives and translation",
+   "blocks": [
+    {
+     "type": "tip",
+     "text": "A proposition is a sentence that's either true or false. The connectives (not, and, or, if-then, iff) glue propositions together, and each one is defined by its truth table."
+    },
+    {
+     "type": "def",
+     "term": "proposition",
+     "text": "A <b>proposition</b> is a statement that is either true or false (not both)."
+    },
+    {
+     "type": "p",
+     "text": "Propositions: “1 + 1 = 4” (false, still a proposition), “There are infinitely many primes” (true), “Today is Monday.”<br>Not propositions: “x + 1 = 2” (depends on x; that's a <i>predicate</i>), “Close the door” (a command), “What time is it?” (a question)."
+    },
+    {
+     "type": "p",
+     "text": "We use letters p, q, r, s as <b>propositional variables</b>, and write T for true, F for false."
+    },
+    {
+     "type": "p",
+     "text": "<b>The six connectives</b>"
+    },
+    {
+     "type": "p",
+     "text": "Connectives build bigger propositions out of smaller ones. Each one is <i>defined</i> by its truth table, so memorize this table:"
+    },
+    {
+     "type": "table",
+     "head": [
+      "p",
+      "q",
+      "¬p",
+      "p ∧ q",
+      "p ∨ q",
+      "p ⊕ q",
+      "p → q",
+      "p ↔ q"
+     ],
+     "rows": [
+      [
+       "T",
+       "T",
+       "F",
+       "T",
+       "T",
+       "F",
+       "T",
+       "T"
+      ],
+      [
+       "T",
+       "F",
+       "F",
+       "F",
+       "T",
+       "T",
+       "F",
+       "F"
+      ],
+      [
+       "F",
+       "T",
+       "T",
+       "F",
+       "T",
+       "T",
+       "T",
+       "F"
+      ],
+      [
+       "F",
+       "F",
+       "T",
+       "F",
+       "F",
+       "F",
+       "T",
+       "T"
+      ]
+     ]
+    },
+    {
+     "type": "def",
+     "term": "Negation",
+     "text": "<b>Negation</b> ¬p: “it is not the case that p.” Opposite truth value."
+    },
+    {
+     "type": "def",
+     "term": "Conjunction",
+     "text": "<b>Conjunction</b> p ∧ q (“p and q”): true when both are true, false otherwise. In logic, “but” also means ∧."
+    },
+    {
+     "type": "def",
+     "term": "Disjunction",
+     "text": "<b>Disjunction</b> p ∨ q (“p or q”): false when both are false, true otherwise. This is the <b>inclusive</b> or."
+    },
+    {
+     "type": "def",
+     "term": "Exclusive or",
+     "text": "<b>Exclusive or</b> p ⊕ q: true when exactly one of p, q is true."
+    },
+    {
+     "type": "warn",
+     "text": "In everyday English “or” often means “one or the other but not both.” In math, ∨ always allows both. The lecture joke: a logician's spouse says “you may have cake or you may have pie,” and the logician replies “Excellent! I'll have both.”"
+    },
+    {
+     "type": "def",
+     "term": "conditional",
+     "text": "The <b>conditional</b> (or <b>implication</b>) p → q is the proposition “if p, then q.” It is <b>false only when p is true and q is false</b>, and true otherwise. p is the <b>hypothesis</b> (premise, antecedent); q is the <b>conclusion</b> (consequence)."
+    },
+    {
+     "type": "tip",
+     "text": "Think of p → q as a <b>promise</b>: “If you get an A on the final, then you get an A in the class.” The only way the promise is <i>broken</i> is if you ace the final and still don't get the A (T → F). If you don't ace the final, the promise hasn't been broken no matter what happens, so the statement counts as true. That's why the bottom two rows are T. We call this <b>vacuously true</b>."
+    },
+    {
+     "type": "warn",
+     "text": "In English, “if p then q” suggests p <i>causes</i> q. In math there's no causation needed: “If 1 + 1 = 2, then 2 + 2 = 4” is true; “If 1 + 1 = 3, then Santa is real” is also true (false hypothesis)."
+    },
+    {
+     "type": "thm",
+     "name": "Principle of explosion",
+     "text": "A false proposition implies any proposition. This isn't just a quirk of the truth table: the rules of proof let you derive <i>anything</i> from a false assumption.",
+     "proof": [
+      {
+       "type": "p",
+       "text": "Claim: if 1 + 1 = 3 then 1 + 1 = 4. Suppose 1 + 1 = 3. Then 2 = 3, so 2 − 1 = 3 − 1, so 1 = 2. So 1 + 1 = 2 + 2 = 4."
+      }
+     ]
+    },
+    {
+     "type": "p",
+     "text": "<b>All the ways to say “p → q”</b>"
+    },
+    {
+     "type": "table",
+     "head": [
+      "English",
+      "English"
+     ],
+     "rows": [
+      [
+       "if p, then q",
+       "p implies q"
+      ],
+      [
+       "q if p",
+       "p is sufficient for q"
+      ],
+      [
+       "<b>p only if q</b>",
+       "q is necessary for p"
+      ],
+      [
+       "q whenever p",
+       "q follows from p"
+      ],
+      [
+       "q provided that p",
+       "<b>q unless ¬p</b>"
+      ]
+     ]
+    },
+    {
+     "type": "warn",
+     "text": "<b>“p only if q” means p → q</b>, not q → p. “You can vote only if you're 18” means vote → 18. Being 18 doesn't force you to vote; it's a requirement."
+    },
+    {
+     "type": "warn",
+     "text": "<b>“p unless q” means ¬q → p.</b> Lecture example: “You will not pass the class unless you take the final.” With p = pass, q = take final: ¬q → ¬p, equivalently p → q."
+    },
+    {
+     "type": "example",
+     "title": "Translating “only if” and a trailing “if”",
+     "prompt": "Translate (a) “You will see the movie only if you are an adult or have permission” (m, a, p) and (b) “We will picnic if it is sunny and we are not tired” (p = picnic, q = sunny, r = tired).",
+     "steps": [
+      "(a) “X only if Y” means X → Y: the part after “only if” is the requirement.",
+      "The requirement is the group “adult or permission”, so keep it in parentheses: m → (a ∨ p).",
+      "(b) “X if Y” means Y → X. The “if” clause is the hypothesis even though it comes second.",
+      "The hypothesis is “sunny and not tired”: (q ∧ ¬r) → p.",
+      "Broken-promise check for (b): the sentence is a lie exactly when it is sunny, we are not tired, and we do not picnic. That is the one row where (q ∧ ¬r) → p is F."
+     ],
+     "answer": "(a) m → (a ∨ p); (b) (q ∧ ¬r) → p"
+    },
+    {
+     "type": "p",
+     "text": "“We will picnic if it is sunny and we are not tired.” (p = picnic, q = sunny, r = tired) Answer: (q ∧ ¬r) → p. The “if” clause is the hypothesis even though it comes second."
+    },
+    {
+     "type": "p",
+     "text": "<b>Converse, contrapositive, inverse</b>"
+    },
+    {
+     "type": "def",
+     "term": "converse",
+     "text": "Starting from p → q:"
+    },
+    {
+     "type": "list",
+     "items": [
+      "<b>converse</b>: q → p",
+      "<b>contrapositive</b>: ¬q → ¬p ← <b>always equivalent</b> to p → q",
+      "<b>inverse</b>: ¬p → ¬q (equivalent to the converse, not the original)"
+     ]
+    },
+    {
+     "type": "example",
+     "title": "Converse vs contrapositive",
+     "prompt": "For a shape S: “If S is a square, then S has 4 sides.” Decide whether the statement, its converse and its contrapositive are true.",
+     "steps": [
+      "Original p → q with p = “S is a square”, q = “S has 4 sides”: true.",
+      "Converse q → p: “If S has 4 sides, then S is a square.” False: a non-square rectangle is a counterexample.",
+      "Contrapositive ¬q → ¬p: “If S does not have 4 sides, then S is not a square.” True, because it is equivalent to the original."
+     ],
+     "answer": "Original true, converse false, contrapositive true"
+    },
+    {
+     "type": "def",
+     "term": "biconditional",
+     "text": "The <b>biconditional</b> p ↔ q (“p if and only if q”, abbreviated <b>iff</b>) is true when p and q have the same truth value and false otherwise. It means (p → q) ∧ (q → p)."
+    },
+    {
+     "type": "p",
+     "text": "<b>Order of operations</b>"
+    },
+    {
+     "type": "p",
+     "text": "Precedence, highest to lowest: ¬, ∧, ∨, →, ↔. (Like PEMDAS: ¬ is like a minus sign, ∧ like ×, ∨ like +.)"
+    },
+    {
+     "type": "p",
+     "text": "<b>Example.</b> p ∨ q ∧ r means p ∨ (q ∧ r). With p = T, q = F, r = F this is T, but (p ∨ q) ∧ r is F, so order matters."
+    },
+    {
+     "type": "p",
+     "text": "¬p ∧ q ∨ p → p ∧ r means ((¬p ∧ q) ∨ p) → (p ∧ r)."
+    },
+    {
+     "type": "p",
+     "text": "<b>Truth tables for compound propositions</b>"
+    },
+    {
+     "type": "p",
+     "text": "With n variables, a truth table has 2<sup>n</sup> rows. Make a column for each sub-piece, working from the inside out."
+    },
+    {
+     "type": "example",
+     "title": "Read off a simpler equivalent formula",
+     "prompt": "Build the truth table of (p ∧ q) ∨ ¬p and find a simpler formula with the same column.",
+     "steps": [
+      "2 letters → 4 rows. Columns: p ∧ q, then ¬p, then their ∨.",
+      "The final column is T, F, T, T (rows TT, TF, FT, FF).",
+      "The only F is at p = T, q = F, which is exactly the column of p → q."
+     ],
+     "answer": "(p ∧ q) ∨ ¬p ≡ p → q (see the table below)"
+    },
+    {
+     "type": "table",
+     "head": [
+      "p",
+      "q",
+      "p ∧ q",
+      "¬p",
+      "(p ∧ q) ∨ ¬p",
+      "p → q"
+     ],
+     "rows": [
+      [
+       "T",
+       "T",
+       "T",
+       "F",
+       "T",
+       "T"
+      ],
+      [
+       "T",
+       "F",
+       "F",
+       "F",
+       "F",
+       "F"
+      ],
+      [
+       "F",
+       "T",
+       "F",
+       "T",
+       "T",
+       "T"
+      ],
+      [
+       "F",
+       "F",
+       "F",
+       "T",
+       "T",
+       "T"
+      ]
+     ]
+    },
+    {
+     "type": "p",
+     "text": "<b>Lock it down</b>"
+    },
+    {
+     "type": "steps",
+     "title": "Is it a proposition?",
+     "items": [
+      "<b>Is it a statement?</b> Questions (“Is it 5?”), commands (“Close the door”) and exclamations are never propositions.",
+      "<b>Hunt for loose letters or pronouns.</b> If it has an x, n, “he” or “this number” whose value is never fixed, it is <b>not</b> a proposition yet. It is a predicate.",
+      "<b>Ask: could it be marked T or F?</b> If yes, it is a proposition, even if it is false (“7 is even”) or nobody knows the answer yet (“There is life on Mars”).",
+      "<b>Check:</b> “false” and “unknown” are both fine. Only “depends on something missing” or “not a claim at all” rules it out."
+     ]
+    },
+    {
+     "type": "steps",
+     "title": "Build a truth table",
+     "items": [
+      "<b>Count the letters.</b> n letters means 2<sup>n</sup> rows: 2 letters → 4 rows, 3 letters → 8 rows.",
+      "<b>Fill the letter columns in the standard order.</b> First letter: top half T, bottom half F. Next letter: halve the blocks again. Last letter: T, F, T, F, …",
+      "<b>Add parentheses</b> using precedence ¬, ∧, ∨, →, ↔, so you know exactly which piece is the main connective.",
+      "<b>Make one column per piece, inside out.</b> Small pieces first (like ¬p), then pieces built from them, and the whole formula last.",
+      "<b>Fill each column by looking only at the two columns it joins.</b> For →, just hunt for rows where the left is T and the right is F. Those rows get F. Every other row gets T.",
+      "<b>Check:</b> right number of rows, no two rows with the same letter values."
+     ]
+    },
+    {
+     "type": "steps",
+     "title": "Translate English into logic",
+     "items": [
+      "<b>Name the simple sentences</b> with letters, in the positive form. “I am not tired” becomes ¬r with r = “I am tired.”",
+      "<b>Find the glue word</b> and use this list: if p, q · q if p · q whenever p → p → q; p only if q → p → q; p is sufficient for q → p → q; p is necessary for q → q → p; p unless q → ¬q → p; p but q → p ∧ q; neither p nor q → ¬p ∧ ¬q; p if and only if q → p ↔ q",
+      "<b>Keep groups together.</b> If a piece is “a and b” or “a or b,” wrap it in parentheses before using it in a rule.",
+      "<b>Check with the broken promise.</b> An → is false in exactly one situation: left side happens, right side doesn't. Ask: is that the one situation that would make the English sentence a lie? If yes, you translated it right."
+     ]
+    },
+    {
+     "type": "steps",
+     "title": "Converse, contrapositive, inverse",
+     "items": [
+      "<b>Rewrite as “if p, then q” first.</b> Turn “only if,” “unless,” “necessary” into → using the list above. Write down exactly what p and q are.",
+      "<b>Converse:</b> swap. q → p.",
+      "<b>Inverse:</b> negate both, keep the order. ¬p → ¬q.",
+      "<b>Contrapositive:</b> swap <b>and</b> negate. ¬q → ¬p.",
+      "<b>Negate compound pieces carefully.</b> ¬(a ∧ b) is ¬a ∨ ¬b, and ¬(a ∨ b) is ¬a ∧ ¬b. The ∧ and ∨ flip.",
+      "<b>Check:</b> the contrapositive always has the same truth value as the original. The converse and inverse always match each other."
+     ]
+    },
+    {
+     "type": "example",
+     "title": "“unless” with a group, then all three relatives",
+     "prompt": "Translate “The app crashes unless you update it and restart it.” Let c = the app crashes, u = you update it, r = you restart it. Then write the converse, inverse and contrapositive.",
+     "steps": [
+      "p = c, q = (u ∧ r) — <i>“p unless q”; the group “update and restart” stays together</i>",
+      "¬(u ∧ r) → c — <i>“p unless q” means ¬q → p</i>",
+      "converse: c → ¬(u ∧ r) — <i>swap the two sides</i>",
+      "inverse: (u ∧ r) → ¬c — <i>negate both sides, ¬¬ cancels</i>",
+      "contrapositive: ¬c → (u ∧ r) — <i>swap and negate, ¬¬ cancels</i>",
+      "Read the contrapositive back: “If the app didn't crash, then you updated it and restarted it.” That says the same thing as the original. The translation could also be written (¬u ∨ ¬r) → c by De Morgan."
+     ],
+     "answer": "contrapositive: ¬c → (u ∧ r)"
+    },
+    {
+     "type": "example",
+     "title": "3-letter truth table with precedence",
+     "prompt": "Build the truth table for ¬p ∨ q → r. In how many rows is it false?",
+     "steps": [
+      "(¬p ∨ q) → r — <i>∨ binds tighter than →, so → is the main connective</i>",
+      "8 rows — <i>3 letters, 2<sup>3</sup> = 8</i>",
+      "columns: ¬p, then ¬p ∨ q, then the whole thing — <i>inside out</i>",
+      "F exactly where ¬p ∨ q is T and r is F — <i>the only way an → is false</i>"
+     ],
+     "answer": "false in <b>3</b> rows (TTF, FTF, FFF). Notice rows 3 and 4: the left side is F, so the → is automatically T no matter what r is."
+    },
+    {
+     "type": "table",
+     "head": [
+      "p",
+      "q",
+      "r",
+      "¬p",
+      "¬p ∨ q",
+      "(¬p ∨ q) → r"
+     ],
+     "rows": [
+      [
+       "T",
+       "T",
+       "T",
+       "F",
+       "T",
+       "T"
+      ],
+      [
+       "T",
+       "T",
+       "F",
+       "F",
+       "T",
+       "<b>F</b>"
+      ],
+      [
+       "T",
+       "F",
+       "T",
+       "F",
+       "F",
+       "T"
+      ],
+      [
+       "T",
+       "F",
+       "F",
+       "F",
+       "F",
+       "T"
+      ],
+      [
+       "F",
+       "T",
+       "T",
+       "T",
+       "T",
+       "T"
+      ],
+      [
+       "F",
+       "T",
+       "F",
+       "T",
+       "T",
+       "<b>F</b>"
+      ],
+      [
+       "F",
+       "F",
+       "T",
+       "T",
+       "T",
+       "T"
+      ],
+      [
+       "F",
+       "F",
+       "F",
+       "T",
+       "T",
+       "<b>F</b>"
+      ]
+     ]
+    },
+    {
+     "type": "warn",
+     "text": "<b>Wrong:</b> “p only if q” is q → p. <b>Right:</b> p → q. (The part after “only if” is the requirement, so it goes on the right.)"
+    },
+    {
+     "type": "warn",
+     "text": "<b>Wrong:</b> “p is necessary for q” is p → q. <b>Right:</b> q → p. (If q happens, the necessary thing p must have happened.)"
+    },
+    {
+     "type": "warn",
+     "text": "<b>Wrong:</b> p → q is false whenever p is false. <b>Right:</b> it is false only when p is T and q is F. (A false hypothesis makes it vacuously true.)"
+    },
+    {
+     "type": "warn",
+     "text": "<b>Wrong:</b> the contrapositive of p → q is ¬p → ¬q. <b>Right:</b> that is the inverse. The contrapositive is ¬q → ¬p: swap <i>and</i> negate."
+    },
+    {
+     "type": "warn",
+     "text": "<b>Wrong:</b> “x > 3” is a proposition because it is math. <b>Right:</b> it is a predicate until x gets a value. (Mathy-looking doesn't mean true-or-false.)"
+    }
+   ]
+  },
+  {
+   "title": "Equivalences, tautologies and the logical laws",
+   "blocks": [
+    {
+     "type": "tip",
+     "text": "Two formulas are equivalent when they always have the same truth value. A short list of equivalences lets you simplify formulas like algebra."
+    },
+    {
+     "type": "def",
+     "term": "tautology",
+     "text": "A compound proposition that is <b>always true</b>, whatever the truth values of its variables, is a <b>tautology</b>. One that is always false is a <b>contradiction</b>. One that is neither is a <b>contingency</b>."
+    },
+    {
+     "type": "p",
+     "text": "Examples: p ∨ ¬p is a tautology, p ∧ ¬p is a contradiction, p → q is a contingency."
+    },
+    {
+     "type": "def",
+     "term": "logically equivalent",
+     "text": "Propositions p and q are <b>logically equivalent</b>, written p ≡ q, if p ↔ q is a tautology. Equivalently: they have identical truth-table columns."
+    },
+    {
+     "type": "p",
+     "text": "≡ is not a connective. p ≡ q is a statement <i>about</i> two formulas, not a new formula."
+    },
+    {
+     "type": "p",
+     "text": "<b>The equivalences to know</b>"
+    },
+    {
+     "type": "table",
+     "head": [
+      "Name",
+      "Equivalence"
+     ],
+     "rows": [
+      [
+       "<b>Conditional as “or”</b>",
+       "p → q ≡ ¬p ∨ q"
+      ],
+      [
+       "<b>Contrapositive</b>",
+       "p → q ≡ ¬q → ¬p"
+      ],
+      [
+       "<b>Negated conditional</b>",
+       "¬(p → q) ≡ p ∧ ¬q"
+      ],
+      [
+       "<b>Biconditional</b>",
+       "p ↔ q ≡ (p → q) ∧ (q → p)"
+      ],
+      [
+       "<b>De Morgan</b>",
+       "¬(p ∧ q) ≡ ¬p ∨ ¬q ¬(p ∨ q) ≡ ¬p ∧ ¬q"
+      ],
+      [
+       "Double negation",
+       "¬(¬p) ≡ p"
+      ],
+      [
+       "Identity",
+       "p ∧ T ≡ p p ∨ F ≡ p"
+      ],
+      [
+       "Domination",
+       "p ∨ T ≡ T p ∧ F ≡ F"
+      ],
+      [
+       "Negation",
+       "p ∨ ¬p ≡ T p ∧ ¬p ≡ F"
+      ],
+      [
+       "Idempotent",
+       "p ∨ p ≡ p p ∧ p ≡ p"
+      ],
+      [
+       "Commutative",
+       "p ∨ q ≡ q ∨ p p ∧ q ≡ q ∧ p"
+      ],
+      [
+       "Associative",
+       "(p ∨ q) ∨ r ≡ p ∨ (q ∨ r) (p ∧ q) ∧ r ≡ p ∧ (q ∧ r)"
+      ],
+      [
+       "<b>Distributive</b>",
+       "p ∧ (q ∨ r) ≡ (p ∧ q) ∨ (p ∧ r) p ∨ (q ∧ r) ≡ (p ∨ q) ∧ (p ∨ r)"
+      ],
+      [
+       "Absorption",
+       "p ∨ (p ∧ q) ≡ p p ∧ (p ∨ q) ≡ p"
+      ],
+      [
+       "Same hypothesis",
+       "(p → q) ∧ (p → r) ≡ p → (q ∧ r)"
+      ],
+      [
+       "Same conclusion",
+       "(p → r) ∧ (q → r) ≡ (p ∨ q) → r"
+      ],
+      [
+       "Exportation",
+       "p → (q → r) ≡ (p ∧ q) → r"
+      ],
+      [
+       "Contradiction",
+       "(¬p → F) ≡ p"
+      ]
+     ]
+    },
+    {
+     "type": "tip",
+     "text": "<b>De Morgan:</b> “Not (rich and famous)” means “not rich, or not famous.” To negate, <b>flip every ∧ ↔ ∨ and push the ¬ inside.</b> The same move works for quantifiers: ∀ ↔ ∃.<br><b>¬(p → q) ≡ p ∧ ¬q:</b> the only way a promise is broken is if p happened and q didn't. This one shows up constantly when setting up proofs by contradiction."
+    },
+    {
+     "type": "example",
+     "title": "Show ¬(p ∨ (¬p ∧ q)) ≡ ¬p ∧ ¬q without a truth tab",
+     "prompt": "Show ¬(p ∨ (¬p ∧ q)) ≡ ¬p ∧ ¬q without a truth table.",
+     "steps": [
+      "¬(p ∨ (¬p ∧ q))",
+      "≡ ¬p ∧ ¬(¬p ∧ q) — <i>De Morgan</i>",
+      "≡ ¬p ∧ (¬¬p ∨ ¬q) — <i>De Morgan</i>",
+      "≡ ¬p ∧ (p ∨ ¬q) — <i>double negation</i>",
+      "≡ (¬p ∧ p) ∨ (¬p ∧ ¬q) — <i>distributive</i>",
+      "≡ F ∨ (¬p ∧ ¬q) — <i>negation law</i>",
+      "≡ ¬p ∧ ¬q — <i>identity</i>",
+      "Truth tables (like the 8-row one for the distributive law) are slow and error-prone; chaining known equivalences is cleaner. Label each step."
+     ],
+     "answer": "≡ ¬p ∧ ¬q"
+    },
+    {
+     "type": "example",
+     "title": "Two ways to show a tautology",
+     "prompt": "Is p ∨ (q → ¬p) a tautology? Is q ∧ (q → p)?",
+     "steps": [
+      "<b>Cases:</b> if p is T, the whole “or” is T. If p is F, then ¬p is T, so q → ¬p is T. Either way the formula is T.",
+      "<b>Algebra:</b> p ∨ (¬q ∨ ¬p) ≡ (p ∨ ¬p) ∨ ¬q ≡ T ∨ ¬q ≡ T (conditional as “or”, commutative/associative, negation, domination).",
+      "For q ∧ (q → p), one false row is enough: q = F makes it F. It is also T at p = q = T, so it is a contingency."
+     ],
+     "answer": "p ∨ (q → ¬p) is a tautology; q ∧ (q → p) is a contingency"
+    },
+    {
+     "type": "p",
+     "text": "Similarly, (p → q) ∨ p is a tautology. If p is true the right side is true; if p is false then p → q is true."
+    },
+    {
+     "type": "tip",
+     "text": "Why we learn laws: a truth table for n letters has 2<sup>n</sup> rows. With 400 letters that is more rows than atoms in the universe. Whether there is a fast general method to decide if a formula is a tautology is essentially the famous P vs NP question."
+    },
+    {
+     "type": "p",
+     "text": "<b>Lock it down</b>"
+    },
+    {
+     "type": "steps",
+     "title": "Equivalence by truth table",
+     "items": [
+      "<b>List every letter</b> that appears in <i>either</i> formula. n letters means 2<sup>n</sup> rows.",
+      "<b>Build both formulas' columns</b> inside out, in the same table.",
+      "<b>Compare the two final columns row by row.</b>",
+      "<b>Same in every row:</b> the formulas are equivalent. Write “the columns are identical, so A ≡ B.”",
+      "<b>Different in even one row:</b> they are not equivalent. That row is your proof. Write it down, e.g. “p = T, q = F: A is T but B is F.”"
+     ]
+    },
+    {
+     "type": "steps",
+     "title": "Equivalence by a chain of laws",
+     "items": [
+      "<b>Start from the messier side.</b> You'll simplify it until it looks like the other side.",
+      "<b>Kill → and ↔ first.</b> p → q ≡ ¬p ∨ q. p ↔ q ≡ (p → q) ∧ (q → p).",
+      "<b>Push every ¬ inward</b> with De Morgan and double negation, until ¬ only sits on single letters.",
+      "<b>Tidy up.</b> Use commutative and associative laws to put matching letters next to each other. Use distributive (either direction) to pull out a common letter.",
+      "<b>Look for kill pairs.</b> p ∨ ¬p becomes T and p ∧ ¬p becomes F. Then identity and domination wipe them out. Absorption is also a big shortcut.",
+      "<b>One law per line, and name it.</b> Graders want the label.",
+      "<b>Stuck?</b> Simplify the other side too. If both sides reach the same formula C, you have shown A ≡ C ≡ B."
+     ]
+    },
+    {
+     "type": "steps",
+     "title": "Tautology, contradiction or contingency?",
+     "items": [
+      "<b>Try to make it false.</b> Find one row where it is F? Then it is <b>not</b> a tautology.",
+      "<b>Try to make it true.</b> Find one row where it is T? Then it is <b>not</b> a contradiction.",
+      "<b>Found both:</b> contingency. Name the two rows as your evidence.",
+      "<b>Shortcut when the main connective is →.</b> To make it false you <i>need</i> left = T and right = F. Write down what that forces. If the letters end up needing to be both T and F, no false row exists: it is a tautology.",
+      "<b>To prove a tautology</b>, a case split (“if p is T … if p is F …”) or a chain of laws ending in T is enough. Checking only a few rows is not."
+     ]
+    },
+    {
+     "type": "example",
+     "title": "chain of laws with a common letter",
+     "prompt": "Show (p → q) ∧ (p → ¬q) ≡ ¬p without a truth table.",
+     "steps": [
+      "(p → q) ∧ (p → ¬q) — <i>start from the messy side</i>",
+      "≡ (¬p ∨ q) ∧ (¬p ∨ ¬q) — <i>conditional as “or,” used twice</i>",
+      "≡ ¬p ∨ (q ∧ ¬q) — <i>distributive, read right to left (pull out ¬p)</i>",
+      "≡ ¬p ∨ F — <i>negation law</i>",
+      "≡ ¬p — <i>identity law</i>",
+      "Sanity check in words: if p were true, you'd need both q and ¬q, which is impossible. So the pair of promises can only hold when p is false."
+     ],
+     "answer": "≡ ¬p"
+    },
+    {
+     "type": "example",
+     "title": "tautology by “try to make it false”",
+     "prompt": "Is [(p → q) ∧ (q → r)] → (p → r) a tautology?",
+     "steps": [
+      "need p → r = F — <i>to make the main → false, the right side must be F</i>",
+      "so p = T, r = F — <i>the only way p → r is false</i>",
+      "need p → q = T, so q = T — <i>the left side must be T, and p is T</i>",
+      "need q → r = T, but q = T, r = F gives F — <i>the left side must be T; it isn't</i>",
+      "no false row exists — <i>every attempt to make it false breaks</i>"
+     ],
+     "answer": "tautology. (This is exactly why the hypothetical syllogism rule is allowed.) This took 4 lines instead of an 8-row table."
+    },
+    {
+     "type": "warn",
+     "text": "<b>Wrong:</b> ¬(p ∧ q) ≡ ¬p ∧ ¬q. <b>Right:</b> ¬p ∨ ¬q. (De Morgan flips the connective. “Not both” only means at least one fails.)"
+    },
+    {
+     "type": "warn",
+     "text": "<b>Wrong:</b> ¬(p → q) ≡ ¬p → ¬q. <b>Right:</b> p ∧ ¬q. (Breaking a promise is an event, an “and,” not another promise.)"
+    },
+    {
+     "type": "warn",
+     "text": "<b>Wrong:</b> p → q ≡ p ∨ ¬q. <b>Right:</b> ¬p ∨ q. (The ¬ goes on the hypothesis. Test p = F, q = T: p → q is T but p ∨ ¬q is F.)"
+    },
+    {
+     "type": "warn",
+     "text": "<b>Wrong:</b> p ∧ (q ∨ r) ≡ (p ∧ q) ∨ r. <b>Right:</b> (p ∧ q) ∨ (p ∧ r). (Distributing means p goes to <i>every</i> piece, like 2(a + b) = 2a + 2b.)"
+    },
+    {
+     "type": "warn",
+     "text": "<b>Wrong:</b> “I checked 3 rows and they were all T, so it's a tautology.” <b>Right:</b> you need every row, or a case split or chain that covers all of them. One F row is enough to say “not a tautology.”"
+    }
+   ]
+  },
+  {
+   "title": "Predicates and quantifiers",
+   "blocks": [
+    {
+     "type": "tip",
+     "text": "A predicate is a sentence with a blank, like “x > 3.” ∀ means every x works; ∃ means at least one does. To negate, swap ∀ ↔ ∃ and negate what's inside."
+    },
+    {
+     "type": "def",
+     "term": "predicate",
+     "text": "A <b>predicate</b> is a statement involving variables which becomes true or false once the values of those variables are specified."
+    },
+    {
+     "type": "p",
+     "text": "Let P(x) be “x² ≥ x”. Then P(2) is true (4 ≥ 2), P(1) is true (1 ≥ 1), and P(½) is false (¼ ≥ ½ is false). We write predicates with capital letters: P(x), Q(x), L(x, y)."
+    },
+    {
+     "type": "def",
+     "term": "universal quantification",
+     "text": "∀x P(x) (the <b>universal quantification</b>) is the proposition “P(x) is true for every x in the domain.” An x where P(x) is false is a <b>counterexample</b>."
+    },
+    {
+     "type": "p",
+     "text": "∃x P(x) (the <b>existential quantification</b>) is the proposition “there exists an x in the domain such that P(x).”"
+    },
+    {
+     "type": "warn",
+     "text": "A quantified statement means nothing until you fix the <b>domain</b> (the allowed values of x). With P(x) = “x² ≥ x”:"
+    },
+    {
+     "type": "warn",
+     "text": "Domain ℝ: ∀x P(x) is <b>false</b> (x = ½)."
+    },
+    {
+     "type": "warn",
+     "text": "Domain ℤ: ∀x P(x) is <b>true</b>. If x ≥ 1 then x·x ≥ x·1; if x ≤ 0 then x² ≥ 0 ≥ x."
+    },
+    {
+     "type": "tip",
+     "text": "Over a finite domain {a₁, …, aₙ}, quantifiers are just long and/or chains:<br>∀x P(x) ≡ P(a₁) ∧ P(a₂) ∧ … ∧ P(aₙ) and ∃x P(x) ≡ P(a₁) ∨ P(a₂) ∨ … ∨ P(aₙ).<br>So negating a quantifier is just De Morgan's law on a long chain."
+    },
+    {
+     "type": "thm",
+     "name": "Negating quantifiers",
+     "text": "¬∀x P(x) ≡ ∃x ¬P(x) ¬∃x P(x) ≡ ∀x ¬P(x)"
+    },
+    {
+     "type": "p",
+     "text": "“Not everyone passed” = “someone didn't pass.” “Nobody cheated” = “everyone didn't cheat.”"
+    },
+    {
+     "type": "example",
+     "title": "push negations inward",
+     "prompt": "Rewrite ¬∀x [P(x) → Q(x)] so every ¬ sits right in front of a predicate.",
+     "steps": [
+      "¬∀x [P(x) → Q(x)]",
+      "≡ ∃x ¬[P(x) → Q(x)] — <i>negate ∀</i>",
+      "≡ ∃x ¬[¬P(x) ∨ Q(x)] — <i>p → q ≡ ¬p ∨ q</i>",
+      "≡ ∃x [¬¬P(x) ∧ ¬Q(x)] — <i>De Morgan</i>",
+      "≡ ∃x [P(x) ∧ ¬Q(x)] — <i>double negation</i>",
+      "Read it: “not every P is a Q” = “some P is not a Q.” Shortcut: <b>¬(p → q) ≡ p ∧ ¬q</b>."
+     ],
+     "answer": "¬(p → q) ≡ p ∧ ¬q"
+    },
+    {
+     "type": "p",
+     "text": "<b>Translating English: the four patterns</b>"
+    },
+    {
+     "type": "tip",
+     "text": "Each of these sentences has two pieces: a <b>group</b> and a <b>claim</b> about that group.<br>“Every <b>dog</b> is <b>friendly</b>.” Domain: all animals. D(x): x is a dog. F(x): x is friendly.<br>x runs over <i>every animal</i>, cats and fish included. So the logic has to say “I only care about the dogs.” That's what the → or ∧ is for."
+    },
+    {
+     "type": "thm",
+     "name": "The recipe: 3 questions",
+     "text": "The group always goes first: D(x) on the left, the claim on the right."
+    },
+    {
+     "type": "steps",
+     "title": "Method",
+     "items": [
+      "<b>Every or some?</b> “every / all / no” → ∀x. “some / there is / at least one” → ∃x.",
+      "<b>Which glue?</b> ∀ takes <b>→</b> (“<i>if</i> it's in the group, <i>then</i> …”). ∃ takes <b>∧</b> (“it's in the group <i>and</i> …”).",
+      "<b>Is there a “no” or “not”?</b> Put ¬ on the claim."
+     ]
+    },
+    {
+     "type": "table",
+     "head": [
+      "English",
+      "Logic",
+      "Reading"
+     ],
+     "rows": [
+      [
+       "Every dog is friendly",
+       "∀x (D(x) → F(x))",
+       "check every animal: if it is a dog, it is friendly (cats pass automatically)"
+      ],
+      [
+       "Some dog is friendly",
+       "∃x (D(x) ∧ F(x))",
+       "one animal that is a dog and is friendly"
+      ],
+      [
+       "No dog is friendly",
+       "∀x (D(x) → ¬F(x))",
+       "same as ¬∃x (D(x) ∧ F(x))"
+      ],
+      [
+       "Some dog is not friendly",
+       "∃x (D(x) ∧ ¬F(x))",
+       "one grumpy dog is enough"
+      ]
+     ]
+    },
+    {
+     "type": "example",
+     "title": "using the recipe",
+     "prompt": "Translate “No student cheated.” Domain: all people. S(x): x is a student. C(x): x cheated.",
+     "steps": [
+      "group = students, claim = cheated — <i>find the two pieces</i>",
+      "∀x — <i>“no” is an every-type word</i>",
+      "∀x (S(x) → C(x)) — <i>∀ takes →, group on the left</i>",
+      "∀x (S(x) → ¬C(x)) — <i>“no” puts ¬ on the claim</i>",
+      "Read it back: “Check every person: if they're a student, they didn't cheat.” ✓"
+     ],
+     "answer": "∀x (S(x) → ¬C(x))"
+    },
+    {
+     "type": "warn",
+     "text": "<b>∀ is a security guard</b> checking every animal in the building. The rule is only for dogs, so the guard asks “<i>if</i> you're a dog, are you friendly?” and waves the cats through. That's →."
+    },
+    {
+     "type": "warn",
+     "text": "<b>∃ is a scavenger hunt</b>: find one animal that is a dog <i>and</i> friendly. Both boxes on the same animal. That's ∧."
+    },
+    {
+     "type": "warn",
+     "text": "Swap them and it breaks:"
+    },
+    {
+     "type": "warn",
+     "text": "∀x (D(x) ∧ F(x)) says “every animal is a friendly dog.” One cat makes it false. <b>Too strong.</b>"
+    },
+    {
+     "type": "warn",
+     "text": "∃x (D(x) → F(x)) is true as soon as one cat exists, because for a cat “if dog …” is false, which makes the → true. <b>Too weak</b>: it says nothing about dogs."
+    },
+    {
+     "type": "tip",
+     "text": "The four patterns come in opposite pairs: “every dog is friendly” ↔ “some dog is not friendly”, and “some dog is friendly” ↔ “no dog is friendly”. That is the ¬∀ ≡ ∃¬ rule: ¬∀x (D(x) → F(x)) ≡ ∃x (D(x) ∧ ¬F(x))."
+    },
+    {
+     "type": "table",
+     "head": [
+      "Pattern",
+      "Also written as",
+      "Logic"
+     ],
+     "rows": [
+      [
+       "Every",
+       "all, each, any, “dogs are friendly”",
+       "∀x (D → F)"
+      ],
+      [
+       "Some",
+       "there is, at least one, a few",
+       "∃x (D ∧ F)"
+      ],
+      [
+       "No",
+       "none, not a single, there is no",
+       "∀x (D → ¬F)"
+      ],
+      [
+       "Some-not",
+       "not every, not all, at least one … isn't",
+       "∃x (D ∧ ¬F)"
+      ],
+      [
+       "<b>Trap: only</b>",
+       "“<b>Only</b> dogs bark” = if it barks, it's a dog",
+       "∀x (B → D)"
+      ]
+     ]
+    },
+    {
+     "type": "p",
+     "text": "<b>When do quantifiers distribute?</b>"
+    },
+    {
+     "type": "thm",
+     "name": "Works",
+     "text": "∀x (P(x) ∧ Q(x)) ≡ ∀x P(x) ∧ ∀x Q(x)"
+    },
+    {
+     "type": "p",
+     "text": "∃x (P(x) ∨ Q(x)) ≡ ∃x P(x) ∨ ∃x Q(x)"
+    },
+    {
+     "type": "warn",
+     "text": "∀x (P ∨ Q) ≢ ∀x P ∨ ∀x Q. Over ℤ: ∀x (x ≥ 0 ∨ x ≤ 0) is true but ∀x (x ≥ 0) ∨ ∀x (x ≤ 0) is false."
+    },
+    {
+     "type": "warn",
+     "text": "∃x (P ∧ Q) ≢ ∃x P ∧ ∃x Q. ∃x (x = 1 ∧ x = 2) is false but ∃x (x = 1) ∧ ∃x (x = 2) is true."
+    },
+    {
+     "type": "p",
+     "text": "Memory trick: ∀ is a big ∧, so it plays nicely with ∧. ∃ is a big ∨, so it plays nicely with ∨."
+    },
+    {
+     "type": "p",
+     "text": "<b>English words for ∀ and ∃</b>"
+    },
+    {
+     "type": "table",
+     "head": [
+      "∃x P(x)",
+      "∀x P(x)"
+     ],
+     "rows": [
+      [
+       "there exists x such that P(x)",
+       "for all x, P(x)"
+      ],
+      [
+       "some x satisfies P(x)",
+       "every / each x satisfies P(x)"
+      ],
+      [
+       "at least one x satisfies P(x)",
+       "given an arbitrary x, P(x) is true"
+      ],
+      [
+       "we can find x with P(x)",
+       "suppose x is in the domain; then P(x)"
+      ]
+     ]
+    },
+    {
+     "type": "warn",
+     "text": "Avoid “any” and “some” in your own writing. “Any” can mean ∀ (“any integer squared is ≥ 0”) or ∃ (“is there any solution?”). The lecture's advice: just say <b>“there exists”</b> and <b>“for all.”</b>"
+    },
+    {
+     "type": "p",
+     "text": "<b>Quantifying over a set</b>"
+    },
+    {
+     "type": "def",
+     "term": "Definition",
+     "text": "(∀x ∈ A) P(x) abbreviates ∀x (x ∈ A → P(x)). (∃x ∈ A) P(x) abbreviates ∃x (x ∈ A ∧ P(x))."
+    },
+    {
+     "type": "p",
+     "text": "Examples: (∀x ∈ ℝ)(x > 0) false; (∀x ∈ ℝ)(x² ≥ 0) true; (∀x ∈ ℕ)(x > 0) false (x = 0); (∃x ∈ ℕ)(x − 1 = 0) true."
+    },
+    {
+     "type": "p",
+     "text": "Over the empty set: (∀x ∈ ∅) P(x) is always <b>true</b> (vacuously: there is no x to break it), and (∃x ∈ ∅) P(x) is always <b>false</b> (there's nothing to be the witness)."
+    },
+    {
+     "type": "example",
+     "title": "Truth values over a finite domain",
+     "prompt": "Domain {1, 2, 3, 4}. Decide (a) ∀x (x² ≤ 10), (b) ∃x (x² = 2x), (c) ∀x ∃y (x + y = 5), (d) ∃y ∀x (x ≤ y), (e) ∀x ∃y (y = x + 1).",
+     "steps": [
+      "(a) A ∀ claim needs every value: x = 4 gives 16 > 10, a counterexample. False.",
+      "(b) An ∃ claim needs one witness: x = 2 gives 4 = 4. True.",
+      "(c) For each x, take y = 5 − x, which is 4, 3, 2, 1, all in the domain. True.",
+      "(d) One fixed y must beat every x: y = 4 works. True.",
+      "(e) x = 4 would need y = 5, which is not in the domain. False.",
+      "Over a finite domain you can always just expand: ∀ is a long ∧, ∃ is a long ∨."
+     ],
+     "answer": "F, T, T, T, F"
+    }
+   ]
+  },
+  {
+   "title": "Nested quantifiers and negation",
+   "blocks": [
+    {
+     "type": "tip",
+     "text": "With two quantifiers, order matters. ∀x ∃y lets y depend on x; ∃y ∀x needs a single y that works for every x."
+    },
+    {
+     "type": "example",
+     "title": "Reading quantifier orders",
+     "prompt": "L(x, y) means “x loves y”. Read ∀x ∃y L, ∃x ∀y L, ∃x ∃y L and ∃y ∀x L.",
+     "steps": [
+      "∀x ∃y L(x, y): everyone loves someone.",
+      "∃x ∀y L(x, y): someone loves everyone.",
+      "∃x ∃y L(x, y): someone loves someone.",
+      "∃y ∀x L(x, y): there's one person loved by everyone (the lecture's answer: Dolly Parton)."
+     ],
+     "answer": "Everyone loves someone; someone loves everyone; someone loves someone; one person is loved by everyone"
+    },
+    {
+     "type": "thm",
+     "name": "Quantifier order",
+     "text": "Swapping two quantifiers <b>of the same kind</b> is fine: ∀x ∀y P ≡ ∀y ∀x P and ∃x ∃y P ≡ ∃y ∃x P."
+    },
+    {
+     "type": "p",
+     "text": "Swapping a <b>∀ and an ∃ changes the meaning</b>: ∀x ∃y P(x, y) ≢ ∃y ∀x P(x, y)."
+    },
+    {
+     "type": "p",
+     "text": "One direction does hold: ∃y ∀x P(x, y) implies ∀x ∃y P(x, y), but not the reverse."
+    },
+    {
+     "type": "tip",
+     "text": "<b>∀x ∃y</b>: “every lock has a key.” Each lock may need a different key, and y is allowed to <i>depend on</i> x.<br><b>∃y ∀x</b>: “there's a master key.” One fixed y works for every x at once.<br>A master key gives every lock a key, but every lock having a key doesn't give you a master key. Another way to see it: read the quantifiers left to right as a game. For ∀x ∃y, an opponent picks x first and then you get to respond with y."
+    },
+    {
+     "type": "example",
+     "title": "Same predicate, two orders",
+     "prompt": "Domain ℤ. Decide ∀x ∃y (y > x) and ∃y ∀x (y > x). What changes on the domain {1, 2, 3} with ≥?",
+     "steps": [
+      "∀x ∃y (y > x): the opponent picks x, we answer y = x + 1. True.",
+      "∃y ∀x (y > x): one y must beat every x, including x = y itself, and y > y is false. False.",
+      "On {1, 2, 3}, ∃y ∀x (y ≥ x) is true with y = 3: a finite domain has a largest element.",
+      "Standard example where the orders differ on ℝ: P(x, y): x &lt; y."
+     ],
+     "answer": "True; false; on {1, 2, 3} ∃y ∀x (y ≥ x) is true"
+    },
+    {
+     "type": "example",
+     "title": "Negate ∀x ∃y (P(x, y) → Q(y))",
+     "prompt": "Negate ∀x ∃y (P(x, y) → Q(y)) and push the ¬ all the way in.",
+     "steps": [
+      "¬∀x ∃y (P(x, y) → Q(y))",
+      "≡ ∃x ¬∃y (P(x, y) → Q(y)) — <i>¬∀ ≡ ∃¬</i>",
+      "≡ ∃x ∀y ¬(P(x, y) → Q(y)) — <i>¬∃ ≡ ∀¬</i>",
+      "≡ ∃x ∀y (P(x, y) ∧ ¬Q(y)) — <i>¬(a → b) ≡ a ∧ ¬b</i>",
+      "Same pattern: ¬∀x ∀y (P(x, y) → Q(x, y)) ≡ ∃x ∃y (P(x, y) ∧ ¬Q(x, y))."
+     ],
+     "answer": "∃x ∀y (P(x, y) ∧ ¬Q(y))"
+    },
+    {
+     "type": "p",
+     "text": "<b>“There is a unique x”</b>"
+    },
+    {
+     "type": "def",
+     "term": "uniqueness quantifier",
+     "text": "∃!x P(x) (the <b>uniqueness quantifier</b>) means “there is exactly one x with P(x).” In ordinary quantifiers:"
+    },
+    {
+     "type": "p",
+     "text": "∃!x P(x) ≡ ∃x [ P(x) ∧ ∀y (y ≠ x → ¬P(y)) ]"
+    },
+    {
+     "type": "p",
+     "text": "“There is an x with P(x), and every other y fails P.” (Equivalently ∃x [P(x) ∧ ∀y (P(y) → y = x)].)"
+    },
+    {
+     "type": "example",
+     "title": "Negating “exactly one”",
+     "prompt": "Negate ∃x [P(x) ∧ ∀y (y ≠ x → ¬P(y))] and say what it means.",
+     "steps": [
+      "¬∃x [P(x) ∧ ∀y (y ≠ x → ¬P(y))]",
+      "≡ ∀x ¬[P(x) ∧ ∀y (y ≠ x → ¬P(y))] — <i>negate ∃</i>",
+      "≡ ∀x [¬P(x) ∨ ¬∀y (y ≠ x → ¬P(y))] — <i>De Morgan</i>",
+      "≡ ∀x [¬P(x) ∨ ∃y ¬(y ≠ x → ¬P(y))] — <i>negate ∀</i>",
+      "≡ ∀x [¬P(x) ∨ ∃y (y ≠ x ∧ P(y))] — <i>¬(p → q) ≡ p ∧ ¬q</i>",
+      "Meaning: every x either fails P or has a different y that also satisfies P. So there are zero solutions, or at least two."
+     ],
+     "answer": "≡ ∀x [¬P(x) ∨ ∃y (y ≠ x ∧ P(y))]"
+    },
+    {
+     "type": "p",
+     "text": "<b>Lock it down</b>"
+    },
+    {
+     "type": "steps",
+     "title": "Read and translate nested quantifiers",
+     "items": [
+      "<b>Symbols to English: go left to right.</b> Say “for every x” for ∀x and “there is a y” for ∃y, then say the predicate. ∀x ∃y L(x, y): “for every x there is a y such that x loves y.”",
+      "<b>Then smooth it out.</b> “Everyone loves someone.” Keep track of which slot is which: in L(x, y) the first slot does the loving.",
+      "<b>English to symbols: find the two roles.</b> Who is “every” and who is “some”? Which slot of the predicate does each fill?",
+      "<b>Decide the order.</b> If the “some” thing is allowed to be different for each “every” thing, the ∃ comes <b>after</b> the ∀. If it must be one single thing for all, the ∃ comes <b>first</b>.",
+      "<b>Negative words:</b> “nobody” and “no one” become ∀ … ¬,.",
+      "<b>Check:</b> read your symbols back left to right and see if you get the sentence."
+     ]
+    },
+    {
+     "type": "steps",
+     "title": "Decide true or false (the game)",
+     "items": [
+      "<b>Two players.</b> ∀ is your opponent's move (they pick, trying to break it). ∃ is your move (you pick, trying to make it work).",
+      "<b>Moves happen left to right.</b> You may use any value already picked. In ∀x ∃y, you see x before choosing y, so y can be a formula in x.",
+      "<b>Prove ∀x ∃y true:</b> give a rule for y in terms of x that always works, like y = x + 1.",
+      "<b>Prove ∃y ∀x true:</b> name one fixed y and show it works for every x.",
+      "<b>Prove something false:</b> show its negation is true. Negate it (next recipe), then play the game for the negation.",
+      "<b>Need an example where the orders differ?</b> Use one where the answer y must change with x: y > x on ℤ, or x + y = 0 on ℝ."
+     ]
+    },
+    {
+     "type": "steps",
+     "title": "Negate a nested statement",
+     "items": [
+      "<b>Slide the ¬ to the right one quantifier at a time.</b> Each time it passes a quantifier, flip it: ∀ becomes ∃ and ∃ becomes ∀.",
+      "<b>Keep the order and the variables exactly the same.</b> Only the symbols ∀ and ∃ change.",
+      "<b>When the ¬ reaches the inside, negate it rules:</b> ¬(A → B) ≡ A ∧ ¬B, ¬(A ∧ B) ≡ ¬A ∨ ¬B, ¬(A ∨ B) ≡ ¬A ∧ ¬B, ¬(x &lt; y) ≡ x ≥ y.",
+      "<b>Done when</b> no ¬ sits in front of a quantifier or a bracket.",
+      "<b>Check:</b> same number of quantifiers, same order, every one flipped."
+     ]
+    },
+    {
+     "type": "steps",
+     "title": "Write “exactly one,” “at most one,” “at least two”",
+     "items": [
+      "<b>Split “exactly one” into two parts:</b> at least one, and no others.",
+      "<b>At least one:</b> ∃x P(x).",
+      "<b>No others:</b> ∀y (y ≠ x → ¬P(y)). This must sit <b>inside</b> the brackets of ∃x, because it talks about that same x.",
+      "<b>Glue with ∧:</b> ∃x [P(x) ∧ ∀y (y ≠ x → ¬P(y))].",
+      "<b>Related shapes:</b> at most one is ∀x ∀y ((P(x) ∧ P(y)) → x = y). At least two is ∃x ∃y (x ≠ y ∧ P(x) ∧ P(y)).",
+      "<b>Check:</b> picture a world with 0, 1 and 2 objects that have P. “Exactly one” should be true only in the world with 1."
+     ]
+    },
+    {
+     "type": "example",
+     "title": "playing the game on ℤ",
+     "prompt": "Domain ℤ. Decide (a) ∀x ∃y (x = 2y) and (b) ∃x ∀y (xy = x).",
+     "steps": [
+      "(a) opponent picks x first — <i>∀x is their move</i>",
+      "opponent picks x = 1 — <i>they try to break it</i>",
+      "need 2y = 1, so y = 1/2, not an integer — <i>no legal move for us</i>",
+      "(a) is false — <i>its negation ∃x ∀y (x ≠ 2y) holds with x = 1</i>",
+      "(b) we pick x first, then any y comes — <i>∃x is our move, ∀y theirs</i>",
+      "pick x = 0: then xy = 0 = x for every y — <i>one fixed x that beats every y</i>",
+      "(b) is true — <i>we named a winning x</i>",
+      "Compare: ∀x ∃y (y = 2x) <i>is</i> true (take y = 2x). Swapping which variable is “the double” changed the answer, so read the predicate carefully."
+     ],
+     "answer": "(b) is true"
+    },
+    {
+     "type": "example",
+     "title": "exactly one, nested, then negated",
+     "prompt": "x ranges over students, y and z over professors. A(x, y): y is an advisor of x. Write “Every student has exactly one advisor,” then negate it and say the negation in English.",
+     "steps": [
+      "∀x [ … ] — <i>“every student” is the outside quantifier</i>",
+      "∃y [A(x, y) ∧ ∀z (z ≠ y → ¬A(x, z))] — <i>“exactly one advisor” for that x, with the recipe</i>",
+      "∀x ∃y [A(x, y) ∧ ∀z (z ≠ y → ¬A(x, z))] — <i>put it together</i>",
+      "¬ … ≡ ∃x ∀y ¬[A(x, y) ∧ ∀z (z ≠ y → ¬A(x, z))] — <i>flip ∀x and ∃y</i>",
+      "≡ ∃x ∀y [¬A(x, y) ∨ ¬∀z (z ≠ y → ¬A(x, z))] — <i>De Morgan</i>",
+      "≡ ∃x ∀y [¬A(x, y) ∨ ∃z (z ≠ y ∧ A(x, z))] — <i>flip ∀z, then ¬(p → q) ≡ p ∧ ¬q</i>",
+      "Read back: “There is a student x such that every professor y either isn't x's advisor, or x has a second advisor z.” In plain English: <b>some student has no advisor or has at least two.</b>"
+     ],
+     "answer": "some student has no advisor or has at least two."
+    },
+    {
+     "type": "warn",
+     "text": "<b>Wrong:</b> negating only the first quantifier, ¬∀x ∃y P ≡ ∃x ∃y ¬P. <b>Right:</b> ∃x ∀y ¬P. (The ¬ walks past <i>every</i> quantifier and flips each one.)"
+    },
+    {
+     "type": "warn",
+     "text": "<b>Wrong:</b> reordering while negating, ¬∀x ∃y P ≡ ∃y ∀x ¬P. <b>Right:</b> keep x first: ∃x ∀y ¬P. (Order carries meaning; the negation never moves letters.)"
+    },
+    {
+     "type": "warn",
+     "text": "<b>Wrong:</b> to show ∃x ∀y P(x, y) is true, “pick y = 0.” <b>Right:</b> y is the opponent's choice. You only pick x, and it has to work for every y."
+    },
+    {
+     "type": "warn",
+     "text": "<b>Wrong:</b> “exactly one” as ∃x ∀y (P(y) → y = x). <b>Right:</b> add P(x) ∧ inside. (Without it, the formula is also true when nothing has P, so it only says “at most one.”)"
+    },
+    {
+     "type": "warn",
+     "text": "<b>Wrong:</b> ∃x P(x) ∧ ∀y (y ≠ x → ¬P(y)) with the bracket closed early. <b>Right:</b> ∃x [P(x) ∧ ∀y (y ≠ x → ¬P(y))]. (Outside the bracket, the second x is a stranger, not the one you found.)"
+    }
+   ]
+  },
+  {
+   "title": "Rules of inference and valid arguments",
+   "blocks": [
+    {
+     "type": "tip",
+     "text": "Rules of inference are the legal moves for getting new facts from ones you have. A proof is a chain of legal moves."
+    },
+    {
+     "type": "def",
+     "term": "(propositional) rule of inference",
+     "text": "A <b>(propositional) rule of inference</b> is a tautology of the form (q₁ ∧ … ∧ qₙ) → p, expressing that if q₁, …, qₙ are all true then p is true. It's often written with premises stacked above a line and the conclusion after “∴”."
+    },
+    {
+     "type": "p",
+     "text": "A <b>propositional argument</b> is a list of propositions where each line is a premise or follows from earlier lines by a rule of inference."
+    },
+    {
+     "type": "p",
+     "text": "Formally, an <i>argument</i> is a sequence of propositions; all but the last are <i>premises</i>, the last is the <i>conclusion</i>. It is <i>valid</i> if the truth of all the premises implies the conclusion is true."
+    },
+    {
+     "type": "table",
+     "head": [
+      "Rule",
+      "From",
+      "Conclude",
+      "Tautology"
+     ],
+     "rows": [
+      [
+       "<b>Modus ponens</b>",
+       "p, p → q",
+       "q",
+       "(p ∧ (p → q)) → q"
+      ],
+      [
+       "<b>Modus tollens</b>",
+       "¬q, p → q",
+       "¬p",
+       "(¬q ∧ (p → q)) → ¬p"
+      ],
+      [
+       "<b>Hypothetical syllogism</b>",
+       "p → q, q → r",
+       "p → r",
+       "((p → q) ∧ (q → r)) → (p → r)"
+      ],
+      [
+       "<b>Disjunctive syllogism</b>",
+       "p ∨ q, ¬p",
+       "q",
+       "((p ∨ q) ∧ ¬p) → q"
+      ],
+      [
+       "<b>Simplification</b>",
+       "p ∧ q",
+       "p",
+       "(p ∧ q) → p"
+      ],
+      [
+       "Addition",
+       "p",
+       "p ∨ q",
+       "p → (p ∨ q)"
+      ],
+      [
+       "Conjunction",
+       "p, q",
+       "p ∧ q",
+       "((p) ∧ (q)) → (p ∧ q)"
+      ],
+      [
+       "Resolution",
+       "p ∨ q, ¬p ∨ r",
+       "q ∨ r",
+       "((p ∨ q) ∧ (¬p ∨ r)) → (q ∨ r)"
+      ]
+     ]
+    },
+    {
+     "type": "tip",
+     "text": "<b>Modus ponens</b> (“affirming”): if it rains the ground is wet; it rains; so the ground is wet.<br><b>Modus tollens</b> (“denying”): if it rains the ground is wet; the ground is <i>not</i> wet; so it didn't rain. (This is the contrapositive in action.)<br><b>Disjunctive syllogism</b>: the cookie is in the jar or on the plate; it's not in the jar; so it's on the plate."
+    },
+    {
+     "type": "warn",
+     "text": "<b>Affirming the conclusion:</b> from p → q and q, concluding p. “If it rained, the grass is wet. The grass is wet. So it rained.” Wrong: maybe the sprinklers ran. ((p → q) ∧ q) → p is not a tautology."
+    },
+    {
+     "type": "warn",
+     "text": "<b>Denying the hypothesis:</b> from p → q and ¬p, concluding ¬q. “It didn't rain, so the grass isn't wet.” Also invalid."
+    },
+    {
+     "type": "warn",
+     "text": "Both mistakes amount to treating p → q as if it were its converse."
+    },
+    {
+     "type": "example",
+     "title": "A propositional chain",
+     "prompt": "Premises: ¬p ∧ q, r → p, ¬r → s, s → t. Show t.",
+     "steps": [
+      "1. ¬p ∧ q — <i>premise</i>",
+      "2. ¬p — <i>simplification (1)</i>",
+      "3. r → p — <i>premise</i>",
+      "4. ¬r — <i>modus tollens (2, 3)</i>",
+      "5. ¬r → s — <i>premise</i>",
+      "6. s — <i>modus ponens (4, 5)</i>",
+      "7. s → t — <i>premise</i>",
+      "8. t — <i>modus ponens (6, 7)</i>"
+     ],
+     "answer": "t, in 8 numbered lines"
+    },
+    {
+     "type": "p",
+     "text": "Strategy for English versions: name each simple sentence with a letter, translate every premise, then chain rules."
+    },
+    {
+     "type": "p",
+     "text": "<b>Rules for quantifiers</b>"
+    },
+    {
+     "type": "table",
+     "head": [
+      "Rule",
+      "From",
+      "Conclude"
+     ],
+     "rows": [
+      [
+       "<b>Universal instantiation</b>",
+       "∀x P(x)",
+       "P(c) for <b>any</b> c in the domain"
+      ],
+      [
+       "<b>Universal generalization</b>",
+       "P(c) for an <b>arbitrary</b> c",
+       "∀x P(x)"
+      ],
+      [
+       "<b>Existential instantiation</b>",
+       "∃x P(x)",
+       "P(c) for <b>some</b> c (a new name, nothing else assumed about it)"
+      ],
+      [
+       "<b>Existential generalization</b>",
+       "P(c) for some particular c",
+       "∃x P(x)"
+      ]
+     ]
+    },
+    {
+     "type": "warn",
+     "text": "Universal generalization needs c to be truly <b>arbitrary</b>: you may not assume anything special about it. Checking P(2), P(3) and P(10) proves nothing about ∀x P(x). This is why proofs start with “Let n be an arbitrary integer.”"
+    },
+    {
+     "type": "example",
+     "title": "If ∀x (P(x) ∧ Q(x)) then ∀x P(x) ∧ ∀x Q(x).",
+     "prompt": "If ∀x (P(x) ∧ Q(x)) then ∀x P(x) ∧ ∀x Q(x).",
+     "steps": [
+      "∀x (P(x) ∧ Q(x)) — premise",
+      "P(c) ∧ Q(c), c arbitrary — universal instantiation",
+      "P(c) — simplification",
+      "∀x P(x) — universal generalization",
+      "Q(c) — simplification (2)",
+      "∀x Q(x) — universal generalization",
+      "∀x P(x) ∧ ∀x Q(x) — conjunction"
+     ],
+     "answer": "∀x P(x) ∧ ∀x Q(x) — conjunction"
+    },
+    {
+     "type": "tip",
+     "text": "All of mathematics = valid propositional rules of inference + the four quantifier rules + an axiom system (usually ZFC set theory). Whitehead and Russell’s <i>Principia Mathematica</i> did this fully formally and needed hundreds of pages to reach 1 + 1 = 2."
+    },
+    {
+     "type": "p",
+     "text": "<b>Lock it down</b>"
+    },
+    {
+     "type": "steps",
+     "title": "Write a numbered argument",
+     "items": [
+      "<b>If it's in English, translate first.</b> Give each simple sentence a letter, write every premise in symbols, and write the goal.",
+      "<b>Work backwards on scrap paper.</b> Find a premise that contains the goal. If the goal is t and you have s → t, your new mini-goal is s. Repeat until you reach something you already have.",
+      "<b>Now write it forwards.</b> One statement per line, numbered. Every line is either “premise” or “rule name (line numbers it uses).”",
+      "<b>Use the right tool for each shape.</b> Have a ∧ b? Simplification splits it. Have a → b? Modus ponens if you have a, modus tollens if you have ¬b. Have a ∨ b? Disjunctive syllogism once you have ¬a.",
+      "<b>Reshape when needed.</b> You may replace a line by an equivalent one (De Morgan, contrapositive, double negation). Cite the law.",
+      "<b>Check:</b> each line uses only earlier lines, and the last line is exactly the goal."
+     ]
+    },
+    {
+     "type": "steps",
+     "title": "Valid or fallacy?",
+     "items": [
+      "<b>Translate to symbols.</b> Rewrite “only if,” “unless,” “necessary” as → first. Find the conditional p → q and the other premise.",
+      "<b>Match the pattern:</b> p → q → valid (modus ponens); ¬q → ¬p → valid (modus tollens); q → p → fallacy: affirming the conclusion; ¬p → ¬q → fallacy: denying the hypothesis",
+      "<b>To prove it's invalid,</b> give one row where every premise is T and the conclusion is F. For both fallacies, the row p = F, q = T works.",
+      "<b>Remember:</b> valid is about the <i>form</i>, not about the facts. A valid argument with a false premise can have a false conclusion."
+     ]
+    },
+    {
+     "type": "steps",
+     "title": "Arguments with quantifiers",
+     "items": [
+      "<b>Strip the ∃ premises first.</b> From ∃x P(x), write P(a) with a <b>brand-new</b> name a (existential instantiation). A second ∃ premise needs a second new name.",
+      "<b>Then use the ∀ premises on that name.</b> From ∀x (P(x) → Q(x)), write P(a) → Q(a) (universal instantiation). ∀ works for any name, even one you just made up.",
+      "<b>Do the propositional moves</b> (modus ponens, simplification, …) on the instantiated lines.",
+      "<b>Put a quantifier back at the end.</b> If a was a specific object, use existential generalization to get ∃x. Only if a was <b>arbitrary</b> (you assumed nothing about it) may you use universal generalization to get ∀x.",
+      "<b>Shortcut:</b> ∀x (P(x) → Q(x)) plus P(a) gives Q(a) in one go (universal modus ponens)."
+     ]
+    },
+    {
+     "type": "example",
+     "title": "English argument with De Morgan",
+     "prompt": "“If I take the bus or the train, I'll be late. I'm not late. If I don't take the bus, I walk.” Show “I walk.” Letters: b = I take the bus, t = I take the train, l = I'm late, w = I walk. Premises: (b ∨ t) → l, ¬l, ¬b → w.",
+     "steps": [
+      "1. (b ∨ t) → l — <i>premise</i>",
+      "2. ¬l — <i>premise</i>",
+      "3. ¬(b ∨ t) — <i>modus tollens (1, 2)</i>",
+      "4. ¬b ∧ ¬t — <i>De Morgan (3)</i>",
+      "5. ¬b — <i>simplification (4)</i>",
+      "6. ¬b → w — <i>premise</i>",
+      "7. w — <i>modus ponens (5, 6)</i>",
+      "Backwards plan that found this: the goal w only appears in ¬b → w, so I needed ¬b. The only way to get ¬b was to break open ¬(b ∨ t), which came from ¬l."
+     ],
+     "answer": "7. w"
+    },
+    {
+     "type": "example",
+     "title": "quantifier rules in a row",
+     "prompt": "“Every Math 55 student has taken calculus. Someone in this room is a Math 55 student. So someone in this room has taken calculus.” Domain: people. M(x): x is a Math 55 student. C(x): x has taken calculus. R(x): x is in this room.",
+     "steps": [
+      "1. ∃x (R(x) ∧ M(x)) — <i>premise</i>",
+      "2. R(a) ∧ M(a) — <i>existential instantiation (1), a is a new name</i>",
+      "3. ∀x (M(x) → C(x)) — <i>premise</i>",
+      "4. M(a) → C(a) — <i>universal instantiation (3)</i>",
+      "5. M(a) — <i>simplification (2)</i>",
+      "6. C(a) — <i>modus ponens (4, 5)</i>",
+      "7. R(a) — <i>simplification (2)</i>",
+      "8. R(a) ∧ C(a) — <i>conjunction (6, 7)</i>",
+      "9. ∃x (R(x) ∧ C(x)) — <i>existential generalization (8)</i>",
+      "Notice the order: the ∃ premise was used first so that a was new. And the last step is ∃, not ∀, because a is one particular person."
+     ],
+     "answer": "9. ∃x (R(x) ∧ C(x))"
+    },
+    {
+     "type": "example",
+     "title": "Valid or fallacy?",
+     "prompt": "Decide each: (a) “If the battery is dead, the car won’t start. The car won’t start. So the battery is dead.” (b) “If the battery is dead, the car won’t start. The car starts. So the battery isn’t dead.” (c) “If it snows, school closes. It didn’t snow. So school is open.”",
+     "steps": [
+      "Let b = battery dead, s = car won’t start, so the conditional is b → s.",
+      "(a) From b → s and s, concluding b: affirming the conclusion. Counterexample row: b = F, s = T (out of gas). Both premises T, conclusion F. Invalid.",
+      "(b) From b → s and ¬s, concluding ¬b: modus tollens. Valid.",
+      "(c) With n = snows, c = school closes: from n → c and ¬n, concluding ¬c is denying the hypothesis. Row n = F, c = T (a power outage) breaks it. Invalid."
+     ],
+     "answer": "(a) fallacy (affirming the conclusion); (b) valid (modus tollens); (c) fallacy (denying the hypothesis)"
+    },
+    {
+     "type": "warn",
+     "text": "<b>Wrong:</b> from (p ∧ q) → r and p, conclude r. <b>Right:</b> you need p ∧ q first. (Get q, then use conjunction, then modus ponens.)"
+    },
+    {
+     "type": "warn",
+     "text": "<b>Wrong:</b> from ¬(p ∧ q), conclude ¬p. <b>Right:</b> De Morgan gives only ¬p ∨ ¬q. (“Not both” doesn't say which one failed.)"
+    },
+    {
+     "type": "warn",
+     "text": "<b>Wrong:</b> from p ∨ q and p, conclude ¬q. <b>Right:</b> nothing follows about q. (∨ is inclusive: both can be true.)"
+    },
+    {
+     "type": "warn",
+     "text": "<b>Wrong:</b> from ∃x P(x) and ∃x Q(x), write P(c) and Q(c) with the same c. <b>Right:</b> use a new name for each: P(c), Q(d). (The thing with P and the thing with Q may be different.)"
+    },
+    {
+     "type": "warn",
+     "text": "<b>Wrong:</b> “the argument is valid, so the conclusion is true.” <b>Right:</b> valid only means <i>if</i> all premises are true, the conclusion is true. A false premise can lead validly to a false conclusion."
+    }
+   ]
+  }
+ ],
+ "cards": [
+  {
+   "front": "Is “x + 2 = 5” a proposition?",
+   "back": [
+    {
+     "type": "p",
+     "text": "No. Its truth depends on x, so it's a predicate."
+    }
+   ]
+  },
+  {
+   "front": "When exactly is p → q false?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Only when p is true and q is false."
+    }
+   ]
+  },
+  {
+   "front": "Translate “You get dessert only if you eat your vegetables” (d, v).",
+   "back": [
+    {
+     "type": "p",
+     "text": "d → v."
+    }
+   ]
+  },
+  {
+   "front": "Simplify ¬(p ∧ ¬q).",
+   "back": [
+    {
+     "type": "p",
+     "text": "¬p ∨ q, which is the same as p → q."
+    }
+   ]
+  },
+  {
+   "front": "Is (p → q) ∨ (q → p) a tautology?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Yes. If q is true, p → q is true. If q is false, q → p is true."
+    }
+   ]
+  },
+  {
+   "front": "Write ¬(p → q) without using →.",
+   "back": [
+    {
+     "type": "p",
+     "text": "p ∧ ¬q."
+    }
+   ]
+  },
+  {
+   "front": "Domain ℤ: true or false, ∃x (x² = 2)?",
+   "back": [
+    {
+     "type": "p",
+     "text": "False. √2 isn't an integer."
+    }
+   ]
+  },
+  {
+   "front": "Negate “Every student passed.”",
+   "back": [
+    {
+     "type": "p",
+     "text": "“Some student didn't pass”: ∃x ¬P(x)."
+    }
+   ]
+  },
+  {
+   "front": "Translate “Some dog is not friendly” using D(x), F(x).",
+   "back": [
+    {
+     "type": "p",
+     "text": "∃x (D(x) ∧ ¬F(x))."
+    }
+   ]
+  },
+  {
+   "front": "Domain ℝ. Is ∀x ∃y (x + y = 0) true? Is ∃y ∀x (x + y = 0)?",
+   "back": [
+    {
+     "type": "p",
+     "text": "First: true (take y = −x). Second: false (no single y cancels every x)."
+    }
+   ]
+  },
+  {
+   "front": "Negate ∀x ∃y (y > x²).",
+   "back": [
+    {
+     "type": "p",
+     "text": "∃x ∀y (y ≤ x²)."
+    }
+   ]
+  },
+  {
+   "front": "“If it's a weekday, I have class. I don't have class.” What follows?",
+   "back": [
+    {
+     "type": "p",
+     "text": "It isn't a weekday (modus tollens)."
+    }
+   ]
+  },
+  {
+   "front": "Valid? “If I study, I pass. I passed. So I studied.”",
+   "back": [
+    {
+     "type": "p",
+     "text": "Invalid: that's affirming the conclusion. You could have passed without studying."
+    }
+   ]
+  },
+  {
+   "front": "When is p → q false? Why is a false hypothesis “vacuously true”?",
+   "back": [
+    {
+     "type": "formula",
+     "text": "p → q is F only when p = T and q = F"
+    },
+    {
+     "type": "p",
+     "text": "Think of a promise: it is broken only if p happens and q does not. If p never happens, the promise was not broken."
+    }
+   ]
+  },
+  {
+   "front": "Converse, inverse, contrapositive of p → q: which one is equivalent to it?",
+   "back": [
+    {
+     "type": "list",
+     "items": [
+      "converse: q → p",
+      "inverse: ¬p → ¬q",
+      "contrapositive: ¬q → ¬p (equivalent to p → q)"
+     ]
+    },
+    {
+     "type": "p",
+     "text": "The converse and inverse are equivalent to each other, not to the original."
+    }
+   ]
+  },
+  {
+   "front": "Why is p → q equivalent to ¬q → ¬p but not to q → p?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Both p → q and ¬q → ¬p are false in exactly one row: p = T, q = F. The converse q → p is false at p = F, q = T instead, where p → q is true."
+    }
+   ]
+  },
+  {
+   "front": "Translate: “p only if q”, “p unless q”, “p is necessary for q”, “p is sufficient for q”.",
+   "back": [
+    {
+     "type": "list",
+     "items": [
+      "p only if q: p → q",
+      "p unless q: ¬q → p",
+      "p necessary for q: q → p",
+      "p sufficient for q: p → q"
+     ]
+    }
+   ]
+  },
+  {
+   "front": "Tautology, contradiction, contingency?",
+   "back": [
+    {
+     "type": "list",
+     "items": [
+      "tautology: T in every row (p ∨ ¬p)",
+      "contradiction: F in every row (p ∧ ¬p)",
+      "contingency: neither (p → q)"
+     ]
+    }
+   ]
+  },
+  {
+   "front": "Negate p → q without →.",
+   "back": [
+    {
+     "type": "formula",
+     "text": "¬(p → q) ≡ p ∧ ¬q"
+    },
+    {
+     "type": "p",
+     "text": "Breaking a promise is an event (an “and”), not another promise."
+    }
+   ]
+  },
+  {
+   "front": "De Morgan’s laws (propositions and quantifiers).",
+   "back": [
+    {
+     "type": "formula",
+     "text": "¬(p ∧ q) ≡ ¬p ∨ ¬q,  ¬(p ∨ q) ≡ ¬p ∧ ¬q"
+    },
+    {
+     "type": "formula",
+     "text": "¬∀x P(x) ≡ ∃x ¬P(x),  ¬∃x P(x) ≡ ∀x ¬P(x)"
+    }
+   ]
+  },
+  {
+   "front": "Which connective goes with ∀ and which with ∃ when translating “every/some A is B”?",
+   "back": [
+    {
+     "type": "list",
+     "items": [
+      "Every A is B: ∀x (A(x) → B(x))",
+      "Some A is B: ∃x (A(x) ∧ B(x))"
+     ]
+    },
+    {
+     "type": "warn",
+     "text": "∀x (A ∧ B) is too strong; ∃x (A → B) is too weak (true as soon as one non-A exists)."
+    }
+   ]
+  },
+  {
+   "front": "Does ∀x ∃y P(x, y) mean the same as ∃y ∀x P(x, y)?",
+   "back": [
+    {
+     "type": "p",
+     "text": "No. ∃y ∀x needs one y that works for every x (a master key); ∀x ∃y lets y depend on x. ∃y ∀x implies ∀x ∃y, not conversely. Example on ℤ: y > x."
+    }
+   ]
+  },
+  {
+   "front": "Over which connective does ∀ distribute? ∃?",
+   "back": [
+    {
+     "type": "formula",
+     "text": "∀x (P ∧ Q) ≡ ∀x P ∧ ∀x Q"
+    },
+    {
+     "type": "formula",
+     "text": "∃x (P ∨ Q) ≡ ∃x P ∨ ∃x Q"
+    },
+    {
+     "type": "warn",
+     "text": "∀ does not distribute over ∨, and ∃ does not distribute over ∧."
+    }
+   ]
+  },
+  {
+   "front": "Modus ponens, modus tollens, and the two classic fallacies.",
+   "back": [
+    {
+     "type": "list",
+     "items": [
+      "modus ponens: p, p → q ∴ q",
+      "modus tollens: ¬q, p → q ∴ ¬p",
+      "affirming the conclusion: q, p → q ∴ p (invalid)",
+      "denying the hypothesis: ¬p, p → q ∴ ¬q (invalid)"
+     ]
+    }
+   ]
+  },
+  {
+   "front": "What is the rule for existential instantiation, and the classic mistake?",
+   "back": [
+    {
+     "type": "p",
+     "text": "From ∃x P(x) write P(c) for a brand-new name c. Do it before using ∀ premises; two ∃ premises need two different names."
+    }
+   ]
+  },
+  {
+   "front": "Write “there is exactly one x with P(x)” without ∃!.",
+   "back": [
+    {
+     "type": "formula",
+     "text": "∃x [P(x) ∧ ∀y (y ≠ x → ¬P(y))]"
+    },
+    {
+     "type": "p",
+     "text": "At most one: ∀x ∀y ((P(x) ∧ P(y)) → x = y). At least two: ∃x ∃y (x ≠ y ∧ P(x) ∧ P(y))."
+    }
+   ]
+  },
+  {
+   "front": "Is → associative? Exportation law?",
+   "back": [
+    {
+     "type": "p",
+     "text": "No: (p → q) → r and p → (q → r) differ at (F,T,F) and (F,F,F)."
+    },
+    {
+     "type": "formula",
+     "text": "p → (q → r) ≡ (p ∧ q) → r"
+    }
+   ]
+  },
+  {
+   "front": "What does “functionally complete” mean? Give examples.",
+   "back": [
+    {
+     "type": "p",
+     "text": "Every truth table can be written with those connectives. {¬, ∧, ∨} is complete (disjunctive normal form), and so are {¬, ∧}, {¬, ∨}, {↑} (NAND) and {↓} (NOR). {∧, ∨, →} is not: every such formula is T when all letters are T."
+    }
+   ]
+  },
+  {
+   "front": "Truth value of ∀x ∈ ∅ P(x) and ∃x ∈ ∅ P(x)?",
+   "back": [
+    {
+     "type": "p",
+     "text": "∀ over the empty set is vacuously true; ∃ over the empty set is false (no witness)."
+    }
+   ]
+  }
+ ],
+ "hard": [
+  {
+   "title": "Is → associative?",
+   "level": "hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "Are (p → q) → r and p → (q → r) logically equivalent? If not, list every truth assignment where they differ, and decide whether either one implies the other."
+    }
+   ],
+   "answer": "Not equivalent: they differ at (F,T,F) and (F,F,F); the left side implies the right, not conversely.",
+   "solution": [
+    {
+     "type": "p",
+     "text": "Rewrite both using a → b ≡ ¬a ∨ b:"
+    },
+    {
+     "type": "list",
+     "items": [
+      "p → (q → r) ≡ ¬p ∨ ¬q ∨ r ≡ (p ∧ q) → r. It is false only at (p,q,r) = (T,T,F).",
+      "(p → q) → r ≡ ¬(¬p ∨ q) ∨ r ≡ (p ∧ ¬q) ∨ r. It is false when r = F and p ∧ ¬q is false: (T,T,F), (F,T,F), (F,F,F)."
+     ]
+    },
+    {
+     "type": "p",
+     "text": "<b>Answer:</b> Not equivalent. They differ at (F,T,F) and (F,F,F), where the left side is false and the right side is true."
+    },
+    {
+     "type": "p",
+     "text": "The left side is false at every row where the right side is false (the one row, TTF). So whenever the left side is true, the right side is true too: ((p → q) → r) → (p → (q → r)) is a tautology. The converse fails at (F,F,F)."
+    },
+    {
+     "type": "tip",
+     "text": "<b>Tests:</b> → is not associative; checking \"implies\" means comparing the rows where each side is false. <b>Common mistake:</b> moving the parentheses as if → were ∧ or ∨."
+    }
+   ]
+  },
+  {
+   "title": "Six nested-quantifier statements over ℤ",
+   "level": "hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "The domain of every variable is ℤ. Give the truth value of each statement and justify it (a witness, a counterexample, or a short proof)."
+    },
+    {
+     "type": "list",
+     "items": [
+      "(a) ∀x ∃y (x = 2y ∨ x = 2y + 1)",
+      "(b) ∃y ∀x (x + y = xy)",
+      "(c) ∀x ∃y ∀z (z > y → z > x)",
+      "(d) ∃x ∀y (xy = y)",
+      "(e) ∀y ∃x (x² = y)",
+      "(f) ∀x ∀y ∃z (z² = x² + y²)"
+     ]
+    }
+   ],
+   "answer": "(a) T (b) F (c) T (d) T (e) F (f) F",
+   "solution": [
+    {
+     "type": "list",
+     "items": [
+      "(a) <b>True.</b> Given x, take y = ⌊x/2⌋. The division algorithm gives x = 2y + r with r ∈ {0, 1}.",
+      "(b) <b>False.</b> Suppose some y works for every x. Taking x = 0 gives y = 0. Then taking x = 1 gives 1 + 0 = 0, which is false.",
+      "(c) <b>True.</b> Given x, take y = x. Then z > y → z > x is literally z > x → z > x, which holds for all z.",
+      "(d) <b>True.</b> The witness is x = 1.",
+      "(e) <b>False.</b> Counterexample: y = 2 (or y = −1). No integer squares to it.",
+      "(f) <b>False.</b> Counterexample: x = y = 1. That needs z² = 2, and no integer z works."
+     ]
+    },
+    {
+     "type": "tip",
+     "text": "<b>Tests:</b> reading the quantifier order. In (c), y is chosen after x but before z, so it may depend on x and not on z. <b>Common mistake:</b> in (b) or (d), letting the ∃ variable depend on the ∀ variable that comes after it. ∃y∀x means one single y must work for every x."
+    }
+   ]
+  },
+  {
+   "title": "Knights and knaves",
+   "level": "hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "Knights always tell the truth and knaves always lie. <b>A</b> says: “B and C are both knaves.” <b>B</b> says: “Exactly one of the three of us is a knight.” <b>C</b> says: “B is a knave.” Find every possible assignment, and prove there are no others."
+    }
+   ],
+   "answer": "A knave, B knight, C knave (the only solution).",
+   "solution": [
+    {
+     "type": "p",
+     "text": "<b>Case 1: B is a knight.</b> Then B’s statement is true: B is the only knight, so A and C are knaves. Check the knaves: A says “B and C are both knaves”, which is false since B is a knight. Good. C says “B is a knave”, which is false. Good. This case is consistent."
+    },
+    {
+     "type": "p",
+     "text": "<b>Case 2: B is a knave.</b> Then C’s statement is true, so C is a knight. B’s statement is false, so the number of knights is not 1. C is a knight and B is not, so there are 1 or 2 knights, which means exactly 2, and A is a knight. But then A’s statement “B and C are both knaves” must be true, and it is false because C is a knight. Contradiction."
+    },
+    {
+     "type": "p",
+     "text": "<b>Answer:</b> The only solution: A is a knave, B is a knight, C is a knave."
+    },
+    {
+     "type": "tip",
+     "text": "<b>Tests:</b> splitting into exhaustive cases and checking every speaker in each case. <b>Common mistake:</b> finding one consistent assignment and stopping. The question asks you to rule out the others."
+    }
+   ]
+  },
+  {
+   "title": "Counting truth tables",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "Two compound propositions count as the same if they are logically equivalent."
+    },
+    {
+     "type": "list",
+     "items": [
+      "(a) How many different propositions φ(p, q, r) make φ → (p ∨ q) a tautology?",
+      "(b) How many satisfy φ(¬p, ¬q, ¬r) ≡ ¬φ(p, q, r) (they are called <i>self-dual</i>)?"
+     ]
+    }
+   ],
+   "answer": "(a) 2⁶ = 64 (b) 2⁴ = 16",
+   "solution": [
+    {
+     "type": "p",
+     "text": "Up to equivalence, a proposition in p, q, r is the same thing as its truth table: one T/F value for each of the 8 rows. That gives 2⁸ = 256 in total."
+    },
+    {
+     "type": "p",
+     "text": "(a) φ → (p ∨ q) fails only where φ is T and p ∨ q is F. So φ must be F on the rows with p = q = F (2 rows, r free). The other 6 rows are free: <b>2⁶ = 64</b>."
+    },
+    {
+     "type": "p",
+     "text": "(b) Flipping all three variables pairs the 8 rows into 4 complementary pairs, such as TTT↔FFF and TTF↔FFT. The condition says φ takes opposite values on the two rows of each pair. So choosing φ on one row of each pair decides everything: <b>2⁴ = 16</b>."
+    },
+    {
+     "type": "tip",
+     "text": "<b>Tests:</b> treating propositions as truth tables, then counting with the product rule. <b>Common mistake:</b> counting formulas (there are infinitely many) instead of equivalence classes."
+    }
+   ]
+  },
+  {
+   "title": "NAND is functionally complete",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "Let p ↑ q (NAND) mean ¬(p ∧ q)."
+    },
+    {
+     "type": "list",
+     "items": [
+      "(a) Write ¬p, p ∧ q, p ∨ q and p → q using only ↑.",
+      "(b) Prove that {↑} is functionally complete.",
+      "(c) Write p ⊕ q using exactly four ↑’s."
+     ]
+    }
+   ],
+   "answer": "¬p ≡ p↑p, p∧q ≡ (p↑q)↑(p↑q), p∨q ≡ (p↑p)↑(q↑q), p→q ≡ p↑(q↑q); complete via {¬,∧,∨}; p⊕q ≡ (p↑t)↑(q↑t) with t = p↑q.",
+   "solution": [
+    {
+     "type": "p",
+     "text": "(a)"
+    },
+    {
+     "type": "list",
+     "items": [
+      "¬p ≡ p ↑ p, since ¬(p ∧ p) ≡ ¬p.",
+      "p ∧ q ≡ ¬(p ↑ q) ≡ (p ↑ q) ↑ (p ↑ q).",
+      "p ∨ q ≡ ¬(¬p ∧ ¬q) ≡ (p ↑ p) ↑ (q ↑ q) (De Morgan).",
+      "p → q ≡ ¬(p ∧ ¬q) ≡ p ↑ (q ↑ q)."
+     ]
+    },
+    {
+     "type": "p",
+     "text": "(b) Every truth table is expressed by its disjunctive normal form, which uses only ¬, ∧, ∨. So {¬, ∧, ∨} is functionally complete. Each of those three operators can be written with ↑ by part (a). Replacing them one at a time turns any formula into an equivalent formula that uses only ↑. ∎"
+    },
+    {
+     "type": "p",
+     "text": "(c) Let t = p ↑ q. Then p ⊕ q ≡ (p ↑ t) ↑ (q ↑ t). Check: p ↑ t ≡ ¬p ∨ (p ∧ q) ≡ ¬p ∨ q, and similarly q ↑ t ≡ ¬q ∨ p. So the whole thing is ¬[(p → q) ∧ (q → p)] ≡ ¬(p ↔ q) ≡ p ⊕ q. All four rows were checked."
+    },
+    {
+     "type": "tip",
+     "text": "<b>Tests:</b> functional completeness means reducing to a set that is already known to be complete. <b>Common mistake:</b> “proving” completeness by expressing two or three examples. You must cover a complete set of connectives."
+    }
+   ]
+  },
+  {
+   "title": "Translate and negate “exactly one”",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "Let L(x, y) mean “x loves y” (the domain is all people). In (b) and (d), push every ¬ all the way in."
+    },
+    {
+     "type": "list",
+     "items": [
+      "(a) Translate: “There is exactly one person whom everybody loves.” (Don’t use ∃!.)",
+      "(b) Negate (a), then say the negation in plain English.",
+      "(c) Translate: “Everybody loves someone who doesn’t love them back.”",
+      "(d) Negate: ∀ε > 0 ∃N ∀n ≥ N (|a<sub>n</sub> − L| &lt; ε)."
+     ]
+    }
+   ],
+   "answer": "(a) ∃x[∀y L(y,x) ∧ ∀z(∀y L(y,z) → z = x)] (b) ∀x[∃y ¬L(y,x) ∨ ∃z(∀y L(y,z) ∧ z ≠ x)] (c) ∀x∃y(L(x,y) ∧ ¬L(y,x)) (d) ∃ε>0 ∀N ∃n≥N (|aₙ − L| ≥ ε)",
+   "solution": [
+    {
+     "type": "list",
+     "items": [
+      "(a) ∃x [ ∀y L(y, x) ∧ ∀z ( ∀y L(y, z) → z = x ) ]",
+      "(b) ∀x [ ∃y ¬L(y, x) ∨ ∃z ( ∀y L(y, z) ∧ z ≠ x ) ]. In English: for every person x, either someone doesn’t love x, or some <i>other</i> person is loved by everybody. In other words, nobody is loved by everyone, or at least two people are.",
+      "(c) ∀x ∃y ( L(x, y) ∧ ¬L(y, x) )",
+      "(d) ∃ε > 0 ∀N ∃n ≥ N (|a<sub>n</sub> − L| ≥ ε). The restriction ε > 0 stays as it is: ¬∀ε>0 P becomes ∃ε>0 ¬P."
+     ]
+    },
+    {
+     "type": "tip",
+     "text": "<b>Tests:</b> encoding “exactly one” as existence plus uniqueness, and negating restricted quantifiers. <b>Common mistake:</b> in (d), writing “∃ε ≤ 0”, or negating ∀z(A → B) as ∃z(A → ¬B) instead of ∃z(A ∧ ¬B)."
+    }
+   ]
+  },
+  {
+   "title": "Quantifier laws: valid or not?",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "For each one, prove it is valid or give a counterexample (a domain and predicates). In (d), Q is a proposition with no free x, and the domain is nonempty."
+    },
+    {
+     "type": "list",
+     "items": [
+      "(a) ∃x P(x) ∧ ∃x Q(x) implies ∃x (P(x) ∧ Q(x)).",
+      "(b) ∀x (P(x) ∨ Q(x)) implies ∀x P(x) ∨ ∀x Q(x).",
+      "(c) ∃x ∀y R(x, y) implies ∀y ∃x R(x, y).",
+      "(d) ∀x (P(x) → Q) ≡ (∃x P(x)) → Q.",
+      "(e) The converse of (c)."
+     ]
+    }
+   ],
+   "answer": "(a) invalid (b) invalid (c) valid (d) valid (e) invalid",
+   "solution": [
+    {
+     "type": "list",
+     "items": [
+      "(a) <b>Invalid.</b> Domain ℤ, P = “even”, Q = “odd”. Both existentials are true, and no integer is both.",
+      "(b) <b>Invalid.</b> Same P and Q. Every integer is even or odd, but neither “all even” nor “all odd” holds.",
+      "(c) <b>Valid.</b> Assume ∃x ∀y R(x, y). Let a be such an x (existential instantiation). Let y be arbitrary. Then R(a, y) (universal instantiation), so ∃x R(x, y) (existential generalization). Since y was arbitrary, ∀y ∃x R(x, y) (universal generalization).",
+      "(d) <b>Valid.</b> The left side is ∀x (¬P(x) ∨ Q). If Q is true, both sides are true. If Q is false, the left side becomes ∀x ¬P(x) ≡ ¬∃x P(x), and the right side (∃x P(x)) → F is also ¬∃x P(x).",
+      "(e) <b>Invalid.</b> Domain ℤ, R(x, y): x > y. Every y has a bigger x, but no x is bigger than every y."
+     ]
+    },
+    {
+     "type": "tip",
+     "text": "<b>Tests:</b> ∃ distributes over ∨ (not ∧), and ∀ distributes over ∧ (not ∨). <b>Common mistake:</b> in (d), expecting the answer ∀x P(x) → Q. A ∀ inside the antecedent turns into ∃ when you pull it out."
+    }
+   ]
+  },
+  {
+   "title": "Formal proof with quantifiers",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "Premises: (1) ∀x (S(x) → (T(x) ∨ U(x))), (2) ∀x (T(x) → ¬R(x)), (3) ∃x (S(x) ∧ R(x)). Derive ∃x U(x) as a numbered argument, naming the rule used at every step."
+    }
+   ],
+   "answer": "∃x U(x) via EI (fresh c), UI twice, MP, MT, disjunctive syllogism, EG (10 lines).",
+   "solution": [
+    {
+     "type": "table",
+     "head": [
+      "#",
+      "Statement",
+      "Reason"
+     ],
+     "rows": [
+      [
+       "1",
+       "∃x (S(x) ∧ R(x))",
+       "Premise (3)"
+      ],
+      [
+       "2",
+       "S(c) ∧ R(c)",
+       "Existential instantiation, c new"
+      ],
+      [
+       "3",
+       "S(c)",
+       "Simplification, 2"
+      ],
+      [
+       "4",
+       "R(c)",
+       "Simplification, 2"
+      ],
+      [
+       "5",
+       "S(c) → T(c) ∨ U(c)",
+       "Universal instantiation, (1)"
+      ],
+      [
+       "6",
+       "T(c) ∨ U(c)",
+       "Modus ponens, 3, 5"
+      ],
+      [
+       "7",
+       "T(c) → ¬R(c)",
+       "Universal instantiation, (2)"
+      ],
+      [
+       "8",
+       "¬T(c)",
+       "Modus tollens, 4, 7"
+      ],
+      [
+       "9",
+       "U(c)",
+       "Disjunctive syllogism, 6, 8"
+      ],
+      [
+       "10",
+       "∃x U(x)",
+       "Existential generalization, 9"
+      ]
+     ]
+    },
+    {
+     "type": "tip",
+     "text": "<b>Tests:</b> the order of instantiations. Do the existential first, with a <i>fresh</i> constant, then instantiate the universals at that constant. <b>Common mistake:</b> universally instantiating at c first and then claiming the ∃-witness is the same c."
+    }
+   ]
+  },
+  {
+   "title": "Proving a set is not functionally complete",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "list",
+     "items": [
+      "(a) Prove that {∧, ∨, →} is <b>not</b> functionally complete. Show that every formula built from variables using only ∧, ∨, → is true when all its variables are true, and conclude that ¬p cannot be expressed.",
+      "(b) Prove that p → q cannot be expressed using only ∧ and ∨."
+     ]
+    }
+   ],
+   "answer": "(a) all-true assignment makes every {∧,∨,→} formula T but ¬p F; (b) all-false assignment makes every {∧,∨} formula F but p → q T.",
+   "solution": [
+    {
+     "type": "p",
+     "text": "(a) Let v be the assignment that makes every variable true. Claim: every formula φ in the class satisfies v(φ) = T. We use structural induction on how formulas are built."
+    },
+    {
+     "type": "p",
+     "text": "<b>Basis.</b> φ is a variable, and v makes it true."
+    },
+    {
+     "type": "p",
+     "text": "<b>Inductive step.</b> Suppose v(α) = v(β) = T. Then v(α ∧ β) = T ∧ T = T, v(α ∨ β) = T ∨ T = T, and v(α → β) = T → T = T."
+    },
+    {
+     "type": "p",
+     "text": "So every such formula is true under v. But ¬p is false under v, so no formula in the class is equivalent to ¬p. A functionally complete set would express ¬p. ∎"
+    },
+    {
+     "type": "p",
+     "text": "(b) Use the same argument with the all-false assignment w. Variables are false under w, and F ∧ F = F, F ∨ F = F. So every {∧, ∨} formula is false under w. But w(p → q) = F → F = T, so p → q is not expressible. ∎"
+    },
+    {
+     "type": "tip",
+     "text": "<b>Tests:</b> proving that something is impossible by finding an <i>invariant</i> that every buildable formula keeps. <b>Common mistake:</b> trying a few formulas, failing, and calling that a proof."
+    }
+   ]
+  }
+ ],
+ "keyFacts": [
+  "p → q is false only when p = T and q = F; p → q ≡ ¬p ∨ q ≡ ¬q → ¬p",
+  "¬(p → q) ≡ p ∧ ¬q; De Morgan: ¬(p ∧ q) ≡ ¬p ∨ ¬q, ¬(p ∨ q) ≡ ¬p ∧ ¬q",
+  "“p only if q” = p → q; “p unless q” = ¬q → p; “p necessary for q” = q → p",
+  "n letters → 2ⁿ truth-table rows; tautology = all T, contradiction = all F, contingency = neither",
+  "¬∀x P ≡ ∃x ¬P, ¬∃x P ≡ ∀x ¬P: slide ¬ right, flip each quantifier, keep the order",
+  "“Every A is B” = ∀x (A → B); “some A is B” = ∃x (A ∧ B)",
+  "∃y ∀x P ⇒ ∀x ∃y P, never the converse in general",
+  "∀ distributes over ∧, ∃ over ∨, not the other way round",
+  "Modus ponens and tollens are valid; affirming the conclusion and denying the hypothesis are fallacies",
+  "Existential instantiation needs a brand-new constant; universal generalization needs an arbitrary one"
+ ]
+}

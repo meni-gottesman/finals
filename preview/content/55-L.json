@@ -1,0 +1,1540 @@
+{
+ "id": "55-L",
+ "course": "55",
+ "title": "Expected value, variance, Chebyshev",
+ "source": "Rosen 7.4 · Lec20–21",
+ "summary": "Random variables, their distributions and expected values; linearity of expectation and the indicator method; independence of random variables; variance, Bienaymé’s formula and the binomial mean and variance; and Chebyshev’s inequality. Expect “expected number of …” questions solved with indicators and a variance-plus-Chebyshev computation.",
+ "lesson": [
+  {
+   "title": "Random variables and their distributions",
+   "blocks": [
+    {
+     "type": "tip",
+     "text": "A random variable is a rule that turns each outcome into a number, so you can ask about averages and spreads."
+    },
+    {
+     "type": "def",
+     "term": "random variable",
+     "text": "A <b>random variable</b> is a function X : S → ℝ from the sample space to the real numbers. It is neither random nor a variable: it is a fixed function, and the randomness is in which outcome happens."
+    },
+    {
+     "type": "def",
+     "term": "distribution of X",
+     "text": "The <b>distribution</b> of X is the list of pairs (r, p(X = r)) over all values r of X. Here p(X = r) is the probability of the event {s ∈ S : X(s) = r}: list those outcomes and add their probabilities. The probabilities add to 1."
+    },
+    {
+     "type": "example",
+     "title": "Distribution of the number of heads",
+     "prompt": "Flip two fair coins; X = number of heads. Find the distribution of X.",
+     "steps": [
+      "Outcomes HH, HT, TH, TT, each 1/4, with X = 2, 1, 1, 0.",
+      "p(X = 2) = 1/4; p(X = 1) = 2/4 = 1/2 (two outcomes); p(X = 0) = 1/4.",
+      "Check: 1/4 + 1/2 + 1/4 = 1."
+     ],
+     "answer": "p(X=0) = 1/4, p(X=1) = 1/2, p(X=2) = 1/4"
+    },
+    {
+     "type": "table",
+     "head": [
+      "Outcome",
+      "HH",
+      "HT",
+      "TH",
+      "TT"
+     ],
+     "rows": [
+      [
+       "X",
+       "2",
+       "1",
+       "1",
+       "0"
+      ]
+     ]
+    },
+    {
+     "type": "example",
+     "title": "Distribution of a dice difference",
+     "prompt": "Roll two fair dice; Y = first − second. Find p(Y = −5), p(Y = 0), p(Y = 3) and the whole distribution.",
+     "steps": [
+      "36 equally likely ordered outcomes.",
+      "Y = −5 only for (1, 6): 1/36.",
+      "Y = 0 for the 6 doubles: 6/36 = 1/6.",
+      "Y = 3 for (4,1), (5,2), (6,3): 3/36 = 1/12.",
+      "In general p(Y = r) = (6 − |r|)/36 for r = −5, …, 5."
+     ],
+     "answer": "1/36, 1/6, 1/12; p(Y = r) = (6 − |r|)/36"
+    },
+    {
+     "type": "example",
+     "title": "Distribution without replacement",
+     "prompt": "An urn has 3 red and 2 blue balls. Draw 2 without replacement; X = number of red balls drawn. Find the distribution of X.",
+     "steps": [
+      "All C(5, 2) = 10 pairs are equally likely.",
+      "X = 0: both blue, C(2, 2) = 1 pair, so 1/10.",
+      "X = 1: C(3, 1)C(2, 1) = 6 pairs, so 6/10.",
+      "X = 2: C(3, 2) = 3 pairs, so 3/10.",
+      "Check: 1 + 6 + 3 = 10."
+     ],
+     "answer": "p(X=0) = 1/10, p(X=1) = 3/5, p(X=2) = 3/10"
+    }
+   ]
+  },
+  {
+   "title": "Expected value",
+   "blocks": [
+    {
+     "type": "def",
+     "term": "expected value",
+     "text": "E(X) = Σ<sub>s∈S</sub> p(s) X(s) = Σ<sub>r</sub> r · p(X = r). The first sum runs over outcomes; the second groups outcomes by value. It is the weighted average of X, the long-run average over many repetitions."
+    },
+    {
+     "type": "steps",
+     "title": "Expected value from the definition",
+     "items": [
+      "List every value r of X.",
+      "Find p(X = r) for each (they must add to 1).",
+      "Multiply each value by its probability and add."
+     ]
+    },
+    {
+     "type": "example",
+     "title": "Expected value by definition",
+     "prompt": "Find E(X) for (a) X = heads in two fair coins, (b) one fair die, (c) the urn variable above, and (d) a game that pays 10 dollars with probability 1/5 and costs 2 dollars otherwise.",
+     "steps": [
+      "(a) 0 · 1/4 + 1 · 1/2 + 2 · 1/4 = 1.",
+      "(b) (1 + 2 + 3 + 4 + 5 + 6)/6 = 21/6 = 7/2. The die can never show 3.5: an expected value is an average, not a likely outcome.",
+      "(c) 0 · 1/10 + 1 · 6/10 + 2 · 3/10 = 12/10 = 6/5.",
+      "(d) 10 · 1/5 + (−2) · 4/5 = 2 − 8/5 = 2/5, i.e. $0.40 per play."
+     ],
+     "answer": "(a) 1 (b) 7/2 (c) 6/5 (d) $0.40"
+    },
+    {
+     "type": "warn",
+     "text": "Don’t just average the possible values. A coin with p(H) = 0.9 flipped twice has E(heads) = 1.8, not (0 + 1 + 2)/3 = 1."
+    }
+   ]
+  },
+  {
+   "title": "Linearity of expectation and indicators",
+   "blocks": [
+    {
+     "type": "thm",
+     "name": "Linearity of expectation",
+     "text": "For any random variables on the same sample space and constants a, b: E(X₁ + ⋯ + Xₙ) = E(X₁) + ⋯ + E(Xₙ) and E(aX + b) = aE(X) + b. No independence is needed.",
+     "proof": [
+      {
+       "type": "p",
+       "text": "E(X₁ + X₂) = Σ p(s)(X₁(s) + X₂(s)) = Σ p(s)X₁(s) + Σ p(s)X₂(s) = E(X₁) + E(X₂). Nothing in this algebra uses any relation between X₁ and X₂."
+      },
+      {
+       "type": "p",
+       "text": "E(aX + b) = Σ p(s)(aX(s) + b) = aΣ p(s)X(s) + bΣ p(s) = aE(X) + b, since the probabilities add to 1. Induct for n terms."
+      }
+     ]
+    },
+    {
+     "type": "example",
+     "title": "Linearity in one line",
+     "prompt": "Find E(first die − second die) and the expected sum of three fair dice.",
+     "steps": [
+      "E(Y₁ − Y₂) = E(Y₁) − E(Y₂) = 7/2 − 7/2 = 0 (compare the long sum over the distribution, where r and −r cancel).",
+      "Three dice: 7/2 + 7/2 + 7/2 = 21/2, with no need to list 216 outcomes."
+     ],
+     "answer": "0 and 21/2"
+    },
+    {
+     "type": "def",
+     "term": "indicator random variable",
+     "text": "I<sub>A</sub> = 1 if event A happens and 0 otherwise. E(I<sub>A</sub>) = 1 · p(A) + 0 · (1 − p(A)) = p(A)."
+    },
+    {
+     "type": "steps",
+     "title": "Expected number of ____ (indicator method)",
+     "items": [
+      "Name the count: X = number of ____.",
+      "Write X = I₁ + ⋯ + Iₙ, one indicator per thing that could happen.",
+      "Find p(each thing happens); often they are all equal by symmetry.",
+      "E(X) = p₁ + ⋯ + pₙ. The indicators may be dependent; linearity does not care."
+     ]
+    },
+    {
+     "type": "example",
+     "title": "Binomial mean by indicators",
+     "prompt": "n independent trials, each a success with probability p. Find E(number of successes). Then: expected sixes in 12 die rolls; expected heads in 100 flips of a coin with p(H) = 0.3.",
+     "steps": [
+      "Iₖ = 1 if trial k succeeds; E(Iₖ) = p.",
+      "X = I₁ + ⋯ + Iₙ, so E(X) = np.",
+      "12 rolls: 12 · 1/6 = 2.",
+      "100 flips: 100 · 0.3 = 30."
+     ],
+     "answer": "E(X) = np; 2; 30"
+    },
+    {
+     "type": "example",
+     "title": "Fixed points of a random permutation",
+     "prompt": "n people check hats, and the hats are handed back in a uniformly random order. Find the expected number of people who get their own hat.",
+     "steps": [
+      "Iᵢ = 1 if person i gets their own hat.",
+      "p(Iᵢ = 1) = (n − 1)!/n! = 1/n.",
+      "E = n · 1/n = 1, for every n, even though the Iᵢ are dependent."
+     ],
+     "answer": "1"
+    },
+    {
+     "type": "example",
+     "title": "Records",
+     "prompt": "n people with different scores arrive in a uniformly random order. A record is a score higher than all earlier ones. Find the expected number of records, and evaluate for n = 4 and n = 100.",
+     "steps": [
+      "Iₖ = 1 if the k-th score is a record, i.e. the largest of the first k.",
+      "By symmetry each of the first k scores is equally likely to be the largest: p = 1/k.",
+      "E = 1 + 1/2 + ⋯ + 1/n = Hₙ, the harmonic number.",
+      "n = 4: 1 + 1/2 + 1/3 + 1/4 = 25/12 ≈ 2.08. n = 100: H₁₀₀ ≈ 5.19. Records get rare, since Hₙ grows like ln n."
+     ],
+     "answer": "Hₙ; 25/12; ≈ 5.19"
+    },
+    {
+     "type": "tip",
+     "text": "Doubling after each loss (the martingale) cannot beat a bet with negative expected value: every single bet at roulette has expected value 0.48 − 0.52 = −0.04 dollars per dollar, so by linearity the sum loses on average. The rare long losing streak (10 losses in a row costs 1023 dollars) pays for all the small wins."
+    }
+   ]
+  },
+  {
+   "title": "Independent random variables and E(XY)",
+   "blocks": [
+    {
+     "type": "def",
+     "term": "independent random variables",
+     "text": "X and Y are <b>independent</b> if p(X = r₁ and Y = r₂) = p(X = r₁) p(Y = r₂) for <b>every</b> pair of values r₁, r₂. One failing pair shows they are not independent."
+    },
+    {
+     "type": "example",
+     "title": "Checking independence of random variables",
+     "prompt": "Two fair coins; X = number of heads, Y = number of tails. Are X and Y independent? Are the two dice values of a pair of dice independent?",
+     "steps": [
+      "p(X = 1) = 1/2, p(Y = 1) = 1/2.",
+      "p(X = 1 and Y = 1) = p({HT, TH}) = 1/2, but (1/2)(1/2) = 1/4. Not independent (X determines Y = 2 − X).",
+      "Dice: p(X₁ = a, X₂ = b) = 1/36 = (1/6)(1/6) for every a, b. Independent."
+     ],
+     "answer": "Heads/tails: not independent; two dice: independent"
+    },
+    {
+     "type": "thm",
+     "name": "Expectation of a product",
+     "text": "If X and Y are independent, E(XY) = E(X) E(Y).",
+     "proof": [
+      {
+       "type": "p",
+       "text": "E(XY) = Σ<sub>r₁,r₂</sub> r₁r₂ p(X = r₁, Y = r₂) = Σ<sub>r₁,r₂</sub> r₁r₂ p(X = r₁) p(Y = r₂) (independence, the only place it is used)."
+      },
+      {
+       "type": "p",
+       "text": "The double sum factors: (Σ r₁ p(X = r₁))(Σ r₂ p(Y = r₂)) = E(X)E(Y)."
+      }
+     ]
+    },
+    {
+     "type": "example",
+     "title": "E(XY) with and without independence",
+     "prompt": "Two dice: find E(X₁X₂). Two coins: compare E(XY) with E(X)E(Y) for X = heads, Y = tails.",
+     "steps": [
+      "Dice are independent: E(X₁X₂) = (7/2)(7/2) = 49/4.",
+      "Coins: XY = 0 for HH and TT, and XY = 1 for HT and TH, so E(XY) = 1/2.",
+      "E(X)E(Y) = 1 · 1 = 1 ≠ 1/2: the product rule fails without independence."
+     ],
+     "answer": "49/4; 1/2 vs 1"
+    },
+    {
+     "type": "warn",
+     "text": "E(XY) = E(X)E(Y) does not prove independence. Sum and difference of two dice satisfy it but are dependent."
+    }
+   ]
+  },
+  {
+   "title": "Variance and standard deviation",
+   "blocks": [
+    {
+     "type": "def",
+     "term": "variance and standard deviation",
+     "text": "V(X) = Σ<sub>s</sub> (X(s) − E(X))² p(s) = E((X − E(X))²), the average squared distance from the mean. σ(X) = √V(X) has the same units as X. V(X) ≥ 0, with equality only if X is constant."
+    },
+    {
+     "type": "thm",
+     "name": "Shortcut formula",
+     "text": "V(X) = E(X²) − E(X)².",
+     "proof": [
+      {
+       "type": "p",
+       "text": "Let μ = E(X). Then (X − μ)² = X² − 2μX + μ². By linearity, E((X − μ)²) = E(X²) − 2μE(X) + μ² = E(X²) − 2μ² + μ² = E(X²) − μ²."
+      }
+     ]
+    },
+    {
+     "type": "thm",
+     "name": "Scaling and shifting",
+     "text": "V(aX + b) = a² V(X).",
+     "proof": [
+      {
+       "type": "p",
+       "text": "aX + b − E(aX + b) = a(X − E(X)), and squaring gives a factor a²."
+      }
+     ]
+    },
+    {
+     "type": "example",
+     "title": "Variance by definition and by the shortcut",
+     "prompt": "Find V(X) for X = heads in two coins (definition), for one fair die (shortcut), and for the urn variable (3 red, 2 blue, draw 2).",
+     "steps": [
+      "Coins: E(X) = 1. Squared distances: TT → 1, HT/TH → 0, HH → 1. V = 1/4 · 1 + 1/2 · 0 + 1/4 · 1 = 1/2.",
+      "Die: E(X) = 7/2, E(X²) = (1 + 4 + 9 + 16 + 25 + 36)/6 = 91/6. V = 91/6 − 49/4 = 182/12 − 147/12 = 35/12 ≈ 2.92.",
+      "Urn: E(X) = 6/5, E(X²) = 0 · 1/10 + 1 · 6/10 + 4 · 3/10 = 18/10 = 9/5. V = 9/5 − 36/25 = 9/25."
+     ],
+     "answer": "1/2; 35/12; 9/25"
+    },
+    {
+     "type": "warn",
+     "text": "E(X²) is not E(X)². For a die, 91/6 ≈ 15.17 vs 49/4 = 12.25; their difference is the variance."
+    }
+   ]
+  },
+  {
+   "title": "Variance of sums: Bienaymé and the binomial",
+   "blocks": [
+    {
+     "type": "thm",
+     "name": "Bienaymé’s formula",
+     "text": "If X₁, …, Xₙ are pairwise independent, V(X₁ + ⋯ + Xₙ) = V(X₁) + ⋯ + V(Xₙ).",
+     "proof": [
+      {
+       "type": "p",
+       "text": "Two variables: V(X + Y) = E((X + Y)²) − (E(X) + E(Y))² = [E(X²) + 2E(XY) + E(Y²)] − [E(X)² + 2E(X)E(Y) + E(Y)²]."
+      },
+      {
+       "type": "p",
+       "text": "Independence gives E(XY) = E(X)E(Y), so the cross terms cancel, leaving (E(X²) − E(X)²) + (E(Y²) − E(Y)²) = V(X) + V(Y). For n variables the cross terms are pairs, so pairwise independence is enough."
+      }
+     ]
+    },
+    {
+     "type": "thm",
+     "name": "Binomial mean and variance",
+     "text": "If X counts successes in n independent trials with success probability p, then E(X) = np and V(X) = np(1 − p).",
+     "proof": [
+      {
+       "type": "p",
+       "text": "X = I₁ + ⋯ + Iₙ. Since Iₖ² = Iₖ, E(Iₖ²) = p and V(Iₖ) = p − p² = p(1 − p)."
+      },
+      {
+       "type": "p",
+       "text": "The trials are independent, so by Bienaymé V(X) = np(1 − p); by linearity E(X) = np."
+      }
+     ]
+    },
+    {
+     "type": "example",
+     "title": "Using Bienaymé",
+     "prompt": "Find the variance of the sum of two fair dice, and the mean, variance and standard deviation of the number of heads in 100 flips with p(H) = 0.3.",
+     "steps": [
+      "Dice are independent: V = 35/12 + 35/12 = 35/6.",
+      "Binomial: E = 100 · 0.3 = 30, V = 100 · 0.3 · 0.7 = 21, σ = √21 ≈ 4.58."
+     ],
+     "answer": "35/6; E = 30, V = 21, σ ≈ 4.58"
+    },
+    {
+     "type": "warn",
+     "text": "Variances only add under independence. Heads + tails of two coins is always 2, so V(X + Y) = 0, while V(X) + V(Y) = 1/2 + 1/2 = 1. Likewise V(X + X) = 4V(X), not 2V(X)."
+    }
+   ]
+  },
+  {
+   "title": "Chebyshev’s inequality",
+   "blocks": [
+    {
+     "type": "tip",
+     "text": "If the variance is small, X cannot often be far from its mean. Chebyshev turns that into a number using only E(X) and V(X)."
+    },
+    {
+     "type": "thm",
+     "name": "Chebyshev’s inequality",
+     "text": "For any random variable X and any r > 0, p(|X − E(X)| ≥ r) ≤ V(X)/r².",
+     "proof": [
+      {
+       "type": "p",
+       "text": "Let A = {s : |X(s) − E(X)| ≥ r}. Start from the definition of variance:"
+      },
+      {
+       "type": "formula",
+       "text": "V(X) = Σ<sub>all s</sub> (X(s) − E(X))² p(s) ≥ Σ<sub>s∈A</sub> (X(s) − E(X))² p(s) ≥ Σ<sub>s∈A</sub> r² p(s) = r² p(A)"
+      },
+      {
+       "type": "p",
+       "text": "The first ≥ drops the nonnegative terms outside A; the second uses (X(s) − E(X))² ≥ r² on A. Divide by r²."
+      }
+     ]
+    },
+    {
+     "type": "steps",
+     "title": "Chebyshev problems",
+     "items": [
+      "Find E(X) and V(X) (linearity, Bienaymé, binomial formulas).",
+      "Rewrite the event as “at least r away from the mean” and read off r.",
+      "The answer is the bound V(X)/r², an upper bound and not the exact probability."
+     ]
+    },
+    {
+     "type": "example",
+     "title": "Bound vs exact: 100 coins",
+     "prompt": "X = heads in 100 fair flips. Bound p(|X − 50| ≥ 10) with Chebyshev and compare with the exact value.",
+     "steps": [
+      "E(X) = 50, V(X) = 100 · 1/2 · 1/2 = 25.",
+      "r = 10: p ≤ 25/10² = 1/4.",
+      "The exact binomial value is about 0.057, far below 1/4: Chebyshev is always valid but usually loose."
+     ],
+     "answer": "≤ 1/4 (exact ≈ 0.057)"
+    },
+    {
+     "type": "example",
+     "title": "Bound vs exact: one die",
+     "prompt": "Roll one fair die. Use Chebyshev to bound p(the roll is 1 or 6), and compare.",
+     "steps": [
+      "E = 7/2, V = 35/12.",
+      "Rolling 1 or 6 means being exactly 5/2 from the mean, so r = 5/2.",
+      "Bound: (35/12)/(25/4) = 7/15 ≈ 0.47.",
+      "True value: 2/6 = 1/3 ≤ 7/15, as it must be."
+     ],
+     "answer": "≤ 7/15 (exact 1/3)"
+    },
+    {
+     "type": "example",
+     "title": "Chebyshev for a binomial count",
+     "prompt": "A fair die is rolled 600 times; X = number of sixes. Bound p(|X − 100| ≥ 20).",
+     "steps": [
+      "E = 600 · 1/6 = 100, V = 600 · 1/6 · 5/6 = 250/3.",
+      "p ≤ (250/3)/20² = 250/1200 = 5/24 ≈ 0.208.",
+      "The exact probability is about 0.034."
+     ],
+     "answer": "≤ 5/24 ≈ 0.208"
+    },
+    {
+     "type": "example",
+     "title": "How many trials?",
+     "prompt": "n fair coins; X = heads. Show p(|X − n/2| ≥ √n) ≤ 1/4 for every n.",
+     "steps": [
+      "E = n/2, V = n/4.",
+      "r = √n, so V/r² = (n/4)/n = 1/4."
+     ],
+     "answer": "1/4 for every n"
+    },
+    {
+     "type": "warn",
+     "text": "Divide by r², and use the variance, not σ. Never present the bound as the exact probability."
+    }
+   ]
+  }
+ ],
+ "cards": [
+  {
+   "front": "What is a random variable?",
+   "back": [
+    {
+     "type": "formula",
+     "text": "X : S → ℝ"
+    },
+    {
+     "type": "p",
+     "text": "<b>Meaning.</b> A <b>random variable</b> X is a rule that gives every outcome s in the sample space S a <b>number</b> X(s). It turns outcomes (like “HT”) into numbers you can average."
+    },
+    {
+     "type": "p",
+     "text": "The name is misleading: X is <b>not random</b> and <b>not a variable</b>. It’s a fixed function. The randomness is only in which outcome happens."
+    },
+    {
+     "type": "p",
+     "text": "<b>Example.</b> Flip two fair coins; X = number of heads. X(HH) = 2, X(HT) = 1, X(TH) = 1, X(TT) = 0."
+    }
+   ]
+  },
+  {
+   "front": "What does p(X = r) mean, and how do you compute it?",
+   "back": [
+    {
+     "type": "p",
+     "text": "<b>Meaning.</b> p(X = r) is the probability of the <b>event</b> “X equals r”: the set of all outcomes s with X(s) = r."
+    },
+    {
+     "type": "p",
+     "text": "<b>How.</b>"
+    },
+    {
+     "type": "list",
+     "items": [
+      "List every outcome that gives X the value r.",
+      "Add up their probabilities."
+     ]
+    },
+    {
+     "type": "p",
+     "text": "<b>Example.</b> Two fair coins, X = heads. Each outcome has probability 1/4. p(X = 2) = 1/4 (just HH). p(X = 1) = 2/4 = <b>1/2</b> (HT and TH). p(X = 0) = 1/4. The three add to 1, a good check."
+    }
+   ]
+  },
+  {
+   "front": "Roll two fair dice; Y = first number − second number. Find p(Y = −5), p(Y = 0) and p(Y = 3).",
+   "back": [
+    {
+     "type": "p",
+     "text": "There are 36 equally likely ordered outcomes, each 1/36."
+    },
+    {
+     "type": "list",
+     "items": [
+      "<b>p(Y = −5) = 1/36.</b> Only (1, 6) gives 1 − 6 = −5.",
+      "<b>p(Y = 0) = 6/36 = 1/6.</b> The dice match: (1,1), (2,2), …, (6,6).",
+      "<b>p(Y = 3) = 3/36 = 1/12.</b> (4,1), (5,2), (6,3)."
+     ]
+    },
+    {
+     "type": "warn",
+     "text": "Order matters: (4,1) and (1,4) are different outcomes, and (1,4) gives −3, not 3."
+    }
+   ]
+  },
+  {
+   "front": "What is the expected value E(X), and what does it mean?",
+   "back": [
+    {
+     "type": "formula",
+     "text": "E(X) = Σ over outcomes s of p(s)·X(s)"
+    },
+    {
+     "type": "formula",
+     "text": "= Σ over values r of r · p(X = r)"
+    },
+    {
+     "type": "p",
+     "text": "<b>Meaning.</b> The <b>weighted average</b> of X: each value counts in proportion to how likely it is. Repeat the experiment many times and the average of X settles near E(X)."
+    },
+    {
+     "type": "p",
+     "text": "The two formulas agree: the second just groups together outcomes that give the same value. Use whichever is easier."
+    },
+    {
+     "type": "p",
+     "text": "<b>How.</b>"
+    },
+    {
+     "type": "list",
+     "items": [
+      "List the possible values r of X.",
+      "Find p(X = r) for each (they must add to 1).",
+      "Multiply each value by its probability and add."
+     ]
+    }
+   ]
+  },
+  {
+   "front": "Two fair coins, X = number of heads. Find E(X) directly.",
+   "back": [
+    {
+     "type": "formula",
+     "text": "E(X) = 0·¼ + 1·½ + 2·¼ = 0 + ½ + ½ = 1"
+    },
+    {
+     "type": "p",
+     "text": "<b>E(X) = 1.</b> It makes sense: two coins, each heads half the time, so one head on average."
+    }
+   ]
+  },
+  {
+   "front": "What is E(X) for one roll of a fair die? Can the die ever show E(X)?",
+   "back": [
+    {
+     "type": "formula",
+     "text": "E(X) = (1 + 2 + 3 + 4 + 5 + 6)/6 = 21/6 = 7/2"
+    },
+    {
+     "type": "p",
+     "text": "<b>E(X) = 7/2 = 3.5.</b> Each face has probability 1/6."
+    },
+    {
+     "type": "p",
+     "text": "No: 3.5 is not a face. The expected value is an <b>average</b>, not a likely outcome, and it doesn’t have to be a possible value."
+    }
+   ]
+  },
+  {
+   "front": "Why can’t you just average the possible values of X to get E(X)?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Because values aren’t equally likely in general. You must <b>weight</b> each value by its probability."
+    },
+    {
+     "type": "p",
+     "text": "A biased coin has p(H) = 0.9. Flip it twice; X = heads. The values 0, 1, 2 average to 1, but E(X) = 0·0.01 + 1·0.18 + 2·0.81 = <b>1.8</b>."
+    },
+    {
+     "type": "warn",
+     "text": "For fair coins the plain average happens to give the right answer. Don’t rely on that."
+    }
+   ]
+  },
+  {
+   "front": "A game: win 10 dollars with probability 1/5, lose 2 dollars otherwise. Expected winnings?",
+   "back": [
+    {
+     "type": "formula",
+     "text": "E = 10·(1/5) + (−2)·(4/5) = 2 − 1.6 = 0.40"
+    },
+    {
+     "type": "p",
+     "text": "<b>$0.40</b> per game. Losses are just negative values; “otherwise” has probability 1 − 1/5 = 4/5."
+    }
+   ]
+  },
+  {
+   "front": "State linearity of expectation.",
+   "back": [
+    {
+     "type": "formula",
+     "text": "E(X₁ + ⋯ + Xₙ) = E(X₁) + ⋯ + E(Xₙ)"
+    },
+    {
+     "type": "formula",
+     "text": "E(aX + b) = a·E(X) + b"
+    },
+    {
+     "type": "p",
+     "text": "<b>Meaning.</b> The expected value of a sum is the sum of the expected values. Constants pull out, and shifts just shift the average."
+    },
+    {
+     "type": "p",
+     "text": "This works <b>always</b>: the Xᵢ do <b>not</b> need to be independent."
+    }
+   ]
+  },
+  {
+   "front": "Why is linearity of expectation true?",
+   "back": [
+    {
+     "type": "p",
+     "text": "<b>Proof.</b> Write E as a sum over outcomes and split it:"
+    },
+    {
+     "type": "formula",
+     "text": "E(X₁ + X₂) = Σ p(s)(X₁(s) + X₂(s))"
+    },
+    {
+     "type": "formula",
+     "text": "= Σ p(s)X₁(s) + Σ p(s)X₂(s) = E(X₁) + E(X₂)"
+    },
+    {
+     "type": "p",
+     "text": "Nothing in that algebra cares whether X₁ and X₂ are related, so no independence is needed."
+    },
+    {
+     "type": "p",
+     "text": "For aX + b: Σ p(s)(aX(s) + b) = a·Σ p(s)X(s) + b·Σ p(s) = aE(X) + b, since the probabilities add to 1."
+    }
+   ]
+  },
+  {
+   "front": "Use linearity to find E(first die − second die).",
+   "back": [
+    {
+     "type": "list",
+     "items": [
+      "Let Y₁ = first die, Y₂ = second die. Then Y = Y₁ − Y₂.",
+      "E(Y₁) = E(Y₂) = 7/2.",
+      "E(Y) = E(Y₁) − E(Y₂) = 7/2 − 7/2 = <b>0</b>."
+     ]
+    },
+    {
+     "type": "p",
+     "text": "Same answer as the long way, in one line. (The minus sign is linearity with a = −1.)"
+    }
+   ]
+  },
+  {
+   "front": "Expected sum of three fair dice?",
+   "back": [
+    {
+     "type": "formula",
+     "text": "E = 7/2 + 7/2 + 7/2 = 21/2"
+    },
+    {
+     "type": "p",
+     "text": "<b>21/2 = 10.5.</b> Listing all 6³ = 216 outcomes would take forever; linearity takes one line."
+    }
+   ]
+  },
+  {
+   "front": "What is an indicator random variable, and what is its expected value?",
+   "back": [
+    {
+     "type": "formula",
+     "text": "Xₖ = 1 if event k happens, 0 if not ⟹ E(Xₖ) = p(event k)"
+    },
+    {
+     "type": "p",
+     "text": "<b>Why.</b> E(Xₖ) = 1·p + 0·(1 − p) = p."
+    },
+    {
+     "type": "p",
+     "text": "<b>Why it matters.</b> Any <b>count</b> is a sum of indicators: “number of heads” = (1 if flip 1 is H) + (1 if flip 2 is H) + ⋯. So by linearity, the expected count = the <b>sum of the probabilities</b>."
+    }
+   ]
+  },
+  {
+   "front": "What is the recipe for “expected number of ____” problems?",
+   "back": [
+    {
+     "type": "p",
+     "text": "<b>The indicator trick.</b>"
+    },
+    {
+     "type": "list",
+     "items": [
+      "Name the count: X = number of ____.",
+      "Write X = X₁ + ⋯ + Xₙ, one indicator for each thing that could happen.",
+      "Find p(each thing happens). Often they’re all equal by symmetry.",
+      "Add: E(X) = p₁ + ⋯ + pₙ."
+     ]
+    },
+    {
+     "type": "p",
+     "text": "You never need the distribution of X itself."
+    },
+    {
+     "type": "warn",
+     "text": "The indicators can depend on each other. Don’t stop to check independence; linearity doesn’t need it."
+    }
+   ]
+  },
+  {
+   "front": "n independent trials, each a success with probability p. Expected number of successes? Why?",
+   "back": [
+    {
+     "type": "formula",
+     "text": "E(X) = np"
+    },
+    {
+     "type": "p",
+     "text": "<b>Why.</b>"
+    },
+    {
+     "type": "list",
+     "items": [
+      "Xₖ = 1 if trial k succeeds, else 0. So X = X₁ + ⋯ + Xₙ.",
+      "E(Xₖ) = p·1 + (1 − p)·0 = p.",
+      "By linearity, E(X) = p + p + ⋯ + p (n times) = <b>np</b>."
+     ]
+    },
+    {
+     "type": "p",
+     "text": "<b>Example.</b> 100 coins with a 3/10 chance of heads: E = 100 · 0.3 = <b>30</b> heads."
+    }
+   ]
+  },
+  {
+   "front": "Roll a fair die 12 times. Expected number of sixes? And 10 flips of a coin with p(H) = 0.2: expected heads?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Both are Bernoulli trials, so E = np."
+    },
+    {
+     "type": "list",
+     "items": [
+      "Sixes: n = 12, p = 1/6. E = <b>2</b>.",
+      "Heads: n = 10, p = 0.2. E = <b>2</b>."
+     ]
+    }
+   ]
+  },
+  {
+   "front": "100 people with different scores appear in a random order. A “record” is a score higher than all before it. Expected number of records?",
+   "back": [
+    {
+     "type": "formula",
+     "text": "E(X) = 1 + 1/2 + 1/3 + ⋯ + 1/100 = H₁₀₀ ≈ 5.19"
+    },
+    {
+     "type": "p",
+     "text": "<b>How.</b>"
+    },
+    {
+     "type": "list",
+     "items": [
+      "Xₖ = 1 if the k-th score is a record. X = X₁ + ⋯ + X₁₀₀.",
+      "The k-th score is a record exactly when it’s the <b>largest of the first k</b>. Each of those k scores is equally likely to be the largest, so p = <b>1/k</b>.",
+      "Add: E(X) = Σ 1/k = H₁₀₀ ≈ <b>5.19</b>."
+     ]
+    },
+    {
+     "type": "p",
+     "text": "Hₙ (the harmonic number) grows like ln n, so records get rarer and rarer."
+    }
+   ]
+  },
+  {
+   "front": "The “martingale”: bet 1 dollar at roulette, double after every loss, stop at the first win. Why does each round end 1 dollar ahead?",
+   "back": [
+    {
+     "type": "p",
+     "text": "If you lose k − 1 times and then win, you lost 1 + 2 + ⋯ + 2ᵏ⁻² and won 2ᵏ⁻¹."
+    },
+    {
+     "type": "formula",
+     "text": "2ᵏ⁻¹ − (1 + 2 + ⋯ + 2ᵏ⁻²) = 2ᵏ⁻¹ − (2ᵏ⁻¹ − 1) = 1"
+    },
+    {
+     "type": "p",
+     "text": "So when the win comes, the profit is exactly <b>$1</b>."
+    }
+   ]
+  },
+  {
+   "front": "Why doesn’t the martingale guarantee a profit? (Roulette: win 48%, lose 52%.)",
+   "back": [
+    {
+     "type": "list",
+     "items": [
+      "Every bet has expected value 0.48 − 0.52 = <b>−$0.04 per dollar</b>. By linearity, a sum of losing bets has negative expected value. No strategy fixes that.",
+      "The rare disaster is huge: 10 losses in a row (probability 0.52¹⁰ ≈ 0.0014) costs 1 + 2 + ⋯ + 512 = <b>$1023</b>, and you may not have money for the next bet.",
+      "Play enough rounds and that streak becomes likely, wiping out all the $1 wins."
+     ]
+    }
+   ]
+  },
+  {
+   "front": "When are random variables X and Y independent?",
+   "back": [
+    {
+     "type": "formula",
+     "text": "p(X = r₁ and Y = r₂) = p(X = r₁) · p(Y = r₂) for all r₁, r₂"
+    },
+    {
+     "type": "p",
+     "text": "<b>Meaning.</b> Knowing the value of X tells you nothing about Y. Equivalently, every event “X = r₁” is independent of every event “Y = r₂”."
+    },
+    {
+     "type": "p",
+     "text": "<b>How to show NOT independent.</b> Find <b>one</b> pair r₁, r₂ where the equation fails."
+    },
+    {
+     "type": "p",
+     "text": "<b>Example.</b> Two dice, X = first, Y = second: p(X = r₁, Y = r₂) = 1/36 = (1/6)(1/6) for every pair, so they’re independent."
+    }
+   ]
+  },
+  {
+   "front": "Two fair coins, X = number of heads, Y = number of tails. Show X and Y are not independent.",
+   "back": [
+    {
+     "type": "list",
+     "items": [
+      "p(X = 1) = 1/2 and p(Y = 1) = 1/2.",
+      "p(X = 1 and Y = 1) = p({HT, TH}) = 1/2.",
+      "But (1/2)(1/2) = 1/4 ≠ 1/2. <b>Not independent.</b>"
+     ]
+    },
+    {
+     "type": "p",
+     "text": "Makes sense: X + Y = 2 always, so knowing X tells you Y exactly."
+    }
+   ]
+  },
+  {
+   "front": "When is E(XY) = E(X)·E(Y)? Why?",
+   "back": [
+    {
+     "type": "formula",
+     "text": "X, Y independent ⟹ E(XY) = E(X)E(Y)"
+    },
+    {
+     "type": "p",
+     "text": "<b>Why.</b>"
+    },
+    {
+     "type": "list",
+     "items": [
+      "E(XY) = Σ over r₁, r₂ of r₁r₂ · p(X = r₁ and Y = r₂).",
+      "Independence splits the probability: p(X = r₁)·p(Y = r₂). <b>This is the only step that uses independence.</b>",
+      "The double sum factors: (Σ r₁ p(X = r₁))·(Σ r₂ p(Y = r₂)) = E(X)E(Y)."
+     ]
+    },
+    {
+     "type": "warn",
+     "text": "Linearity works for sums always; this product rule needs independence."
+    }
+   ]
+  },
+  {
+   "front": "Show E(XY) ≠ E(X)E(Y) for X = heads, Y = tails of two fair coins.",
+   "back": [
+    {
+     "type": "list",
+     "items": [
+      "XY: HH → 2·0 = 0, TT → 0·2 = 0, HT → 1·1 = 1, TH → 1·1 = 1.",
+      "E(XY) = ¼·0 + ¼·0 + ¼·1 + ¼·1 = <b>½</b>.",
+      "E(X) = E(Y) = 1, so E(X)E(Y) = <b>1</b>."
+     ]
+    },
+    {
+     "type": "p",
+     "text": "½ ≠ 1, which is fine: X and Y aren’t independent."
+    }
+   ]
+  },
+  {
+   "front": "What are variance and standard deviation, and what do they measure?",
+   "back": [
+    {
+     "type": "formula",
+     "text": "V(X) = Σ over s of (X(s) − E(X))² · p(s)"
+    },
+    {
+     "type": "formula",
+     "text": "σ(X) = √V(X)"
+    },
+    {
+     "type": "p",
+     "text": "<b>Meaning.</b> E(X) is the center. <b>Variance</b> measures spread: the average <b>squared</b> distance from E(X). Squaring makes all distances positive and punishes big ones more."
+    },
+    {
+     "type": "p",
+     "text": "σ, the <b>standard deviation</b>, undoes the square, so it’s in the same units as X: roughly “how far from the mean X typically lands”."
+    },
+    {
+     "type": "p",
+     "text": "V(X) ≥ 0 always, and V(X) = 0 only if X is constant."
+    }
+   ]
+  },
+  {
+   "front": "Two fair coins, X = heads. Find V(X) from the definition.",
+   "back": [
+    {
+     "type": "list",
+     "items": [
+      "E(X) = 1.",
+      "Squared distances: TT → (0 − 1)² = 1; HT, TH → 0; HH → (2 − 1)² = 1.",
+      "V(X) = ¼·1 + ½·0 + ¼·1 = <b>½</b>."
+     ]
+    }
+   ]
+  },
+  {
+   "front": "What is the shortcut formula for variance, and why does it hold?",
+   "back": [
+    {
+     "type": "formula",
+     "text": "V(X) = E(X²) − E(X)²"
+    },
+    {
+     "type": "p",
+     "text": "“Mean of the square minus square of the mean.”"
+    },
+    {
+     "type": "p",
+     "text": "<b>Why.</b>"
+    },
+    {
+     "type": "list",
+     "items": [
+      "Write μ = E(X). Expand: (X − μ)² = X² − 2μX + μ².",
+      "Take E using linearity: E(X²) − 2μE(X) + μ² = E(X²) − 2μ² + μ².",
+      "= E(X²) − μ²."
+     ]
+    },
+    {
+     "type": "p",
+     "text": "<b>How.</b> Compute E(X), then E(X²) = Σ r²·p(X = r) (square the <b>values</b>, keep the probabilities), then subtract."
+    }
+   ]
+  },
+  {
+   "front": "Find the variance of one roll of a fair die.",
+   "back": [
+    {
+     "type": "list",
+     "items": [
+      "E(X) = 7/2, so E(X)² = 49/4.",
+      "E(X²) = (1 + 4 + 9 + 16 + 25 + 36)/6 = 91/6.",
+      "V(X) = 91/6 − 49/4 = 182/12 − 147/12 = <b>35/12</b> ≈ 2.92."
+     ]
+    },
+    {
+     "type": "warn",
+     "text": "E(X²) is not E(X)²: 91/6 ≈ 15.17 vs. 49/4 = 12.25. Their difference is exactly the variance."
+    }
+   ]
+  },
+  {
+   "front": "What is V(aX + b)?",
+   "back": [
+    {
+     "type": "formula",
+     "text": "V(aX + b) = a² · V(X)"
+    },
+    {
+     "type": "p",
+     "text": "<b>Why.</b> Adding b shifts every value <b>and</b> the mean by b, so distances from the mean don’t change. Multiplying by a multiplies every distance by a, so squared distances by a²."
+    },
+    {
+     "type": "p",
+     "text": "V(3X + 7) = 9V(X). V(−X) = V(X)."
+    }
+   ]
+  },
+  {
+   "front": "X is 0 or 10, each with probability ½. Find V(X) and σ(X).",
+   "back": [
+    {
+     "type": "list",
+     "items": [
+      "E(X) = 5.",
+      "E(X²) = ½·0 + ½·100 = 50.",
+      "V(X) = 50 − 25 = <b>25</b>, so σ = <b>5</b>."
+     ]
+    },
+    {
+     "type": "p",
+     "text": "Every value is exactly 5 from the mean, which matches σ = 5."
+    }
+   ]
+  },
+  {
+   "front": "State Bienaymé’s formula.",
+   "back": [
+    {
+     "type": "formula",
+     "text": "X₁, …, Xₙ independent ⟹ V(X₁ + ⋯ + Xₙ) = V(X₁) + ⋯ + V(Xₙ)"
+    },
+    {
+     "type": "p",
+     "text": "<b>Meaning.</b> For <b>independent</b> variables, variances add, just like expectations. Unlike linearity, this <b>needs independence</b>."
+    }
+   ]
+  },
+  {
+   "front": "Why are variances additive for two independent variables?",
+   "back": [
+    {
+     "type": "list",
+     "items": [
+      "V(X₁ + X₂) = E((X₁ + X₂)²) − (E(X₁) + E(X₂))².",
+      "Expand: E(X₁²) + 2E(X₁X₂) + E(X₂²) − [E(X₁)² + 2E(X₁)E(X₂) + E(X₂)²].",
+      "Independence gives E(X₁X₂) = E(X₁)E(X₂), so the two cross terms cancel.",
+      "Left: [E(X₁²) − E(X₁)²] + [E(X₂²) − E(X₂)²] = V(X₁) + V(X₂)."
+     ]
+    },
+    {
+     "type": "p",
+     "text": "Without independence the cross terms stay, and the formula can fail."
+    }
+   ]
+  },
+  {
+   "front": "Variance of the sum of two fair dice?",
+   "back": [
+    {
+     "type": "p",
+     "text": "The dice are independent, and each has variance 35/12."
+    },
+    {
+     "type": "formula",
+     "text": "V = 35/12 + 35/12 = 35/6"
+    }
+   ]
+  },
+  {
+   "front": "Show variances don’t add without independence (X = heads, Y = tails, two coins).",
+   "back": [
+    {
+     "type": "p",
+     "text": "X + Y = 2 always, so <b>V(X + Y) = 0</b>."
+    },
+    {
+     "type": "p",
+     "text": "But V(X) + V(Y) = ½ + ½ = <b>1</b>."
+    },
+    {
+     "type": "warn",
+     "text": "Before adding variances, check independence. (Adding expectations never needs it.)"
+    }
+   ]
+  },
+  {
+   "front": "Variance of the number of successes in n independent trials with success probability p? Why?",
+   "back": [
+    {
+     "type": "formula",
+     "text": "V(X) = np(1 − p)"
+    },
+    {
+     "type": "p",
+     "text": "<b>Why.</b>"
+    },
+    {
+     "type": "list",
+     "items": [
+      "Indicators: X = X₁ + ⋯ + Xₙ, Xₖ = 1 on success.",
+      "Xₖ is 0 or 1, so Xₖ² = Xₖ and E(Xₖ²) = p.",
+      "V(Xₖ) = E(Xₖ²) − E(Xₖ)² = p − p² = p(1 − p).",
+      "The trials are independent, so by Bienaymé, V(X) = n·p(1 − p)."
+     ]
+    }
+   ]
+  },
+  {
+   "front": "100 coins with p(H) = 0.3: variance and standard deviation of heads? And 10 flips with p = 0.2?",
+   "back": [
+    {
+     "type": "list",
+     "items": [
+      "V = 100 · 0.3 · 0.7 = <b>21</b>; σ = √21 ≈ <b>4.58</b>. So expect about 30 ± 4.6 heads.",
+      "V = 10 · 0.2 · 0.8 = <b>1.6</b>."
+     ]
+    }
+   ]
+  },
+  {
+   "front": "State Chebyshev’s inequality and say what it’s for.",
+   "back": [
+    {
+     "type": "formula",
+     "text": "p( |X − E(X)| ≥ r ) ≤ V(X) / r²"
+    },
+    {
+     "type": "p",
+     "text": "<b>Meaning.</b> For any random variable and any r > 0: the chance X lands <b>at least r away from its mean</b> is at most variance over r²."
+    },
+    {
+     "type": "p",
+     "text": "Small variance means X rarely strays far. It needs <b>only</b> E(X) and V(X), not the whole distribution."
+    },
+    {
+     "type": "warn",
+     "text": "It gives an <b>upper bound</b> (≤), not the exact probability. Use V, not σ, and square r."
+    }
+   ]
+  },
+  {
+   "front": "Why is Chebyshev’s inequality true?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Let A = the outcomes where |X(s) − E(X)| ≥ r."
+    },
+    {
+     "type": "list",
+     "items": [
+      "V(X) = Σ over <b>all</b> s of (X(s) − E(X))² p(s).",
+      "Drop the outcomes outside A. Every term is ≥ 0, so the sum can only shrink: V(X) ≥ Σ over s in A.",
+      "Inside A, each (X(s) − E(X))² ≥ r², so V(X) ≥ Σ over s in A of r² p(s) = r²·p(A).",
+      "Divide by r²: p(A) ≤ V(X)/r²."
+     ]
+    }
+   ]
+  },
+  {
+   "front": "What is the recipe for a Chebyshev problem?",
+   "back": [
+    {
+     "type": "list",
+     "items": [
+      "Find E(X) and V(X), usually with indicators, np and np(1 − p).",
+      "Rewrite the event as “at least r away from the mean” to read off r.",
+      "Answer: probability ≤ V(X)/r²."
+     ]
+    },
+    {
+     "type": "p",
+     "text": "“At most 40 or at least 60 heads out of 100” = “at least 10 away from 50”, so r = 10."
+    }
+   ]
+  },
+  {
+   "front": "100 fair coins. Bound the probability that the number of heads is at least 10 away from 50.",
+   "back": [
+    {
+     "type": "list",
+     "items": [
+      "E = 50, V = 100 · ½ · ½ = 25.",
+      "r = 10.",
+      "p(|X − 50| ≥ 10) ≤ 25/100 = <b>1/4</b>."
+     ]
+    },
+    {
+     "type": "p",
+     "text": "The true value is about 0.057. Chebyshev is always safe but often loose."
+    }
+   ]
+  },
+  {
+   "front": "Flip a fair coin n times; X = number of tails. Bound p(|X − n/2| ≥ √n).",
+   "back": [
+    {
+     "type": "list",
+     "items": [
+      "E(X) = n/2, V(X) = n·½·½ = n/4.",
+      "r = √n, so r² = n.",
+      "p ≤ (n/4)/n = <b>1/4</b>, for every n."
+     ]
+    }
+   ]
+  },
+  {
+   "front": "One fair die. Use Chebyshev to bound p(roll is 1 or 6), and compare with the truth.",
+   "back": [
+    {
+     "type": "list",
+     "items": [
+      "E = 7/2, V = 35/12.",
+      "1 and 6 are exactly 2.5 from 3.5, so r = 2.5 and r² = 25/4.",
+      "p ≤ (35/12)/(25/4) = <b>7/15</b> ≈ 0.47."
+     ]
+    },
+    {
+     "type": "p",
+     "text": "The truth is 2/6 = 1/3 ≈ 0.33, so the bound holds but isn’t tight."
+    }
+   ]
+  },
+  {
+   "front": "Why does linearity of expectation not need independence, while adding variances does?",
+   "back": [
+    {
+     "type": "p",
+     "text": "E(X + Y) = Σ p(s)(X(s) + Y(s)) splits for any X, Y. V(X + Y) = V(X) + V(Y) + 2(E(XY) − E(X)E(Y)), and the cross term vanishes only when E(XY) = E(X)E(Y), e.g. under independence."
+    }
+   ]
+  },
+  {
+   "front": "Expected number of fixed points of a random permutation of n items?",
+   "back": [
+    {
+     "type": "formula",
+     "text": "E = n · (1/n) = 1"
+    },
+    {
+     "type": "p",
+     "text": "Indicators Iᵢ for “i is fixed”, each with probability 1/n. Its variance is also 1, but you cannot get that from Bienaymé: the Iᵢ are dependent."
+    }
+   ]
+  }
+ ],
+ "hard": [
+  {
+   "title": "Expected number of runs",
+   "level": "hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "A fair coin is flipped n times. A <i>run</i> is a maximal block of equal outcomes (HHTHH has 3 runs). Find the expected number of runs."
+    }
+   ],
+   "answer": "(n + 1)/2",
+   "solution": [
+    {
+     "type": "p",
+     "text": "Runs = 1 + (number of positions i, 1 ≤ i ≤ n − 1, where flip i ≠ flip i + 1). Let I<sub>i</sub> indicate a change at position i, so P(I<sub>i</sub> = 1) = 1/2. By linearity, <b>E = 1 + (n − 1)/2 = (n + 1)/2</b>. For n = 10 that is 5.5."
+    },
+    {
+     "type": "tip",
+     "text": "<b>Tests:</b> writing a messy count as a constant plus a sum of indicators. <b>Common mistake:</b> trying to find the full distribution of the number of runs. Linearity doesn’t need it."
+    }
+   ]
+  },
+  {
+   "title": "Distinct faces and inversions",
+   "level": "hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "(a) A die is rolled 6 times. Find the expected number of distinct values seen. (b) Find the expected number of inversions (pairs i &lt; j with π(i) > π(j)) in a uniformly random permutation of {1..n}."
+    }
+   ],
+   "answer": "(a) 6(1 − (5/6)⁶) = 31031/7776 ≈ 3.99 (b) n(n − 1)/4",
+   "solution": [
+    {
+     "type": "p",
+     "text": "(a) For each face v, let I<sub>v</sub> = 1 if v appears. P(I<sub>v</sub> = 1) = 1 − (5/6)⁶. So E = 6(1 − (5/6)⁶) = 31031/7776 ≈ <b>3.99</b>."
+    },
+    {
+     "type": "p",
+     "text": "(b) One indicator for each of the C(n,2) pairs of positions. By symmetry, the pair is inverted with probability 1/2. <b>E = n(n − 1)/4</b>."
+    },
+    {
+     "type": "tip",
+     "text": "<b>Tests:</b> choosing what to index the indicators by (faces, not rolls; pairs, not elements). <b>Common mistake:</b> in (a), the indicators are dependent, but linearity doesn’t care. Don’t multiply probabilities."
+    }
+   ]
+  },
+  {
+   "title": "Coupon collector with a die",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "Find the expected number of rolls of a fair die needed to see all six faces."
+    }
+   ],
+   "answer": "6(1 + 1/2 + ⋯ + 1/6) = 14.7 rolls",
+   "solution": [
+    {
+     "type": "p",
+     "text": "Split the wait into stages. After i − 1 distinct faces have been seen, each roll shows a new face with probability (7 − i)/6. The stage length is geometric, with mean 6/(7 − i). By linearity:"
+    },
+    {
+     "type": "p",
+     "text": "E = 6(1/6 + 1/5 + ⋯ + 1/1) = 6·49/20 = <b>14.7</b>."
+    },
+    {
+     "type": "tip",
+     "text": "<b>Tests:</b> the geometric mean 1/p, plus splitting into stages. <b>Common mistake:</b> answering 6·6 = 36, or 6."
+    }
+   ]
+  },
+  {
+   "title": "Variance of the number of fixed points",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "Let X be the number of fixed points of a uniformly random permutation of {1..n} (n ≥ 2). Find V(X). Why can’t you use Bienaymé’s formula?"
+    }
+   ],
+   "answer": "V(X) = 2 − 1² = 1; Bienaymé fails because the indicators are dependent.",
+   "solution": [
+    {
+     "type": "p",
+     "text": "X = Σ I<sub>i</sub> with P(I<sub>i</sub> = 1) = 1/n, so E[X] = 1."
+    },
+    {
+     "type": "p",
+     "text": "E[X²] = Σ<sub>i</sub> E[I<sub>i</sub>²] + Σ<sub>i≠j</sub> E[I<sub>i</sub>I<sub>j</sub>] = n·(1/n) + n(n − 1)·1/(n(n − 1)) = 2. Here I<sub>i</sub>² = I<sub>i</sub>, and both i and j are fixed with probability (n − 2)!/n!."
+    },
+    {
+     "type": "p",
+     "text": "<b>Answer:</b> V(X) = 2 − 1² = 1."
+    },
+    {
+     "type": "p",
+     "text": "The I<sub>i</sub> are not independent (if n − 1 points are fixed, so is the last one), so the variance of the sum is not the sum of the variances. That would give n·(1/n)(1 − 1/n) = 1 − 1/n, which is wrong."
+    },
+    {
+     "type": "tip",
+     "text": "<b>Tests:</b> expanding E[X²] over pairs of indicators. <b>Common mistake:</b> applying Bienaymé to dependent indicators."
+    }
+   ]
+  },
+  {
+   "title": "Uncorrelated but dependent",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "Roll two dice, X<sub>1</sub> and X<sub>2</sub>."
+    },
+    {
+     "type": "list",
+     "items": [
+      "(a) Show that S = X<sub>1</sub> + X<sub>2</sub> and D = X<sub>1</sub> − X<sub>2</sub> satisfy E[SD] = E[S]E[D], yet are not independent.",
+      "(b) Are X<sub>1</sub> and Y = max(X<sub>1</sub>, X<sub>2</sub>) independent?",
+      "(c) Give a random variable X for which V(X + X) ≠ V(X) + V(X)."
+     ]
+    }
+   ],
+   "answer": "(a) E[SD] = 0 = E[S]E[D] but P(S=2, D=0) = 1/36 ≠ 1/216 (b) not independent (c) V(X + X) = 4V(X) ≠ 2V(X) for any nonconstant X",
+   "solution": [
+    {
+     "type": "p",
+     "text": "(a) E[SD] = E[X<sub>1</sub>²] − E[X<sub>2</sub>²] = 0 and E[D] = 0, so E[SD] = 0 = E[S]E[D]. But P(S = 2, D = 0) = P((1,1)) = 1/36, while P(S = 2)P(D = 0) = (1/36)(1/6). Not independent."
+    },
+    {
+     "type": "p",
+     "text": "(b) No. P(X<sub>1</sub> = 6, Y = 1) = 0, but P(X<sub>1</sub> = 6)P(Y = 1) = (1/6)(1/36) ≠ 0."
+    },
+    {
+     "type": "p",
+     "text": "(c) Take any X with V(X) > 0, for example one die. Then V(2X) = 4V(X) ≠ 2V(X). Bienaymé needs independence, and X is not independent of itself."
+    },
+    {
+     "type": "tip",
+     "text": "<b>Tests:</b> independence means every pair of values multiplies. A product rule for expectations is not enough. <b>Common mistake:</b> treating “E[XY] = E[X]E[Y]” as a proof of independence."
+    }
+   ]
+  },
+  {
+   "title": "Chebyshev sample size for coin flips",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "How many flips n of a fair coin does Chebyshev’s inequality say are enough to guarantee that the fraction of heads is within 0.05 of 1/2 with probability at least 0.99?"
+    }
+   ],
+   "answer": "n ≥ 10000",
+   "solution": [
+    {
+     "type": "p",
+     "text": "Let X be the number of heads. Then V(X) = n/4 (Bienaymé, since the flips are independent), so V(X/n) = 1/(4n). Chebyshev: P(|X/n − 1/2| ≥ 0.05) ≤ (1/(4n))/0.05² = 100/n."
+    },
+    {
+     "type": "p",
+     "text": "We need 100/n ≤ 0.01, i.e. <b>n ≥ 10000</b>."
+    },
+    {
+     "type": "tip",
+     "text": "<b>Tests:</b> scaling the variance: V(X/n) = V(X)/n². <b>Common mistake:</b> dividing by n instead of n², or using the standard deviation in place of the variance."
+    }
+   ]
+  },
+  {
+   "title": "Cards until the first ace",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "A standard deck is shuffled and cards are turned over one at a time until the first ace appears. What is the expected number of cards turned over, including the ace?"
+    }
+   ],
+   "answer": "1 + 48/5 = 53/5 = 10.6",
+   "solution": [
+    {
+     "type": "p",
+     "text": "For each of the 48 non-aces c, let I<sub>c</sub> = 1 if c comes before all four aces. Among c and the 4 aces, each of the 5 is equally likely to come first, so P(I<sub>c</sub> = 1) = 1/5."
+    },
+    {
+     "type": "p",
+     "text": "Number of cards turned = 1 (the first ace) + Σ I<sub>c</sub>, so E = 1 + 48/5 = <b>53/5 = 10.6</b>."
+    },
+    {
+     "type": "tip",
+     "text": "<b>Tests:</b> using an indicator for each object that comes <i>before</i> the event. <b>Common mistake:</b> treating the draws as independent with probability 4/52 each (that gives 13). These draws are without replacement."
+    }
+   ]
+  },
+  {
+   "title": "Waiting for HH vs HT",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "Find the expected number of flips of a fair coin until HH first appears, and until HT first appears. Explain why they are different."
+    }
+   ],
+   "answer": "HH: 6 flips; HT: 4 flips",
+   "solution": [
+    {
+     "type": "p",
+     "text": "<b>HH.</b> Let E be the expected number of flips from the start, and E<sub>H</sub> the expected number still needed when the last flip was H. Then:"
+    },
+    {
+     "type": "formula",
+     "text": "E = 1 + ½E<sub>H</sub> + ½E"
+    },
+    {
+     "type": "formula",
+     "text": "E<sub>H</sub> = 1 + ½·0 + ½E"
+    },
+    {
+     "type": "p",
+     "text": "The first equation gives E = 2 + E<sub>H</sub>. Substituting into the second, E<sub>H</sub> = 1 + 1 + E<sub>H</sub>/2, so E<sub>H</sub> = 4 and <b>E = 6</b>."
+    },
+    {
+     "type": "p",
+     "text": "<b>HT.</b> Wait for the first H (expected 2 flips). After that, extra H’s don’t lose anything, so wait for a T (expected 2 more). <b>E = 4</b>."
+    },
+    {
+     "type": "p",
+     "text": "<b>Why they differ.</b> While building HH, a T after an H sends you back to the start. While building HT, a wrong flip (another H) leaves you exactly where you were. Failure is cheaper for HT."
+    },
+    {
+     "type": "tip",
+     "text": "<b>Tests:</b> setting up linear equations by conditioning on the first flip. <b>Common mistake:</b> “every 2-flip pattern has probability 1/4, so the expected wait is 4 for both”."
+    }
+   ]
+  },
+  {
+   "title": "Die rolls, Chebyshev and overlapping patterns",
+   "level": "hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "<b>(a)</b> A fair die is rolled 90 times. Let X be the number of rolls showing 1 or 2. Find E(X) and V(X), and use Chebyshev’s inequality to bound P(|X − 30| ≥ 10)."
+    },
+    {
+     "type": "p",
+     "text": "<b>(b)</b> A fair coin is flipped 12 times. Find the expected number of times the pattern HTH appears in three consecutive flips (overlaps count: HTHTH contains it twice)."
+    },
+    {
+     "type": "p",
+     "text": "<b>(c)</b> Let I<sub>j</sub> be the indicator that HTH starts at flip j. Are I<sub>1</sub> and I<sub>2</sub> independent? Are I<sub>1</sub> and I<sub>3</sub>? Does your answer affect part (b)?"
+    }
+   ],
+   "answer": "(a) E = 30, V = 20, P(|X − 30| ≥ 10) ≤ 1/5 (b) 10 · 1/8 = 5/4 (c) I₁, I₂ dependent; I₁, I₃ dependent; (b) unaffected (linearity)",
+   "solution": [
+    {
+     "type": "p",
+     "text": "<b>(a)</b> X is binomial with n = 90, p = 2/6 = 1/3 (the rolls are independent)."
+    },
+    {
+     "type": "steps",
+     "title": "Method",
+     "items": [
+      "E(X) = np = <b>30</b>.",
+      "V(X) = np(1 − p) = 90 · (1/3) · (2/3) = <b>20</b>.",
+      "Chebyshev: P(|X − E(X)| ≥ r) ≤ V(X)/r². With r = 10: P(|X − 30| ≥ 10) ≤ 20/100 = <b>1/5</b>."
+     ]
+    },
+    {
+     "type": "p",
+     "text": "(The true value is about 0.033. Chebyshev is crude but always valid.)"
+    },
+    {
+     "type": "p",
+     "text": "<b>(b)</b> HTH can start at flips 1, 2, …, 10 (it needs 3 flips): 10 positions. Let I<sub>j</sub> indicate that flips j, j+1, j+2 read HTH; E(I<sub>j</sub>) = (1/2)³ = 1/8. By linearity of expectation:"
+    },
+    {
+     "type": "formula",
+     "text": "E(count) = Σ<sub>j=1</sub><sup>10</sup> E(I<sub>j</sub>) = 10 · 1/8 = 5/4"
+    },
+    {
+     "type": "p",
+     "text": "<b>(c)</b> I<sub>1</sub> = I<sub>2</sub> = 1 would need flip 2 to be T (for I<sub>1</sub>) and H (for I<sub>2</sub>). Impossible, so P(I<sub>1</sub> = I<sub>2</sub> = 1) = 0 ≠ (1/8)² = 1/64. <b>Not independent.</b>"
+    },
+    {
+     "type": "p",
+     "text": "I<sub>1</sub> = I<sub>3</sub> = 1 means flips 1–5 read HTHTH: probability 1/32 ≠ 1/64. <b>Not independent</b> either (they share flip 3)."
+    },
+    {
+     "type": "p",
+     "text": "<b>No effect on (b):</b> linearity of expectation holds for <b>any</b> random variables, independent or not. (Independence would matter for the variance.)"
+    },
+    {
+     "type": "tip",
+     "text": "Recognizing a binomial, Chebyshev’s inequality, indicator variables with linearity, and knowing linearity needs no independence."
+    },
+    {
+     "type": "warn",
+     "text": "Using 12 positions instead of 10 in (b). Believing E(X + Y) = E(X) + E(Y) requires independence; it’s V(X + Y) = V(X) + V(Y) that does."
+    }
+   ]
+  }
+ ],
+ "keyFacts": [
+  "E(X) = Σ p(s)X(s) = Σ r · p(X = r)",
+  "Linearity: E(X + Y) = E(X) + E(Y), E(aX + b) = aE(X) + b, with no independence needed",
+  "Indicator: E(I_A) = p(A); expected count = sum of the probabilities",
+  "X, Y independent ⇒ E(XY) = E(X)E(Y) (the converse is false)",
+  "V(X) = E(X²) − E(X)²; V(aX + b) = a²V(X)",
+  "Bienaymé: independent ⇒ V(ΣXᵢ) = ΣV(Xᵢ)",
+  "Binomial(n, p): E = np, V = np(1 − p); one die: E = 7/2, V = 35/12",
+  "Chebyshev: p(|X − E(X)| ≥ r) ≤ V(X)/r², an upper bound, often loose",
+  "Geometric wait for success probability p: mean 1/p"
+ ]
+}

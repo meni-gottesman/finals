@@ -1,0 +1,1042 @@
+{
+ "id": "55-G",
+ "course": "55",
+ "title": "Induction, strong induction, well-ordering",
+ "source": "Rosen 5.1–5.2 · Lec12",
+ "summary": "How to prove a statement for every integer: ordinary induction for sums, divisibility and inequalities, strong induction when a case depends on several earlier ones (postage, prime factorization, games, recurrences), and well-ordering (smallest counterexample) proofs. Induction proofs are near-certain on the final, and graders look for a labeled base case, a stated hypothesis and a correct step.",
+ "lesson": [
+  {
+   "title": "The principle of induction and sum formulas",
+   "blocks": [
+    {
+     "type": "tip",
+     "text": "To prove something for <b>every</b> n, prove it for the first n, then prove that being true for one n forces it to be true for the next."
+    },
+    {
+     "type": "tip",
+     "text": "A line of dominoes, one per n. If you knock over the first one, and every falling domino knocks over the next, then <b>every</b> domino falls: P(1) → P(2) → P(3) → ⋯"
+    },
+    {
+     "type": "def",
+     "term": "Principle of mathematical induction",
+     "text": "To prove P(n) for all n ≥ a: (1) <b>base case:</b> show P(a); (2) <b>induction step:</b> show that for every k ≥ a, P(k) → P(k + 1). Assuming P(k) inside the step is the <b>induction hypothesis</b> (IH)."
+    },
+    {
+     "type": "p",
+     "text": "<b>Start anywhere:</b> to prove P(n) for all n ≥ a, the base case is P(a) and the step is “for all k ≥ a, P(k) → P(k + 1).”"
+    },
+    {
+     "type": "warn",
+     "text": "<b>Clearly label both parts</b> (“Base case”, “Induction step”) and <b>state the induction hypothesis</b> in words. Start with “By induction.”"
+    },
+    {
+     "type": "tip",
+     "text": "<b>By induction.</b><br><b>Base case (n = 1):</b> check it directly.<br><b>Induction step:</b> “Assume P(k): <i>[write it out]</i>. We need to show P(k + 1): <i>[write out the goal]</i>.” Start from the k + 1 side, find the P(k) piece inside it, replace it using the IH, and simplify until you reach the goal. □"
+    },
+    {
+     "type": "thm",
+     "name": "Sum of the first n integers",
+     "text": "1 + 2 + ⋯ + n = n(n + 1)/2 for all n ≥ 1.",
+     "proof": [
+      {
+       "type": "p",
+       "text": "<b>By induction.</b> <b>Base case (n = 1):</b> 1 = 1·2/2 ✓."
+      },
+      {
+       "type": "p",
+       "text": "<b>Induction step:</b> let k ≥ 1 and assume 1 + ⋯ + k = k(k + 1)/2 (IH). We show 1 + ⋯ + (k + 1) = (k + 1)(k + 2)/2."
+      },
+      {
+       "type": "p",
+       "text": "1 + ⋯ + k + (k + 1) = k(k + 1)/2 + (k + 1) (by the IH) = (k + 1)(k/2 + 1) = (k + 1)(k + 2)/2."
+      },
+      {
+       "type": "p",
+       "text": "So P(k) → P(k + 1) for every k ≥ 1, and by induction the formula holds for all n ≥ 1. □"
+      }
+     ]
+    },
+    {
+     "type": "tip",
+     "text": "Picture proof: stack 1, 2, …, n dots as a staircase. Two staircases fit together into an n × (n + 1) rectangle, so twice the sum is n(n + 1). Notation: Σᵢ₌ₐᵇ f(i) = f(a) + f(a + 1) + ⋯ + f(b)."
+    },
+    {
+     "type": "thm",
+     "name": "Geometric sum",
+     "text": "1 + 2 + 2² + ⋯ + 2ⁿ = 2ⁿ⁺¹ − 1 for all n ≥ 0.",
+     "proof": [
+      {
+       "type": "p",
+       "text": "<b>Base case (n = 0):</b> 1 = 2¹ − 1 ✓."
+      },
+      {
+       "type": "p",
+       "text": "<b>Step:</b> assume 1 + ⋯ + 2ᵏ = 2ᵏ⁺¹ − 1. Then 1 + ⋯ + 2ᵏ + 2ᵏ⁺¹ = (2ᵏ⁺¹ − 1) + 2ᵏ⁺¹ = 2·2ᵏ⁺¹ − 1 = 2ᵏ⁺² − 1 ✓. □"
+      }
+     ]
+    },
+    {
+     "type": "steps",
+     "title": "A sum formula proof",
+     "items": [
+      "<b>Name the claim.</b> Write: “Let P(n) be the statement <i>[the formula with n]</i>. We prove P(n) for all n ≥ a by induction.”",
+      "<b>Base case.</b> “Base case (n = a): the left side is …, the right side is …, so P(a) is true.” Work out each side on its own and compare.",
+      "<b>Inductive hypothesis.</b> “Let k ≥ a be an integer and assume P(k): <i>[the formula with k]</i>.” This is <b>one fixed k</b>, not every n.",
+      "<b>Write the goal.</b> “We must show P(k + 1): <i>[the formula with k + 1 everywhere]</i>.” Now you know where you are heading.",
+      "<b>Split off the last term.</b> Start with only the <b>left side</b> of P(k + 1). Write it as (the sum up to k) + (term number k + 1). Get the new term by putting n = k + 1 into the general term.",
+      "<b>Use the IH.</b> Replace (the sum up to k) by the right side of P(k). Write “by the IH” on that line.",
+      "<b>Simplify to the goal.</b> Pull out the common factor (usually k + 1) and simplify until you get exactly the right side of P(k + 1).",
+      "<b>Conclusion.</b> “So P(k) → P(k + 1) for every k ≥ a. By induction, P(n) is true for all n ≥ a. □”"
+     ]
+    },
+    {
+     "type": "example",
+     "title": "Sum of squares by induction",
+     "prompt": "Prove 1² + 2² + ⋯ + n² = n(n + 1)(2n + 1)/6 for all n ≥ 1.",
+     "steps": [
+      "Let P(n) be the formula. <b>Base case (n = 1):</b> left 1, right 1·2·3/6 = 1 ✓.",
+      "<b>IH:</b> assume 1² + ⋯ + k² = k(k + 1)(2k + 1)/6 for some k ≥ 1. <b>Goal:</b> 1² + ⋯ + (k + 1)² = (k + 1)(k + 2)(2k + 3)/6.",
+      "1² + ⋯ + k² + (k + 1)² — <i>split off the new term (k + 1)², not k²</i>",
+      "= k(k + 1)(2k + 1)/6 + (k + 1)² — <i>by the IH</i>",
+      "= (k + 1)[k(2k + 1) + 6(k + 1)]/6 — <i>factor out (k + 1)</i>",
+      "= (k + 1)(2k² + 7k + 6)/6 = (k + 1)(k + 2)(2k + 3)/6 — <i>2k² + 7k + 6 = (k + 2)(2k + 3)</i>",
+      "That is P(k + 1), so by induction the formula holds for all n ≥ 1. □"
+     ],
+     "answer": "1² + ⋯ + n² = n(n + 1)(2n + 1)/6 for all n ≥ 1"
+    }
+   ]
+  },
+  {
+   "title": "Divisibility, inequalities and choosing the base case",
+   "blocks": [
+    {
+     "type": "thm",
+     "name": "A divisibility model proof",
+     "text": "3 | 4ⁿ − 1 for all n ≥ 1.",
+     "proof": [
+      {
+       "type": "p",
+       "text": "<b>Base case (n = 1):</b> 4 − 1 = 3, and 3 | 3 ✓."
+      },
+      {
+       "type": "p",
+       "text": "<b>Step:</b> assume 3 | 4ᵏ − 1, say 4ᵏ − 1 = 3m. Then 4ᵏ⁺¹ − 1 = 4·4ᵏ − 1 = 3·4ᵏ + (4ᵏ − 1) = 3·4ᵏ + 3m = 3(4ᵏ + m). So 3 | 4ᵏ⁺¹ − 1. □"
+      }
+     ]
+    },
+    {
+     "type": "p",
+     "text": "Key move: <b>rewrite the k + 1 expression so the k expression shows up inside it.</b>"
+    },
+    {
+     "type": "example",
+     "title": "Inequalities and where to start",
+     "prompt": "Prove 2ⁿ > n for n ≥ 1, and 2ⁿ > n² for n ≥ 5.",
+     "steps": [
+      "2ⁿ > n: base n = 1: 2 > 1 ✓. Step: 2ᵏ⁺¹ = 2·2ᵏ > 2k = k + k ≥ k + 1, using the IH and k ≥ 1.",
+      "2ⁿ > n²: the table gives n = 4: 16 = 16 (not >), n = 5: 32 > 25, so the base case is n = 5.",
+      "Step for k ≥ 5: 2ᵏ⁺¹ = 2·2ᵏ > 2k² (IH).",
+      "2k² ≥ (k + 1)² ⟺ k² − 2k − 1 ≥ 0 ⟺ (k − 1)² ≥ 2, true for k ≥ 5 (indeed k ≥ 3).",
+      "So 2ᵏ⁺¹ > (k + 1)², and by induction 2ⁿ > n² for all n ≥ 5. □"
+     ],
+     "answer": "2ⁿ > n for n ≥ 1; 2ⁿ > n² for n ≥ 5 (base case n = 5)"
+    },
+    {
+     "type": "p",
+     "text": "<b>Harmonic numbers</b> Hₙ = 1 + ½ + ⋯ + 1/n: one proves H₂ⁿ ≥ 1 + n/2 by induction. The step adds 2ᵏ terms, each at least 1/2ᵏ⁺¹, so it adds at least ½."
+    },
+    {
+     "type": "p",
+     "text": "Inequality steps: use the IH once, then show the leftover inequality separately (often “k ≥ something”)."
+    },
+    {
+     "type": "steps",
+     "title": "A divisibility proof",
+     "items": [
+      "“Let P(n) be the statement d | f(n).” <b>Base case:</b> work out f(a) and show it equals d times an integer.",
+      "<b>IH:</b> “Assume d | f(k) for some k ≥ a, so f(k) = d·m for some integer m.” Naming m makes the algebra easy.",
+      "<b>Goal:</b> “We show d | f(k + 1).”",
+      "<b>Make f(k) appear inside f(k + 1).</b> Pull one factor out of each power: cᵏ⁺¹ = c·cᵏ. Then rearrange to get (number)·f(k) + (leftover).",
+      "<b>Use the IH:</b> replace f(k) by d·m. Check the leftover is a multiple of d.",
+      "<b>Factor out d:</b> f(k + 1) = d·(integer), so d | f(k + 1). Conclude as usual."
+     ]
+    },
+    {
+     "type": "p",
+     "text": "Shortcut for cⁿ − 1: cᵏ⁺¹ − 1 = c(cᵏ − 1) + (c − 1)."
+    },
+    {
+     "type": "example",
+     "title": "Divisibility with two powers",
+     "prompt": "Prove that 7 | 2ⁿ⁺² + 3²ⁿ⁺¹ for all n ≥ 0.",
+     "steps": [
+      "Let P(n) be the statement 7 | 2ⁿ⁺² + 3²ⁿ⁺¹. <b>Base case (n = 0):</b> 2² + 3¹ = 4 + 3 = 7, and 7 | 7 ✓.",
+      "<b>IH:</b> assume 7 | 2ᵏ⁺² + 3²ᵏ⁺¹ for some k ≥ 0, so 2ᵏ⁺² + 3²ᵏ⁺¹ = 7m for an integer m. <b>Goal:</b> 7 | 2ᵏ⁺³ + 3²ᵏ⁺³.",
+      "2ᵏ⁺³ + 3²ᵏ⁺³ — <i>the expression for n = k + 1, since (k + 1) + 2 = k + 3 and 2(k + 1) + 1 = 2k + 3</i>",
+      "= 2·2ᵏ⁺² + 9·3²ᵏ⁺¹ — <i>pull out one 2 and one 3² = 9 so the k pieces appear</i>",
+      "= 2·2ᵏ⁺² + 2·3²ᵏ⁺¹ + 7·3²ᵏ⁺¹ — <i>split 9 = 2 + 7 so both pieces get the same factor 2</i>",
+      "= 2(2ᵏ⁺² + 3²ᵏ⁺¹) + 7·3²ᵏ⁺¹ — <i>factor out the 2</i>",
+      "= 2·7m + 7·3²ᵏ⁺¹ — <i>by the IH</i>",
+      "= 7(2m + 3²ᵏ⁺¹) — <i>factor out 7; 2m + 3²ᵏ⁺¹ is an integer</i>",
+      "So 7 | 2ᵏ⁺³ + 3²ᵏ⁺³, which is P(k + 1). By induction, P(n) holds for all n ≥ 0. □ The trick: split the big coefficient (9) into the small one (2) plus a multiple of 7."
+     ],
+     "answer": "7 | 2ⁿ⁺² + 3²ⁿ⁺¹ for all n ≥ 0"
+    },
+    {
+     "type": "steps",
+     "title": "An inequality proof",
+     "items": [
+      "“Let P(n) be L(n) &lt; R(n).” <b>Base case:</b> plug in n = a and compare the two numbers.",
+      "<b>IH:</b> “Assume L(k) &lt; R(k) for some k ≥ a.”",
+      "<b>Goal:</b> “We show L(k + 1) &lt; R(k + 1).”",
+      "<b>Start from L(k + 1) only.</b> Rewrite it so L(k) shows up, e.g. (k + 1)! = (k + 1)·k! or 2ᵏ⁺¹ = 2·2ᵏ.",
+      "<b>Use the IH once:</b> swap L(k) for the bigger R(k). Now you have L(k + 1) &lt; (something).",
+      "<b>Close the gap:</b> show (something) ≤ R(k + 1). This is a plain fact about k, and it usually needs k ≥ a. Say exactly where you use k ≥ a.",
+      "<b>Write the chain:</b> L(k + 1) &lt; … ≤ R(k + 1). One strict &lt; anywhere makes the whole chain strict."
+     ]
+    },
+    {
+     "type": "example",
+     "title": "An inequality that starts at n = 4",
+     "prompt": "For which n is n! > 2ⁿ? Prove your answer.",
+     "steps": [
+      "<b>Table first:</b> n = 1: 1 vs 2 ✗. n = 2: 2 vs 4 ✗. n = 3: 6 vs 8 ✗. n = 4: 24 vs 16 ✓. So we prove it for all n ≥ 4.",
+      "Let P(n) be n! > 2ⁿ. <b>Base case (n = 4):</b> 4! = 24 > 16 = 2⁴ ✓. <b>IH:</b> assume k! > 2ᵏ for some k ≥ 4. <b>Goal:</b> (k + 1)! > 2ᵏ⁺¹.",
+      "(k + 1)! = (k + 1)·k! — <i>definition of factorial, so k! shows up</i>",
+      "> (k + 1)·2ᵏ — <i>by the IH, times the positive number k + 1</i>",
+      "≥ 2·2ᵏ — <i>k + 1 ≥ 5 ≥ 2, because k ≥ 4</i>",
+      "= 2ᵏ⁺¹ — <i>exponent rule</i>",
+      "So (k + 1)! > 2ᵏ⁺¹, which is P(k + 1). By induction, n! > 2ⁿ for all n ≥ 4. □ Notice the step works for any k ≥ 1. It is the <b>base case</b> that forces the start at 4: P(1) is false."
+     ],
+     "answer": "n! > 2ⁿ exactly for n ≥ 4"
+    },
+    {
+     "type": "steps",
+     "title": "Choosing the base case n = a",
+     "items": [
+      "The base case is the <b>smallest n in the claim</b>. “For all n ≥ 4” means base case n = 4, not n = 1.",
+      "If the problem asks “for which n is this true?”, make a table for n = 1, 2, 3, … first. Find the point after which it is always true. That point is a.",
+      "The IH is now “assume P(k) for some k ≥ a”, and you are allowed to use k ≥ a in the step (for example, k ≥ 4 gives k + 1 ≥ 2).",
+      "Test the step at the smallest k = a with real numbers. If the step needs a larger k to work, you need a larger a."
+     ]
+    }
+   ]
+  },
+  {
+   "title": "Strong induction",
+   "blocks": [
+    {
+     "type": "tip",
+     "text": "Strong induction lets you assume <b>all</b> earlier cases, not just the previous one. Well-ordering says every nonempty set of natural numbers has a smallest element."
+    },
+    {
+     "type": "def",
+     "term": "Strong induction",
+     "text": "<b>Base case(s):</b> P(a) (or several: P(a), …, P(b)). <b>Induction step:</b> for every k ≥ b, [P(a) ∧ P(a + 1) ∧ ⋯ ∧ P(k)] → P(k + 1). You may use any earlier case, not just P(k)."
+    },
+    {
+     "type": "p",
+     "text": "Use it when the k + 1 case breaks into smaller pieces that aren't necessarily k."
+    },
+    {
+     "type": "tip",
+     "text": "Ordinary: “if I can reach rung k, I can reach rung k + 1.” Strong: “if I can reach <i>every</i> rung up to k, I can reach k + 1.” Sometimes you step up from a rung further down."
+    },
+    {
+     "type": "thm",
+     "name": "Existence of prime factorizations",
+     "text": "Every integer n ≥ 2 is a prime or a product of primes.",
+     "proof": [
+      {
+       "type": "p",
+       "text": "<b>By strong induction.</b> <b>Base case (n = 2):</b> 2 is prime."
+      },
+      {
+       "type": "p",
+       "text": "<b>Step:</b> let k ≥ 2 and assume every j with 2 ≤ j ≤ k is a product of primes. If k + 1 is prime, done. Otherwise k + 1 = a·b with 2 ≤ a, b ≤ k."
+      },
+      {
+       "type": "p",
+       "text": "By the IH (strong: a and b are smaller than k + 1 but need not equal k), a and b are products of primes, so a·b = k + 1 is too. □"
+      }
+     ]
+    },
+    {
+     "type": "thm",
+     "name": "Postage with 3¢ and 5¢ stamps",
+     "text": "Every n ≥ 8 equals 5a + 3b for some integers a, b ≥ 0.",
+     "proof": [
+      {
+       "type": "p",
+       "text": "<b>Base cases (n = 8, 9, 10):</b> 8 = 5 + 3, 9 = 3 + 3 + 3, 10 = 5 + 5."
+      },
+      {
+       "type": "p",
+       "text": "<b>Step:</b> let k ≥ 10 and assume 8, …, k all work. Then k − 2 satisfies 8 ≤ k − 2 ≤ k, so k − 2 = 5a + 3b by the IH, and k + 1 = 5a + 3(b + 1). □"
+      }
+     ]
+    },
+    {
+     "type": "p",
+     "text": "The step reaches back 3, so you need 3 base cases. Rule: <b>the number of base cases = how far back the step reaches</b>."
+    },
+    {
+     "type": "steps",
+     "title": "A strong induction proof",
+     "items": [
+      "<b>Name the claim.</b> “Let P(n) be <i>[statement]</i>. We prove P(n) for all n ≥ a by strong induction.”",
+      "<b>Base cases.</b> “Base cases (n = a, a + 1, …, b): <i>[check each one directly]</i>.” The next box tells you how many.",
+      "<b>Inductive hypothesis.</b> “Let k ≥ b and assume P(j) is true for <b>every</b> j with a ≤ j ≤ k.” Note k starts at b, the <b>last</b> base case.",
+      "<b>Goal.</b> “We show P(k + 1).”",
+      "<b>Break k + 1 into smaller cases.</b> Find smaller number(s) j, like k + 1 − 3, or factors of k + 1. Write one line showing a ≤ j ≤ k, so the IH covers j.",
+      "<b>Use the IH</b> on those j: “By the IH, P(j) is true, so …”.",
+      "<b>Build P(k + 1)</b> out of the smaller answers.",
+      "<b>Conclusion.</b> “By strong induction, P(n) holds for all n ≥ a. □”"
+     ]
+    },
+    {
+     "type": "steps",
+     "title": "Counting base cases",
+     "items": [
+      "<b>Write the step first.</b> See how far back it reaches. If P(k + 1) uses P(k + 1 − s), the reach is s.",
+      "You need <b>s base cases</b>: P(a), P(a + 1), …, P(a + s − 1).",
+      "<b>Why:</b> for those n, n − s is below a, outside the claim. The step can't reach them, so you check them by hand.",
+      "The step then runs for <b>k ≥ a + s − 1</b> (the last base case), so that k + 1 − s ≥ a.",
+      "If the step uses several earlier cases (like P(k) and P(k − 2)), count by the <b>farthest</b> one.",
+      "If the step uses “some smaller number” with no fixed distance (like factors or halves), one base case is usually enough. Just make sure every smaller number you use is still ≥ a."
+     ]
+    },
+    {
+     "type": "p",
+     "text": "Stamps rule of thumb: if the step adds one c-cent stamp, you need c base cases in a row."
+    },
+    {
+     "type": "example",
+     "title": "4¢ and 5¢ stamps, four base cases",
+     "prompt": "Prove every amount n ≥ 12 cents can be made from 4¢ and 5¢ stamps: n = 4a + 5b with integers a, b ≥ 0.",
+     "steps": [
+      "Let P(n) be “n = 4a + 5b for some integers a, b ≥ 0.” The step will take off one 4¢ stamp, so it reaches back 4: we need <b>4 base cases</b>.",
+      "<b>Base cases:</b> 12 = 4·3, 13 = 4·2 + 5·1, 14 = 4·1 + 5·2, 15 = 5·3 ✓.",
+      "<b>IH:</b> let k ≥ 15 and assume P(j) for every 12 ≤ j ≤ k. <b>Goal:</b> P(k + 1).",
+      "(k + 1) − 4 = k − 3 — <i>take one 4¢ stamp off</i>",
+      "12 ≤ k − 3 ≤ k — <i>k ≥ 15 gives k − 3 ≥ 12, so k − 3 is in the IH range</i>",
+      "k − 3 = 4a + 5b with a, b ≥ 0 — <i>by the IH (strong: P(k − 3), not P(k))</i>",
+      "k + 1 = 4(a + 1) + 5b — <i>put the 4¢ stamp back</i>",
+      "a + 1 ≥ 0, b ≥ 0 — <i>so this is a valid way to make k + 1: P(k + 1) ✓</i>",
+      "By strong induction, every n ≥ 12 works. □ Is 12 the right start? Yes: 11 can't be made (with 0, 1 or 2 fives you need 11, 6 or 1 from fours, and none is a multiple of 4)."
+     ],
+     "answer": "Every n ≥ 12 is 4a + 5b (four base cases 12–15); 11 is not"
+    },
+    {
+     "type": "steps",
+     "title": "Ordinary or strong?",
+     "items": [
+      "If P(k + 1) follows from P(k) alone (sum formulas, one-step rules), use ordinary induction.",
+      "If k + 1 breaks into pieces that are smaller but not k (factors, halves, k + 1 − 3, two earlier terms), use strong induction.",
+      "Strong never hurts. If you're not sure, assume all earlier cases."
+     ]
+    },
+    {
+     "type": "example",
+     "title": "Strong induction for a game",
+     "prompt": "A pile has n stones. Two players alternate removing 1, 2 or 3 stones; whoever takes the last stone wins. Prove the first player has a winning strategy exactly when 4 ∤ n.",
+     "steps": [
+      "Let P(n): “the player to move wins iff 4 ∤ n.” <b>Base case (n = 0):</b> the player to move has no stones to take; the opponent took the last one, so the mover has lost, and 4 | 0 ✓.",
+      "<b>IH:</b> let k ≥ 0 and assume P(j) for all 0 ≤ j ≤ k. <b>Goal:</b> P(k + 1).",
+      "If 4 ∤ k + 1: write k + 1 = 4q + r with r ∈ {1, 2, 3}. Take r stones, leaving 4q ≤ k. By the IH the player to move from 4q loses, so the first player wins.",
+      "If 4 | k + 1: any move takes t ∈ {1, 2, 3}, leaving k + 1 − t, which is between 0 and k and not divisible by 4. By the IH the opponent (now to move) wins.",
+      "Both cases give P(k + 1). Strong induction was needed because the move jumps back 1, 2 or 3. □"
+     ],
+     "answer": "The first player wins iff 4 ∤ n (move to a multiple of 4)"
+    },
+    {
+     "type": "example",
+     "title": "Strong induction with two base cases",
+     "prompt": "Let a₀ = 1, a₁ = 2 and aₙ = aₙ₋₁ + 2aₙ₋₂ for n ≥ 2. Prove aₙ = 2ⁿ for all n ≥ 0.",
+     "steps": [
+      "The step uses the two previous terms, so it reaches back 2: two base cases.",
+      "<b>Base cases:</b> a₀ = 1 = 2⁰ ✓, a₁ = 2 = 2¹ ✓.",
+      "<b>IH:</b> let k ≥ 1 and assume aⱼ = 2ʲ for all 0 ≤ j ≤ k. <b>Goal:</b> aₖ₊₁ = 2ᵏ⁺¹.",
+      "aₖ₊₁ = aₖ + 2aₖ₋₁ = 2ᵏ + 2·2ᵏ⁻¹ — <i>IH at j = k and j = k − 1, both in range since k ≥ 1</i>",
+      "= 2ᵏ + 2ᵏ = 2ᵏ⁺¹ ✓. By strong induction aₙ = 2ⁿ for all n ≥ 0. □"
+     ],
+     "answer": "aₙ = 2ⁿ for all n ≥ 0"
+    },
+    {
+     "type": "example",
+     "title": "A Fibonacci bound",
+     "prompt": "With f₀ = 0, f₁ = 1, fₙ = fₙ₋₁ + fₙ₋₂, prove fₙ &lt; 2ⁿ for all n ≥ 0.",
+     "steps": [
+      "<b>Base cases:</b> f₀ = 0 &lt; 1, f₁ = 1 &lt; 2 ✓.",
+      "<b>IH:</b> assume fⱼ &lt; 2ʲ for all 0 ≤ j ≤ k, where k ≥ 1.",
+      "fₖ₊₁ = fₖ + fₖ₋₁ &lt; 2ᵏ + 2ᵏ⁻¹ &lt; 2ᵏ + 2ᵏ = 2ᵏ⁺¹. □"
+     ],
+     "answer": "fₙ &lt; 2ⁿ for all n ≥ 0"
+    }
+   ]
+  },
+  {
+   "title": "Well-ordering and strengthening the hypothesis",
+   "blocks": [
+    {
+     "type": "thm",
+     "name": "Well-ordering principle",
+     "text": "If A ⊆ ℕ is nonempty, then A has a <b>smallest element</b>.",
+     "proof": [
+      {
+       "type": "p",
+       "text": "By contraposition: if A has no smallest element, show A is empty, i.e. a ∉ A for every a, by strong induction. Base case: 0 ∉ A (otherwise 0 would be the smallest). Step: assume 0, …, k ∉ A. If k + 1 ∈ A, it would be the smallest element. Contradiction!"
+      }
+     ]
+    },
+    {
+     "type": "p",
+     "text": "Proof style it enables: “take the <b>smallest</b> counterexample (or smallest divisor, smallest element …) and show something smaller exists.”"
+    },
+    {
+     "type": "thm",
+     "name": "Every n ≥ 2 has a prime divisor (well-ordering proof)",
+     "text": "Every integer n ≥ 2 is divisible by some prime.",
+     "proof": [
+      {
+       "type": "p",
+       "text": "Let D = {d ≥ 2 : d | n}. D is nonempty because n ∈ D. By the well-ordering principle D has a smallest element p."
+      },
+      {
+       "type": "p",
+       "text": "Suppose p is not prime. Then p = ab with 2 ≤ a &lt; p. Since a | p and p | n, a | n, so a ∈ D and a &lt; p, contradicting the minimality of p."
+      },
+      {
+       "type": "p",
+       "text": "So p is a prime dividing n. □"
+      }
+     ]
+    },
+    {
+     "type": "tip",
+     "text": "Induction follows from well-ordering: if P(n) failed somewhere, the set of counterexamples would have a smallest element m. m is not the base case, and P(m − 1) is true, so the step gives P(m), a contradiction."
+    },
+    {
+     "type": "thm",
+     "name": "Division algorithm (existence and uniqueness)",
+     "text": "For d > 0 and a ≥ 0 there are unique q, r with a = qd + r and 0 ≤ r &lt; d.",
+     "proof": [
+      {
+       "type": "p",
+       "text": "Strong induction on a. If 0 ≤ a &lt; d, the only option is q = 0, r = a."
+      },
+      {
+       "type": "p",
+       "text": "If a ≥ d, then a = qd + r ⟺ a − d = (q − 1)d + r, and the IH gives a unique answer for the smaller number a − d ≥ 0. □"
+      }
+     ]
+    },
+    {
+     "type": "steps",
+     "title": "A well-ordering (smallest counterexample) proof",
+     "items": [
+      "“Suppose, for contradiction, that P(n) is false for some n ≥ a.”",
+      "“Then the set C = {n ≥ a : P(n) is false} is a <b>nonempty</b> set of natural numbers.” (Nonempty because of step 1.)",
+      "“By the well-ordering principle, C has a smallest element m.” So P(m) is false, and P(j) is true for every a ≤ j &lt; m.",
+      "If you need it, rule out m = a by checking P(a) directly.",
+      "Find a <b>smaller</b> element of C (a smaller counterexample), or use the true cases below m to show P(m) is true after all.",
+      "“This contradicts the choice of m as smallest. So C is empty, and P(n) holds for all n ≥ a. □”"
+     ]
+    },
+    {
+     "type": "p",
+     "text": "Picture it: line up all the counterexamples. Grab the first one in line. Show someone is standing in front of it. That's impossible, so the line was empty."
+    },
+    {
+     "type": "example",
+     "title": "Well-ordering: √2 is irrational",
+     "prompt": "Prove √2 is not a fraction of positive integers.",
+     "steps": [
+      "Suppose it is. Then C = {b ∈ ℤ⁺ : √2 = a/b for some positive integer a} is a nonempty set of positive integers. By well-ordering it has a smallest element b, with √2 = a/b, that is, a = √2·b.",
+      "1 &lt; √2 &lt; 2 — <i>because 1 &lt; 2 &lt; 4</i>",
+      "b &lt; a &lt; 2b — <i>multiply by b, using a = √2·b</i>",
+      "0 &lt; a − b &lt; b — <i>subtract b from each part</i>",
+      "√2(a − b) = 2b − a — <i>√2·a = √2·√2·b = 2b, and √2·b = a</i>",
+      "√2 = (2b − a)/(a − b) — <i>divide by a − b > 0; also 2b − a > 0 since a &lt; 2b</i>",
+      "a − b ∈ C and a − b &lt; b — <i>√2 is a fraction with the positive denominator a − b</i>",
+      "So C has an element smaller than its smallest element b. Contradiction. So √2 is irrational. □ Pattern: assume a counterexample, take the smallest one, build a smaller one."
+     ],
+     "answer": "√2 is irrational (a − b would be a smaller denominator)"
+    },
+    {
+     "type": "example",
+     "title": "Forcing the induction (strengthen the claim)",
+     "prompt": "Prove Σᵢ₌₁ⁿ 1/i² ≤ 2 for all n ≥ 1.",
+     "steps": [
+      "Direct induction is stuck: knowing the sum is ≤ 2 says nothing about adding 1/(k + 1)².",
+      "Prove the stronger P(n): Σᵢ₌₁ⁿ 1/i² ≤ 2 − 1/n. Base n = 1: 1 ≤ 2 − 1 ✓.",
+      "Step: Σᵢ₌₁ᵏ⁺¹ 1/i² ≤ 2 − 1/k + 1/(k + 1)² (IH).",
+      "1/(k + 1)² ≤ 1/(k(k + 1)) = 1/k − 1/(k + 1), so the sum ≤ 2 − 1/(k + 1) ✓.",
+      "So the sum is ≤ 2 − 1/n ≤ 2. A stronger IH made the step easier."
+     ],
+     "answer": "Σ 1/i² ≤ 2 − 1/n ≤ 2"
+    }
+   ]
+  },
+  {
+   "title": "Finding the flaw in a bogus induction",
+   "blocks": [
+    {
+     "type": "steps",
+     "title": "Spotting a broken proof",
+     "items": [
+      "<b>Base case:</b> compute it yourself. Is it actually true?",
+      "<b>IH:</b> does it assume P(k) for one k (fine) or the claim for all n (circular)?",
+      "<b>Direction:</b> does the step start from P(k) and end at P(k + 1)? Or does it assume P(k + 1) and work backward to something true?",
+      "<b>Algebra:</b> check the new term and each line. A wrong next term is the most common slip.",
+      "<b>Smallest k:</b> run the step at k = a with actual small numbers. Many fake proofs fail only at the first step (like going from 1 to 2).",
+      "The <b>first</b> check that fails is the bug."
+     ]
+    },
+    {
+     "type": "example",
+     "title": "All horses are the same color?",
+     "prompt": "“Claim: in every set of n ≥ 1 horses, all horses have the same color. Base n = 1: trivial. Step: given k + 1 horses, remove horse A; the other k are one color by the IH. Remove horse B instead; again the other k are one color. The two groups overlap, so all k + 1 have one color.” Find the flaw.",
+     "steps": [
+      "Base case n = 1 is true.",
+      "The step is fine for k ≥ 2: the two groups of k share at least one horse, which ties the colors together.",
+      "Run the step at the smallest k = 1 (going from 1 horse to 2): removing A leaves {B}, removing B leaves {A}. The groups do not overlap.",
+      "So P(1) → P(2) fails, and every later step depends on it."
+     ],
+     "answer": "The step from n = 1 to n = 2 fails: the two groups of size 1 do not overlap"
+    },
+    {
+     "type": "example",
+     "title": "Strong induction with a missing base case",
+     "prompt": "“Claim: every n ≥ 1 equals 3a + 5b with a, b ≥ 0. Base: 3 = 3·1. Step: n = (n − 3) + 3 and n − 3 works by strong induction.” What is wrong?",
+     "steps": [
+      "The step reaches back 3, so it needs 3 consecutive base cases.",
+      "It never checks 1, 2, 4, 7 — and in fact 1, 2, 4, 7 cannot be written as 3a + 5b.",
+      "Also n − 3 may be below the starting value, where the IH says nothing.",
+      "The true statement is: every n ≥ 8 is 3a + 5b (bases 8, 9, 10)."
+     ],
+     "answer": "Too few base cases: the claim is false for 1, 2, 4, 7; true for n ≥ 8"
+    },
+    {
+     "type": "warn",
+     "text": "Assume P(k) and <i>prove</i> P(k + 1); never assume P(k + 1)."
+    },
+    {
+     "type": "warn",
+     "text": "You must actually <b>use</b> the IH."
+    },
+    {
+     "type": "warn",
+     "text": "Make sure the step works for the <b>smallest</b> k. A classic fake proof that “x = y whenever max(x, y) = n” breaks because x − 1 or y − 1 can be 0, which isn’t a positive integer, so the IH doesn’t apply."
+    },
+    {
+     "type": "warn",
+     "text": "<b>Wrong:</b> “IH: assume P(n) is true for all n ≥ 1.” <b>Right:</b> “Assume P(k) for some fixed k ≥ 1.” (The first version assumes the whole theorem, so the proof goes in a circle.)"
+    },
+    {
+     "type": "warn",
+     "text": "<b>Wrong:</b> writing the P(k + 1) equation, doing the same thing to both sides, reaching 0 = 0, and saying “true, so done.” <b>Right:</b> start with only the left side of P(k + 1) and turn it into the right side, one line at a time. (A true line can come from a false start: multiply 1 = 2 by 0 and you get 0 = 0.)"
+    },
+    {
+     "type": "warn",
+     "text": "<b>Wrong:</b> for 1² + 2² + ⋯ + n², writing the k + 1 sum as (sum up to k) + k² or + (k² + 1). <b>Right:</b> the new term is the general term with n = k + 1, which is (k + 1)². (Plug k + 1 into the formula for the term; don't guess.)"
+    },
+    {
+     "type": "warn",
+     "text": "<b>Wrong:</b> skipping the base case because “the step works.” <b>Right:</b> always check it. (Fake claim: n + 1 &lt; n. The step k + 1 &lt; k → k + 2 &lt; k + 1 is perfectly valid, but the claim is false for every n. No first domino, nothing falls.)"
+    },
+    {
+     "type": "warn",
+     "text": "<b>Wrong:</b> stopping at (k + 1)! > (k + 1)·2ᵏ and saying “so (k + 1)! > 2ᵏ⁺¹.” <b>Right:</b> add the missing link (k + 1)·2ᵏ ≥ 2·2ᵏ and say why (k + 1 ≥ 2). (Every link in an inequality chain needs its own reason.)"
+    },
+    {
+     "type": "warn",
+     "text": "<b>Wrong:</b> in the 4¢/5¢ proof, checking only n = 12. <b>Right:</b> check 12, 13, 14 and 15. (The step for 13 would use 13 − 4 = 9, which is below 12 and not covered. Dominoes 13, 14, 15 never get pushed.)"
+    },
+    {
+     "type": "warn",
+     "text": "<b>Wrong:</b> running the step “for all k ≥ 12” (the first base case). <b>Right:</b> “for all k ≥ 15” (the last base case). (At k = 12, k − 3 = 9 is outside the IH, so the step is not valid there. That's fine, because 13, 14, 15 are already base cases.)"
+    },
+    {
+     "type": "warn",
+     "text": "<b>Wrong:</b> writing the IH as “assume P(k)” and then using P(k − 3). <b>Right:</b> “assume P(j) for all 12 ≤ j ≤ k.” (You can only use what you assumed. Say “strong induction” and assume every case up to k.)"
+    },
+    {
+     "type": "warn",
+     "text": "<b>Wrong:</b> “take the smallest positive rational with property …” or “take the smallest counterexample” without saying why one exists. <b>Right:</b> use a set of natural numbers, and say it is nonempty because you assumed a counterexample. (The positive rationals have no smallest element: x/2 is always smaller.)"
+    },
+    {
+     "type": "warn",
+     "text": "<b>Wrong:</b> in a factor argument, “k + 1 = a·b with a, b ≤ k” and allowing a = 1. <b>Right:</b> if k + 1 is not prime, then k + 1 = ab with 2 ≤ a, b ≤ k. (If a = 1, then b = k + 1 is not smaller, and the IH says nothing about it.)"
+    }
+   ]
+  }
+ ],
+ "cards": [
+  {
+   "front": "Prove 2 + 4 + ⋯ + 2n = n(n + 1) by induction.",
+   "back": [
+    {
+     "type": "p",
+     "text": "Base case: 2 = 1·2. Induction step: k(k + 1) + 2(k + 1) = (k + 1)(k + 2)."
+    }
+   ]
+  },
+  {
+   "front": "Prove 5 | 6ⁿ − 1 for all n ≥ 1.",
+   "back": [
+    {
+     "type": "p",
+     "text": "Base case: 5 | 5. Step: 5 | 6ᵏ − 1 by the IH, so 5 divides 6(6ᵏ − 1) + 5."
+    }
+   ]
+  },
+  {
+   "front": "What must every induction proof clearly contain?",
+   "back": [
+    {
+     "type": "p",
+     "text": "A labeled base case, a labeled induction step, and the induction hypothesis stated in words."
+    }
+   ]
+  },
+  {
+   "front": "Prove every n ≥ 4 is 2a + 5b (a, b ≥ 0). How many base cases do you need?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Two base cases: 4 = 2·2 and 5 = 5. Step (k ≥ 5): k − 1 ≥ 4 works by the IH, so add a 2."
+    }
+   ]
+  },
+  {
+   "front": "Why does the 5a + 3b (n ≥ 8) proof need 3 base cases?",
+   "back": [
+    {
+     "type": "p",
+     "text": "The step goes back 3 (from k + 1 to k − 2), so 8, 9, 10 must be checked directly."
+    }
+   ]
+  },
+  {
+   "front": "What's the least element of {n ∈ ℕ : n² > 50}?",
+   "back": [
+    {
+     "type": "p",
+     "text": "8."
+    }
+   ]
+  },
+  {
+   "front": "What does “forcing the induction” mean?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Proving a stronger statement because its step is easier, e.g. Σ 1/i² ≤ 2 − 1/n instead of ≤ 2."
+    }
+   ]
+  },
+  {
+   "front": "State the principle of mathematical induction.",
+   "back": [
+    {
+     "type": "p",
+     "text": "If P(a) is true and P(k) → P(k + 1) for every k ≥ a, then P(n) is true for all n ≥ a."
+    }
+   ]
+  },
+  {
+   "front": "Template of an induction proof?",
+   "back": [
+    {
+     "type": "list",
+     "items": [
+      "“By induction on n.”",
+      "Base case: check P(a) directly.",
+      "IH: “Let k ≥ a and assume P(k): …”",
+      "Goal: write out P(k + 1).",
+      "Start from one side of P(k + 1), use the IH, reach the other side.",
+      "Conclude: “By induction, P(n) for all n ≥ a.”"
+     ]
+    }
+   ]
+  },
+  {
+   "front": "Strong induction: what may you assume, and how many base cases?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Assume P(a), …, P(k) all hold. If the step uses P(k + 1 − s), you need s consecutive base cases, and the step runs for k ≥ the last base case."
+    }
+   ]
+  },
+  {
+   "front": "Well-ordering principle and the proof pattern it gives?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Every nonempty set of nonnegative integers has a least element. Pattern: assume a counterexample, take the smallest one, produce a smaller one — contradiction."
+    }
+   ]
+  },
+  {
+   "front": "Why does induction follow from well-ordering?",
+   "back": [
+    {
+     "type": "p",
+     "text": "If P failed, the counterexamples would have a least element m > a; P(m − 1) holds, so the step forces P(m), a contradiction."
+    }
+   ]
+  },
+  {
+   "front": "When does ordinary induction get stuck but strong induction work?",
+   "back": [
+    {
+     "type": "p",
+     "text": "When P(k + 1) depends on cases other than P(k): prime factorization (k + 1 = ab), postage (k + 1 − 3), recurrences using two earlier terms, games."
+    }
+   ]
+  },
+  {
+   "front": "Key move in a divisibility induction?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Rewrite f(k + 1) as (multiple of f(k)) + (obvious multiple of d), e.g. 4ᵏ⁺¹ − 1 = 4(4ᵏ − 1) + 3."
+    }
+   ]
+  },
+  {
+   "front": "How do you choose the base case for “for which n is the inequality true?”",
+   "back": [
+    {
+     "type": "p",
+     "text": "Tabulate small n, find where it starts holding for good, use that as a, and check that the step works for every k ≥ a."
+    }
+   ]
+  },
+  {
+   "front": "What is “forcing the induction” (strengthening the hypothesis)?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Prove a stronger statement whose IH is strong enough for the step, e.g. Σ 1/i² ≤ 2 − 1/n instead of ≤ 2."
+    }
+   ]
+  },
+  {
+   "front": "The three classic bugs in a bogus induction?",
+   "back": [
+    {
+     "type": "list",
+     "items": [
+      "the base case is false or missing",
+      "the step fails at the smallest k (horses: 1 → 2)",
+      "the step assumes P(k + 1) or uses an IH case outside the range"
+     ]
+    }
+   ]
+  },
+  {
+   "front": "Prove every n ≥ 2 is a product of primes.",
+   "back": [
+    {
+     "type": "p",
+     "text": "Strong induction: 2 is prime. If k + 1 is not prime, k + 1 = ab with 2 ≤ a, b ≤ k; by the IH both factor into primes, so k + 1 does."
+    }
+   ]
+  }
+ ],
+ "hard": [
+  {
+   "title": "64 divides 9ⁿ − 8n − 1",
+   "level": "hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "Prove 64 | 9<sup>n</sup> − 8n − 1 for all n ≥ 0."
+    }
+   ],
+   "answer": "Proved: a₀ = 0 and aₙ₊₁ = 9aₙ + 64n.",
+   "solution": [
+    {
+     "type": "p",
+     "text": "Let a<sub>n</sub> = 9<sup>n</sup> − 8n − 1. <b>Basis:</b> a<sub>0</sub> = 0. <b>Inductive step:</b> assume 64 | a<sub>n</sub>. Then"
+    },
+    {
+     "type": "formula",
+     "text": "a<sub>n+1</sub> = 9·9<sup>n</sup> − 8n − 9 = 9(9<sup>n</sup> − 8n − 1) + 64n = 9a<sub>n</sub> + 64n"
+    },
+    {
+     "type": "p",
+     "text": "Both terms are multiples of 64. ∎ (Alternative: 9<sup>n</sup> = (1 + 8)<sup>n</sup> = 1 + 8n + Σ<sub>k≥2</sub> C(n,k)8<sup>k</sup>.)"
+    },
+    {
+     "type": "tip",
+     "text": "<b>Tests:</b> writing a<sub>n+1</sub> as (multiple of a<sub>n</sub>) + (obvious multiple of 64). <b>Common mistake:</b> expanding a<sub>n+1</sub> − a<sub>n</sub> = 8·9<sup>n</sup> − 8 and then being stuck on whether 64 | 8(9<sup>n</sup> − 1). (It does, but that needs its own argument.)"
+    }
+   ]
+  },
+  {
+   "title": "3ⁿ ≥ n³ with four base cases",
+   "level": "hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "Prove 3<sup>n</sup> ≥ n³ for <b>all</b> integers n ≥ 0. (Watch which base cases you need.)"
+    }
+   ],
+   "answer": "Proved: bases n = 0, 1, 2, 3; step for n ≥ 3 since (1 + 1/n)³ ≤ 64/27 &lt; 3 (the step fails at n = 2).",
+   "solution": [
+    {
+     "type": "p",
+     "text": "<b>Bases n = 0, 1, 2, 3:</b> 1 ≥ 0, 3 ≥ 1, 9 ≥ 8, 27 ≥ 27."
+    },
+    {
+     "type": "p",
+     "text": "<b>Step, for n ≥ 3:</b> assume 3<sup>n</sup> ≥ n³. Then 3<sup>n+1</sup> ≥ 3n³, and it suffices that 3n³ ≥ (n + 1)³, i.e. (1 + 1/n)³ ≤ 3. For n ≥ 3, (1 + 1/n)³ ≤ (4/3)³ = 64/27 &lt; 3. ∎"
+    },
+    {
+     "type": "p",
+     "text": "The step fails at n = 2, since (3/2)³ = 3.375 > 3. So you cannot start the induction at 0 and go up one at a time: n = 0, 1, 2, 3 all need to be checked directly."
+    },
+    {
+     "type": "tip",
+     "text": "<b>Tests:</b> finding where the inductive step starts working and covering everything below it as base cases. <b>Common mistake:</b> using the step at n = 2 without noticing that it is false there."
+    }
+   ]
+  },
+  {
+   "title": "Postage with 5¢ and 8¢",
+   "level": "hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "Prove that every integer n ≥ 28 can be written as 5a + 8b with a, b ≥ 0. Show that 27 cannot."
+    }
+   ],
+   "answer": "Proved: bases 28–32, step n − 5; 27 is impossible (27, 19, 11, 3 not multiples of 5).",
+   "solution": [
+    {
+     "type": "p",
+     "text": "<b>Bases n = 28…32:</b> 28 = 5·4 + 8·1, 29 = 5·1 + 8·3, 30 = 5·6, 31 = 5·3 + 8·2, 32 = 8·4."
+    },
+    {
+     "type": "p",
+     "text": "<b>Step:</b> let n ≥ 33 and assume the claim for every k with 28 ≤ k &lt; n. Then n − 5 ≥ 28, so n − 5 = 5a + 8b, and n = 5(a + 1) + 8b. ∎"
+    },
+    {
+     "type": "p",
+     "text": "<b>27:</b> 27 − 8b for b = 0, 1, 2, 3 gives 27, 19, 11, 3, none of which is divisible by 5."
+    },
+    {
+     "type": "tip",
+     "text": "<b>Tests:</b> strong induction with as many base cases as the step size (5). <b>Common mistake:</b> checking only 28 and stepping by 5, which leaves 29–32 uncovered."
+    }
+   ]
+  },
+  {
+   "title": "Σ 1/k² &lt; 2 by strengthening",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "Prove Σ<sub>k=1</sub><sup>n</sup> 1/k² &lt; 2 for all n ≥ 1. (Trying to prove “&lt; 2” directly by induction fails. Why?)"
+    }
+   ],
+   "answer": "Prove the stronger Σ 1/k² ≤ 2 − 1/n; the step reduces to 1/(n+1)² ≤ 1/(n(n+1)).",
+   "solution": [
+    {
+     "type": "p",
+     "text": "Knowing that the sum is &lt; 2 says nothing about whether adding 1/(n + 1)² keeps it below 2. The hypothesis is too weak. So prove the stronger statement P(n): Σ<sub>k=1</sub><sup>n</sup> 1/k² ≤ 2 − 1/n."
+    },
+    {
+     "type": "p",
+     "text": "<b>Basis:</b> 1 ≤ 2 − 1. <b>Step:</b> assume P(n). Then Σ<sub>k=1</sub><sup>n+1</sup> ≤ 2 − 1/n + 1/(n+1)². We need this to be ≤ 2 − 1/(n+1), i.e. 1/(n+1)² ≤ 1/n − 1/(n+1) = 1/(n(n+1)), i.e. n ≤ n + 1. ✓"
+    },
+    {
+     "type": "p",
+     "text": "So the sum is ≤ 2 − 1/n &lt; 2. ∎"
+    },
+    {
+     "type": "tip",
+     "text": "<b>Tests:</b> when the induction is stuck, prove something stronger. <b>Common mistake:</b> writing “sum &lt; 2, and 1/(n+1)² is tiny, so the new sum is &lt; 2”."
+    }
+   ]
+  },
+  {
+   "title": "Three bogus inductions",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "Each induction proof below “proves” something false. Find the exact step that fails."
+    },
+    {
+     "type": "list",
+     "items": [
+      "(a) <i>Claim:</i> any n ≥ 2 lines in the plane, no two parallel, pass through one common point. <i>Proof:</i> Two non-parallel lines meet. Assume it for n lines, and take n + 1 lines. Lines 1…n meet at a point P, and lines 2…n+1 meet at a point Q. Lines 2…n pass through both P and Q, and two distinct lines meet in at most one point, so P = Q.",
+      "(b) <i>Claim:</i> 2n = 0 for every n ≥ 0. <i>Proof (strong induction):</i> 2·0 = 0. Assume 2j = 0 for all 0 ≤ j ≤ k. Write k + 1 = a + b with 0 ≤ a, b ≤ k. Then 2(k + 1) = 2a + 2b = 0 + 0.",
+      "(c) <i>Claim:</i> n² + n is odd for all n ≥ 1. <i>Proof:</i> If k² + k is odd, then (k + 1)² + (k + 1) = (k² + k) + 2(k + 1) is odd + even, which is odd."
+     ]
+    }
+   ],
+   "answer": "(a) step n = 2 → 3 fails (only one middle line) (b) step 0 → 1 fails (1 ≠ a + b with a, b ≤ 0) (c) no base case; 1² + 1 = 2 is even",
+   "solution": [
+    {
+     "type": "list",
+     "items": [
+      "(a) The step from n = 2 to n = 3 fails. The “middle” lines 2…n are then just line 2, a single line. One line contains both P and Q, so there is no second line to force P = Q. Every later step depends on this one, so the whole proof collapses.",
+      "(b) The step from k = 0 to k + 1 = 1 fails. You can’t write 1 = a + b with a, b ≤ 0. One of them would have to be 1, which is not ≤ k = 0.",
+      "(c) The step is fine, but there is <b>no base case</b>, and in fact 1² + 1 = 2 is even. (In fact n² + n = n(n + 1) is always even.)"
+     ]
+    },
+    {
+     "type": "tip",
+     "text": "<b>Tests:</b> checking that the step works for the <i>smallest</i> k it is applied to, and that the base case exists. <b>Common mistake:</b> saying vaguely “the induction hypothesis is used wrongly” without naming the k where it breaks."
+    }
+   ]
+  },
+  {
+   "title": "Cutting a square into n squares",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "Prove that for every n ≥ 6, a square can be cut into exactly n smaller squares (they need not be the same size)."
+    }
+   ],
+   "answer": "Proved for n ≥ 6: bases 6, 7, 8 and the step k → k + 3 (quarter one square).",
+   "solution": [
+    {
+     "type": "p",
+     "text": "<b>Bases.</b>"
+    },
+    {
+     "type": "list",
+     "items": [
+      "6: a 3×3 grid with one 2×2 block merged into a single square: 9 − 4 + 1 = 6.",
+      "7: a 2×2 grid with one quarter split into 4: 4 − 1 + 4 = 7.",
+      "8: a 4×4 grid with one 3×3 block merged: 16 − 9 + 1 = 8."
+     ]
+    },
+    {
+     "type": "p",
+     "text": "<b>Step.</b> If a square can be cut into k squares, split any one of them into 4 quarters. That gives k + 3 squares. For n ≥ 9, the claim for n − 3 ≥ 6 holds by strong induction, so it holds for n. ∎"
+    },
+    {
+     "type": "tip",
+     "text": "<b>Tests:</b> strong induction with step size 3, which needs 3 base cases. <b>Common mistake:</b> proving only the step “k ⇒ k + 3” from one base case, which covers 6, 9, 12, … but not 7 or 8."
+    }
+   ]
+  },
+  {
+   "title": "Zeckendorf-style Fibonacci sums",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "Let F<sub>1</sub> = 1, F<sub>2</sub> = 2 and F<sub>k+1</sub> = F<sub>k</sub> + F<sub>k−1</sub> (so 1, 2, 3, 5, 8, 13, …). Prove that every positive integer is a sum of <b>distinct</b> terms of this sequence. Write 100 this way."
+    }
+   ],
+   "answer": "Proved by strong induction (greedy: subtract the largest term); 100 = 89 + 8 + 3.",
+   "solution": [
+    {
+     "type": "p",
+     "text": "Strong induction on n. <b>Basis:</b> 1 = F<sub>1</sub>, 2 = F<sub>2</sub>, 3 = F<sub>3</sub>."
+    },
+    {
+     "type": "p",
+     "text": "<b>Step:</b> let n ≥ 4 and assume the claim for all smaller positive integers. If n is itself a term, we are done. Otherwise pick k with F<sub>k</sub> &lt; n &lt; F<sub>k+1</sub> (k ≥ 3). Let m = n − F<sub>k</sub>. Then 0 &lt; m &lt; F<sub>k+1</sub> − F<sub>k</sub> = F<sub>k−1</sub>. By the hypothesis, m is a sum of distinct terms, each ≤ m &lt; F<sub>k−1</sub> &lt; F<sub>k</sub>. So F<sub>k</sub> is not among them, and n = F<sub>k</sub> + (that sum) is a sum of distinct terms. ∎"
+    },
+    {
+     "type": "p",
+     "text": "100 = 89 + 11 = <b>89 + 8 + 3</b>."
+    },
+    {
+     "type": "tip",
+     "text": "<b>Tests:</b> greedy choice plus strong induction, and proving distinctness. <b>Common mistake:</b> forgetting to show that F<sub>k</sub> isn’t already used in the representation of m."
+    }
+   ]
+  },
+  {
+   "title": "Shortest cycle in a tournament",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "A <i>tournament</i> is a directed graph in which every pair of distinct vertices has exactly one arrow between them. Prove that if a tournament has a directed cycle, it has a directed cycle of length 3."
+    }
+   ],
+   "answer": "Proved: a shortest directed cycle of length k ≥ 4 can be shortened via the v₁–v₃ arrow, so k = 3.",
+   "solution": [
+    {
+     "type": "p",
+     "text": "The set of lengths of directed cycles is a nonempty set of positive integers. By well-ordering, pick a shortest cycle v<sub>1</sub> → v<sub>2</sub> → ⋯ → v<sub>k</sub> → v<sub>1</sub>. Here k ≥ 3, since there are no loops and no pair has arrows both ways. Suppose k ≥ 4. Look at the arrow between v<sub>1</sub> and v<sub>3</sub>:"
+    },
+    {
+     "type": "list",
+     "items": [
+      "If v<sub>3</sub> → v<sub>1</sub>, then v<sub>1</sub> → v<sub>2</sub> → v<sub>3</sub> → v<sub>1</sub> is a 3-cycle, shorter than k.",
+      "If v<sub>1</sub> → v<sub>3</sub>, then v<sub>1</sub> → v<sub>3</sub> → v<sub>4</sub> → ⋯ → v<sub>k</sub> → v<sub>1</sub> is a cycle of length k − 1."
+     ]
+    },
+    {
+     "type": "p",
+     "text": "Either way we get a shorter cycle, contradicting minimality. So k = 3. ∎"
+    },
+    {
+     "type": "tip",
+     "text": "<b>Tests:</b> the “shortest object” form of well-ordering. <b>Common mistake:</b> forgetting to explain why k ≥ 3 (tournaments have no loops and no 2-cycles), or not checking that the shortened sequence is still a genuine cycle. It is, because it uses a subset of the original distinct vertices."
+    }
+   ]
+  },
+  {
+   "title": "n-digit numbers of 1s and 2s divisible by 2ⁿ",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "Prove that for every n ≥ 1 there is an n-digit number, using only the digits 1 and 2, that is divisible by 2<sup>n</sup>. (The first ones are 2, 12, 112, 2112, 22112.)"
+    }
+   ],
+   "answer": "Proved: prepend d ∈ {1, 2} with d·5ⁿ + m even; e.g. 2, 12, 112, 2112, 22112.",
+   "solution": [
+    {
+     "type": "p",
+     "text": "<b>Basis:</b> n = 1, the number 2."
+    },
+    {
+     "type": "p",
+     "text": "<b>Step:</b> suppose N has n digits, all 1 or 2, and N = 2<sup>n</sup>m. We put one more digit d ∈ {1, 2} in front: N′ = d·10<sup>n</sup> + N = 2<sup>n</sup>(d·5<sup>n</sup> + m). Then 2<sup>n+1</sup> | N′ iff d·5<sup>n</sup> + m is even. Since 5<sup>n</sup> is odd:"
+    },
+    {
+     "type": "list",
+     "items": [
+      "if m is even, choose d = 2;",
+      "if m is odd, choose d = 1."
+     ]
+    },
+    {
+     "type": "p",
+     "text": "N′ has n + 1 digits, all 1 or 2, and is divisible by 2<sup>n+1</sup>. ∎"
+    },
+    {
+     "type": "tip",
+     "text": "<b>Tests:</b> an induction that <i>builds</i> the object, and the hypothesis has to carry the factorization N = 2<sup>n</sup>m. <b>Common mistake:</b> appending the digit at the end. That changes divisibility by powers of 2 unpredictably; putting it in front keeps N’s factor."
+    }
+   ]
+  }
+ ],
+ "keyFacts": [
+  "Induction: P(a) and ∀k ≥ a (P(k) → P(k + 1)) ⇒ ∀n ≥ a P(n)",
+  "Always label the base case, state the IH for one fixed k, write the goal P(k + 1)",
+  "Divisibility: write f(k + 1) = c·f(k) + (multiple of d)",
+  "Inequalities: use the IH once, then close the gap with a fact about k ≥ a",
+  "Strong induction: assume P(a), …, P(k); step reaching back s needs s base cases",
+  "Well-ordering: every nonempty subset of ℕ has a least element (smallest counterexample proofs)",
+  "Stuck? Strengthen the claim (Σ 1/i² ≤ 2 − 1/n)",
+  "Bogus proofs usually fail at the base case or at the smallest k of the step",
+  "1 + ⋯ + n = n(n + 1)/2; 1² + ⋯ + n² = n(n + 1)(2n + 1)/6; 1 + 2 + ⋯ + 2ⁿ = 2ⁿ⁺¹ − 1"
+ ]
+}

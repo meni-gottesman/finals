@@ -1,0 +1,1432 @@
+{
+ "id": "55-E",
+ "course": "55",
+ "title": "Primes, gcd, Euclid, Bézout, linear congruences",
+ "source": "Rosen 4.3–4.4 · Lec08, Lec10",
+ "summary": "Primes and unique factorization, gcd and lcm, the Euclidean algorithm and its extended version (Bézout), modular inverses and solving ax ≡ b (mod m). These computations are guaranteed final material, and Bézout and Euclid’s lemma are the tools for every gcd and prime proof.",
+ "lesson": [
+  {
+   "title": "Primes and the Fundamental Theorem of Arithmetic",
+   "blocks": [
+    {
+     "type": "tip",
+     "text": "Primes are the building blocks: every integer above 1 factors into primes in exactly one way, and there are infinitely many primes."
+    },
+    {
+     "type": "def",
+     "term": "prime",
+     "text": "An integer p > 1 is <b>prime</b> if its only positive factors are 1 and p. An integer greater than 1 that is not prime is <b>composite</b>."
+    },
+    {
+     "type": "p",
+     "text": "2, 3, 5 are prime; 4 (factors 1, 2, 4) and 6 (factors 1, 2, 3, 6) are composite. <b>1 is neither</b> (it has only one positive factor). n is composite ⟺ some a with 1 &lt; a &lt; n divides n."
+    },
+    {
+     "type": "thm",
+     "name": "Fundamental Theorem of Arithmetic (Rosen Thm 1)",
+     "text": "Every integer greater than 1 can be written <b>uniquely</b> as a prime or a product of primes, up to the order of the factors. Grouping repeated primes: n = p₁^{a₁} p₂^{a₂} ⋯ p_k^{a_k}."
+    },
+    {
+     "type": "p",
+     "text": "Example: 360 = 2³ · 3² · 5; a bigger one: 6,061,496 = 2³ · 7³ · 47², and that is the only way."
+    },
+    {
+     "type": "p",
+     "text": "(Uniqueness is proved using Euclid’s lemma, “if p | ab then p | a or p | b,” proved later in this unit.)"
+    },
+    {
+     "type": "thm",
+     "name": "Arithmetic with factorizations",
+     "text": "Pad both factorizations with zero exponents so they use the same primes: a = p₁^{a₁}⋯pₙ^{aₙ}, b = p₁^{b₁}⋯pₙ^{bₙ}."
+    },
+    {
+     "type": "list",
+     "items": [
+      "Multiplying adds exponents: ab = p₁^{a₁+b₁} ⋯ pₙ^{aₙ+bₙ}. E.g. (2²·3·5)(2·3³·7) = 2³·3⁴·5·7.",
+      "<b>a | b ⟺ aᵢ ≤ bᵢ for every i.</b> (⇒: if b = ad, uniqueness of factorization gives bᵢ = aᵢ + dᵢ ≥ aᵢ.)"
+     ]
+    },
+    {
+     "type": "thm",
+     "name": "Rosen Thm 2: trial division",
+     "text": "If n is composite, then n has a prime divisor ≤ √n. (If n = ab with 1 &lt; a ≤ b, then a² ≤ ab = n.)"
+    },
+    {
+     "type": "p",
+     "text": "So to test n, try dividing by primes up to √n. Example: 101 isn't divisible by 2, 3, 5, 7, and √101 &lt; 11, so 101 is prime."
+    },
+    {
+     "type": "tip",
+     "text": "List 2, 3, …, N. Circle the first number not crossed out (it's prime) and cross out all its multiples. Repeat. Up to 30 the survivors are 2, 3, 5, 7, 11, 13, 17, 19, 23, 29. You can stop once the next prime exceeds √N."
+    },
+    {
+     "type": "thm",
+     "name": "Euclid, c. 300 BCE (Rosen Thm 3)",
+     "text": "There are infinitely many primes.",
+     "proof": [
+      {
+       "type": "p",
+       "text": "Suppose for a contradiction there were only finitely many primes p₁, p₂, …, pₙ. Let Q = p₁p₂⋯pₙ + 1. Each pᵢ leaves remainder 1 when divided into Q, so no pᵢ divides Q, so no pᵢ appears in Q's prime factorization. But Q > 1 has a prime factorization, so it contains a prime not on our list. Contradiction!"
+      }
+     ]
+    },
+    {
+     "type": "p",
+     "text": "E.g. from 2, 3, 5: 2·3·5 + 1 = 31 must have a prime factor other than 2, 3, 5."
+    },
+    {
+     "type": "warn",
+     "text": "The proof does <b>not</b> say p₁⋯pₙ + 1 is prime. 2·3·5·7·11·13 + 1 = 30031 = 59 · 509. It only says Q has a prime factor that's not on the list."
+    },
+    {
+     "type": "tip",
+     "text": "How primes are spread out: the Prime Number Theorem says the number of primes ≤ x is about x / ln x. Bertrand’s postulate guarantees a prime strictly between n and 2n for every n ≥ 2. Whether there are infinitely many twin primes (p and p + 2 both prime) is still open."
+    },
+    {
+     "type": "p",
+     "text": "<b>Lock it down</b>"
+    },
+    {
+     "type": "steps",
+     "title": "Prime factorization (trial division ladder)",
+     "items": [
+      "<b>Start with p = 2.</b> While p divides what is left, divide it out and write p down.",
+      "<b>Move to the next prime</b> 3, 5, 7, 11, 13, … and repeat.",
+      "<b>Quick tests:</b> 2 if the last digit is even; 3 if the digit sum is divisible by 3; 5 if it ends in 0 or 5; 11 if the alternating digit sum (+ − + …) is divisible by 11.",
+      "<b>Stop when p² is bigger than what is left.</b> If what is left is above 1, it is prime: write it down.",
+      "<b>Group repeats into powers</b>, primes in increasing order: 2²·3²·7·17.",
+      "<b>Check:</b> multiply back, and make sure every base in your answer is prime."
+     ]
+    },
+    {
+     "type": "steps",
+     "title": "Test whether n is prime",
+     "items": [
+      "<b>Find √n</b>, or just the biggest k with k² ≤ n.",
+      "<b>List the primes ≤ √n.</b> Include a prime exactly equal to √n (49 = 7²).",
+      "<b>Divide n by each one.</b> One divides it: composite, and you found a factor. None does: prime.",
+      "<b>Check:</b> you only need primes, not 4, 6, 9, …, because any composite divisor has a smaller prime divisor you already tried."
+     ]
+    },
+    {
+     "type": "steps",
+     "title": "Use exponents: a | b and counting divisors",
+     "items": [
+      "<b>Factor both numbers</b> and pad with p⁰ so both list the same primes.",
+      "<b>a | b exactly when</b> every exponent in a is ≤ the matching exponent in b. Extra primes in b are fine; an extra prime in a kills it.",
+      "<b>Count the positive divisors</b> of n = p₁^{e₁}⋯p_k^{e_k}: it is (e₁ + 1)(e₂ + 1)⋯(e_k + 1). A divisor picks an exponent from 0 to eᵢ for each prime, so eᵢ + 1 choices each.",
+      "<b>Check:</b> 12 = 2²·3 gives (2 + 1)(1 + 1) = 6 divisors: 1, 2, 3, 4, 6, 12 ✓."
+     ]
+    },
+    {
+     "type": "steps",
+     "title": "Write Euclid's proof (template to memorize)",
+     "items": [
+      "“Suppose, for contradiction, that there are only finitely many primes, p₁, p₂, …, pₙ.”",
+      "“Let Q = p₁p₂⋯pₙ + 1.”",
+      "“Since Q > 1, Q has a prime factor p (Fundamental Theorem of Arithmetic).”",
+      "“p is on our list, so p = pᵢ for some i. Then pᵢ | Q and pᵢ | p₁⋯pₙ, so pᵢ | Q − p₁⋯pₙ = 1.”",
+      "“No prime divides 1. Contradiction. So there are infinitely many primes.” □",
+      "<b>Check:</b> you never claimed Q is prime, and you gave a reason (it would divide 1) why no pᵢ divides Q."
+     ]
+    },
+    {
+     "type": "example",
+     "title": "factor with the ladder",
+     "prompt": "Prime-factor 4284. How many positive divisors does it have? Does 2²·3³ divide it?",
+     "steps": [
+      "4284 = 2·2142 — <i>even, so try 2 first</i>",
+      "2142 = 2·1071 — <i>still even</i>",
+      "1071 = 3·357 — <i>1071 is odd; digit sum 9, so 3 divides it</i>",
+      "357 = 3·119 — <i>digit sum 15, still divisible by 3</i>",
+      "119 = 7·17 — <i>digit sum 11, so not 3; does not end in 0 or 5; try 7</i>",
+      "17 is prime — <i>7 ∤ 17 and 7² = 49 is bigger than 17, so stop</i>",
+      "4284 = 2²·3²·7·17 — <i>group repeated primes</i>",
+      "(2+1)(2+1)(1+1)(1+1) = 36 — <i>divisor count formula</i>",
+      "2²·3³ ∤ 4284 — <i>it needs 3³, but 4284 only has 3²</i>",
+      "Read-back: 4·9·7·17 = 36·119 = 4284 ✓."
+     ],
+     "answer": "2²·3³ ∤ 4284"
+    },
+    {
+     "type": "example",
+     "title": "a cousin of Euclid's proof",
+     "prompt": "Prove: for every positive integer n, there is a prime p with p > n.",
+     "steps": [
+      "Let N = n! + 1 — <i>n! = 1·2·3⋯n</i>",
+      "N ≥ 2, so N has a prime factor p — <i>Fundamental Theorem of Arithmetic</i>",
+      "Suppose p ≤ n. Then p | n! — <i>p is one of the factors 1, 2, …, n</i>",
+      "p | N and p | n!, so p | N − n! = 1 — <i>a difference of multiples of p is a multiple of p</i>",
+      "Impossible — <i>no prime divides 1</i>",
+      "So p > n □ — <i>the assumption p ≤ n fails</i>",
+      "Read-back with n = 4: 4! + 1 = 25 = 5², and 5 > 4 ✓. Since n can be anything, the primes never run out. Again, N itself need not be prime."
+     ],
+     "answer": "For every n there is a prime p > n (a prime factor of n! + 1)"
+    },
+    {
+     "type": "warn",
+     "text": "<b>Wrong:</b> “221 is prime: 2, 3, 5, 7, 11 don't divide it.” <b>Right:</b> √221 ≈ 14.9, so you must also try 13, and 221 = 13·17. (you test every prime up to √n, including one equal to √n, as in 49 = 7²)"
+    },
+    {
+     "type": "warn",
+     "text": "<b>Wrong:</b> stopping with a composite piece: 1500 = 2²·3·125. <b>Right:</b> 1500 = 2²·3·5³. (every base in a prime factorization must be prime)"
+    },
+    {
+     "type": "warn",
+     "text": "<b>Wrong:</b> in Euclid's proof: “no pᵢ divides Q because Q is bigger than every pᵢ.” <b>Right:</b> if pᵢ | Q then pᵢ | Q − p₁⋯pₙ = 1, which is impossible. (being bigger never stops divisibility: 6 is bigger than 2 and 2 | 6)"
+    },
+    {
+     "type": "warn",
+     "text": "<b>Wrong:</b> “2²·3 | 2³·5, since 2² | 2³.” <b>Right:</b> check every prime: a has 3¹ but b has 3⁰, so 2²·3 ∤ 2³·5. (pad with zero exponents and compare prime by prime)"
+    },
+    {
+     "type": "warn",
+     "text": "<b>Wrong:</b> 72 = 2³·3² has 3·2 = 6 divisors. <b>Right:</b> (3 + 1)(2 + 1) = 12 divisors. (each exponent can also be 0, so there are eᵢ + 1 choices)"
+    }
+   ]
+  },
+  {
+   "title": "gcd, lcm and the Euclidean algorithm",
+   "blocks": [
+    {
+     "type": "tip",
+     "text": "gcd is the biggest shared divisor and lcm the smallest shared multiple. The Euclidean algorithm finds the gcd fast by repeated division."
+    },
+    {
+     "type": "def",
+     "term": "greatest common divisor",
+     "text": "Let a, b be integers, not both zero. The <b>greatest common divisor</b> gcd(a, b) is the largest integer d with d | a and d | b."
+    },
+    {
+     "type": "p",
+     "text": "a and b are <b>relatively prime</b> if gcd(a, b) = 1. Integers a₁, …, aₙ are <b>pairwise relatively prime</b> if gcd(aᵢ, aⱼ) = 1 for all i ≠ j."
+    },
+    {
+     "type": "p",
+     "text": "The <b>least common multiple</b> lcm(a, b) of positive integers a, b is the smallest positive integer divisible by both."
+    },
+    {
+     "type": "p",
+     "text": "<b>Examples.</b> gcd(6, 10) = 2, gcd(0, 11) = 11 (everything divides 0), gcd(−12, 18) = 6, lcm(6, 10) = 30, lcm(12, 60) = 60."
+    },
+    {
+     "type": "p",
+     "text": "10, 17, 21 are pairwise relatively prime. 10, 19, 24 are not, since gcd(10, 24) = 2 (even though gcd(10, 19) = gcd(19, 24) = 1)."
+    },
+    {
+     "type": "thm",
+     "name": "Gcd and lcm from factorizations",
+     "text": "If a = p₁^{a₁}⋯pₙ^{aₙ} and b = p₁^{b₁}⋯pₙ^{bₙ} (same primes, exponents ≥ 0), then gcd(a, b) = p₁^{min(a₁,b₁)} ⋯ pₙ^{min(aₙ,bₙ)} and lcm(a, b) = p₁^{max(a₁,b₁)} ⋯ pₙ^{max(aₙ,bₙ)}. Therefore gcd(a, b) · lcm(a, b) = ab.",
+     "proof": [
+      {
+       "type": "p",
+       "text": "(gcd) g = ∏ p^{min} divides a and b since min(aᵢ, bᵢ) ≤ aᵢ, bᵢ. If d = ∏ p^{dᵢ} divides both, then dᵢ ≤ aᵢ and dᵢ ≤ bᵢ, so dᵢ ≤ min(aᵢ, bᵢ); so d | g and d ≤ g. The lcm part is the same with max."
+      },
+      {
+       "type": "p",
+       "text": "(product) min(x, y) + max(x, y) = x + y for any two numbers, so the exponent of each prime in gcd · lcm equals its exponent in ab."
+      }
+     ]
+    },
+    {
+     "type": "example",
+     "title": "gcd and lcm by factoring",
+     "prompt": "Find gcd and lcm of a = 360 = 2³·3²·5 and b = 1134 = 2·3⁴·7.",
+     "steps": [
+      "Pad: a = 2³·3²·5¹·7⁰, b = 2¹·3⁴·5⁰·7¹.",
+      "gcd: smaller exponents: 2¹·3² = 18.",
+      "lcm: larger exponents: 2³·3⁴·5·7 = 22680.",
+      "Check: 18 · 22680 = 408240 = 360 · 1134 ✓."
+     ],
+     "answer": "gcd = 18, lcm = 22680"
+    },
+    {
+     "type": "p",
+     "text": "Another: a = 7²·11⁴·13, b = 5³·11·13²: gcd = 11·13, lcm = 5³·7²·11⁴·13², and a ∤ b (b has no factor of 7)."
+    },
+    {
+     "type": "thm",
+     "name": "Lemma Rosen Lemma 1, the key to Euclid",
+     "text": "If a = bq + r (all integers), then gcd(a, b) = gcd(b, r).",
+     "proof": [
+      {
+       "type": "p",
+       "text": "It suffices to show a, b and b, r have the same common divisors. If d | a and d | b, then d | a − bq = r. If d | b and d | r, then d | bq + r = a."
+      }
+     ]
+    },
+    {
+     "type": "def",
+     "term": "Euclidean algorithm",
+     "text": "To find gcd(a, b) with a ≥ b > 0: divide, then replace (a, b) by (b, remainder). Repeat until the remainder is 0. <b>The last nonzero remainder is the gcd.</b>"
+    },
+    {
+     "type": "p",
+     "text": "r₀ = a, r₁ = b; rᵢ₋₁ = rᵢ qᵢ + rᵢ₊₁ ⇒ gcd(rᵢ₋₁, rᵢ) = gcd(rᵢ, rᵢ₊₁); … gcd(rₙ, 0) = rₙ."
+    },
+    {
+     "type": "example",
+     "title": "Euclidean algorithm",
+     "prompt": "Find gcd(270, 192).",
+     "steps": [
+      "270 = 192·1 + 78, so gcd(270, 192) = gcd(192, 78)",
+      "192 = 78·2 + 36, so = gcd(78, 36)",
+      "78 = 36·2 + 6, so = gcd(36, 6)",
+      "36 = 6·6 + 0, so = gcd(6, 0) = 6"
+     ],
+     "answer": "gcd(270, 192) = 6"
+    },
+    {
+     "type": "thm",
+     "name": "Why Euclid is fast",
+     "text": "If 2ⁿ > a > b, the algorithm takes at most 2n steps, because every two steps the remainder at least halves: rᵢ₊₂ &lt; rᵢ / 2.",
+     "proof": [
+      {
+       "type": "p",
+       "text": "Case 1: rᵢ₊₁ ≤ rᵢ/2. Then rᵢ₊₂ &lt; rᵢ₊₁ ≤ rᵢ/2. Case 2: rᵢ₊₁ > rᵢ/2. Then the quotient is 1, so rᵢ₊₂ = rᵢ − rᵢ₊₁ &lt; rᵢ − rᵢ/2 = rᵢ/2."
+      }
+     ]
+    },
+    {
+     "type": "p",
+     "text": "Factoring is slow (much of modern cryptography would break if it weren't), so computing gcds by factoring is inefficient. Euclid's way avoids factoring entirely."
+    },
+    {
+     "type": "p",
+     "text": "<b>Lock it down</b>"
+    },
+    {
+     "type": "steps",
+     "title": "Gcd and lcm by factorization",
+     "items": [
+      "<b>Factor both numbers.</b>",
+      "<b>Pad with p⁰</b> so both list the same primes: 20 = 2²·3⁰·5 and 6 = 2·3·5⁰.",
+      "<b>gcd:</b> each prime to the <b>smaller</b> exponent. A prime missing from one number has exponent 0 there, so it drops out.",
+      "<b>lcm:</b> each prime to the <b>larger</b> exponent.",
+      "<b>Check:</b> gcd · lcm = a · b. Here gcd(20, 6) = 2 and lcm(20, 6) = 2²·3·5 = 60, and 2·60 = 120 = 20·6 ✓."
+     ]
+    },
+    {
+     "type": "steps",
+     "title": "The Euclidean algorithm",
+     "items": [
+      "<b>Set up:</b> bigger number a, smaller number b. (Negative numbers: use absolute values.)",
+      "<b>Divide:</b> a = b·q + r with 0 ≤ r &lt; b.",
+      "<b>If r = 0, stop:</b> the gcd is b, the divisor in that last line.",
+      "<b>Otherwise shift left:</b> the old divisor b becomes the new a, and r becomes the new b. Divide again.",
+      "<b>Answer:</b> the last <b>nonzero</b> remainder.",
+      "<b>Check:</b> your answer divides both original numbers."
+     ]
+    },
+    {
+     "type": "steps",
+     "title": "Lcm without factoring, and finding a missing number",
+     "items": [
+      "<b>Find g = gcd(a, b)</b> by Euclid.",
+      "<b>lcm(a, b) = (a / g) · b.</b> Divide first so the numbers stay small.",
+      "<b>Missing number:</b> from gcd · lcm = ab, solve b = gcd · lcm / a.",
+      "<b>Check:</b> gcd must divide lcm, and recompute gcd and lcm of your final pair. This only works for <b>two</b> numbers."
+     ]
+    },
+    {
+     "type": "steps",
+     "title": "Relatively prime vs pairwise relatively prime",
+     "items": [
+      "<b>Two numbers:</b> relatively prime means gcd = 1. Euclid answers it without factoring.",
+      "<b>Several numbers, pairwise:</b> check the gcd of <b>every</b> pair. With 3 numbers that is 3 pairs, with 4 numbers 6 pairs.",
+      "<b>One pair with gcd above 1</b> means “not pairwise relatively prime,” even if all of them together share nothing.",
+      "<b>Check:</b> 6, 10, 15 have no common factor all together, yet gcd(6, 10) = 2, so they are not pairwise relatively prime."
+     ]
+    },
+    {
+     "type": "example",
+     "title": "Euclid, then lcm",
+     "prompt": "Find gcd(1071, 462) with Euclid, then lcm(1071, 462).",
+     "steps": [
+      "1071 = 462·2 + 147 — <i>divide the bigger by the smaller</i>",
+      "462 = 147·3 + 21 — <i>shift: (462, 147)</i>",
+      "147 = 21·7 + 0 — <i>shift: (147, 21); remainder 0, stop</i>",
+      "gcd = 21 — <i>last nonzero remainder</i>",
+      "lcm = (1071 / 21)·462 = 51·462 — <i>lcm = ab / gcd, dividing first</i>",
+      "= 23562 — <i>multiply</i>",
+      "Check by factoring: 1071 = 3²·7·17 and 462 = 2·3·7·11. Min exponents give 3·7 = 21 ✓. Max exponents give 2·3²·7·11·17 = 23562 ✓."
+     ],
+     "answer": "= 23562"
+    },
+    {
+     "type": "example",
+     "title": "find the missing number",
+     "prompt": "Positive integers a, b have gcd(a, b) = 6 and lcm(a, b) = 180. If a = 36, find b.",
+     "steps": [
+      "ab = gcd · lcm — <i>gcd · lcm = ab</i>",
+      "36·b = 6·180 = 1080 — <i>plug in</i>",
+      "b = 1080 / 36 = 30 — <i>divide</i>",
+      "gcd(36, 30) = 6 ✓ — <i>36 = 30·1 + 6, then 30 = 6·5 + 0</i>",
+      "lcm(36, 30) = 2²·3²·5 = 180 ✓ — <i>36 = 2²·3² and 30 = 2·3·5, take max exponents</i>"
+     ],
+     "answer": "b = 30. Always do the check. Some givens have no answer at all: gcd 4 and lcm 30 is impossible, because the gcd must divide the lcm."
+    },
+    {
+     "type": "warn",
+     "text": "<b>Wrong:</b> gcd takes the bigger exponents. <b>Right:</b> gcd takes the smaller (min), lcm takes the bigger (max). (the gcd has to fit inside both numbers; the lcm has to contain both)"
+    },
+    {
+     "type": "warn",
+     "text": "<b>Wrong:</b> gcd(2²·5, 2·3) = 2·3·5. <b>Right:</b> gcd = 2. (a prime that is in only one number has exponent 0 in the other, and min(·, 0) = 0)"
+    },
+    {
+     "type": "warn",
+     "text": "<b>Wrong:</b> answering with the last remainder (0) or the last quotient. <b>Right:</b> the answer is the last nonzero remainder, which is the divisor in the final line. (gcd(rₙ, 0) = rₙ)"
+    },
+    {
+     "type": "warn",
+     "text": "<b>Wrong:</b> after 662 = 414·1 + 248, continuing with (662, 248). <b>Right:</b> continue with (414, 248). (each step replaces (a, b) by (b, r), so the numbers shrink)"
+    },
+    {
+     "type": "warn",
+     "text": "<b>Wrong:</b> gcd(a, b, c) · lcm(a, b, c) = abc. <b>Right:</b> the product rule is for two numbers only: gcd(2, 2, 2) · lcm(2, 2, 2) = 2·2 = 4, but 2·2·2 = 8. (min + max = x + y works for two exponents, not three)"
+    }
+   ]
+  },
+  {
+   "title": "Bézout’s theorem and extended Euclid",
+   "blocks": [
+    {
+     "type": "tip",
+     "text": "Run Euclid backwards to write gcd = sa + tb. That gives inverses mod m, which let you solve ax ≡ b (mod m)."
+    },
+    {
+     "type": "thm",
+     "name": "Bézout's theorem (Rosen Thm 6)",
+     "text": "If a and b are positive integers, there exist integers s and t such that gcd(a, b) = sa + tb. That is, the gcd is an integer <b>linear combination</b> of a and b."
+    },
+    {
+     "type": "p",
+     "text": "s, t are <b>Bézout coefficients</b>, and gcd(a, b) = sa + tb is <b>Bézout's identity</b>. They aren't unique. The <b>extended Euclidean algorithm</b> computes them."
+    },
+    {
+     "type": "def",
+     "term": "Extended Euclidean algorithm",
+     "text": "Run Euclid forwards. Then start from the second-to-last equation, solved for the gcd, and <b>substitute backwards</b>, each time replacing the smaller remainder by its formula from the line above, until only a and b remain. Simplify (collect terms) after every substitution."
+    },
+    {
+     "type": "example",
+     "title": "Extended Euclid: gcd(72, 26)",
+     "prompt": "Write gcd(72, 26) as s·72 + t·26.",
+     "steps": [
+      "Forwards: 72 = 2·26 + 20",
+      "26 = 1·20 + 6",
+      "20 = 3·6 + 2  ← last nonzero remainder, gcd = 2",
+      "6 = 3·2 + 0",
+      "Backwards: 2 = 20 − 3·6 — <i>line 3 solved for the gcd</i>",
+      "= 20 − 3·(26 − 20) = 4·20 − 3·26 — <i>swap 6 using line 2, collect the 20s</i>",
+      "= 4·(72 − 2·26) − 3·26 = 4·72 − 11·26 — <i>swap 20 using line 1, collect the 26s</i>",
+      "Check: 288 − 286 = 2 ✓"
+     ],
+     "answer": "2 = 4·72 − 11·26 (s = 4, t = −11)"
+    },
+    {
+     "type": "example",
+     "title": "Extended Euclid with gcd 1: 49 and 32",
+     "prompt": "Write 1 = gcd(49, 32) as s·49 + t·32, and read off two inverses.",
+     "steps": [
+      "49 = 1·32 + 17; 32 = 1·17 + 15; 17 = 1·15 + 2; 15 = 7·2 + 1; 2 = 2·1 + 0.",
+      "1 = 15 − 7·2 = 15 − 7·(17 − 15) = 8·15 − 7·17",
+      "= 8·(32 − 17) − 7·17 = 8·32 − 15·17",
+      "= 8·32 − 15·(49 − 32) = 23·32 − 15·49",
+      "Check: 736 − 735 = 1 ✓. So 32·23 ≡ 1 (mod 49) and 49·(−15) ≡ 1 (mod 32)."
+     ],
+     "answer": "1 = 23·32 − 15·49; inverse of 32 mod 49 is 23, inverse of 49 mod 32 is −15 ≡ 17"
+    },
+    {
+     "type": "p",
+     "text": "<b>Table method</b> (same answer, fewer slips): keep columns r, s, t where each row means r = s·a + t·b. Start with rows (a, 1, 0) and (b, 0, 1). Each new row = (row two up) − q × (row above), where q is Euclid’s quotient. For a = 84, b = 33:"
+    },
+    {
+     "type": "table",
+     "head": [
+      "q",
+      "r",
+      "s",
+      "t"
+     ],
+     "rows": [
+      [
+       "",
+       "84",
+       "1",
+       "0"
+      ],
+      [
+       "2",
+       "33",
+       "0",
+       "1"
+      ],
+      [
+       "1",
+       "18",
+       "1",
+       "−2"
+      ],
+      [
+       "1",
+       "15",
+       "−1",
+       "3"
+      ],
+      [
+       "5",
+       "3",
+       "2",
+       "−5"
+      ],
+      [
+       "",
+       "0",
+       "",
+       ""
+      ]
+     ]
+    },
+    {
+     "type": "p",
+     "text": "The last nonzero r is the gcd, and its row says 3 = 2·84 − 5·33. Check: 168 − 165 = 3 ✓."
+    },
+    {
+     "type": "thm",
+     "name": "Corollary (Rosen Lemma 2)",
+     "text": "If gcd(a, b) = 1 and a | bc, then a | c.",
+     "proof": [
+      {
+       "type": "p",
+       "text": "By Bézout, 1 = sa + tb. Multiply by c: c = csa + ctb. Now a | csa obviously, and a | ctb since a | bc. So a divides the sum, c."
+      }
+     ]
+    },
+    {
+     "type": "thm",
+     "name": "Primes split products (Rosen Lemma 3)",
+     "text": "If p is prime and p | ab, then p | a or p | b. More generally, if p | a₁a₂⋯aₙ then p | aᵢ for some i.",
+     "proof": [
+      {
+       "type": "p",
+       "text": "Assume p | ab. If p | a we're done. Otherwise p ∤ a, and since p's only positive divisors are 1 and p, gcd(a, p) = 1. By the corollary, p | b."
+      }
+     ]
+    },
+    {
+     "type": "p",
+     "text": "This is the key ingredient in the <b>uniqueness</b> part of the Fundamental Theorem of Arithmetic."
+    },
+    {
+     "type": "warn",
+     "text": "Fails for composite numbers: 6 | 30 = 10·3, but 6 ∤ 10 and 6 ∤ 3."
+    },
+    {
+     "type": "steps",
+     "title": "Extended Euclid (write gcd = sa + tb)",
+     "items": [
+      "Split your paper into two columns. Label the left one FORWARDS and the right one BACKWARDS.",
+      "Forwards: write big = q·small + r. Then the small number becomes the new big one and r becomes the new small one. Repeat until the remainder is 0.",
+      "The last <b>nonzero</b> remainder is the gcd. Circle it. Every other remainder has a formula on its line: r = big − q·small.",
+      "Backwards: start from the line that made the gcd, solved for it: gcd = big − q·small.",
+      "Of the two numbers on the right, pick the <b>smaller</b> one. Replace it by its formula from one line higher up. Always put the formula in parentheses.",
+      "Collect terms so you again have exactly two numbers, each with one coefficient. Keep products like 2·18 unmultiplied, or you lose track of which number is which.",
+      "Repeat steps 5 and 6 until only a and b are left. Their coefficients are s and t.",
+      "<b>Check:</b> multiply out s·a + t·b with real numbers. It must equal the gcd exactly."
+     ]
+    },
+    {
+     "type": "example",
+     "title": "Extended Euclid on bigger numbers",
+     "prompt": "Find gcd(252, 198) and Bézout coefficients.",
+     "steps": [
+      "252 = 1·198 + 54",
+      "198 = 3·54 + 36",
+      "54 = 1·36 + 18",
+      "36 = 2·18 + 0, so gcd = 18",
+      "18 = 54 − 36 = 54 − (198 − 3·54) = 4·54 − 198",
+      "= 4·(252 − 198) − 198 = 4·252 − 5·198",
+      "Check: 1008 − 990 = 18 ✓"
+     ],
+     "answer": "18 = 4·252 − 5·198"
+    }
+   ]
+  },
+  {
+   "title": "Inverses and linear congruences",
+   "blocks": [
+    {
+     "type": "p",
+     "text": "A <b>linear congruence</b> is ax ≡ b (mod m) with unknown x. If x is a solution, so is anything ≡ x (mod m), so you only need to search 0, 1, …, m − 1. But there's a much faster way."
+    },
+    {
+     "type": "p",
+     "text": "<b>Examples.</b> 2x ≡ 3 (mod 12) has <b>no solution</b>: 2x − 3 is odd, and 12 can’t divide an odd number. 3x ≡ 1 (mod 7) has x = 5, since 15 = 2·7 + 1."
+    },
+    {
+     "type": "thm",
+     "name": "When there's no solution",
+     "text": "Let d = gcd(a, m). If d ∤ b, then ax ≡ b (mod m) has <b>no solution</b>.",
+     "proof": [
+      {
+       "type": "p",
+       "text": "By contraposition. Suppose ax ≡ b (mod m), so ax − b = km for some integer k. Then b = ax − km. Since d | a and d | m, d divides ax − km = b."
+      }
+     ]
+    },
+    {
+     "type": "thm",
+     "name": "When there is",
+     "text": "If d = gcd(a, m) divides b, write d = sa + tm (extended Euclid) and b = cd. Then x = cs is a solution.",
+     "proof": [
+      {
+       "type": "p",
+       "text": "a(cs) = c(sa) = c(d − tm) = cd − ctm ≡ cd = b (mod m), since m ≡ 0."
+      }
+     ]
+    },
+    {
+     "type": "steps",
+     "title": "Solve ax ≡ b (mod m) with Bézout",
+     "items": [
+      "Compute d = gcd(a, m) with Euclid.",
+      "If d ∤ b: no solution. Stop.",
+      "Otherwise use extended Euclid to write d = sa + tm. Then x₀ = (b/d)·s is a solution.",
+      "All solutions: x = x₀ + k·(m/d) for integers k, so exactly d solutions mod m."
+     ]
+    },
+    {
+     "type": "example",
+     "title": "One Bézout identity, three congruences",
+     "prompt": "Using 2 = 4·72 − 11·26, solve 26x ≡ 2, 26x ≡ 3 and 26x ≡ 6 (mod 72).",
+     "steps": [
+      "From the identity, 26·(−11) ≡ 2 (mod 72).",
+      "26x ≡ 2: x = −11 ≡ 61; m/d = 36, so x ≡ 25 or 61 (mod 72).",
+      "26x ≡ 3: d = 2 ∤ 3, so no solution.",
+      "26x ≡ 6: 6 = 3·2, so x = 3·(−11) = −33 ≡ 39; all solutions x ≡ 3 (mod 36), i.e. x ≡ 3 or 39 (mod 72).",
+      "Check: 26·3 = 78 ≡ 6 and 26·39 = 1014 = 14·72 + 6 ✓."
+     ],
+     "answer": "26x ≡ 2: x ≡ 25, 61; 26x ≡ 3: none; 26x ≡ 6: x ≡ 3, 39 (mod 72)"
+    },
+    {
+     "type": "example",
+     "title": "Full run with gcd > 1",
+     "prompt": "Solve 15x ≡ 9 (mod 21).",
+     "steps": [
+      "21 = 1·15 + 6; 15 = 2·6 + 3; 6 = 2·3 + 0, so d = 3.",
+      "3 | 9, so it is solvable with 3 solutions mod 21.",
+      "3 = 15 − 2·6 = 15 − 2·(21 − 15) = 3·15 − 2·21, so s = 3.",
+      "x₀ = (9/3)·3 = 9. Check: 15·9 = 135 = 6·21 + 9 ✓.",
+      "Step m/d = 7: x = 2, 9, 16."
+     ],
+     "answer": "x ≡ 2, 9, 16 (mod 21)"
+    },
+    {
+     "type": "example",
+     "title": "The fast way when gcd = 1",
+     "prompt": "Solve 7x ≡ 3 (mod 10), then 12x ≡ 8 (mod 20).",
+     "steps": [
+      "gcd(7, 10) = 1, so 7 has an inverse. Try multiples: 7·3 = 21 ≡ 1, so 7̄ = 3.",
+      "Multiply both sides by 3: x ≡ 9 (mod 10). Check: 63 ≡ 3 ✓.",
+      "12x ≡ 8 (mod 20): d = 4 and 4 | 8, so 4 solutions.",
+      "Divide through by 4: 3x ≡ 2 (mod 5). 3·2 = 6 ≡ 1, so x ≡ 2·2 = 4 (mod 5).",
+      "List with step 5: x = 4, 9, 14, 19."
+     ],
+     "answer": "x ≡ 9 (mod 10); x ≡ 4, 9, 14, 19 (mod 20)"
+    },
+    {
+     "type": "p",
+     "text": "<b>Inverses mod m</b>"
+    },
+    {
+     "type": "def",
+     "term": "inverse of a modulo m",
+     "text": "An integer ā with āa ≡ 1 (mod m) is an <b>inverse of a modulo m</b>. It's the mod-m version of 1/a."
+    },
+    {
+     "type": "thm",
+     "name": "Rosen Thm 1",
+     "text": "If gcd(a, m) = 1 and m > 1, then a has an inverse mod m, and it is unique mod m. Conversely, if gcd(a, m) > 1 there is no inverse: aā − km is always a multiple of gcd(a, m), so it can never equal 1."
+    },
+    {
+     "type": "p",
+     "text": "How to find it: Bézout gives 1 = sa + tm, so sa ≡ 1 (mod m), and <b>s is the inverse</b>."
+    },
+    {
+     "type": "p",
+     "text": "<b>Example.</b> 5·3 = 15 ≡ 1 (mod 7), so 3 is an inverse of 5 mod 7. To solve 5y ≡ 4 (mod 7), multiply both sides by 3: y ≡ 12 ≡ 5. Check: 25 ≡ 4."
+    },
+    {
+     "type": "p",
+     "text": "From 1 = −15·49 + 23·32: 23 is the inverse of 32 mod 49 (32·23 = 736 = 15·49 + 1), and −15 ≡ 17 is the inverse of 49 mod 32."
+    },
+    {
+     "type": "p",
+     "text": "General trick: once you have ā, the solution of ay ≡ b is y ≡ āb, because a(āb) = (aā)b ≡ b."
+    },
+    {
+     "type": "example",
+     "title": "Inverse that exists and one that doesn’t",
+     "prompt": "Find the inverse of 11 mod 26 and use it to solve 11x ≡ 7 (mod 26). Does 12 have an inverse mod 26?",
+     "steps": [
+      "26 = 2·11 + 4; 11 = 2·4 + 3; 4 = 1·3 + 1, so gcd = 1.",
+      "1 = 4 − 3 = 4 − (11 − 2·4) = 3·4 − 11 = 3·(26 − 2·11) − 11 = 3·26 − 7·11.",
+      "Inverse = coefficient on 11: −7 ≡ 19. Check: 11·19 = 209 = 8·26 + 1 ✓.",
+      "x ≡ 19·7 = 133 ≡ 3 (mod 26). Check: 33 ≡ 7 ✓.",
+      "gcd(12, 26) = 2 > 1, so 12 has no inverse mod 26."
+     ],
+     "answer": "11̄ ≡ 19, x ≡ 3 (mod 26); 12 has no inverse mod 26"
+    },
+    {
+     "type": "thm",
+     "name": "Cancellation law (Rosen Thm 7)",
+     "text": "If ac ≡ bc (mod m) and gcd(c, m) = 1, then a ≡ b (mod m).",
+     "proof": [
+      {
+       "type": "p",
+       "text": "Since gcd(c, m) = 1, c has an inverse c̄. Multiply both sides by c̄: a(cc̄) ≡ b(cc̄), so a·1 ≡ b·1 (mod m)."
+      }
+     ]
+    },
+    {
+     "type": "p",
+     "text": "<b>Lock it down</b>"
+    },
+    {
+     "type": "steps",
+     "title": "Find an inverse of a mod m (or show there is none)",
+     "items": [
+      "Reduce a mod m first. For example, the inverse of 47 mod 12 is the same as the inverse of 11 mod 12.",
+      "Compute d = gcd(a, m). If d > 1, write “no inverse” and give the reason: aā − km is always a multiple of d, so it can never equal 1.",
+      "Small m (about 15 or less): just try a·1, a·2, a·3, … mod m until you get 1.",
+      "Bigger m: run extended Euclid on m and a to get 1 = s·a + t·m. The inverse is <b>s, the coefficient sitting on a</b>. Ignore t.",
+      "If s is negative or bigger than m, reduce it into {0, 1, …, m − 1} (for a negative s, add m).",
+      "<b>Check:</b> a·s mod m must be 1."
+     ]
+    },
+    {
+     "type": "steps",
+     "title": "Solve ax ≡ b (mod m) and list every solution",
+     "items": [
+      "Reduce a and b mod m so the numbers are small.",
+      "Compute d = gcd(a, m). If d ∤ b, write “no solution, since d ∤ b” and stop.",
+      "If d = 1: find ā (recipe above) and multiply both sides by it: x ≡ ā·b (mod m). That is the only solution mod m.",
+      "If d > 1: divide <b>a, b and m</b> all by d. You get a′x ≡ b′ (mod m′) with m′ = m/d and gcd(a′, m′) = 1. Solve it as in step 3 to get x ≡ x₀ (mod m′). (This gives the same answers as x₀ = (b/d)·s above.)",
+      "List the d solutions mod m: x₀, x₀ + m′, x₀ + 2m′, …, x₀ + (d − 1)m′. Think of it as d evenly spaced stops around a clock with m hours.",
+      "<b>Check:</b> plug one solution into the original ax, reduce mod m, and confirm you get b."
+     ]
+    },
+    {
+     "type": "example",
+     "title": "inverse by Euclid, then solve: 17x ≡ 5 (mod 60)",
+     "prompt": "Find the inverse of 17 mod 60, then solve 17x ≡ 5 (mod 60).",
+     "steps": [
+      "60 = 3·17 + 9 — <i>Euclid, line 1</i>",
+      "17 = 1·9 + 8 — <i>line 2</i>",
+      "9 = 1·8 + 1 — <i>line 3: gcd = 1, so an inverse exists</i>",
+      "1 = 9 − 1·8 — <i>line 3 solved for the gcd</i>",
+      "= 9 − (17 − 9) = 2·9 − 17 — <i>swap 8 using line 2, collect the 9s</i>",
+      "= 2·(60 − 3·17) − 17 = 2·60 − 7·17 — <i>swap 9 using line 1, collect the 17s</i>",
+      "17·(−7) ≡ 1 (mod 60) — <i>the 2·60 term is 0 mod 60</i>",
+      "ā = −7 + 60 = 53 — <i>make the inverse positive</i>",
+      "x ≡ 53·5 = 265 ≡ 25 (mod 60) — <i>multiply both sides by ā; 265 − 4·60 = 25</i>"
+     ],
+     "answer": "the inverse is 53 and x ≡ 25 (mod 60). Check: 17·53 = 901 = 15·60 + 1 ✓ and 17·25 = 425 = 7·60 + 5 ✓."
+    },
+    {
+     "type": "example",
+     "title": "gcd > 1, divide-through method: 18x ≡ 12 (mod 42)",
+     "prompt": "Find every solution of 18x ≡ 12 (mod 42) with 0 ≤ x &lt; 42.",
+     "steps": [
+      "42 = 2·18 + 6, 18 = 3·6 — <i>Euclid: d = gcd(18, 42) = 6</i>",
+      "6 | 12 — <i>so it is solvable, with 6 solutions mod 42</i>",
+      "3x ≡ 2 (mod 7) — <i>divide a, b and m all by 6</i>",
+      "3·5 = 15 ≡ 1 (mod 7) — <i>so the inverse of 3 mod 7 is 5</i>",
+      "x ≡ 5·2 = 10 ≡ 3 (mod 7) — <i>multiply both sides by 5</i>",
+      "x = 3, 10, 17, 24, 31, 38 — <i>keep adding m/d = 7 until you have d = 6 values</i>"
+     ],
+     "answer": "x = 3, 10, 17, 24, 31, 38. Check: 18·3 = 54 = 42 + 12 ✓ and 18·38 = 684 = 16·42 + 12 ✓."
+    },
+    {
+     "type": "warn",
+     "text": "<b>Wrong:</b> dividing 6x ≡ 4 (mod 8) by 2 to get 3x ≡ 2 (mod 8). <b>Right:</b> 3x ≡ 2 (mod 4), so x = 2 or 6 mod 8. (You must divide the modulus too. The wrong version only finds x = 6 and loses x = 2.)"
+    },
+    {
+     "type": "warn",
+     "text": "<b>Wrong:</b> 9 − (17 − 9) = −17. <b>Right:</b> 9 − (17 − 9) = 2·9 − 17. (The minus sign hits both terms in the parentheses, so the 9 shows up twice.)"
+    },
+    {
+     "type": "warn",
+     "text": "<b>Wrong:</b> from 1 = 2·60 − 7·17, saying the inverse of 17 mod 60 is 2. <b>Right:</b> it is −7 ≡ 53. (The inverse is the coefficient on a, not the one on m. Then reduce it so it is between 0 and m − 1.)"
+    },
+    {
+     "type": "warn",
+     "text": "<b>Wrong:</b> “4 has no inverse mod 10, so 4x ≡ 6 (mod 10) has no solution.” <b>Right:</b> d = 2 divides 6, so there are 2 solutions: x = 4 and 9. (No inverse only means d > 1. You still need to test whether d | b.)"
+    },
+    {
+     "type": "warn",
+     "text": "<b>Wrong:</b> stopping after one solution when d > 1. <b>Right:</b> list all d of them, spaced m/d apart. (The question “list all solutions mod m” wants d answers, not one.)"
+    }
+   ]
+  },
+  {
+   "title": "Writing proofs with gcds and primes",
+   "blocks": [
+    {
+     "type": "tip",
+     "text": "Almost every gcd/prime proof uses one of four tools: (1) the factorization exponents, (2) “d divides both, so d divides any combination”, (3) Bézout, (4) Euclid’s lemma. Pick the tool that matches the hypothesis."
+    },
+    {
+     "type": "thm",
+     "name": "Combination lemma",
+     "text": "If d | a and d | b, then d | ma + nb for all integers m, n. In particular gcd(a, b) = gcd(a − kb, b) for every integer k.",
+     "proof": [
+      {
+       "type": "p",
+       "text": "Write a = dk₁, b = dk₂. Then ma + nb = d(mk₁ + nk₂). For the second claim, the pairs (a, b) and (a − kb, b) have exactly the same common divisors, by the first claim applied both ways, so they have the same greatest one."
+      }
+     ]
+    },
+    {
+     "type": "thm",
+     "name": "Euclid’s lemma (full proof)",
+     "text": "If p is prime and p | ab, then p | a or p | b.",
+     "proof": [
+      {
+       "type": "p",
+       "text": "Suppose p | ab and p ∤ a. The only positive divisors of p are 1 and p, and p ∤ a, so gcd(a, p) = 1."
+      },
+      {
+       "type": "p",
+       "text": "By Bézout, 1 = sa + tp. Multiply by b: b = s(ab) + (tb)p."
+      },
+      {
+       "type": "p",
+       "text": "p | ab and p | p, so p divides the right-hand side, so p | b. ∎"
+      }
+     ]
+    },
+    {
+     "type": "steps",
+     "title": "Template: proving a gcd equals 1 (or a fixed value)",
+     "items": [
+      "Let d = gcd(x, y) (or let d be any common divisor).",
+      "Combine: d divides any ma + nb. Choose m, n to cancel the variable part (one Euclid step done with letters).",
+      "Conclude d | (a constant), so d is limited to the divisors of that constant.",
+      "If needed, decide which divisor occurs by checking parity or a residue."
+     ]
+    },
+    {
+     "type": "example",
+     "title": "A gcd proof with one Euclid step",
+     "prompt": "Prove gcd(n, n + 1) = 1 and find gcd(3n + 2, 5n + 3) for every integer n ≥ 0.",
+     "steps": [
+      "Let d | n and d | n + 1. Then d | (n + 1) − n = 1, so d = 1.",
+      "gcd(5n + 3, 3n + 2) = gcd(5n + 3 − (3n + 2), 3n + 2) = gcd(2n + 1, 3n + 2).",
+      "= gcd(2n + 1, (3n + 2) − (2n + 1)) = gcd(2n + 1, n + 1) = gcd(n, n + 1) = 1."
+     ],
+     "answer": "Both gcds are 1 for every n"
+    },
+    {
+     "type": "example",
+     "title": "Proof with Euclid’s lemma",
+     "prompt": "Prove: if p is prime and p | a², then p | a. Use it to show √p is irrational.",
+     "steps": [
+      "p | a·a, so by Euclid’s lemma p | a or p | a; either way p | a.",
+      "Suppose √p = a/b in lowest terms. Then a² = pb², so p | a², so p | a. Write a = pc.",
+      "Then p²c² = pb², so b² = pc², so p | b² and p | b.",
+      "Now p divides both a and b, contradicting lowest terms."
+     ],
+     "answer": "p | a; √p is irrational"
+    },
+    {
+     "type": "warn",
+     "text": "Euclid’s lemma needs p prime: 6 | 4·9 but 6 ∤ 4 and 6 ∤ 9. For a composite n, n | ab ⇒ n | b only when gcd(n, a) = 1."
+    },
+    {
+     "type": "warn",
+     "text": "Checking n = 1, 2, 3 never proves a gcd statement for all n. Use the combination lemma with letters."
+    }
+   ]
+  }
+ ],
+ "cards": [
+  {
+   "front": "Is 91 prime?",
+   "back": [
+    {
+     "type": "p",
+     "text": "No: 91 = 7·13."
+    }
+   ]
+  },
+  {
+   "front": "Prime-factor 360.",
+   "back": [
+    {
+     "type": "p",
+     "text": "2³·3²·5."
+    }
+   ]
+  },
+  {
+   "front": "Why isn't 1 prime?",
+   "back": [
+    {
+     "type": "p",
+     "text": "A prime needs exactly two positive divisors, and 1 has only one. (This also keeps factorizations unique.)"
+    }
+   ]
+  },
+  {
+   "front": "Use factorizations to find gcd(48, 180) and lcm(48, 180).",
+   "back": [
+    {
+     "type": "p",
+     "text": "gcd = 2²·3 = 12, lcm = 2⁴·3²·5 = 720. Check: 12·720 = 48·180 = 8640."
+    }
+   ]
+  },
+  {
+   "front": "Use Euclid to find gcd(91, 35).",
+   "back": [
+    {
+     "type": "p",
+     "text": "91 = 2·35 + 21, 35 = 1·21 + 14, 21 = 1·14 + 7, 14 = 2·7 + 0. So the gcd is 7."
+    }
+   ]
+  },
+  {
+   "front": "Write gcd(91, 35) = 7 as s·91 + t·35.",
+   "back": [
+    {
+     "type": "p",
+     "text": "7 = 21 − (35 − 21) = 2·21 − 35 = 2(91 − 2·35) − 35 = 2·91 − 5·35."
+    }
+   ]
+  },
+  {
+   "front": "Find the inverse of 3 mod 11.",
+   "back": [
+    {
+     "type": "p",
+     "text": "4, since 3·4 = 12 ≡ 1."
+    }
+   ]
+  },
+  {
+   "front": "Solve 3x ≡ 5 (mod 11).",
+   "back": [
+    {
+     "type": "p",
+     "text": "x ≡ 4·5 = 20 ≡ 9. Check: 27 ≡ 5."
+    }
+   ]
+  },
+  {
+   "front": "Does 6x ≡ 4 (mod 9) have a solution?",
+   "back": [
+    {
+     "type": "p",
+     "text": "No. gcd(6, 9) = 3 doesn't divide 4."
+    }
+   ]
+  },
+  {
+   "front": "Fundamental Theorem of Arithmetic?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Every integer n > 1 is a product of primes in exactly one way, up to order: n = p₁^{a₁}⋯p_k^{a_k}. Existence by strong induction; uniqueness by Euclid’s lemma."
+    }
+   ]
+  },
+  {
+   "front": "Trial division: how far must you test to prove n prime?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Primes up to √n (including √n itself). If n = ab with 1 &lt; a ≤ b then a² ≤ n."
+    }
+   ]
+  },
+  {
+   "front": "Prove there are infinitely many primes.",
+   "back": [
+    {
+     "type": "p",
+     "text": "Suppose p₁, …, pₙ are all. Q = p₁⋯pₙ + 1 > 1 has a prime factor pᵢ. pᵢ | Q and pᵢ | p₁⋯pₙ, so pᵢ | 1. Contradiction."
+    },
+    {
+     "type": "warn",
+     "text": "Q need not be prime: 2·3·5·7·11·13 + 1 = 59·509."
+    }
+   ]
+  },
+  {
+   "front": "Number of positive divisors of p₁^{e₁}⋯p_k^{e_k}?",
+   "back": [
+    {
+     "type": "formula",
+     "text": "(e₁ + 1)(e₂ + 1)⋯(e_k + 1)"
+    }
+   ]
+  },
+  {
+   "front": "gcd and lcm from factorizations?",
+   "back": [
+    {
+     "type": "p",
+     "text": "gcd: min exponent of each prime; lcm: max exponent."
+    },
+    {
+     "type": "formula",
+     "text": "gcd(a, b) · lcm(a, b) = ab (two numbers only)"
+    }
+   ]
+  },
+  {
+   "front": "Why does the Euclidean algorithm work, and why does it stop?",
+   "back": [
+    {
+     "type": "p",
+     "text": "If a = bq + r then gcd(a, b) = gcd(b, r) (same common divisors). Remainders strictly decrease and stay ≥ 0, so they reach 0; then gcd(rₙ, 0) = rₙ. Every two steps the remainder at least halves, so it is fast."
+    }
+   ]
+  },
+  {
+   "front": "Bézout’s theorem?",
+   "back": [
+    {
+     "type": "formula",
+     "text": "gcd(a, b) = sa + tb for some integers s, t"
+    },
+    {
+     "type": "p",
+     "text": "In fact gcd(a, b) is the smallest positive integer combination of a and b (well-ordering proof)."
+    }
+   ]
+  },
+  {
+   "front": "Euclid’s lemma and its coprime version?",
+   "back": [
+    {
+     "type": "list",
+     "items": [
+      "p prime, p | ab ⇒ p | a or p | b",
+      "gcd(a, b) = 1, a | bc ⇒ a | c"
+     ]
+    },
+    {
+     "type": "p",
+     "text": "Proof: multiply 1 = sa + tb by c."
+    }
+   ]
+  },
+  {
+   "front": "When does a have an inverse mod m, and how do you find it?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Exactly when gcd(a, m) = 1. Run extended Euclid: 1 = sa + tm, and s (reduced mod m) is the inverse."
+    },
+    {
+     "type": "warn",
+     "text": "The inverse is the coefficient on a, not on m."
+    }
+   ]
+  },
+  {
+   "front": "When does ax ≡ b (mod m) have a solution? How many mod m?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Let d = gcd(a, m). Solvable iff d | b; then exactly d solutions mod m, spaced m/d apart."
+    }
+   ]
+  },
+  {
+   "front": "Solving ax ≡ b (mod m) when d = gcd(a, m) > 1: what do you divide?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Divide a, b and m by d, solve a′x ≡ b′ (mod m/d), then list x₀, x₀ + m/d, …, x₀ + (d − 1)m/d."
+    },
+    {
+     "type": "warn",
+     "text": "Forgetting to divide m loses solutions."
+    }
+   ]
+  },
+  {
+   "front": "Cancellation law mod m?",
+   "back": [
+    {
+     "type": "p",
+     "text": "If ac ≡ bc (mod m) and gcd(c, m) = 1, then a ≡ b (mod m). Without coprimality it fails: 2·1 ≡ 2·4 (mod 6) but 1 ≢ 4."
+    }
+   ]
+  },
+  {
+   "front": "If a | c and b | c, must ab | c?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Only if gcd(a, b) = 1. Counterexample: a = b = c = 2. Proof of the coprime case: c = c(sa + tb) = csa + ctb, each term a multiple of ab."
+    }
+   ]
+  },
+  {
+   "front": "Pairwise relatively prime vs relatively prime?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Pairwise: every pair has gcd 1. 6, 10, 15 have no common factor overall but are not pairwise relatively prime."
+    }
+   ]
+  }
+ ],
+ "hard": [
+  {
+   "title": "Extended Euclid on 4199 and 1547",
+   "level": "hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "Find gcd(4199, 1547), integers s, t with 4199s + 1547t = gcd, and lcm(4199, 1547)."
+    }
+   ],
+   "answer": "gcd = 221 = 3·4199 − 8·1547; lcm = 29393",
+   "solution": [
+    {
+     "type": "formula",
+     "text": "4199 = 2·1547 + 1105"
+    },
+    {
+     "type": "formula",
+     "text": "1547 = 1·1105 + 442"
+    },
+    {
+     "type": "formula",
+     "text": "1105 = 2·442 + 221"
+    },
+    {
+     "type": "formula",
+     "text": "442 = 2·221 + 0"
+    },
+    {
+     "type": "p",
+     "text": "So the gcd is <b>221</b>. Back-substitute:"
+    },
+    {
+     "type": "p",
+     "text": "221 = 1105 − 2·442 = 1105 − 2(1547 − 1105) = 3·1105 − 2·1547 = 3(4199 − 2·1547) − 2·1547 = 3·4199 − 8·1547."
+    },
+    {
+     "type": "p",
+     "text": "<b>Answer:</b> gcd = 221, s = 3, t = −8; lcm = 4199·1547/221 = 19·1547 = 29393."
+    },
+    {
+     "type": "p",
+     "text": "(As a check: 4199 = 13·17·19, 1547 = 7·13·17, gcd = 13·17, lcm = 7·13·17·19.)"
+    },
+    {
+     "type": "tip",
+     "text": "<b>Tests:</b> careful back-substitution. <b>Common mistake:</b> substituting a remainder from the wrong line, which shows up as a final check that doesn’t equal 221. Always verify: 12597 − 12376 = 221."
+    }
+   ]
+  },
+  {
+   "title": "Inverse of 97 mod 1001",
+   "level": "hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "Find the inverse of 97 modulo 1001, as an integer in [0, 1000]."
+    }
+   ],
+   "answer": "258",
+   "solution": [
+    {
+     "type": "formula",
+     "text": "1001 = 10·97 + 31"
+    },
+    {
+     "type": "formula",
+     "text": "97 = 3·31 + 4"
+    },
+    {
+     "type": "formula",
+     "text": "31 = 7·4 + 3"
+    },
+    {
+     "type": "formula",
+     "text": "4 = 1·3 + 1"
+    },
+    {
+     "type": "p",
+     "text": "1 = 4 − 3 = 4 − (31 − 7·4) = 8·4 − 31 = 8(97 − 3·31) − 31 = 8·97 − 25·31 = 8·97 − 25(1001 − 10·97) = 258·97 − 25·1001."
+    },
+    {
+     "type": "p",
+     "text": "<b>Answer:</b> 97<sup>−1</sup> ≡ 258 (mod 1001)."
+    },
+    {
+     "type": "p",
+     "text": "Check: 97·258 = 25026 = 25·1001 + 1. ✓"
+    },
+    {
+     "type": "tip",
+     "text": "<b>Tests:</b> the inverse is the Bézout coefficient of a. <b>Common mistake:</b> giving the coefficient of 1001 (−25), or a negative coefficient without reducing it into range."
+    }
+   ]
+  },
+  {
+   "title": "Three linear congruences",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "Solve each congruence completely. List every solution in the given range, or explain why there are none."
+    },
+    {
+     "type": "list",
+     "items": [
+      "(a) 34x ≡ 77 (mod 89)",
+      "(b) 12x ≡ 18 (mod 30), with 0 ≤ x &lt; 30",
+      "(c) 10x ≡ 7 (mod 25)"
+     ]
+    }
+   ],
+   "answer": "(a) x ≡ 52 (mod 89) (b) x ∈ {4, 9, 14, 19, 24, 29} (c) no solution (5 ∤ 7)",
+   "solution": [
+    {
+     "type": "p",
+     "text": "(a) 89 is prime. Euclid: 89 = 2·34 + 21, 34 = 21 + 13, 21 = 13 + 8, 13 = 8 + 5, 8 = 5 + 3, 5 = 3 + 2, 3 = 2 + 1. Back-substituting gives 1 = 13·89 − 34·34, so 34<sup>−1</sup> ≡ −34 ≡ 55. Then x ≡ 55·77 = 4235 ≡ <b>52 (mod 89)</b>. Check: 34·52 = 1768 = 19·89 + 77. ✓"
+    },
+    {
+     "type": "p",
+     "text": "(b) gcd(12, 30) = 6 and 6 | 18, so there are exactly 6 solutions mod 30. Divide through by 6: 2x ≡ 3 (mod 5), so x ≡ 3·3 = 9 ≡ 4 (mod 5). <b>x ∈ {4, 9, 14, 19, 24, 29}</b>."
+    },
+    {
+     "type": "p",
+     "text": "(c) gcd(10, 25) = 5 ∤ 7: <b>no solutions</b>. (10x − 7 would have to be a multiple of 25, but 10x − 7 ≡ −7 ≡ 3 (mod 5).)"
+    },
+    {
+     "type": "tip",
+     "text": "<b>Tests:</b> ax ≡ b (mod m) is solvable iff gcd(a, m) | b, and then it has exactly gcd(a, m) solutions mod m. <b>Common mistake:</b> in (b), dividing 12 and 18 by 6 but leaving the modulus at 30, or reporting only x ≡ 4."
+    }
+   ]
+  },
+  {
+   "title": "Symbolic Euclid steps",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "list",
+     "items": [
+      "(a) Prove gcd(2n + 1, 3n + 1) = 1 for every integer n ≥ 0.",
+      "(b) Find all possible values of gcd(n² + 1, n + 1) for n ≥ 1, and say exactly when each occurs."
+     ]
+    }
+   ],
+   "answer": "(a) gcd = gcd(n, 1) = 1 (b) gcd(n² + 1, n + 1) = gcd(2, n + 1): 2 if n odd, 1 if n even",
+   "solution": [
+    {
+     "type": "p",
+     "text": "Key fact: gcd(a, b) = gcd(a − kb, b) for any integer k, because the common divisors are the same."
+    },
+    {
+     "type": "p",
+     "text": "(a) gcd(3n + 1, 2n + 1) = gcd(n, 2n + 1) = gcd(n, 1) = 1."
+    },
+    {
+     "type": "p",
+     "text": "(b) n² + 1 = (n + 1)(n − 1) + 2, so gcd(n² + 1, n + 1) = gcd(2, n + 1). That is <b>2 if n is odd</b> and <b>1 if n is even</b>."
+    },
+    {
+     "type": "tip",
+     "text": "<b>Tests:</b> one Euclid step done symbolically. <b>Common mistake:</b> testing n = 1, 2, 3 and stating a pattern without proof."
+    }
+   ]
+  },
+  {
+   "title": "Six number-theory true/false claims",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "All letters are positive integers, and p is prime."
+    },
+    {
+     "type": "list",
+     "items": [
+      "(a) If p | a² then p | a.",
+      "(b) If gcd(a, b) = gcd(a, c) = 1, then gcd(a, bc) = 1.",
+      "(c) If gcd(a, b) = gcd(a, c), then b = c.",
+      "(d) If a | c and b | c, then ab | c.",
+      "(e) If 2<sup>n</sup> − 1 is prime, then n is prime. Is the converse true?",
+      "(f) gcd(a, b) · lcm(a, b) = ab."
+     ]
+    }
+   ],
+   "answer": "(a) T (b) T (c) F (d) F (e) T, converse false (2047 = 23·89) (f) T",
+   "solution": [
+    {
+     "type": "list",
+     "items": [
+      "(a) <b>True</b>, by Euclid’s lemma (p | a·a ⇒ p | a or p | a).",
+      "(b) <b>True.</b> If some prime q divided both a and bc, then q | b or q | c, so q would be a common factor of a with b or with c. Contradiction.",
+      "(c) <b>False.</b> a = 2, b = 3, c = 5.",
+      "(d) <b>False.</b> a = b = c = 2.",
+      "(e) <b>True.</b> If n = rs with 1 &lt; r &lt; n, put x = 2<sup>r</sup> into x<sup>s</sup> − 1 = (x − 1)(x<sup>s−1</sup> + ⋯ + 1). Then 2<sup>r</sup> − 1 divides 2<sup>n</sup> − 1, and 1 &lt; 2<sup>r</sup> − 1 &lt; 2<sup>n</sup> − 1. The converse is <b>false</b>: 2<sup>11</sup> − 1 = 2047 = 23 · 89.",
+      "(f) <b>True.</b> Write a and b over the same primes. The exponent of p in gcd · lcm is min(α, β) + max(α, β) = α + β, which is its exponent in ab."
+     ]
+    },
+    {
+     "type": "tip",
+     "text": "<b>Tests:</b> using the right tool: Euclid’s lemma, prime exponents, or a counterexample. <b>Common mistake:</b> (d) is true only when gcd(a, b) = 1. Problem E7 proves that version."
+    }
+   ]
+  },
+  {
+   "title": "Bézout via well-ordering",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "Prove Bézout’s theorem: if a, b are integers, not both 0, then gcd(a, b) is the <b>smallest positive</b> integer of the form as + bt."
+    }
+   ],
+   "answer": "Proved: the least positive element of {as + bt} divides a and b (division algorithm) and every common divisor divides it, so it is the gcd.",
+   "solution": [
+    {
+     "type": "p",
+     "text": "Let S = {as + bt : s, t ∈ ℤ, as + bt > 0}. S is nonempty, because a·a + b·b > 0. By well-ordering it has a least element d = as<sub>0</sub> + bt<sub>0</sub>."
+    },
+    {
+     "type": "p",
+     "text": "<b>d | a.</b> Divide: a = qd + r, 0 ≤ r &lt; d. Then r = a − q(as<sub>0</sub> + bt<sub>0</sub>) = a(1 − qs<sub>0</sub>) + b(−qt<sub>0</sub>) is also a combination of a and b. If r > 0, then r ∈ S and r &lt; d, contradicting minimality. So r = 0. In the same way, d | b."
+    },
+    {
+     "type": "p",
+     "text": "<b>d is the greatest common divisor.</b> If c | a and c | b, then c | as<sub>0</sub> + bt<sub>0</sub> = d, so c ≤ |c| ≤ d. So d is a common divisor and every common divisor is ≤ d: d = gcd(a, b). ∎"
+    },
+    {
+     "type": "tip",
+     "text": "<b>Tests:</b> using well-ordering together with the division algorithm. <b>Common mistake:</b> not showing that the remainder r is itself a linear combination, which is the whole point of the argument."
+    }
+   ]
+  },
+  {
+   "title": "Multiplying Bézout by c",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "list",
+     "items": [
+      "(a) Prove: if gcd(a, b) = 1, a | c and b | c, then ab | c.",
+      "(b) Prove Euclid’s lemma for coprime numbers: if gcd(a, b) = 1 and a | bc, then a | c."
+     ]
+    }
+   ],
+   "answer": "Proved both from c = acs + bct: (a) each term is a multiple of ab; (b) a divides each term.",
+   "solution": [
+    {
+     "type": "p",
+     "text": "Both start from 1 = as + bt and multiply by c: c = acs + bct."
+    },
+    {
+     "type": "p",
+     "text": "(a) Write c = bk and c = al. Then acs = a(bk)s = ab·ks and bct = b(al)t = ab·lt. Both terms are multiples of ab, so ab | c."
+    },
+    {
+     "type": "p",
+     "text": "(b) a | acs, and a | bc so a | bct. Hence a | c. ∎"
+    },
+    {
+     "type": "tip",
+     "text": "<b>Tests:</b> the trick of multiplying the Bézout identity by c. <b>Common mistake:</b> in (a), writing “c = ak = bl, so ab | c” with no justification. That is exactly the claim that needs proof."
+    }
+   ]
+  },
+  {
+   "title": "Infinitely many primes ≡ 3 (mod 4)",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "Prove there are infinitely many primes congruent to 3 mod 4. Explain why the proof breaks if you use p<sub>1</sub>⋯p<sub>k</sub> + 1."
+    }
+   ],
+   "answer": "Proved with N = 4p₁⋯p_k − 1 ≡ 3 (mod 4), which must have a prime factor ≡ 3 (mod 4) not on the list.",
+   "solution": [
+    {
+     "type": "p",
+     "text": "Suppose the only such primes are p<sub>1</sub>, …, p<sub>k</sub>. Let N = 4p<sub>1</sub>p<sub>2</sub>⋯p<sub>k</sub> − 1. Then N > 1, N is odd, and N ≡ 3 (mod 4)."
+    },
+    {
+     "type": "p",
+     "text": "Every prime factor of N is odd, so it is ≡ 1 or 3 (mod 4). A product of numbers that are all ≡ 1 (mod 4) is ≡ 1 (mod 4). Since N ≡ 3, at least one prime factor q satisfies q ≡ 3 (mod 4). So q = p<sub>i</sub> for some i. But p<sub>i</sub> | 4p<sub>1</sub>⋯p<sub>k</sub> and p<sub>i</sub> | N, so p<sub>i</sub> | 1. Contradiction. ∎"
+    },
+    {
+     "type": "p",
+     "text": "With p<sub>1</sub>⋯p<sub>k</sub> + 1 you can’t control the residue mod 4. It could be ≡ 1 (mod 4) with every prime factor ≡ 1, and then there is no contradiction."
+    },
+    {
+     "type": "tip",
+     "text": "<b>Tests:</b> choosing N so that it is <i>forced</i> to have a prime factor of the right type. <b>Common mistake:</b> saying “N is ≡ 3 mod 4, so N is prime”. N doesn’t have to be prime, only to have such a factor."
+    }
+   ]
+  },
+  {
+   "title": "n | 2ⁿ − 1 forces n = 1",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "Prove that if n ≥ 1 and n | 2<sup>n</sup> − 1, then n = 1."
+    }
+   ],
+   "answer": "Proved: smallest prime p | n gives 2^{gcd(n, p−1)} ≡ 1 (mod p) and gcd(n, p − 1) = 1, so p | 1.",
+   "solution": [
+    {
+     "type": "p",
+     "text": "Suppose n > 1, and let p be the <b>smallest</b> prime factor of n. Since 2<sup>n</sup> − 1 is odd, p is odd, so gcd(2, p) = 1."
+    },
+    {
+     "type": "list",
+     "items": [
+      "2<sup>n</sup> ≡ 1 (mod p), because p | n | 2<sup>n</sup> − 1.",
+      "2<sup>p−1</sup> ≡ 1 (mod p), by Fermat."
+     ]
+    },
+    {
+     "type": "p",
+     "text": "Let g = gcd(n, p − 1) and write g = un + v(p − 1) (Bézout). Since 2 has an inverse mod p, negative powers make sense, and 2<sup>g</sup> = (2<sup>n</sup>)<sup>u</sup>(2<sup>p−1</sup>)<sup>v</sup> ≡ 1 (mod p)."
+    },
+    {
+     "type": "p",
+     "text": "Every prime factor of p − 1 is less than p, and every prime factor of n is at least p. So g = 1, which gives 2 ≡ 1 (mod p), that is, p | 1. Contradiction. ∎"
+    },
+    {
+     "type": "tip",
+     "text": "<b>Tests:</b> combining two congruences 2<sup>a</sup> ≡ 2<sup>b</sup> ≡ 1 into 2<sup>gcd(a,b)</sup> ≡ 1 with Bézout. <b>Common mistake:</b> forgetting that the minimality of p is what forces g = 1."
+    }
+   ]
+  }
+ ],
+ "keyFacts": [
+  "Every n > 1 factors uniquely into primes; n composite ⇒ prime factor ≤ √n",
+  "gcd: min exponents, lcm: max exponents; gcd(a, b) · lcm(a, b) = ab",
+  "a = bq + r ⇒ gcd(a, b) = gcd(b, r); last nonzero remainder is the gcd",
+  "Bézout: gcd(a, b) = sa + tb, the smallest positive combination",
+  "Euclid’s lemma: p prime, p | ab ⇒ p | a or p | b; gcd(a, b) = 1, a | bc ⇒ a | c",
+  "a⁻¹ mod m exists iff gcd(a, m) = 1; it is the Bézout coefficient of a",
+  "ax ≡ b (mod m) solvable iff d = gcd(a, m) | b; then d solutions mod m, spaced m/d",
+  "Divide a, b AND m by d before solving",
+  "Number of divisors of ∏ pᵢ^{eᵢ} is ∏ (eᵢ + 1)"
+ ]
+}

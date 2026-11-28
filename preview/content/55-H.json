@@ -1,0 +1,1123 @@
+{
+ "id": "55-H",
+ "course": "55",
+ "title": "Recursive definitions, structural induction, recursive algorithms",
+ "source": "Rosen 5.3–5.4 · Lec13",
+ "summary": "How to define sequences, sets, strings and trees recursively, and how to prove things about them with structural induction, which mirrors the definition rule by rule. It also covers recursive algorithms: computing their outputs and costs (Tower of Hanoi) and proving them correct by strong induction, a standard final-exam proof.",
+ "lesson": [
+  {
+   "title": "Recursively defined sequences",
+   "blocks": [
+    {
+     "type": "tip",
+     "text": "Define a sequence by giving its starting values and a rule for each new term from earlier terms. Prove things about it by induction, which follows the same structure."
+    },
+    {
+     "type": "def",
+     "term": "recursive definition",
+     "text": "A <b>recursive definition</b> of a function on ℕ gives some <b>initial values (base cases)</b> and a <b>rule</b> for f(n) in terms of earlier values of f."
+    },
+    {
+     "type": "example",
+     "title": "Reading recursive definitions",
+     "prompt": "List the first terms of g₀ = 1, gₙ = 2gₙ₋₁; of h₁ = 1, hₙ = n·hₙ₋₁; and of the Fibonacci numbers, and guess closed forms where you can.",
+     "steps": [
+      "g₀ = 1, gₙ = 2gₙ₋₁: gives 1, 2, 4, 8, 16, so the guess is gₙ = 2ⁿ (prove it by induction).",
+      "h₁ = 1, hₙ = n·hₙ₋₁: gives 1, 2, 6, 24, 120, so hₙ = n!.",
+      "<b>Fibonacci (convention used here):</b> <b>f₀ = 1, f₁ = 1</b>, fₙ = fₙ₋₁ + fₙ₋₂, giving 1, 1, 2, 3, 5, 8, 13, 21, 34, 55, … Two base cases, because each step looks back two."
+     ],
+     "answer": "gₙ = 2ⁿ; hₙ = n!; Fibonacci 1, 1, 2, 3, 5, 8, 13, 21, 34, 55, …"
+    },
+    {
+     "type": "warn",
+     "text": "Rosen uses f₀ = 0, f₁ = 1 (shifted by one). These notes use <b>f₀ = f₁ = 1</b>. Always check which convention a problem uses before quoting a formula."
+    },
+    {
+     "type": "tip",
+     "text": "A recipe that refers back to earlier batches: “Day 0: 1 rabbit pair. Each day: as many as yesterday plus the day before.” To know day 10, work up from day 0. A recursive definition is only legal if every term eventually reduces to the base cases."
+    },
+    {
+     "type": "thm",
+     "name": "Fibonacci sum",
+     "text": "For all n ≥ 0, f₀ + f₁ + ⋯ + fₙ = fₙ₊₂ − 1 (with f₀ = f₁ = 1).",
+     "proof": [
+      {
+       "type": "p",
+       "text": "<b>Base case (n = 0):</b> f₀ = 1 = 2 − 1 = f₂ − 1."
+      },
+      {
+       "type": "p",
+       "text": "<b>Inductive step:</b> assume f₀ + ⋯ + fₖ = fₖ₊₂ − 1. Then f₀ + ⋯ + fₖ + fₖ₊₁ = (fₖ₊₂ − 1) + fₖ₊₁ = fₖ₊₃ − 1, using the recursion fₖ₊₃ = fₖ₊₂ + fₖ₊₁. ∎"
+      }
+     ]
+    },
+    {
+     "type": "thm",
+     "name": "Fibonacci growth",
+     "text": "Let φ = (1 + √5)/2 ≈ 1.618, so φ² = φ + 1. Then fₙ ≥ φⁿ⁻² for all n ≥ 3.",
+     "proof": [
+      {
+       "type": "p",
+       "text": "Strong induction with two base cases: f₃ = 3 ≥ φ ≈ 1.618 and f₄ = 5 ≥ φ² ≈ 2.618."
+      },
+      {
+       "type": "p",
+       "text": "<b>Step:</b> let k ≥ 4 and assume the bound for all 3 ≤ j ≤ k. Then fₖ₊₁ = fₖ + fₖ₋₁ ≥ φᵏ⁻² + φᵏ⁻³ = φᵏ⁻³(φ + 1) = φᵏ⁻³·φ² = φᵏ⁻¹. ∎"
+      },
+      {
+       "type": "p",
+       "text": "Two base cases are needed because the step uses both fₖ and fₖ₋₁."
+      }
+     ]
+    },
+    {
+     "type": "steps",
+     "title": "Computing terms",
+     "items": [
+      "<b>Make a table</b> with columns n and aₙ. Fill in the given starting values first.",
+      "<b>Rewrite the rule for the term you want.</b> If the rule says aₙ₊₁ = 3aₙ − 1, then a₃ = 3a₂ − 1.",
+      "<b>Fill one row at a time</b>, using only rows already filled. For a two-term rule, you always need the last two rows.",
+      "<b>Watch any n inside the rule.</b> In aₙ = aₙ₋₁ + 2n, the n is the index of the <b>new</b> term: a₃ = a₂ + 2·3.",
+      "<b>Check where the indexing starts</b> (a₀ or a₁) before you answer “the fifth term.”"
+     ]
+    },
+    {
+     "type": "steps",
+     "title": "Guess a closed form, then prove it",
+     "items": [
+      "<b>Compute 5 or 6 terms.</b>",
+      "<b>Look for a pattern.</b> Same difference each time: linear, an + b. Same ratio: c·rⁿ. Ratio close to r but off by a fixed amount d: try c·rⁿ + d. Differences growing by the same amount: quadratic.",
+      "<b>Check the guess against every term</b> you computed, including the starting ones.",
+      "<b>Prove it.</b> Let P(n) be “aₙ = <i>[formula]</i>.” Base case(s): one for each starting value given.",
+      "<b>IH:</b> assume the formula for the earlier terms the rule uses. One-term rule: just P(k). Two-term rule: P(k) and P(k − 1), so use strong induction.",
+      "<b>Step:</b> aₖ₊₁ = (the rule) = (put in the IH) = … = the formula with k + 1."
+     ]
+    },
+    {
+     "type": "p",
+     "text": "Checking terms is how you <b>guess</b>. The induction is the <b>proof</b>."
+    },
+    {
+     "type": "steps",
+     "title": "A Fibonacci proof (f₀ = f₁ = 1)",
+     "items": [
+      "<b>Sum facts</b> (f₀ + ⋯ + fₙ, f₀² + ⋯ + fₙ², …): ordinary induction usually works, with one base case. Split off the last term, use the IH, then combine with fₖ₊₂ = fₖ₊₁ + fₖ.",
+      "<b>Facts about fₙ itself</b> (bounds, formulas, divisibility): use strong induction with <b>two</b> base cases, because fₖ₊₁ = fₖ + fₖ₋₁ needs both P(k) and P(k − 1).",
+      "<b>IH (strong):</b> “Let k ≥ 1 (the second base case) and assume P(j) for all 0 ≤ j ≤ k.”",
+      "<b>Step:</b> start from fₖ₊₁ = fₖ + fₖ₋₁, use the IH on <b>both</b> terms, then simplify.",
+      "Never use the IH on fₖ₊₁ itself. That's the thing you're proving something about."
+     ]
+    },
+    {
+     "type": "example",
+     "title": "Computing terms when n appears in the rule",
+     "prompt": "Let a₁ = 3 and aₙ = aₙ₋₁ + 2n for n ≥ 2. Find a₂, a₃, a₄, a₅ and guess a closed form.",
+     "steps": [
+      "a₂ = a₁ + 2·2 = 3 + 4 = 7 — <i>the n in the rule is the index of the new term</i>",
+      "a₃ = 7 + 6 = 13, a₄ = 13 + 8 = 21, a₅ = 21 + 10 = 31",
+      "Differences 4, 6, 8, 10 grow by 2, so the closed form is quadratic.",
+      "Unrolling: aₙ = 3 + 2(2 + 3 + ⋯ + n) = 3 + n(n + 1) − 2 = n² + n + 1. Check n = 5: 25 + 5 + 1 = 31."
+     ],
+     "answer": "a₂ = 7, a₃ = 13, a₄ = 21, a₅ = 31; aₙ = n² + n + 1"
+    },
+    {
+     "type": "example",
+     "title": "A two-term rule, two base cases",
+     "prompt": "Let a₀ = 2, a₁ = 1, and aₙ = aₙ₋₁ + 2aₙ₋₂ for n ≥ 2. Find a pattern and prove it.",
+     "steps": [
+      "<b>Terms:</b> 2, 1, 5, 7, 17, 31, 65. These are near powers of 2 (1, 2, 4, 8, 16, 32, 64), off by +1, −1, +1, −1, … Guess: aₙ = 2ⁿ + (−1)ⁿ.",
+      "Let P(n) be aₙ = 2ⁿ + (−1)ⁿ. The rule looks back 2, so use strong induction with two base cases. <b>Base cases:</b> a₀ = 2 = 2⁰ + (−1)⁰ ✓ and a₁ = 1 = 2¹ + (−1)¹ ✓.",
+      "<b>IH:</b> let k ≥ 1 and assume P(j) for all 0 ≤ j ≤ k. <b>Goal:</b> aₖ₊₁ = 2ᵏ⁺¹ + (−1)ᵏ⁺¹.",
+      "aₖ₊₁ = aₖ + 2aₖ₋₁ — <i>the rule, allowed since k + 1 ≥ 2</i>",
+      "= 2ᵏ + (−1)ᵏ + 2(2ᵏ⁻¹ + (−1)ᵏ⁻¹) — <i>IH for k and for k − 1 (k ≥ 1 makes k − 1 ≥ 0)</i>",
+      "= 2ᵏ + 2ᵏ + (−1)ᵏ + 2(−1)ᵏ⁻¹ — <i>expand: 2·2ᵏ⁻¹ = 2ᵏ</i>",
+      "= 2ᵏ⁺¹ + (−1)ᵏ⁻¹(−1 + 2) — <i>(−1)ᵏ = (−1)ᵏ⁻¹·(−1); factor out (−1)ᵏ⁻¹</i>",
+      "= 2ᵏ⁺¹ + (−1)ᵏ⁻¹ — <i>−1 + 2 = 1</i>",
+      "= 2ᵏ⁺¹ + (−1)ᵏ⁺¹ — <i>(−1)ᵏ⁺¹ = (−1)ᵏ⁻¹·(−1)² = (−1)ᵏ⁻¹</i>",
+      "That is P(k + 1). By strong induction, aₙ = 2ⁿ + (−1)ⁿ for all n ≥ 0. □"
+     ],
+     "answer": "aₙ = 2ⁿ + (−1)ⁿ"
+    },
+    {
+     "type": "warn",
+     "text": "<b>Wrong:</b> one base case for a rule like aₙ = aₙ₋₁ + 2aₙ₋₂. <b>Right:</b> one base case for each starting value, here a₀ and a₁. (The step for a₁ would need a₋₁, which doesn't exist.)"
+    },
+    {
+     "type": "warn",
+     "text": "<b>Wrong:</b> “the formula matches a₀ through a₅, so it's proved.” <b>Right:</b> use the terms to guess, then prove by induction. (Patterns can break: the number of regions you get by joining n points on a circle goes 1, 2, 4, 8, 16, and then 31, not 32.)"
+    },
+    {
+     "type": "warn",
+     "text": "<b>Wrong:</b> for aₙ = aₙ₋₁ + 2n, computing a₃ = a₂ + 2·2. <b>Right:</b> a₃ = a₂ + 2·3. (The n in the rule is the index of the term you are computing.)"
+    },
+    {
+     "type": "warn",
+     "text": "<b>Wrong:</b> in a Fibonacci step, writing “fₖ₊₁ ≤ 2ᵏ⁺¹ by the IH.” <b>Right:</b> the IH only covers indices up to k. Write fₖ₊₁ = fₖ + fₖ₋₁ first, then use the IH on fₖ and fₖ₋₁."
+    }
+   ]
+  },
+  {
+   "title": "Recursively defined sets and structural induction",
+   "blocks": [
+    {
+     "type": "p",
+     "text": "Sets can be defined recursively too: a <b>basis step</b> lists starting elements, a <b>recursive step</b> gives rules that build new elements from old ones, and an implicit <b>exclusion rule</b> says nothing else is in the set."
+    },
+    {
+     "type": "example",
+     "title": "Recursive definitions of sets",
+     "prompt": "Give recursive definitions of (a) the positive integers ≡ 2 (mod 3), (b) the set of all powers of 2, (c) ℤ × ℤ pairs (a, b) with b = 2a.",
+     "steps": [
+      "(a) Basis: 2 ∈ S. Rule: if x ∈ S then x + 3 ∈ S. This produces 2, 5, 8, 11, …",
+      "(b) Basis: 1 ∈ S. Rule: if x ∈ S then 2x ∈ S.",
+      "(c) Basis: (0, 0) ∈ S. Rules: if (a, b) ∈ S then (a + 1, b + 2) ∈ S and (a − 1, b − 2) ∈ S. (Without the second rule you only get a ≥ 0.)",
+      "Check each definition both ways: every element built has the property, and every object with the property can be built."
+     ],
+     "answer": "(a) 2 ∈ S, x ∈ S ⇒ x + 3 ∈ S; (b) 1 ∈ S, x ∈ S ⇒ 2x ∈ S; (c) (0,0) ∈ S, (a,b) ∈ S ⇒ (a ± 1, b ± 2) ∈ S"
+    },
+    {
+     "type": "thm",
+     "name": "Structural induction",
+     "text": "To prove that every element of a recursively defined set S has property Q: (1) <b>basis step</b>: show each basis element has Q; (2) <b>recursive step</b>: for each rule, assume the elements it uses have Q and show the new element has Q. Then every element of S has Q.",
+     "proof": [
+      {
+       "type": "p",
+       "text": "Every element of S is obtained from basis elements by finitely many rule applications. Induct on the number of applications n: an element built in 0 steps is a basis element; an element built in n + 1 steps comes from elements built in at most n steps by one rule, and the recursive step shows Q is passed on. So structural induction is just strong induction on the number of construction steps. ∎"
+      }
+     ]
+    },
+    {
+     "type": "p",
+     "text": "Example: 3 ∈ S, and if x, y ∈ S then x + y ∈ S. Every element is a positive multiple of 3 (basis 3 = 3·1; if x = 3i and y = 3j then x + y = 3(i + j)), and conversely 3k is built by adding 3 to itself k times."
+    },
+    {
+     "type": "steps",
+     "title": "Template: structural induction proof",
+     "items": [
+      "<b>Read the definition.</b> List the basis elements and every rule (“if x ∈ S then … ∈ S”).",
+      "Write: “We prove every element of S has property Q, by structural induction.”",
+      "<b>Basis step:</b> show every basis element has Q.",
+      "<b>Recursive step, one rule at a time:</b> “Assume x (and y) in S have Q” (this is the IH). Show the new element the rule builds also has Q.",
+      "Do <b>every</b> rule. Skipping one leaves a gap.",
+      "<b>Conclusion:</b> “Every element of S is built from basis elements by the rules, so every element has Q. □”"
+     ]
+    },
+    {
+     "type": "p",
+     "text": "Picture Lego: if every starter brick is red, and every way of snapping bricks together keeps things red, then everything you can build is red."
+    },
+    {
+     "type": "example",
+     "title": "Structural induction with three rules",
+     "prompt": "S is a set of pairs of integers. <b>Basis:</b> (0, 0) ∈ S. <b>Rules:</b> if (a, b) ∈ S, then (a, b + 1), (a + 1, b + 1) and (a + 2, b + 1) are in S. Prove that a ≤ 2b for every (a, b) ∈ S.",
+     "steps": [
+      "Let Q(a, b) be “a ≤ 2b.” We use structural induction. In each rule, the IH is: (a, b) ∈ S and a ≤ 2b.",
+      "Basis: 0 ≤ 2·0 — <i>(0, 0) has the property</i>",
+      "Rule 1: a ≤ 2b ≤ 2b + 2 = 2(b + 1) — <i>IH, then add 2 to the right side; so (a, b + 1) has it</i>",
+      "Rule 2: a + 1 ≤ 2b + 1 ≤ 2(b + 1) — <i>IH plus 1 on both sides, then 1 ≤ 2; so (a + 1, b + 1) has it</i>",
+      "Rule 3: a + 2 ≤ 2b + 2 = 2(b + 1) — <i>IH plus 2 on both sides; so (a + 2, b + 1) has it</i>",
+      "The basis has the property and every rule keeps it, so every element of S has a ≤ 2b. □ Rule 3 is the tight one: it is why the bound is 2b and not smaller."
+     ],
+     "answer": "a ≤ 2b for every (a, b) ∈ S (basis and all three rules checked)"
+    },
+    {
+     "type": "warn",
+     "text": "<b>Wrong:</b> in structural induction, checking the basis and only one of the rules. <b>Right:</b> check every rule. (An element built with the unchecked rule might break the property.)"
+    }
+   ]
+  },
+  {
+   "title": "Strings: recursive definitions and proofs",
+   "blocks": [
+    {
+     "type": "def",
+     "term": "Σ* (strings over an alphabet Σ)",
+     "text": "Basis: the empty string λ ∈ Σ*. Recursive step: if w ∈ Σ* and a ∈ Σ, then wa ∈ Σ*. So every string is built by appending one symbol at a time on the right."
+    },
+    {
+     "type": "p",
+     "text": "Functions on strings are defined by recursion on the same structure:"
+    },
+    {
+     "type": "list",
+     "items": [
+      "<b>length:</b> l(λ) = 0, l(wa) = l(w) + 1",
+      "<b>concatenation:</b> x·λ = x, x·(wa) = (x·w)a",
+      "<b>reversal:</b> λ<sup>R</sup> = λ, (wa)<sup>R</sup> = a·w<sup>R</sup>",
+      "<b>number of 1s:</b> ones(λ) = 0, ones(w0) = ones(w), ones(w1) = ones(w) + 1"
+     ]
+    },
+    {
+     "type": "thm",
+     "name": "Length of a concatenation",
+     "text": "For all strings x, y ∈ Σ*: l(xy) = l(x) + l(y).",
+     "proof": [
+      {
+       "type": "p",
+       "text": "Fix x and use structural induction on y (the definitions peel symbols off the right, so induct on the right-hand string)."
+      },
+      {
+       "type": "p",
+       "text": "<b>Basis y = λ:</b> l(xλ) = l(x) = l(x) + 0 = l(x) + l(λ)."
+      },
+      {
+       "type": "p",
+       "text": "<b>Recursive step y = wa:</b> assume l(xw) = l(x) + l(w). Then l(x(wa)) = l((xw)a) = l(xw) + 1 = l(x) + l(w) + 1 = l(x) + l(wa). ∎"
+      }
+     ]
+    },
+    {
+     "type": "steps",
+     "title": "Template: structural induction on strings",
+     "items": [
+      "Say which string you induct on (usually the one the recursive definitions peel apart, here the right-hand one) and fix the others.",
+      "<b>Basis:</b> check the claim for λ using the base clauses of each definition.",
+      "<b>Recursive step:</b> assume the claim for w (IH); prove it for wa for an arbitrary symbol a. Unfold the definitions on wa until w appears, then apply the IH.",
+      "If a set has several rules (like 0w, w0, 1w1), check the claim for <b>every</b> rule.",
+      "Conclude: “by structural induction, the claim holds for every string.”"
+     ]
+    },
+    {
+     "type": "example",
+     "title": "A recursive set of strings, both inclusions",
+     "prompt": "S ⊆ {0,1}*: λ ∈ S; if w ∈ S then 0w ∈ S, w0 ∈ S and 1w1 ∈ S. Prove S is exactly the set E of bit strings with an even number of 1s.",
+     "steps": [
+      "<b>S ⊆ E</b> (structural induction). Basis: λ has zero 1s, which is even.",
+      "Rules: if ones(w) is even, then ones(0w) = ones(w0) = ones(w) and ones(1w1) = ones(w) + 2, all even.",
+      "<b>E ⊆ S</b> (strong induction on length). λ ∈ S. Let s ∈ E with length ≥ 1.",
+      "If s starts with 0, s = 0w with w ∈ E shorter, so w ∈ S and s = 0w ∈ S. If s ends with 0, similarly s = w0 ∈ S.",
+      "Otherwise s starts and ends with 1. It has an even, nonzero number of 1s, so length ≥ 2 and s = 1w1 where w has two fewer 1s: w ∈ E is shorter, so w ∈ S and s ∈ S.",
+      "Both inclusions hold, so S = E. (Checked by computer for every string of length ≤ 10.)"
+     ],
+     "answer": "S = {bit strings with an even number of 1s}"
+    },
+    {
+     "type": "warn",
+     "text": "Structural induction proves “everything built has the property” (S ⊆ E). The reverse inclusion (“everything with the property can be built”) needs a separate argument, usually strong induction on length."
+    },
+    {
+     "type": "example",
+     "title": "Recursive definition of a string set",
+     "prompt": "Give a recursive definition of the set of bit strings that are palindromes (w<sup>R</sup> = w).",
+     "steps": [
+      "Basis: λ, 0, 1 are palindromes (lengths 0 and 1).",
+      "Rule: if w is a palindrome then 0w0 and 1w1 are palindromes.",
+      "Why it is complete: a palindrome of length ≥ 2 has equal first and last symbols, and stripping them leaves a shorter palindrome."
+     ],
+     "answer": "λ, 0, 1 ∈ Pal; w ∈ Pal ⇒ 0w0, 1w1 ∈ Pal"
+    }
+   ]
+  },
+  {
+   "title": "Full binary trees",
+   "blocks": [
+    {
+     "type": "def",
+     "term": "full binary tree",
+     "text": "Basis: a single vertex r is a full binary tree. Recursive step: if T₁ and T₂ are disjoint full binary trees, then T₁·T₂ (a new root r joined to the roots of T₁ and T₂) is a full binary tree. Every internal vertex has exactly 2 children."
+    },
+    {
+     "type": "list",
+     "items": [
+      "<b>vertices:</b> n(single vertex) = 1, n(T₁·T₂) = 1 + n(T₁) + n(T₂)",
+      "<b>height:</b> h(single vertex) = 0, h(T₁·T₂) = 1 + max(h(T₁), h(T₂))",
+      "<b>leaves:</b> l(single vertex) = 1, l(T₁·T₂) = l(T₁) + l(T₂)",
+      "<b>internal vertices:</b> i(single vertex) = 0, i(T₁·T₂) = 1 + i(T₁) + i(T₂)"
+     ]
+    },
+    {
+     "type": "thm",
+     "name": "Size bound",
+     "text": "Every full binary tree T satisfies n(T) ≤ 2<sup>h(T)+1</sup> − 1.",
+     "proof": [
+      {
+       "type": "p",
+       "text": "<b>Basis:</b> a single vertex has n = 1 and h = 0, and 1 ≤ 2¹ − 1."
+      },
+      {
+       "type": "p",
+       "text": "<b>Recursive step:</b> let T = T₁·T₂ and assume n(T₁) ≤ 2<sup>h(T₁)+1</sup> − 1 and n(T₂) ≤ 2<sup>h(T₂)+1</sup> − 1. Then"
+      },
+      {
+       "type": "formula",
+       "text": "n(T) = 1 + n(T₁) + n(T₂) ≤ 1 + (2<sup>h(T₁)+1</sup> − 1) + (2<sup>h(T₂)+1</sup> − 1)"
+      },
+      {
+       "type": "formula",
+       "text": "≤ 2·2<sup>max(h(T₁), h(T₂))+1</sup> − 1 = 2<sup>max(h(T₁), h(T₂))+2</sup> − 1 = 2<sup>h(T)+1</sup> − 1"
+      },
+      {
+       "type": "p",
+       "text": "using 2<sup>a</sup> + 2<sup>b</sup> ≤ 2·2<sup>max(a,b)</sup> and h(T) = 1 + max(h(T₁), h(T₂)). ∎"
+      }
+     ]
+    },
+    {
+     "type": "thm",
+     "name": "Leaves vs internal vertices",
+     "text": "Every full binary tree has l(T) = i(T) + 1, so n(T) = 2i(T) + 1 is odd.",
+     "proof": [
+      {
+       "type": "p",
+       "text": "<b>Basis:</b> a single vertex has l = 1, i = 0, and 1 = 0 + 1."
+      },
+      {
+       "type": "p",
+       "text": "<b>Recursive step:</b> assume l(T₁) = i(T₁) + 1 and l(T₂) = i(T₂) + 1. Then l(T) = l(T₁) + l(T₂) = i(T₁) + i(T₂) + 2 = (1 + i(T₁) + i(T₂)) + 1 = i(T) + 1. ∎"
+      },
+      {
+       "type": "p",
+       "text": "Then n = l + i = 2i + 1."
+      }
+     ]
+    },
+    {
+     "type": "steps",
+     "title": "Template: structural induction on trees",
+     "items": [
+      "Write the recursive formulas for every quantity in the claim (n, h, l, i …) for the single vertex and for T₁·T₂.",
+      "<b>Basis:</b> plug in the single-vertex values.",
+      "<b>Recursive step:</b> assume the claim for T₁ <b>and</b> T₂ (two hypotheses), write the quantity for T₁·T₂ with the recursive formula, apply both hypotheses, simplify.",
+      "For max(h(T₁), h(T₂)), bound each term by the max: 2<sup>h(T₁)</sup> ≤ 2<sup>max</sup>.",
+      "Do not induct on n or h with ordinary induction: the two subtrees can have very different sizes."
+     ]
+    },
+    {
+     "type": "example",
+     "title": "Using the tree facts",
+     "prompt": "Can a full binary tree have (a) height 3 and 16 vertices? (b) 10 leaves and height 3? (c) 7 internal vertices? If yes, how many vertices and leaves?",
+     "steps": [
+      "(a) n ≤ 2<sup>3+1</sup> − 1 = 15 &lt; 16, so no. (Also 16 is even, and n is always odd.)",
+      "(b) A full binary tree of height h has at most 2<sup>h</sup> leaves (a short structural induction: l(T₁·T₂) ≤ 2<sup>h₁</sup> + 2<sup>h₂</sup> ≤ 2<sup>h</sup>). At height 3 that is 8 &lt; 10, so no.",
+      "(c) Yes: l = i + 1 = 8 leaves and n = 2·7 + 1 = 15 vertices (the perfect tree of height 3 is one example)."
+     ],
+     "answer": "(a) no; (b) no (at most 8 leaves); (c) yes: 8 leaves, 15 vertices"
+    }
+   ]
+  },
+  {
+   "title": "Recursive algorithms and the Tower of Hanoi",
+   "blocks": [
+    {
+     "type": "tip",
+     "text": "A recursive algorithm solves a problem by calling itself on smaller inputs until it hits a base case. Its correctness and its running time are proved by induction."
+    },
+    {
+     "type": "def",
+     "term": "recursive algorithm",
+     "text": "A <b>recursive algorithm</b> calls itself on smaller inputs as part of its definition."
+    },
+    {
+     "type": "p",
+     "text": "<b>Euclid's algorithm, recursively:</b> gcd(a, b) with a ≥ b: if b = 0, output a. Otherwise write a = qb + r with 0 ≤ r &lt; b and output gcd(b, r). Example: gcd(84, 33) → gcd(33, 18) → gcd(18, 15) → gcd(15, 3) → gcd(3, 0) = 3."
+    },
+    {
+     "type": "example",
+     "title": "Tower of Hanoi: count the moves",
+     "prompt": "n disks of different sizes sit on one of 3 pegs, largest at the bottom. Move them all to another peg, one disk at a time, never putting a disk on a smaller one. How many moves does the recursive solution use?",
+     "steps": [
+      "Recursive solution: move the top n − 1 disks to the spare peg (recursively), move the biggest disk to the destination, move the n − 1 disks back on top of it (recursively).",
+      "Count: H₁ = 1 and Hₙ = 2Hₙ₋₁ + 1 (two recursive calls plus one move).",
+      "Terms: 1, 3, 7, 15, 31, … Guess Hₙ = 2ⁿ − 1.",
+      "Proof by induction: H₁ = 1 = 2¹ − 1; if Hₖ = 2ᵏ − 1 then Hₖ₊₁ = 2(2ᵏ − 1) + 1 = 2ᵏ⁺¹ − 1."
+     ],
+     "answer": "Hₙ = 2ⁿ − 1 (e.g. 31 moves for 5 disks)"
+    },
+    {
+     "type": "thm",
+     "name": "Hanoi is optimal",
+     "text": "Every solution of the n-disk puzzle uses at least 2ⁿ − 1 moves.",
+     "proof": [
+      {
+       "type": "p",
+       "text": "Induction on n; n = 1 needs 1 move. Before the biggest disk first moves, the other n − 1 disks must all sit on the third peg, which takes at least 2ⁿ⁻¹ − 1 moves by the IH. After its last move, they all have to be moved onto it, at least 2ⁿ⁻¹ − 1 more. Plus at least 1 move of the big disk: at least 2ⁿ − 1 in total. ∎"
+      }
+     ]
+    },
+    {
+     "type": "tip",
+     "text": "Open a doll, find a smaller doll, repeat until you reach the solid one in the middle (the base case). Every recursive algorithm needs a base case, and each call must shrink the input."
+    },
+    {
+     "type": "steps",
+     "title": "Count moves or steps",
+     "items": [
+      "Let T(n) be the number of moves (or additions, multiplications, …) on input n.",
+      "<b>Base:</b> read T(base) off the base case of the algorithm.",
+      "<b>Recurrence:</b> add up the cost of each recursive call plus the work done in this call. Hanoi: two calls on n − 1 disks plus 1 move, so T(n) = 2T(n − 1) + 1.",
+      "<b>Compute</b> T(1), T(2), T(3), T(4) and guess a closed form.",
+      "<b>Prove</b> the closed form by induction: put the IH into the recurrence."
+     ]
+    },
+    {
+     "type": "p",
+     "text": "Count what the algorithm <b>does</b>, not what it <b>returns</b>. They are different numbers."
+    },
+    {
+     "type": "steps",
+     "title": "Solve Hanoi by hand",
+     "items": [
+      "To move n disks from X to Z using Y: move n − 1 disks X → Y (using Z), move the biggest disk X → Z, move the n − 1 disks Y → Z (using X).",
+      "Unfold this until every piece is a 1-disk move.",
+      "<b>Shortcut:</b> the smallest disk moves on every other move (moves 1, 3, 5, …). With an odd number of disks it goes to the target peg first; with an even number, to the spare peg first.",
+      "<b>n = 3, from A to C</b> (disk 1 = smallest): 1: A→C, 2: A→B, 1: C→B, 3: A→C, 1: B→A, 2: B→C, 1: A→C. That's 7 = 2³ − 1 moves.",
+      "<b>Who moves how often:</b> disk j moves 2ⁿ⁻ʲ times. The largest disk moves once, the smallest moves 2ⁿ⁻¹ times."
+     ]
+    },
+    {
+     "type": "warn",
+     "text": "<b>Wrong:</b> “Hanoi with n disks takes 2ⁿ moves.” <b>Right:</b> 2ⁿ − 1. (Check n = 1: one disk needs 1 move, not 2.)"
+    },
+    {
+     "type": "warn",
+     "text": "<b>Wrong:</b> Hanoi recurrence Hₙ = 2Hₙ₋₁. <b>Right:</b> Hₙ = 2Hₙ₋₁ + 1. (The + 1 is the one move of the biggest disk.)"
+    },
+    {
+     "type": "example",
+     "title": "Count additions in a recursive algorithm",
+     "prompt": "fib(n): if n ≤ 1 return 1, else return fib(n − 1) + fib(n − 2). Let A(n) be the number of additions it performs. Find A(n) for n ≤ 6 and a formula.",
+     "steps": [
+      "A(0) = A(1) = 0 (base case, no addition).",
+      "A(n) = A(n − 1) + A(n − 2) + 1: both calls plus this call’s one addition.",
+      "A(2) = 1, A(3) = 2, A(4) = 4, A(5) = 7, A(6) = 12.",
+      "Guess A(n) = fₙ − 1 (with f₀ = f₁ = 1): f₆ − 1 = 13 − 1 = 12 ✓.",
+      "Proof: A(n) + 1 = (A(n − 1) + 1) + (A(n − 2) + 1), the Fibonacci recursion, with A(0) + 1 = A(1) + 1 = 1. So A(n) + 1 = fₙ."
+     ],
+     "answer": "A(n) = fₙ − 1 (A(6) = 12): the naive recursion is exponentially slow"
+    }
+   ]
+  },
+  {
+   "title": "Proving recursive algorithms correct",
+   "blocks": [
+    {
+     "type": "steps",
+     "title": "Describe a recursive algorithm",
+     "items": [
+      "<b>Base case:</b> pick the smallest input(s) and answer them directly (n = 0, b = 0, one disk, an empty list).",
+      "<b>Shrink:</b> say how the answer for input n comes from the answer for a <b>smaller</b> input (n − 1, n/2, the pair (b, r), n − 1 disks).",
+      "<b>Combine:</b> say what to do with the smaller answer (multiply by n, square it, add a digit, …).",
+      "<b>Check it stops:</b> every call must be on a strictly smaller input that eventually hits the base case.",
+      "<b>Write it in this shape:</b> “procedure name(input): if (base case) return …; else return … name(smaller input) ….”"
+     ]
+    },
+    {
+     "type": "steps",
+     "title": "Template: correctness of a recursive algorithm",
+     "items": [
+      "<b>Claim:</b> “Let P(n) be: on input n, the algorithm returns <i>[the right answer]</i>. We prove P(n) for all n ≥ a by induction on n.” Induct on the thing that shrinks.",
+      "If the recursive call can jump down by more than 1 (n/2, a remainder r), use <b>strong</b> induction.",
+      "<b>Base case:</b> run the code on the base input. It returns the right answer directly.",
+      "<b>IH:</b> “Assume the algorithm returns the right answer on every smaller input.”",
+      "<b>Step:</b> follow the code on input k + 1. When it calls itself on a smaller input, replace that call by the right answer. <b>This is where the IH is used.</b>",
+      "<b>Finish with a math fact</b> showing the combine line gives the right answer (like a·aᵏ = aᵏ⁺¹ or gcd(a, b) = gcd(b, r)).",
+      "<b>Conclusion:</b> “By (strong) induction, the algorithm is correct on every input. □”"
+     ]
+    },
+    {
+     "type": "example",
+     "title": "Recursive Euclid is correct",
+     "prompt": "Algorithm gcd(a, b) for a ≥ b ≥ 0, a > 0: if b = 0, return a. Otherwise write a = qb + r with 0 ≤ r &lt; b and return gcd(b, r). Prove it always returns the greatest common divisor of a and b.",
+     "steps": [
+      "Let P(b) be “for every a ≥ b with a > 0, the algorithm on (a, b) returns gcd(a, b).” We use strong induction on b ≥ 0, because the next call is on r, which can be any number below b.",
+      "Base (b = 0): the algorithm returns a — <i>first line of the code</i>",
+      "gcd(a, 0) = a — <i>every integer divides 0, and the biggest divisor of a > 0 is a; so P(0) ✓</i>",
+      "IH: let b ≥ 1, assume P(j) for all 0 ≤ j &lt; b — <i>strong induction</i>",
+      "a = qb + r with 0 ≤ r &lt; b — <i>the code's next line (division algorithm)</i>",
+      "the algorithm returns gcd(b, r) — <i>a valid input, since b ≥ r and b > 0</i>",
+      "that call returns the true gcd(b, r) — <i>by the IH, since r &lt; b</i>",
+      "gcd(b, r) = gcd(a, b) — <i>r = a − qb, so a, b and b, r have exactly the same common divisors</i>",
+      "So the algorithm returns gcd(a, b), which is P(b). By strong induction it is correct for every input. □"
+     ],
+     "answer": "The algorithm returns gcd(a, b) for every valid input (strong induction on b)."
+    },
+    {
+     "type": "example",
+     "title": "Fast powers by squaring",
+     "prompt": "pow(a, n) for n ≥ 0: if n = 0, return 1. If n is even, let t = pow(a, n/2) and return t·t. If n is odd, return a·pow(a, n − 1). Prove pow(a, n) = aⁿ.",
+     "steps": [
+      "<b>Trace first:</b> pow(3, 6) calls pow(3, 3), which calls pow(3, 2), then pow(3, 1), then pow(3, 0) = 1. Coming back up: 3·1 = 3, then 3·3 = 9, then 3·9 = 27, then 27·27 = 729 = 3⁶ ✓.",
+      "Let P(n) be “pow(a, n) returns aⁿ.” Strong induction on n, because the even case jumps down to n/2.",
+      "Base (n = 0): returns 1 = a⁰ — <i>first line of the code; P(0) ✓</i>",
+      "IH: let k ≥ 0, assume P(j) for all 0 ≤ j ≤ k — <i>strong induction; goal is P(k + 1)</i>",
+      "k + 1 even: t = pow(a, (k + 1)/2) — <i>what the code does</i>",
+      "(k + 1)/2 ≤ k — <i>k + 1 even means k + 1 ≥ 2, so k ≥ 1, and then k + 1 ≤ 2k</i>",
+      "t = a<sup>(k + 1)/2</sup>, so t·t = aᵏ⁺¹ — <i>IH on (k + 1)/2, then add exponents</i>",
+      "k + 1 odd: returns a·pow(a, k) — <i>what the code does</i>",
+      "= a·aᵏ = aᵏ⁺¹ — <i>IH on k</i>",
+      "Both cases give aᵏ⁺¹, so P(k + 1) holds. By strong induction, pow is correct. □ Bonus: it uses about 2·log₂ n multiplications instead of the n − 1 of the plain loop."
+     ],
+     "answer": "pow(a, n) = aⁿ for all n ≥ 0 (strong induction on n); pow(3, 6) = 729"
+    },
+    {
+     "type": "warn",
+     "text": "<b>Wrong:</b> a recursive call that doesn't shrink, like fact(n) = n·fact(n + 1), or a missing base case. <b>Right:</b> every call is on a smaller input, and the smallest input is answered directly. (Otherwise the algorithm never stops, like a doll that never runs out of smaller dolls.)"
+    },
+    {
+     "type": "warn",
+     "text": "<b>Wrong:</b> in a correctness proof, “by the IH, the algorithm is correct on k + 1.” <b>Right:</b> the IH only covers <b>smaller</b> inputs. Follow the code on k + 1 and use the IH only on the recursive call inside it."
+    },
+    {
+     "type": "warn",
+     "text": "<b>Wrong:</b> proving pow(a, n) correct with ordinary induction (IH: P(k) only), then using P((k + 1)/2). <b>Right:</b> strong induction, since (k + 1)/2 is usually much smaller than k."
+    }
+   ]
+  }
+ ],
+ "cards": [
+  {
+   "front": "With f₀ = f₁ = 1, list f₀ through f₇.",
+   "back": [
+    {
+     "type": "p",
+     "text": "1, 1, 2, 3, 5, 8, 13, 21."
+    }
+   ]
+  },
+  {
+   "front": "Check f₀ + ⋯ + f₄ = f₆ − 1.",
+   "back": [
+    {
+     "type": "p",
+     "text": "1 + 1 + 2 + 3 + 5 = 12 and f₆ − 1 = 13 − 1 = 12 ✓."
+    }
+   ]
+  },
+  {
+   "front": "a₀ = 1, aₙ₊₁ = 3aₙ − 1. Find a₁, a₂, a₃.",
+   "back": [
+    {
+     "type": "p",
+     "text": "2, 5, 14."
+    }
+   ]
+  },
+  {
+   "front": "Give a recursive definition of 2ⁿ.",
+   "back": [
+    {
+     "type": "p",
+     "text": "2⁰ = 1 and 2ⁿ⁺¹ = 2·2ⁿ."
+    }
+   ]
+  },
+  {
+   "front": "Trace the recursive gcd(30, 12).",
+   "back": [
+    {
+     "type": "p",
+     "text": "gcd(30, 12) → gcd(12, 6) → gcd(6, 0) = 6."
+    }
+   ]
+  },
+  {
+   "front": "How many moves does the Hanoi algorithm use for 5 disks?",
+   "back": [
+    {
+     "type": "p",
+     "text": "2⁵ − 1 = 31."
+    }
+   ]
+  },
+  {
+   "front": "What goes wrong if a recursive algorithm has no base case?",
+   "back": [
+    {
+     "type": "p",
+     "text": "It never stops."
+    }
+   ]
+  },
+  {
+   "front": "What are the parts of a recursive definition of a set?",
+   "back": [
+    {
+     "type": "list",
+     "items": [
+      "basis step: the starting elements",
+      "recursive step: rules building new elements from old ones",
+      "exclusion: nothing else is in the set"
+     ]
+    }
+   ]
+  },
+  {
+   "front": "State structural induction. Why is it valid?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Basis: every basis element has Q. Recursive step: every rule turns elements with Q into an element with Q. Then all of S has Q."
+    },
+    {
+     "type": "p",
+     "text": "It is strong induction on the number of rule applications used to build an element."
+    }
+   ]
+  },
+  {
+   "front": "Recursive definition of Σ*, length and reversal.",
+   "back": [
+    {
+     "type": "list",
+     "items": [
+      "λ ∈ Σ*; w ∈ Σ*, a ∈ Σ ⇒ wa ∈ Σ*",
+      "l(λ) = 0, l(wa) = l(w) + 1",
+      "λ<sup>R</sup> = λ, (wa)<sup>R</sup> = a·w<sup>R</sup>"
+     ]
+    }
+   ]
+  },
+  {
+   "front": "To prove l(xy) = l(x) + l(y), which string do you induct on, and why?",
+   "back": [
+    {
+     "type": "p",
+     "text": "On y: the definitions of concatenation and length peel symbols off the right end, so y = wa unfolds and the IH applies to xw."
+    }
+   ]
+  },
+  {
+   "front": "Recursive definition of full binary trees.",
+   "back": [
+    {
+     "type": "p",
+     "text": "A single vertex is one. If T₁, T₂ are disjoint full binary trees, a new root joined to their roots is one (T₁·T₂)."
+    }
+   ]
+  },
+  {
+   "front": "Recursive formulas for n(T) and h(T) of a full binary tree T = T₁·T₂.",
+   "back": [
+    {
+     "type": "formula",
+     "text": "n(T) = 1 + n(T₁) + n(T₂)"
+    },
+    {
+     "type": "formula",
+     "text": "h(T) = 1 + max(h(T₁), h(T₂)), h(single vertex) = 0"
+    }
+   ]
+  },
+  {
+   "front": "Size bound for full binary trees, and the key step of its proof.",
+   "back": [
+    {
+     "type": "formula",
+     "text": "n(T) ≤ 2<sup>h(T)+1</sup> − 1"
+    },
+    {
+     "type": "p",
+     "text": "Step: 1 + (2<sup>h₁+1</sup> − 1) + (2<sup>h₂+1</sup> − 1) ≤ 2·2<sup>max+1</sup> − 1 = 2<sup>h+1</sup> − 1."
+    }
+   ]
+  },
+  {
+   "front": "Leaves vs internal vertices in a full binary tree.",
+   "back": [
+    {
+     "type": "formula",
+     "text": "l(T) = i(T) + 1, n(T) = 2i(T) + 1 (always odd)"
+    },
+    {
+     "type": "p",
+     "text": "Basis 1 = 0 + 1; step l₁ + l₂ = (i₁ + 1) + (i₂ + 1) = i + 1."
+    }
+   ]
+  },
+  {
+   "front": "How many moves does the Tower of Hanoi take with n disks? Recurrence?",
+   "back": [
+    {
+     "type": "formula",
+     "text": "Hₙ = 2Hₙ₋₁ + 1, H₁ = 1 ⟹ Hₙ = 2ⁿ − 1"
+    },
+    {
+     "type": "p",
+     "text": "It is also optimal: no solution uses fewer moves. Disk j (1 = smallest) moves 2ⁿ⁻ʲ times."
+    }
+   ]
+  },
+  {
+   "front": "How do you prove a recursive algorithm correct?",
+   "back": [
+    {
+     "type": "list",
+     "items": [
+      "induct (usually strong) on the size of the input that shrinks",
+      "base case: run the code on the base input",
+      "step: follow the code; replace each recursive call by the correct answer (IH, valid because the input is smaller)",
+      "finish with the math fact behind the combine line"
+     ]
+    },
+    {
+     "type": "warn",
+     "text": "Never apply the IH to the input k + 1 itself."
+    }
+   ]
+  },
+  {
+   "front": "Why does recursive Euclid need strong induction on b?",
+   "back": [
+    {
+     "type": "p",
+     "text": "The next call is on (b, r) with r = a mod b, which can be any number below b, not just b − 1."
+    }
+   ]
+  },
+  {
+   "front": "When do you need two base cases?",
+   "back": [
+    {
+     "type": "p",
+     "text": "When the rule looks back two steps (aₙ = aₙ₋₁ + 2aₙ₋₂, Fibonacci): the step for the second starting index would need a term before the first."
+    }
+   ]
+  },
+  {
+   "front": "Fibonacci sum identity (f₀ = f₁ = 1).",
+   "back": [
+    {
+     "type": "formula",
+     "text": "f₀ + f₁ + ⋯ + fₙ = fₙ₊₂ − 1"
+    }
+   ]
+  },
+  {
+   "front": "Number of bit strings of length n with no two consecutive 1s?",
+   "back": [
+    {
+     "type": "p",
+     "text": "aₙ = aₙ₋₁ + aₙ₋₂ (ends in 0, or ends in 01), a₀ = 1, a₁ = 2: 1, 2, 3, 5, 8, … = fₙ₊₁ with f₀ = f₁ = 1."
+    }
+   ]
+  }
+ ],
+ "hard": [
+  {
+   "title": "Pairs built by (+2, +3) and (+3, +2)",
+   "level": "hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "Define S ⊆ ℤ × ℤ by: (0, 0) ∈ S, and if (a, b) ∈ S then (a + 2, b + 3) ∈ S and (a + 3, b + 2) ∈ S."
+    },
+    {
+     "type": "list",
+     "items": [
+      "(a) Prove that 5 | a + b for every (a, b) ∈ S.",
+      "(b) Is every pair of nonnegative integers with 5 | a + b in S?",
+      "(c) Describe S exactly, with proof."
+     ]
+    }
+   ],
+   "answer": "(a) proved (each rule adds 5 to a + b); (b) no, e.g. (5, 0) ∉ S; (c) S = {(a, b) : 5 | a + b and 5|a − b| ≤ a + b}",
+   "solution": [
+    {
+     "type": "p",
+     "text": "(a) Structural induction. <b>Basis:</b> 0 + 0 = 0. <b>Step:</b> if 5 | a + b, then (a + 2) + (b + 3) = (a + b) + 5 and (a + 3) + (b + 2) = (a + b) + 5 are also multiples of 5."
+    },
+    {
+     "type": "p",
+     "text": "(b) <b>No.</b> (5, 0) ∉ S. Every element has a, b ≥ 0, and an element with a + b = 5 is one step from (0, 0): (2, 3) or (3, 2)."
+    },
+    {
+     "type": "p",
+     "text": "(c) By induction in both directions, S consists exactly of the pairs (2i + 3j, 3i + 2j) with i, j ≥ 0 (use i steps of the first kind and j of the second). For such a pair, a + b = 5(i + j) and a − b = j − i. Conversely, given (a, b), set s = (a + b)/5 and d = a − b, and solve i + j = s, j − i = d: i = (s − d)/2, j = (s + d)/2. These are integers because 5s ≡ d (mod 2), so s ≡ d. They are ≥ 0 iff |d| ≤ s."
+    },
+    {
+     "type": "p",
+     "text": "<b>Answer:</b> S = {(a, b) : 5 | a + b and 5|a − b| ≤ a + b}."
+    },
+    {
+     "type": "tip",
+     "text": "<b>Tests:</b> structural induction proves “every element has property P”, while the converse (every P-object is in S) needs a construction. <b>Common mistake:</b> assuming the invariant from (a) characterizes S."
+    }
+   ]
+  },
+  {
+   "title": "Balanced parentheses",
+   "level": "hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "Balanced strings: λ ∈ P; if x ∈ P then (x) ∈ P; if x, y ∈ P then xy ∈ P. Prove that every w ∈ P has as many “(” as “)”, and that every prefix of w has at least as many “(” as “)”. List all strings in P of length 6."
+    }
+   ],
+   "answer": "Both properties hold by structural induction on β = #( − #); length 6: ((())), (()()), (())(), ()(()), ()()()",
+   "solution": [
+    {
+     "type": "p",
+     "text": "Let β(u) = #( − #). Claim: β(w) = 0, and β(u) ≥ 0 for every prefix u of w."
+    },
+    {
+     "type": "p",
+     "text": "<b>Basis λ:</b> its only prefix is λ, with β = 0."
+    },
+    {
+     "type": "p",
+     "text": "<b>(x):</b> its prefixes are λ (β = 0), “(” followed by a prefix u of x (β = 1 + β(u) ≥ 1), and (x) itself (β = 1 + 0 − 1 = 0)."
+    },
+    {
+     "type": "p",
+     "text": "<b>xy:</b> a prefix is either a prefix of x (β ≥ 0 by hypothesis), or x followed by a prefix u of y, with β = β(x) + β(u) = 0 + β(u) ≥ 0. The total is β(x) + β(y) = 0."
+    },
+    {
+     "type": "p",
+     "text": "Length 6: <b>((())), (()()), (())(), ()(()), ()()()</b>."
+    },
+    {
+     "type": "tip",
+     "text": "<b>Tests:</b> handling <i>every</i> constructor in the inductive step. <b>Common mistake:</b> proving only the equal-count statement. The prefix condition is the one that rules out “)(”."
+    }
+   ]
+  },
+  {
+   "title": "Reversal of a concatenation",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "Recall λ<sup>R</sup> = λ and (wa)<sup>R</sup> = a·w<sup>R</sup> for a symbol a."
+    },
+    {
+     "type": "list",
+     "items": [
+      "(a) Prove (xy)<sup>R</sup> = y<sup>R</sup>x<sup>R</sup> by structural induction on y.",
+      "(b) Deduce (w<sup>R</sup>)<sup>R</sup> = w.",
+      "(c) <i>“Claim:</i> w<sup>R</sup> = w for every string w. <i>Proof:</i> λ<sup>R</sup> = λ. If w<sup>R</sup> = w, then (wa)<sup>R</sup> = a·w<sup>R</sup> = aw = wa.” Find the error."
+     ]
+    }
+   ],
+   "answer": "(a) induct on y; (b) follows from (a) and a<sup>R</sup> = a; (c) the step “aw = wa” is false: concatenation is not commutative",
+   "solution": [
+    {
+     "type": "p",
+     "text": "(a) <b>Basis y = λ:</b> (xλ)<sup>R</sup> = x<sup>R</sup> = λx<sup>R</sup> = λ<sup>R</sup>x<sup>R</sup>. <b>Step y = wa:</b> (x(wa))<sup>R</sup> = ((xw)a)<sup>R</sup> = a(xw)<sup>R</sup> = a(w<sup>R</sup>x<sup>R</sup>) = (aw<sup>R</sup>)x<sup>R</sup> = (wa)<sup>R</sup>x<sup>R</sup>. This uses the induction hypothesis and associativity of concatenation."
+    },
+    {
+     "type": "p",
+     "text": "(b) Induction on w. λ is clear. Then ((wa)<sup>R</sup>)<sup>R</sup> = (a w<sup>R</sup>)<sup>R</sup> = (w<sup>R</sup>)<sup>R</sup> a<sup>R</sup> = w a, using (a) and a<sup>R</sup> = a."
+    },
+    {
+     "type": "p",
+     "text": "(c) The step “aw = wa” is false: concatenation is not commutative. For example, with w = 0 and a = 1, (01)<sup>R</sup> = 10 ≠ 01."
+    },
+    {
+     "type": "tip",
+     "text": "<b>Tests:</b> inducting on the correct argument. For (a) it is y, because reversal is defined by peeling symbols off the right. <b>Common mistake:</b> inducting on x, which gets stuck immediately."
+    }
+   ]
+  },
+  {
+   "title": "No two consecutive 1s: definition and count",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "Give a recursive definition of the set A of bit strings with <b>no two consecutive 1s</b>, and prove that your definition produces exactly A. How many such strings of length n are there?"
+    }
+   ],
+   "answer": "λ, 1 ∈ A; w ∈ A ⇒ w0, w01 ∈ A (both inclusions proved); count aₙ = aₙ₋₁ + aₙ₋₂, a₀ = 1, a₁ = 2, i.e. fₙ₊₁ with f₀ = f₁ = 1",
+   "solution": [
+    {
+     "type": "p",
+     "text": "<b>Definition:</b> λ ∈ A′ and 1 ∈ A′; if w ∈ A′ then w0 ∈ A′ and w01 ∈ A′."
+    },
+    {
+     "type": "p",
+     "text": "<b>A′ ⊆ A</b> (structural induction). λ and 1 have no “11”. If w has no 11, appending 0 can’t create one. Appending 01 can’t either: the new 1 follows a 0, and the boundary character is 0."
+    },
+    {
+     "type": "p",
+     "text": "<b>A ⊆ A′</b> (strong induction on length). Let s ∈ A. If s = λ or s = 1, it is in A′. If s ends in 0, then s = w0 with w ∈ A shorter, so w ∈ A′ and s ∈ A′. If s ends in 1 and has length ≥ 2, its second-to-last symbol must be 0 (no 11), so s = w01 with w ∈ A shorter, and s ∈ A′."
+    },
+    {
+     "type": "p",
+     "text": "Counting: a<sub>n</sub> = a<sub>n−1</sub> + a<sub>n−2</sub> (ends in 0, or ends in 01), with a<sub>0</sub> = 1, a<sub>1</sub> = 2. So a<sub>n</sub> = 1, 2, 3, 5, 8, 13, …, the Fibonacci number f<sub>n+1</sub> with f₀ = f₁ = 1 (F<sub>n+2</sub> in Rosen’s convention F₀ = 0, F₁ = 1)."
+    },
+    {
+     "type": "tip",
+     "text": "<b>Tests:</b> a correct recursive definition needs <i>both</i> inclusions. <b>Common mistake:</b> the rule “w ∈ A ⇒ w0, w1 ∈ A” (it produces 11), or forgetting the base string “1” (then 1 and 101 are missing)."
+    }
+   ]
+  },
+  {
+   "title": "Counting binary 1s recursively",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "Define f(0) = 0 and f(n) = f(⌊n/2⌋) + (n mod 2) for n ≥ 1. Prove that f(n) is the number of 1s in the binary expansion of n, and that f(n) ≤ ⌊log<sub>2</sub>n⌋ + 1 for n ≥ 1."
+    }
+   ],
+   "answer": "Strong induction: n = 2⌊n/2⌋ + (n mod 2) appends one bit; f(n) ≤ number of bits = ⌊log₂ n⌋ + 1",
+   "solution": [
+    {
+     "type": "p",
+     "text": "Strong induction. f(0) = 0, and 0 has no 1s. For n ≥ 1, n = 2⌊n/2⌋ + (n mod 2), so the binary expansion of n is the expansion of ⌊n/2⌋ with the bit (n mod 2) appended. Then ones(n) = ones(⌊n/2⌋) + (n mod 2) = f(⌊n/2⌋) + (n mod 2) = f(n), using the hypothesis for ⌊n/2⌋ &lt; n."
+    },
+    {
+     "type": "p",
+     "text": "For the bound: n has exactly ⌊log<sub>2</sub>n⌋ + 1 bits (since 2<sup>k</sup> ≤ n &lt; 2<sup>k+1</sup> with k = ⌊log<sub>2</sub>n⌋), and f(n) counts some of them. Equality holds iff n = 2<sup>k+1</sup> − 1."
+    },
+    {
+     "type": "tip",
+     "text": "<b>Tests:</b> strong induction for recursions that jump from n to n/2. <b>Common mistake:</b> using ordinary induction (n − 1 ⇒ n), whose hypothesis doesn’t mention ⌊n/2⌋."
+    }
+   ]
+  },
+  {
+   "title": "Fast modular exponentiation: correctness and cost",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "The recursive algorithm <b>power</b>(a, n, m): if n = 0 return 1 mod m; if n is even, set t = <b>power</b>(a, n/2, m) and return t·t mod m; otherwise return a·<b>power</b>(a, n − 1, m) mod m."
+    },
+    {
+     "type": "list",
+     "items": [
+      "(a) Prove it returns a<sup>n</sup> mod m.",
+      "(b) Let M(n) be the number of multiplications. Prove M(n) ≤ 2⌊log<sub>2</sub>n⌋ + 1 for n ≥ 1."
+     ]
+    }
+   ],
+   "answer": "(a) strong induction on n; (b) M(n) ≤ 2⌊log₂ n⌋ + 1 (odd inputs cost two multiplications before halving)",
+   "solution": [
+    {
+     "type": "p",
+     "text": "(a) Strong induction on n. For n = 0 it returns 1 = a⁰ mod m. For even n > 0: by hypothesis t ≡ a<sup>n/2</sup>, so t² ≡ a<sup>n</sup>. For odd n: by hypothesis <b>power</b>(a, n − 1, m) ≡ a<sup>n−1</sup>, and multiplying by a gives a<sup>n</sup>. (Reducing mod m at every step is valid, since congruences can be multiplied.)"
+    },
+    {
+     "type": "p",
+     "text": "(b) M(0) = 0. For even n, M(n) = M(n/2) + 1. For odd n, M(n) = M(n − 1) + 1. Strong induction:"
+    },
+    {
+     "type": "list",
+     "items": [
+      "n = 1: M(1) = 1 ≤ 1.",
+      "n even ≥ 2: M(n) ≤ 2⌊log<sub>2</sub>(n/2)⌋ + 2 = 2⌊log<sub>2</sub>n⌋.",
+      "n odd ≥ 3: M(n) = M((n − 1)/2) + 2 ≤ 2⌊log<sub>2</sub>(n − 1)⌋ − 2 + 3 ≤ 2⌊log<sub>2</sub>n⌋ + 1."
+     ]
+    },
+    {
+     "type": "tip",
+     "text": "<b>Tests:</b> correctness proofs for recursive algorithms are strong induction on the input size. <b>Common mistake:</b> in (b), treating odd n as one step. An odd input costs two multiplications before it halves."
+    }
+   ]
+  },
+  {
+   "title": "Leaves, vertices and height of full binary trees",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "Full binary trees: a single vertex is one, and so is a root joined to two full binary trees T<sub>1</sub>, T<sub>2</sub>. Let n(T) be the number of vertices, l(T) the number of leaves, and h(T) the height (0 for a single vertex, 1 + max(h<sub>1</sub>, h<sub>2</sub>) otherwise). Prove that (a) l(T) = (n(T) + 1)/2 and (b) n(T) ≤ 2<sup>h(T)+1</sup> − 1. Is there a full binary tree with 2026 vertices?"
+    }
+   ],
+   "answer": "(a), (b) proved by structural induction; n = 2l − 1 is odd, so no tree has 2026 vertices",
+   "solution": [
+    {
+     "type": "p",
+     "text": "<b>Basis</b> (single vertex): l = 1 = (1 + 1)/2, and n = 1 ≤ 2¹ − 1."
+    },
+    {
+     "type": "p",
+     "text": "<b>Step.</b> n = 1 + n<sub>1</sub> + n<sub>2</sub>, l = l<sub>1</sub> + l<sub>2</sub>, h = 1 + max(h<sub>1</sub>, h<sub>2</sub>)."
+    },
+    {
+     "type": "p",
+     "text": "(a) l = (n<sub>1</sub> + 1)/2 + (n<sub>2</sub> + 1)/2 = (n<sub>1</sub> + n<sub>2</sub> + 2)/2 = (n + 1)/2."
+    },
+    {
+     "type": "p",
+     "text": "(b) n ≤ 1 + (2<sup>h<sub>1</sub>+1</sup> − 1) + (2<sup>h<sub>2</sub>+1</sup> − 1) ≤ 2·2<sup>max+1</sup> − 1 = 2<sup>h+1</sup> − 1."
+    },
+    {
+     "type": "p",
+     "text": "By (a), n = 2l − 1 is always odd. So <b>no</b> full binary tree has 2026 vertices."
+    },
+    {
+     "type": "tip",
+     "text": "<b>Tests:</b> structural induction on trees, with the right recursive formulas for n, l and h. <b>Common mistake:</b> inducting on height or on n with ordinary induction, then mishandling subtrees of different sizes."
+    }
+   ]
+  },
+  {
+   "title": "Euclid halves every two steps",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "<b>gcd</b>(a, b) with a ≥ b ≥ 0: if b = 0 return a, else return <b>gcd</b>(b, a mod b)."
+    },
+    {
+     "type": "list",
+     "items": [
+      "(a) Prove gcd(a, b) = gcd(b, a mod b) for b > 0, and conclude that the algorithm is correct.",
+      "(b) Prove: if a ≥ b > 0, then a mod b &lt; a/2.",
+      "(c) Deduce that the algorithm makes at most 2⌊log<sub>2</sub>b⌋ + 2 recursive calls when b ≥ 1."
+     ]
+    }
+   ],
+   "answer": "(a) same common divisors ⇒ correct; (b) cases b ≤ a/2 and b > a/2; (c) at most 2⌊log₂ b⌋ + 2 calls",
+   "solution": [
+    {
+     "type": "p",
+     "text": "(a) Write a = qb + r. Any common divisor of a and b divides r = a − qb. Any common divisor of b and r divides a = qb + r. So the two pairs have the same common divisors, hence the same gcd. Correctness then follows by strong induction on b: gcd(a, 0) = a, and for b > 0 the call on (b, r) with r &lt; b returns gcd(b, r) = gcd(a, b)."
+    },
+    {
+     "type": "p",
+     "text": "(b) If b ≤ a/2, then a mod b &lt; b ≤ a/2. If b > a/2, then q = 1 and a mod b = a − b &lt; a/2."
+    },
+    {
+     "type": "p",
+     "text": "(c) Two consecutive calls go (a, b) → (b, r<sub>1</sub>) → (r<sub>1</sub>, r<sub>2</sub>) with r<sub>2</sub> = b mod r<sub>1</sub> &lt; b/2 by (b). So the second argument at least halves every two calls. After 2k calls it is &lt; b/2<sup>k</sup>. Once k = ⌊log<sub>2</sub>b⌋ + 1, that is &lt; 1, i.e. 0, and the recursion stops. So there are at most 2k calls."
+    },
+    {
+     "type": "tip",
+     "text": "<b>Tests:</b> proving a running-time bound from a halving lemma. <b>Common mistake:</b> claiming that the remainder halves at <i>every</i> step. It can go 100 → 99 → 1 (it’s every two steps)."
+    }
+   ]
+  },
+  {
+   "title": "McCarthy’s 91 function",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "McCarthy’s function on ℤ: M(n) = n − 10 if n > 100, and M(n) = M(M(n + 11)) if n ≤ 100. Prove that M(n) = 91 for every n ≤ 100. What is M(102)?"
+    }
+   ],
+   "answer": "M(n) = 91 for all n ≤ 100 (downward strong induction); M(102) = 92",
+   "solution": [
+    {
+     "type": "p",
+     "text": "<b>Step 1 (90 ≤ n ≤ 100).</b> Here n + 11 ≥ 101, so M(n + 11) = n + 1 and M(n) = M(n + 1). Since M(101) = 91, going down one at a time gives M(100) = M(101) = 91, M(99) = M(100) = 91, …, M(90) = 91."
+    },
+    {
+     "type": "p",
+     "text": "<b>Step 2 (n &lt; 90).</b> Let P(j) be “M(100 − j) = 91”, for j ≥ 0. Step 1 proves P(0), …, P(10). For j ≥ 11, assume P(i) for all i &lt; j. With n = 100 − j: n + 11 = 100 − (j − 11), so M(n + 11) = 91 by P(j − 11). Then M(n) = M(91) = 91 by P(9). By strong induction, P(j) holds for all j ≥ 0. ∎"
+    },
+    {
+     "type": "p",
+     "text": "M(102) = <b>92</b>, directly from the first rule."
+    },
+    {
+     "type": "tip",
+     "text": "<b>Tests:</b> strong induction in a non-standard direction (downward, with jumps of 11). <b>Common mistake:</b> trying ordinary upward induction on n. M(n) depends on <i>larger</i> arguments, so you have to induct downward."
+    }
+   ]
+  }
+ ],
+ "keyFacts": [
+  "Recursive definition = basis + recursive step (+ exclusion: nothing else)",
+  "Structural induction: check every basis element, then every rule preserves the property",
+  "Strings: λ ∈ Σ*, wa ∈ Σ*; l(wa) = l(w) + 1; (wa)<sup>R</sup> = a·w<sup>R</sup>; prove l(xy) = l(x) + l(y) by induction on y",
+  "Full binary tree: n(T) ≤ 2<sup>h+1</sup> − 1, l = i + 1, n = 2i + 1 odd, at most 2<sup>h</sup> leaves",
+  "Hanoi: Hₙ = 2Hₙ₋₁ + 1 = 2ⁿ − 1, and that is optimal",
+  "Correctness of a recursive algorithm: strong induction on input size; IH only on the recursive call",
+  "Two-term recursions need two base cases and strong induction",
+  "f₀ = f₁ = 1 here (Rosen: f₀ = 0, f₁ = 1); f₀ + ⋯ + fₙ = fₙ₊₂ − 1"
+ ]
+}

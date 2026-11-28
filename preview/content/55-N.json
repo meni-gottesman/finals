@@ -1,0 +1,1310 @@
+{
+ "id": "55-N",
+ "course": "55",
+ "title": "Inclusion–exclusion & applications",
+ "source": "Rosen 8.5–8.6 · Lec22",
+ "summary": "Inclusion–exclusion counts a union of overlapping sets by alternately adding and subtracting intersections. Its real power is the “none of” form, which gives divisibility counts, bounded stars and bars, dice sums, derangements, onto functions and Euler’s φ; these are standard final-exam computations.",
+ "lesson": [
+  {
+   "title": "Two and three sets",
+   "blocks": [
+    {
+     "type": "tip",
+     "text": "Inclusion–exclusion counts a union of overlapping sets: add the sizes, subtract what you counted twice, add back what you subtracted too often. Almost every application on the final is the “none of” form: count everything, subtract the union of the bad sets."
+    },
+    {
+     "type": "formula",
+     "text": "|A ∪ B| = |A| + |B| − |A ∩ B|"
+    },
+    {
+     "type": "p",
+     "text": "<b>Why:</b> |A| + |B| counts every element of A ∩ B <b>twice</b>, once in each set. Subtracting |A ∩ B| once fixes it."
+    },
+    {
+     "type": "example",
+     "title": "Two sets: divisibility",
+     "prompt": "How many integers from 1 to 100 are divisible by 2 or 5?",
+     "steps": [
+      "A = multiples of 2: ⌊100/2⌋ = 50. B = multiples of 5: ⌊100/5⌋ = 20.",
+      "A ∩ B = multiples of both = multiples of lcm(2, 5) = 10: ⌊100/10⌋ = 10.",
+      "|A ∪ B| = 50 + 20 − 10."
+     ],
+     "answer": "60"
+    },
+    {
+     "type": "example",
+     "title": "Two sets: bit strings",
+     "prompt": "How many 4-bit strings start with 1 or end with 0?",
+     "steps": [
+      "Start with 1: the other 3 bits are free, 2³ = 8.",
+      "End with 0: also 8.",
+      "Both: 2 bits fixed, 2 free, 2² = 4.",
+      "8 + 8 − 4."
+     ],
+     "answer": "12"
+    },
+    {
+     "type": "formula",
+     "text": "|A ∪ B ∪ C| = |A| + |B| + |C|"
+    },
+    {
+     "type": "formula",
+     "text": "− |A∩B| − |A∩C| − |B∩C|"
+    },
+    {
+     "type": "formula",
+     "text": "+ |A∩B∩C|"
+    },
+    {
+     "type": "p",
+     "text": "<b>Why the signs alternate</b>"
+    },
+    {
+     "type": "p",
+     "text": "Track how many times an element is counted, depending on how many of the sets it’s in:"
+    },
+    {
+     "type": "table",
+     "head": [
+      "In",
+      "+singles",
+      "−pairs",
+      "+triple",
+      "Total"
+     ],
+     "rows": [
+      [
+       "1 set",
+       "1",
+       "0",
+       "0",
+       "<b>1</b>"
+      ],
+      [
+       "2 sets",
+       "2",
+       "−1",
+       "0",
+       "<b>1</b>"
+      ],
+      [
+       "all 3",
+       "3",
+       "−3",
+       "+1",
+       "<b>1</b>"
+      ]
+     ]
+    },
+    {
+     "type": "p",
+     "text": "Every element of the union ends up counted exactly once. The pair terms over-correct for elements in all three sets (3 − 3 = 0), and the triple term adds them back."
+    },
+    {
+     "type": "warn",
+     "text": "Forgetting the last term (+|A∩B∩C|), or subtracting it. The signs go +, −, +."
+    },
+    {
+     "type": "thm",
+     "name": "Why the three-set signs work",
+     "text": "Each element of A ∪ B ∪ C is counted exactly once by |A| + |B| + |C| − |A∩B| − |A∩C| − |B∩C| + |A∩B∩C|.",
+     "proof": [
+      {
+       "type": "p",
+       "text": "An element in exactly one set is counted once by the singles and never again. An element in exactly two sets is counted 2 − 1 = 1 times. An element in all three is counted 3 − 3 + 1 = 1 times (see the table above)."
+      }
+     ]
+    },
+    {
+     "type": "example",
+     "title": "Three sets: a survey",
+     "prompt": "Of 100 students, 45 take Spanish, 38 French, 30 German; 15 take Spanish and French, 12 Spanish and German, 10 French and German, and 5 take all three. How many take none of the three?",
+     "steps": [
+      "|S ∪ F ∪ G| = 45 + 38 + 30 − 15 − 12 − 10 + 5 = 81.",
+      "None = total − union = 100 − 81.",
+      "Sanity check with the Venn regions: Spanish only = 45 − 15 − 12 + 5 = 23, French only = 18, German only = 13, all nonnegative."
+     ],
+     "answer": "19 students"
+    }
+   ]
+  },
+  {
+   "title": "The general formula and why the signs alternate",
+   "blocks": [
+    {
+     "type": "formula",
+     "text": "|A<sub>1</sub> ∪ ⋯ ∪ A<sub>n</sub>| = Σ|A<sub>i</sub>| − Σ<sub>i&lt;j</sub>|A<sub>i</sub>∩A<sub>j</sub>| + Σ<sub>i&lt;j&lt;k</sub>|A<sub>i</sub>∩A<sub>j</sub>∩A<sub>k</sub>| − ⋯ + (−1)<sup>n+1</sup>|A<sub>1</sub>∩⋯∩A<sub>n</sub>|"
+    },
+    {
+     "type": "p",
+     "text": "Add singles, subtract pairs, add triples, … alternating. There are 2<sup>n</sup> − 1 terms in all."
+    },
+    {
+     "type": "thm",
+     "name": "Inclusion–exclusion (general)",
+     "text": "The signs alternate: intersections of r sets get sign (−1)<sup>r+1</sup>, and every element of the union is counted exactly once.",
+     "proof": [
+      {
+       "type": "p",
+       "text": "Suppose x is in exactly r of the sets (r ≥ 1). It counts once on the left side."
+      },
+      {
+       "type": "p",
+       "text": "On the right, x appears in C(r, 1) single terms, C(r, 2) pair terms, C(r, 3) triple terms, and so on. Its total count is C(r,1) − C(r,2) + C(r,3) − ⋯ + (−1)<sup>r+1</sup>C(r,r)."
+      },
+      {
+       "type": "p",
+       "text": "By the binomial theorem, 0 = (1 − 1)<sup>r</sup> = C(r,0) − C(r,1) + C(r,2) − ⋯ + (−1)<sup>r</sup>C(r,r)."
+      },
+      {
+       "type": "p",
+       "text": "Since C(r, 0) = 1, rearranging gives C(r,1) − C(r,2) + ⋯ = 1. So x is counted exactly once on the right too. ∎"
+      }
+     ]
+    },
+    {
+     "type": "tip",
+     "text": "Why the binomial theorem is the whole proof: an element in r of the sets is counted C(r,1) − C(r,2) + ⋯ times, and (1 − 1)<sup>r</sup> = 0 says that alternating sum equals C(r,0) = 1."
+    },
+    {
+     "type": "p",
+     "text": "A Venn diagram for n sets needs a region for <b>every</b> combination of in/out, so 2<sup>n</sup> regions, counting the outside. For 4 sets that’s 16."
+    },
+    {
+     "type": "p",
+     "text": "Four overlapping circles <b>can’t</b> do it: they miss some combinations. For example, there’s no region for “in A and C only” or “in B and D only”. Correct 4-set diagrams use other shapes, like ellipses."
+    },
+    {
+     "type": "tip",
+     "text": "Fun fact: a rotationally symmetric Venn diagram of n sets can exist only when n is prime, because rotation groups the C(n, r) regions in exactly r sets into orbits of size n, and n must divide C(n, r) for all 0 &lt; r &lt; n."
+    }
+   ]
+  },
+  {
+   "title": "“None of” counts and divisibility",
+   "blocks": [
+    {
+     "type": "tip",
+     "text": "The number of integers from 1 to N divisible by d is ⌊N/d⌋. Divisible by both a and b means divisible by lcm(a, b), which is ab when a and b share no factors."
+    },
+    {
+     "type": "example",
+     "title": "Three divisibility conditions",
+     "prompt": "How many integers from 1 to 600 are divisible by 2, 3 or 5? By none of them?",
+     "steps": [
+      "Singles: ⌊600/2⌋ = 300, ⌊600/3⌋ = 200, ⌊600/5⌋ = 120.",
+      "Pairs (lcm = product here): by 6 → 100, by 10 → 60, by 15 → 40.",
+      "Triple: by 30 → 20.",
+      "Union: 300 + 200 + 120 − 100 − 60 − 40 + 20 = 440.",
+      "None: 600 − 440 = 160."
+     ],
+     "answer": "440 divisible by at least one; 160 by none"
+    },
+    {
+     "type": "warn",
+     "text": "When the numbers share factors, use the lcm, not the product: divisible by 4 and 6 means divisible by 12, not 24."
+    },
+    {
+     "type": "tip",
+     "text": "Most applications want objects with <b>none</b> of some bad properties. Count everything, then subtract the union of the bad sets."
+    },
+    {
+     "type": "formula",
+     "text": "#(none of the properties) = N − |A<sub>1</sub> ∪ ⋯ ∪ A<sub>n</sub>|"
+    },
+    {
+     "type": "p",
+     "text": "N = total number of objects; A<sub>i</sub> = objects with bad property i."
+    },
+    {
+     "type": "p",
+     "text": "<b>The recipe</b>"
+    },
+    {
+     "type": "steps",
+     "title": "Method",
+     "items": [
+      "Define the universe and its size N.",
+      "Define each bad set A<sub>i</sub> (“has property i”).",
+      "Find the sizes of all intersections. Usually all intersections of r sets have the <b>same</b> size, so you multiply by C(n, r).",
+      "Answer = N − Σ|A<sub>i</sub>| + Σ|A<sub>i</sub>∩A<sub>j</sub>| − ⋯"
+     ]
+    },
+    {
+     "type": "example",
+     "title": "“Neither” with two conditions",
+     "prompt": "How many integers from 1 to 1000 are divisible by neither 5 nor 7?",
+     "steps": [
+      "Divisible by 5: 200. By 7: ⌊1000/7⌋ = 142. By both (35): ⌊1000/35⌋ = 28.",
+      "Divisible by 5 or 7: 200 + 142 − 28 = 314.",
+      "Neither: 1000 − 314."
+     ],
+     "answer": "686"
+    },
+    {
+     "type": "example",
+     "title": "The lcm trap",
+     "prompt": "How many integers from 1 to 1000 are divisible by none of 4, 6, 10?",
+     "steps": [
+      "Singles: ⌊1000/4⌋ = 250, ⌊1000/6⌋ = 166, ⌊1000/10⌋ = 100.",
+      "Pairs use the lcm, not the product: lcm(4,6) = 12 → 83, lcm(4,10) = 20 → 50, lcm(6,10) = 30 → 33.",
+      "Triple: lcm(4,6,10) = 60 → 16.",
+      "Union: 250 + 166 + 100 − 83 − 50 − 33 + 16 = 366.",
+      "None: 1000 − 366 = 634."
+     ],
+     "answer": "634"
+    },
+    {
+     "type": "warn",
+     "text": "Using products instead of lcms (24, 40, 60, 240 above) is the most common error in divisibility counts."
+    }
+   ]
+  },
+  {
+   "title": "Bounded integer solutions and dice sums",
+   "blocks": [
+    {
+     "type": "tip",
+     "text": "Stars and bars handles lower bounds easily but not upper bounds. So count without the upper bounds, then use inclusion–exclusion to subtract the solutions that <b>break</b> a bound."
+    },
+    {
+     "type": "formula",
+     "text": "x<sub>1</sub> + ⋯ + x<sub>k</sub> = n, x<sub>i</sub> ≥ 0 ⟹ C(n + k − 1, k − 1) solutions"
+    },
+    {
+     "type": "p",
+     "text": "Breaking “x<sub>i</sub> ≤ c” means x<sub>i</sub> ≥ c + 1. Substitute x<sub>i</sub>′ = x<sub>i</sub> − (c + 1) ≥ 0, which lowers the total n by c + 1."
+    },
+    {
+     "type": "example",
+     "title": "Upper bounds on three variables",
+     "prompt": "Count nonnegative integer solutions of x₁ + x₂ + x₃ = 12 with x₁ ≤ 4, x₂ ≤ 5, x₃ ≤ 6.",
+     "steps": [
+      "No upper bounds: C(14, 2) = 91.",
+      "A₁: x₁ ≥ 5 → total 7 → C(9, 2) = 36. A₂: x₂ ≥ 6 → total 6 → C(8, 2) = 28. A₃: x₃ ≥ 7 → total 5 → C(7, 2) = 21.",
+      "A₁∩A₂ → total 1 → C(3, 2) = 3. A₁∩A₃ → total 0 → 1. A₂∩A₃ → total −1 → 0. Triple → 0.",
+      "91 − (36 + 28 + 21) + (3 + 1 + 0) − 0 = 10."
+     ],
+     "answer": "10"
+    },
+    {
+     "type": "warn",
+     "text": "If subtracting makes the total negative, there are <b>0</b> solutions for that term. Don’t plug a negative number into C(·, ·)."
+    },
+    {
+     "type": "example",
+     "title": "Four variables, one common bound",
+     "prompt": "Count solutions of x₁ + x₂ + x₃ + x₄ = 20 with 0 ≤ xᵢ ≤ 7.",
+     "steps": [
+      "No bounds: C(23, 3) = 1771.",
+      "One xᵢ ≥ 8: total 12 → C(15, 3) = 455, for each of 4 variables.",
+      "Two ≥ 8: total 4 → C(7, 3) = 35, for each of C(4, 2) = 6 pairs.",
+      "Three ≥ 8 would need 24 > 20: 0.",
+      "1771 − 4·455 + 6·35 = 1771 − 1820 + 210."
+     ],
+     "answer": "161"
+    },
+    {
+     "type": "p",
+     "text": "A sum of dice is a bounded stars-and-bars problem: each die is between 1 and 6."
+    },
+    {
+     "type": "example",
+     "title": "Probability that 6 dice sum to 21",
+     "prompt": "Six fair dice are rolled. What is the probability that the sum is 21?",
+     "steps": [
+      "There are 6⁶ equally likely rolls. Count x₁ + ⋯ + x₆ = 21 with 1 ≤ xᵢ ≤ 6.",
+      "Shift: yᵢ = xᵢ − 1, so y₁ + ⋯ + y₆ = 15 with 0 ≤ yᵢ ≤ 5.",
+      "No upper bound: C(20, 5) = 15504.",
+      "Some yᵢ ≥ 6: total 9 → C(14, 5) = 2002, times 6 dice.",
+      "Two yᵢ ≥ 6: total 3 → C(8, 5) = 56, times C(6, 2) = 15 pairs. Three is impossible (18 > 15).",
+      "15504 − 12012 + 840 = 4332."
+     ],
+     "answer": "4332/6⁶ ≈ 0.093"
+    },
+    {
+     "type": "example",
+     "title": "Three dice",
+     "prompt": "In how many ordered ways can 3 dice sum to 10?",
+     "steps": [
+      "yᵢ = xᵢ − 1: y₁ + y₂ + y₃ = 7 with yᵢ ≤ 5.",
+      "No bounds: C(9, 2) = 36.",
+      "One yᵢ ≥ 6: total 1 → C(3, 2) = 3, times 3 dice = 9. Two ≥ 6 is impossible.",
+      "36 − 9."
+     ],
+     "answer": "27"
+    }
+   ]
+  },
+  {
+   "title": "Derangements and fixed points",
+   "blocks": [
+    {
+     "type": "tip",
+     "text": "A <b>derangement</b> is a permutation of 1, …, n where <b>no</b> number is in its own position (i is never in spot i)."
+    },
+    {
+     "type": "formula",
+     "text": "D<sub>n</sub> = n! (1 − 1/1! + 1/2! − 1/3! + ⋯ + (−1)<sup>n</sup>/n!)"
+    },
+    {
+     "type": "p",
+     "text": "<b>Where it comes from</b>"
+    },
+    {
+     "type": "steps",
+     "title": "Method",
+     "items": [
+      "Let A<sub>i</sub> = permutations with i in position i (the “bad” event). Derangements = n! − |A<sub>1</sub> ∪ ⋯ ∪ A<sub>n</sub>|.",
+      "Fixing r particular numbers leaves the other n − r free: |A<sub>i<sub>1</sub></sub> ∩ ⋯ ∩ A<sub>i<sub>r</sub></sub>| = (n − r)!.",
+      "There are C(n, r) ways to choose which r, and C(n, r)(n − r)! = n!/r!.",
+      "So D<sub>n</sub> = n! − n!/1! + n!/2! − ⋯, which factors as the formula."
+     ]
+    },
+    {
+     "type": "example",
+     "title": "Derangements of 3 and 4",
+     "prompt": "Compute D₃ and D₄ from the formula and list the derangements of 3.",
+     "steps": [
+      "D₃ = 3! (1 − 1 + 1/2 − 1/6) = 6 − 6 + 3 − 1 = 2: the arrangements 231 and 312.",
+      "D₄ = 4! − 4!/1! + 4!/2! − 4!/3! + 4!/4! = 24 − 24 + 12 − 4 + 1 = 9.",
+      "Next values: D₅ = 44, D₆ = 265."
+     ],
+     "answer": "D₃ = 2, D₄ = 9"
+    },
+    {
+     "type": "p",
+     "text": "As n grows, D<sub>n</sub>/n! → 1/e ≈ <b>0.368</b> (the Taylor series for e<sup>−1</sup>). So about 37% of random permutations are derangements, for any large n."
+    },
+    {
+     "type": "example",
+     "title": "Exactly k fixed points",
+     "prompt": "How many permutations of {1, …, 6} have exactly 2 fixed points?",
+     "steps": [
+      "Choose which 2 elements stay put: C(6, 2) = 15.",
+      "The other 4 must all move: D₄ = 9.",
+      "15 · 9."
+     ],
+     "answer": "135"
+    },
+    {
+     "type": "p",
+     "text": "An easier question: in a random permutation, what is the <b>expected</b> number of i in position i?"
+    },
+    {
+     "type": "example",
+     "title": "Hat-check: expected fixed points",
+     "prompt": "In a uniformly random permutation of 1, …, n, what is the expected number of i in position i?",
+     "steps": [
+      "X<sub>i</sub> = 1 if i is in position i. The count is X<sub>1</sub> + ⋯ + X<sub>n</sub>.",
+      "E(X<sub>i</sub>) = (n − 1)!/n! = 1/n: fix i, then permute the other n − 1.",
+      "By linearity, E = n · 1/n = <b>1</b>, for every n."
+     ],
+     "answer": "1, for every n"
+    },
+    {
+     "type": "tip",
+     "text": "Compare: the probability of no fixed point needs inclusion–exclusion (≈ 1/e), but the expected number of fixed points needs only linearity (exactly 1)."
+    }
+   ]
+  },
+  {
+   "title": "Onto functions",
+   "blocks": [
+    {
+     "type": "formula",
+     "text": "#onto functions from an m-set to an n-set = Σ<sub>r=0</sub><sup>n</sup> (−1)<sup>r</sup> C(n, r)(n − r)<sup>m</sup>"
+    },
+    {
+     "type": "formula",
+     "text": "= n<sup>m</sup> − C(n,1)(n−1)<sup>m</sup> + C(n,2)(n−2)<sup>m</sup> − ⋯"
+    },
+    {
+     "type": "p",
+     "text": "<b>Where it comes from</b>"
+    },
+    {
+     "type": "steps",
+     "title": "Method",
+     "items": [
+      "All functions: n<sup>m</sup> (each of the m inputs picks one of n outputs).",
+      "A<sub>i</sub> = functions that <b>miss</b> output i. Onto = n<sup>m</sup> − |A<sub>1</sub> ∪ ⋯ ∪ A<sub>n</sub>|.",
+      "Missing r particular outputs leaves n − r choices per input: (n − r)<sup>m</sup>, and there are C(n, r) ways to pick those r."
+     ]
+    },
+    {
+     "type": "example",
+     "title": "Onto functions 5 → 3",
+     "prompt": "How many onto functions are there from a 5-element set to a 3-element set?",
+     "steps": [
+      "All functions: 3⁵ = 243.",
+      "Miss a given output: 2⁵ = 32, times C(3,1) = 3.",
+      "Miss two given outputs: 1⁵ = 1, times C(3,2) = 3.",
+      "Miss all three: 0.",
+      "243 − 96 + 3 − 0."
+     ],
+     "answer": "150"
+    },
+    {
+     "type": "example",
+     "title": "Onto functions 4 → 3",
+     "prompt": "How many onto functions are there from {1, 2, 3, 4} to {a, b, c}? Check the answer a second way.",
+     "steps": [
+      "Inclusion–exclusion: 3⁴ − 3·2⁴ + 3·1⁴ − 0 = 81 − 48 + 3 = 36.",
+      "Direct check: some output gets two inputs. Choose that output (3), choose its two inputs (C(4,2) = 6), then the remaining 2 inputs go bijectively to the 2 other outputs (2!): 3·6·2 = 36."
+     ],
+     "answer": "36"
+    },
+    {
+     "type": "example",
+     "title": "Jobs to workers",
+     "prompt": "Six different jobs are assigned to 4 employees so that every employee gets at least one job. How many assignments?",
+     "steps": [
+      "An assignment is a function jobs → employees; “everyone gets a job” means onto.",
+      "4⁶ − C(4,1)3⁶ + C(4,2)2⁶ − C(4,3)1⁶ = 4096 − 2916 + 384 − 4."
+     ],
+     "answer": "1560"
+    },
+    {
+     "type": "warn",
+     "text": "Onto functions count assignments of <b>distinct</b> objects to <b>distinct</b> boxes with no box empty. If the boxes are identical, divide by n! (Stirling numbers); if the objects are identical, use stars and bars instead."
+    }
+   ]
+  },
+  {
+   "title": "Euler’s φ function",
+   "blocks": [
+    {
+     "type": "tip",
+     "text": "Euler’s φ(n) counts the integers in 1..n that are coprime to n. Coprime to n means “divisible by none of the primes dividing n”, so φ is a “none of” count."
+    },
+    {
+     "type": "thm",
+     "name": "Euler φ by inclusion–exclusion",
+     "text": "If the distinct primes dividing n are p₁, …, p<sub>k</sub>, then φ(n) = n(1 − 1/p₁)(1 − 1/p₂)⋯(1 − 1/p<sub>k</sub>).",
+     "proof": [
+      {
+       "type": "p",
+       "text": "Let Aᵢ be the multiples of pᵢ in 1..n. Any intersection A<sub>i₁</sub> ∩ ⋯ ∩ A<sub>iᵣ</sub> is the set of multiples of p<sub>i₁</sub>⋯p<sub>iᵣ</sub>, which has exactly n/(p<sub>i₁</sub>⋯p<sub>iᵣ</sub>) elements because that product divides n."
+      },
+      {
+       "type": "p",
+       "text": "So φ(n) = n − Σ n/pᵢ + Σ n/(pᵢpⱼ) − ⋯, and this alternating sum is exactly the expansion of n(1 − 1/p₁)⋯(1 − 1/p<sub>k</sub>). ∎"
+      }
+     ]
+    },
+    {
+     "type": "example",
+     "title": "φ(360) from scratch",
+     "prompt": "Compute φ(360) by inclusion–exclusion. (360 = 2³·3²·5.)",
+     "steps": [
+      "Coprime to 360 ⇔ divisible by none of 2, 3, 5.",
+      "Singles: 180 + 120 + 72 = 372. Pairs: 60 + 36 + 24 = 120. Triple: 12.",
+      "Union: 372 − 120 + 12 = 264.",
+      "φ(360) = 360 − 264 = 96. Check: 360·(1/2)(2/3)(4/5) = 96."
+     ],
+     "answer": "96"
+    },
+    {
+     "type": "example",
+     "title": "φ of a product of three primes",
+     "prompt": "Compute φ(1001), where 1001 = 7·11·13.",
+     "steps": [
+      "1001(1 − 1/7)(1 − 1/11)(1 − 1/13) = 6·10·12."
+     ],
+     "answer": "720"
+    },
+    {
+     "type": "warn",
+     "text": "Only the distinct primes matter: for 3600 = 2⁴·3²·5² the conditions are “divisible by 2, 3 or 5”, not by 16, 9 or 25."
+    }
+   ]
+  }
+ ],
+ "cards": [
+  {
+   "front": "What is inclusion–exclusion for two sets, and why does it work?",
+   "back": [
+    {
+     "type": "formula",
+     "text": "|A ∪ B| = |A| + |B| − |A ∩ B|"
+    },
+    {
+     "type": "p",
+     "text": "<b>Why.</b> |A| + |B| counts every element of A ∩ B <b>twice</b>, once in each set. Subtracting |A ∩ B| once makes every element count exactly once."
+    },
+    {
+     "type": "p",
+     "text": "<b>Example.</b> Numbers 1–100 divisible by 2 or 5: 50 + 20 − 10 = <b>60</b>. (Both 2 and 5 means divisible by 10.)"
+    }
+   ]
+  },
+  {
+   "front": "State inclusion–exclusion for three sets.",
+   "back": [
+    {
+     "type": "formula",
+     "text": "|A ∪ B ∪ C| = |A| + |B| + |C| − |A∩B| − |A∩C| − |B∩C| + |A∩B∩C|"
+    },
+    {
+     "type": "p",
+     "text": "Add the singles, subtract the pairs, add back the triple. Signs: +, −, +."
+    },
+    {
+     "type": "warn",
+     "text": "Forgetting the final +|A∩B∩C| term, or subtracting it."
+    }
+   ]
+  },
+  {
+   "front": "Why does the three-set formula count every element exactly once?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Count how often an element is counted, by how many sets it’s in:"
+    },
+    {
+     "type": "list",
+     "items": [
+      "<b>In 1 set:</b> +1 (single), no pairs or triple → <b>1</b>.",
+      "<b>In 2 sets:</b> +2 (singles), −1 (the one pair it’s in) → <b>1</b>.",
+      "<b>In all 3:</b> +3 (singles), −3 (all three pairs), +1 (triple) → <b>1</b>."
+     ]
+    },
+    {
+     "type": "p",
+     "text": "The pair terms over-subtract elements in all three sets (3 − 3 = 0), and the triple term adds them back."
+    }
+   ]
+  },
+  {
+   "front": "How many integers from 1 to N are divisible by d? Divisible by both a and b?",
+   "back": [
+    {
+     "type": "formula",
+     "text": "#{1 ≤ k ≤ N : d | k} = ⌊N/d⌋"
+    },
+    {
+     "type": "p",
+     "text": "Divisible by both a and b means divisible by <b>lcm(a, b)</b>, which is ab only when a and b share no common factor."
+    },
+    {
+     "type": "p",
+     "text": "Numbers ≤ 600 divisible by 7: ⌊600/7⌋ = 85."
+    },
+    {
+     "type": "warn",
+     "text": "Divisible by 4 and 6 means divisible by lcm = 12, not 24."
+    }
+   ]
+  },
+  {
+   "front": "How many numbers from 1 to 600 are divisible by 2, 3 or 5?",
+   "back": [
+    {
+     "type": "list",
+     "items": [
+      "Singles: ⌊600/2⌋ = 300, ⌊600/3⌋ = 200, ⌊600/5⌋ = 120.",
+      "Pairs: by 6 → 100; by 10 → 60; by 15 → 40.",
+      "Triple: by 30 → 20.",
+      "300 + 200 + 120 − 100 − 60 − 40 + 20 = <b>440</b>."
+     ]
+    },
+    {
+     "type": "p",
+     "text": "And “divisible by none of 2, 3, 5” = 600 − 440 = 160."
+    }
+   ]
+  },
+  {
+   "front": "How do you count objects that have NONE of several bad properties?",
+   "back": [
+    {
+     "type": "formula",
+     "text": "#(none) = N − |A₁ ∪ ⋯ ∪ Aₙ|"
+    },
+    {
+     "type": "p",
+     "text": "<b>Recipe.</b>"
+    },
+    {
+     "type": "list",
+     "items": [
+      "Define the universe and its size N.",
+      "Let Aᵢ = objects with bad property i.",
+      "Find the sizes of the intersections. Often every intersection of r sets has the <b>same</b> size, so you multiply by C(n, r).",
+      "Answer = N − Σ|Aᵢ| + Σ|Aᵢ∩Aⱼ| − Σ|Aᵢ∩Aⱼ∩Aₖ| + ⋯"
+     ]
+    },
+    {
+     "type": "p",
+     "text": "This is how derangements, onto functions and bounded stars and bars all work."
+    }
+   ]
+  },
+  {
+   "front": "How many numbers from 1 to 1000 are divisible by neither 5 nor 7?",
+   "back": [
+    {
+     "type": "list",
+     "items": [
+      "Divisible by 5: 200. By 7: ⌊1000/7⌋ = 142. By both (35): ⌊1000/35⌋ = 28.",
+      "Divisible by 5 or 7: 200 + 142 − 28 = 314.",
+      "Neither: 1000 − 314 = <b>686</b>."
+     ]
+    }
+   ]
+  },
+  {
+   "front": "State the general principle of inclusion–exclusion for n sets.",
+   "back": [
+    {
+     "type": "formula",
+     "text": "|A₁ ∪ ⋯ ∪ Aₙ| = Σ|Aᵢ| − Σᵢ&lt;ⱼ|Aᵢ∩Aⱼ| + Σᵢ&lt;ⱼ&lt;ₖ|Aᵢ∩Aⱼ∩Aₖ| − ⋯ + (−1)ⁿ⁺¹|A₁∩⋯∩Aₙ|"
+    },
+    {
+     "type": "p",
+     "text": "Add singles, subtract pairs, add triples, subtract quadruples, … The sign for intersections of r sets is (−1)ʳ⁺¹."
+    },
+    {
+     "type": "p",
+     "text": "There are 2ⁿ − 1 terms in total, one for each nonempty collection of the sets."
+    }
+   ]
+  },
+  {
+   "front": "Prove the general inclusion–exclusion formula.",
+   "back": [
+    {
+     "type": "list",
+     "items": [
+      "Take an element x in exactly r of the sets (r ≥ 1). It counts <b>once</b> on the left.",
+      "On the right it appears in C(r, 1) singles, C(r, 2) pairs, C(r, 3) triples, … so its count is C(r,1) − C(r,2) + C(r,3) − ⋯ + (−1)ʳ⁺¹C(r,r).",
+      "Binomial theorem: 0 = (1 − 1)ʳ = C(r,0) − C(r,1) + C(r,2) − ⋯ + (−1)ʳC(r,r).",
+      "C(r, 0) = 1, so rearranging gives C(r,1) − C(r,2) + ⋯ = 1. Counted once on the right too. ∎"
+     ]
+    }
+   ]
+  },
+  {
+   "front": "How many regions does a Venn diagram for n sets need? Do four circles work?",
+   "back": [
+    {
+     "type": "p",
+     "text": "One region for every in/out combination: <b>2ⁿ</b> regions (counting the outside). For 4 sets that’s 16."
+    },
+    {
+     "type": "p",
+     "text": "Four circles <b>don’t</b> work: some combinations get no region, e.g. “in A and C only” or “in B and D only”. Correct 4-set diagrams use other shapes, like ellipses."
+    }
+   ]
+  },
+  {
+   "front": "For which n can a Venn diagram be rotationally symmetric? Why?",
+   "back": [
+    {
+     "type": "p",
+     "text": "Only when <b>n is prime</b>."
+    },
+    {
+     "type": "p",
+     "text": "<b>Why.</b>"
+    },
+    {
+     "type": "list",
+     "items": [
+      "Rotating by 1/n of a turn moves each region lying in exactly r sets to a different such region, so those regions come in groups of n.",
+      "There are C(n, r) of them, so n must divide C(n, r) for every 1 ≤ r &lt; n.",
+      "If n has a prime factor p &lt; n, then n does <b>not</b> divide C(n, p) (e.g. C(4, 2) = 6), so n must be prime."
+     ]
+    },
+    {
+     "type": "p",
+     "text": "Symmetric diagrams are known for 2, 3, 5, 7, 11, 13, 17, 19 and 23; whether one exists for every prime is open."
+    }
+   ]
+  },
+  {
+   "front": "How do you count solutions to x₁ + ⋯ + xₖ = n with upper bounds like xᵢ ≤ c?",
+   "back": [
+    {
+     "type": "formula",
+     "text": "no upper bounds: C(n + k − 1, k − 1) solutions with all xᵢ ≥ 0"
+    },
+    {
+     "type": "list",
+     "items": [
+      "Count with no upper bounds.",
+      "Bad set Aᵢ: xᵢ <b>breaks</b> its bound, i.e. xᵢ ≥ c + 1. Substitute xᵢ′ = xᵢ − (c + 1) ≥ 0, which lowers the total by c + 1; count with stars and bars again.",
+      "For intersections, subtract all the relevant amounts at once.",
+      "Answer = total − singles + pairs − ⋯"
+     ]
+    },
+    {
+     "type": "warn",
+     "text": "If the lowered total goes negative, that term is 0."
+    }
+   ]
+  },
+  {
+   "front": "Count solutions of x₁ + x₂ + x₃ = 11 (all ≥ 0) with x₁ ≤ 3, x₂ ≤ 4, x₃ ≤ 6.",
+   "back": [
+    {
+     "type": "list",
+     "items": [
+      "No bounds: C(13, 2) = 78.",
+      "x₁ ≥ 4 → total 7 → C(9, 2) = 36. x₂ ≥ 5 → total 6 → C(8, 2) = 28. x₃ ≥ 7 → total 4 → C(6, 2) = 15.",
+      "x₁ ≥ 4 and x₂ ≥ 5 → total 2 → C(4, 2) = 6. x₁ ≥ 4 and x₃ ≥ 7 → total 0 → 1. x₂, x₃ both → total −1 → 0. All three → 0.",
+      "78 − 79 + 7 − 0 = <b>6</b>."
+     ]
+    }
+   ]
+  },
+  {
+   "front": "What is the probability that 6 fair dice sum to 21?",
+   "back": [
+    {
+     "type": "list",
+     "items": [
+      "6⁶ equally likely rolls. Count x₁ + ⋯ + x₆ = 21 with 1 ≤ xᵢ ≤ 6.",
+      "Shift: yᵢ = xᵢ − 1, so y₁ + ⋯ + y₆ = 15 with 0 ≤ yᵢ ≤ 5.",
+      "No bounds: C(20, 5).",
+      "One yᵢ ≥ 6 → total 9 → C(14, 5), for each of 6 dice.",
+      "Two ≥ 6 → total 3 → C(8, 5), for each of C(6, 2) pairs. Three is impossible (18 > 15)."
+     ]
+    },
+    {
+     "type": "formula",
+     "text": "C(20,5) − 6·C(14,5) + C(6,2)·C(8,5) = 15504 − 12012 + 840 = 4332"
+    },
+    {
+     "type": "p",
+     "text": "Probability <b>4332/6⁶ ≈ 0.093</b>."
+    }
+   ]
+  },
+  {
+   "front": "How many ways can 3 dice (in order) sum to 10?",
+   "back": [
+    {
+     "type": "list",
+     "items": [
+      "yᵢ = xᵢ − 1: y₁ + y₂ + y₃ = 7 with yᵢ ≤ 5.",
+      "No bounds: C(9, 2) = 36.",
+      "One yᵢ ≥ 6 → total 1 → C(3, 2) = 3, for each of 3 dice: 9. Two ≥ 6 is impossible.",
+      "36 − 9 = <b>27</b>."
+     ]
+    }
+   ]
+  },
+  {
+   "front": "What is a derangement, and what is the formula for Dₙ?",
+   "back": [
+    {
+     "type": "p",
+     "text": "A <b>derangement</b> is a permutation of 1, …, n where <b>no</b> number is in its own position: i is never in spot i."
+    },
+    {
+     "type": "formula",
+     "text": "Dₙ = n! (1 − 1/1! + 1/2! − 1/3! + ⋯ + (−1)ⁿ/n!)"
+    },
+    {
+     "type": "p",
+     "text": "<b>Small cases.</b> D₃ = <b>2</b>: 231 and 312. D₄ = 24 − 24 + 12 − 4 + 1 = <b>9</b>."
+    }
+   ]
+  },
+  {
+   "front": "Derive the derangement formula with inclusion–exclusion.",
+   "back": [
+    {
+     "type": "list",
+     "items": [
+      "Aᵢ = permutations with i in position i. Derangements = n! − |A₁ ∪ ⋯ ∪ Aₙ|.",
+      "Fixing r chosen numbers leaves the other n − r free to permute: each r-fold intersection has (n − r)! permutations.",
+      "There are C(n, r) choices of which r, and C(n, r)(n − r)! = n!/r!.",
+      "So Dₙ = n! − n!/1! + n!/2! − ⋯ + (−1)ⁿn!/n!, which factors into the formula."
+     ]
+    }
+   ]
+  },
+  {
+   "front": "What fraction of permutations are derangements when n is large?",
+   "back": [
+    {
+     "type": "formula",
+     "text": "Dₙ/n! = 1 − 1/1! + 1/2! − ⋯ + (−1)ⁿ/n! → e⁻¹ ≈ 0.368"
+    },
+    {
+     "type": "p",
+     "text": "That’s the Taylor series e⁻¹ = Σ (−1)ᵏ/k!. So about <b>37%</b> of random permutations have no fixed point, almost regardless of n."
+    }
+   ]
+  },
+  {
+   "front": "In a random permutation of 1, …, n, what is the expected number of i in position i?",
+   "back": [
+    {
+     "type": "list",
+     "items": [
+      "Xᵢ = 1 if i is in position i, else 0. The count is X₁ + ⋯ + Xₙ.",
+      "E(Xᵢ) = (n − 1)!/n! = <b>1/n</b>: fix i, then permute the other n − 1 numbers.",
+      "Linearity: E = n · 1/n = <b>1</b>, for every n."
+     ]
+    },
+    {
+     "type": "p",
+     "text": "Much easier than derangements: expected values need only linearity, not inclusion–exclusion."
+    }
+   ]
+  },
+  {
+   "front": "How many onto functions are there from an m-element set to an n-element set?",
+   "back": [
+    {
+     "type": "formula",
+     "text": "Σ from r = 0 to n of (−1)ʳ C(n, r)(n − r)ᵐ = nᵐ − C(n,1)(n−1)ᵐ + C(n,2)(n−2)ᵐ − ⋯"
+    },
+    {
+     "type": "p",
+     "text": "<b>Why.</b>"
+    },
+    {
+     "type": "list",
+     "items": [
+      "All functions: nᵐ (each of the m inputs picks one of n outputs).",
+      "Aᵢ = functions that <b>miss</b> output i. Onto = nᵐ − |A₁ ∪ ⋯ ∪ Aₙ|.",
+      "Missing r chosen outputs leaves n − r choices per input: (n − r)ᵐ functions, and C(n, r) ways to choose the r."
+     ]
+    }
+   ]
+  },
+  {
+   "front": "How many onto functions from a 5-element set to a 3-element set?",
+   "back": [
+    {
+     "type": "formula",
+     "text": "3⁵ − 3·2⁵ + 3·1⁵ = 243 − 96 + 3 = 150"
+    },
+    {
+     "type": "p",
+     "text": "<b>150.</b> The last term C(3, 3)·0⁵ = 0."
+    }
+   ]
+  },
+  {
+   "front": "How many onto functions from a 4-element set to a 2-element set?",
+   "back": [
+    {
+     "type": "formula",
+     "text": "2⁴ − 2·1⁴ = 14"
+    },
+    {
+     "type": "p",
+     "text": "All 16 functions except the 2 constant ones."
+    }
+   ]
+  },
+  {
+   "front": "How many 4-bit strings start with 1 or end with 0?",
+   "back": [
+    {
+     "type": "formula",
+     "text": "8 + 8 − 4 = 12"
+    },
+    {
+     "type": "p",
+     "text": "<b>How.</b>"
+    },
+    {
+     "type": "list",
+     "items": [
+      "Start with 1: the other 3 bits are free ⟹ 2³ = 8.",
+      "End with 0: the other 3 bits are free ⟹ 8.",
+      "Both: 2 bits are fixed, 2 free ⟹ 2² = 4."
+     ]
+    }
+   ]
+  },
+  {
+   "front": "8-character passwords from 10 digits, 26 letters and 10 special characters. How many have no special character or no digit?",
+   "back": [
+    {
+     "type": "formula",
+     "text": "36⁸ + 36⁸ − 26⁸"
+    },
+    {
+     "type": "p",
+     "text": "<b>How.</b>"
+    },
+    {
+     "type": "list",
+     "items": [
+      "No special character: 36 symbols allowed ⟹ 36⁸.",
+      "No digit: 26 + 10 = 36 symbols allowed ⟹ 36⁸.",
+      "Both (no special and no digit): letters only ⟹ 26⁸.",
+      "Inclusion–exclusion."
+     ]
+    }
+   ]
+  },
+  {
+   "front": "How many permutations of n have exactly k fixed points?",
+   "back": [
+    {
+     "type": "formula",
+     "text": "C(n, k) · D<sub>n−k</sub>"
+    },
+    {
+     "type": "p",
+     "text": "Choose the fixed points, then derange the rest. Example: n = 6, k = 2 gives 15 · 9 = 135."
+    }
+   ]
+  },
+  {
+   "front": "State φ(n) as an inclusion–exclusion count.",
+   "back": [
+    {
+     "type": "formula",
+     "text": "φ(n) = n(1 − 1/p₁)⋯(1 − 1/p<sub>k</sub>) over the distinct primes pᵢ | n"
+    },
+    {
+     "type": "p",
+     "text": "Coprime to n means divisible by none of the pᵢ. Example: φ(360) = 96."
+    }
+   ]
+  },
+  {
+   "front": "Onto functions from a 4-set to a 3-set? Derangements of 4?",
+   "back": [
+    {
+     "type": "formula",
+     "text": "3⁴ − 3·2⁴ + 3·1⁴ = 36"
+    },
+    {
+     "type": "formula",
+     "text": "D₄ = 24 − 24 + 12 − 4 + 1 = 9"
+    }
+   ]
+  }
+ ],
+ "hard": [
+  {
+   "title": "None of 6, 10, 15 (the lcm trap)",
+   "level": "hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "How many integers in 1..2026 are divisible by none of 6, 10, 15?"
+    }
+   ],
+   "answer": "1486",
+   "solution": [
+    {
+     "type": "p",
+     "text": "Singles: ⌊2026/6⌋ = 337, ⌊2026/10⌋ = 202, ⌊2026/15⌋ = 135, total 674. Every pairwise lcm is 30, and so is the triple lcm: ⌊2026/30⌋ = 67."
+    },
+    {
+     "type": "p",
+     "text": "|union| = 674 − 3·67 + 67 = 540. None: 2026 − 540 = <b>1486</b>."
+    },
+    {
+     "type": "tip",
+     "text": "<b>Tests:</b> intersections use the lcm, not the product. <b>Common mistake:</b> using 60, 90, 150 for the pairs and 900 for the triple."
+    }
+   ]
+  },
+  {
+   "title": "Counting primes ≤ 120 with a sieve",
+   "level": "hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "Use inclusion–exclusion to count the primes ≤ 120."
+    }
+   ],
+   "answer": "30 primes (27 survivors of the sieve, minus 1, plus 2, 3, 5, 7)",
+   "solution": [
+    {
+     "type": "p",
+     "text": "A composite n ≤ 120 has a prime factor ≤ √120 &lt; 11, so one of 2, 3, 5, 7. Count n ∈ [1, 120] divisible by none of them:"
+    },
+    {
+     "type": "formula",
+     "text": "120 − (60 + 40 + 24 + 17) + (20 + 12 + 8 + 8 + 5 + 3) − (4 + 2 + 1 + 1) + 0 = 27"
+    },
+    {
+     "type": "p",
+     "text": "pairs: 6, 10, 14, 15, 21, 35 · triples: 30, 42, 70, 105 · all four: 210"
+    },
+    {
+     "type": "p",
+     "text": "Those 27 numbers are 1 together with the primes from 11 to 120. So π(120) = 27 − 1 + 4 (adding back 2, 3, 5, 7) = <b>30</b>."
+    },
+    {
+     "type": "tip",
+     "text": "<b>Tests:</b> bookkeeping in the sieve: remove 1, add back the sieving primes. <b>Common mistake:</b> reporting 27."
+    }
+   ]
+  },
+  {
+   "title": "φ(3600) and the two-prime φ formula",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "Count the integers in 1..3600 that are coprime to 3600 = 2⁴·3²·5². Then prove φ(p<sup>a</sup>q<sup>b</sup>) = p<sup>a</sup>q<sup>b</sup>(1 − 1/p)(1 − 1/q) for distinct primes p, q."
+    }
+   ],
+   "answer": "φ(3600) = 960; proof: φ(n) = n − n/p − n/q + n/(pq) = n(1 − 1/p)(1 − 1/q)",
+   "solution": [
+    {
+     "type": "p",
+     "text": "Coprime to 3600 means divisible by none of 2, 3, 5: 3600 − (1800 + 1200 + 720) + (600 + 360 + 240) − 120 = <b>960</b>. (Also 3600·½·⅔·⅘ = 960.)"
+    },
+    {
+     "type": "p",
+     "text": "<b>Proof.</b> Let n = p<sup>a</sup>q<sup>b</sup>. A number is coprime to n iff it is divisible by neither p nor q. Among 1..n, n/p are divisible by p, n/q by q, and n/(pq) by both. So φ(n) = n − n/p − n/q + n/(pq) = n(1 − 1/p)(1 − 1/q). ∎"
+    },
+    {
+     "type": "tip",
+     "text": "<b>Tests:</b> only the distinct primes matter, not the exponents. <b>Common mistake:</b> including 4, 9 or 25 as separate conditions."
+    }
+   ]
+  },
+  {
+   "title": "AABBCC with no equal neighbours",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "How many arrangements of AABBCC have no two identical letters next to each other?"
+    }
+   ],
+   "answer": "90 − 3·30 + 3·12 − 6 = 30",
+   "solution": [
+    {
+     "type": "p",
+     "text": "Total: 6!/(2!2!2!) = 90. Let A<sub>X</sub> be “the two X’s are adjacent”. Gluing one pair: 5!/(2!2!) = 30, three ways. Gluing two pairs: 4!/2! = 12, three ways. Gluing all three: 3! = 6."
+    },
+    {
+     "type": "p",
+     "text": "90 − 3·30 + 3·12 − 6 = <b>30</b>."
+    },
+    {
+     "type": "tip",
+     "text": "<b>Tests:</b> gluing letters, then dividing by the repetitions that remain. <b>Common mistake:</b> multiplying a glued pair by 2 for its internal order. Identical letters have only one order."
+    }
+   ]
+  },
+  {
+   "title": "Seven tasks, four workers, A gets exactly two",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "Seven different tasks go to 4 workers so that every worker gets at least one task, and worker A gets exactly two. How many ways?"
+    }
+   ],
+   "answer": "C(7,2)·150 = 3150",
+   "solution": [
+    {
+     "type": "p",
+     "text": "Choose A’s tasks: C(7,2) = 21. The other 5 tasks go onto the 3 remaining workers: 3⁵ − 3·2⁵ + 3·1⁵ = 243 − 96 + 3 = 150."
+    },
+    {
+     "type": "p",
+     "text": "<b>Answer:</b> 21·150 = 3150"
+    },
+    {
+     "type": "tip",
+     "text": "<b>Tests:</b> fix the constrained worker first, then count onto functions for the rest. <b>Common mistake:</b> counting onto functions 7 → 4 and multiplying by a “probability that A gets 2”."
+    }
+   ]
+  },
+  {
+   "title": "Five-digit strings with digit sum 30",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "How many integers from 0 to 99999 have digit sum 30? Check your answer with a symmetry."
+    }
+   ],
+   "answer": "3246 (equals the count for digit sum 15 by d ↦ 9 − d)",
+   "solution": [
+    {
+     "type": "p",
+     "text": "Count 5-tuples of digits 0–9 with sum 30. Let A<sub>i</sub> be “d<sub>i</sub> ≥ 10”, and subtract 10 for each violated digit:"
+    },
+    {
+     "type": "formula",
+     "text": "C(34,4) − 5·C(24,4) + 10·C(14,4) − 10·C(4,4) = 46376 − 53130 + 10010 − 10 = 3246"
+    },
+    {
+     "type": "p",
+     "text": "<b>Check.</b> d ↦ 9 − d is a bijection between digit sum 30 and digit sum 45 − 30 = 15. For sum 15: C(19,4) − 5·C(9,4) = 3876 − 630 = 3246. ✓"
+    },
+    {
+     "type": "p",
+     "text": "<b>Answer:</b> 3246"
+    },
+    {
+     "type": "tip",
+     "text": "<b>Tests:</b> knowing when the inclusion–exclusion terms stop (3·10 = 30 is the last k with a nonzero term). <b>Common mistake:</b> stopping after k = 1, which gives a negative answer here."
+    }
+   ]
+  },
+  {
+   "title": "No even number fixed",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "How many permutations of {1, …, 8} leave no <b>even</b> number in its own position? (Odd numbers may stay put.)"
+    }
+   ],
+   "answer": "Σ(−1)ᵏC(4,k)(8−k)! = 24024",
+   "solution": [
+    {
+     "type": "p",
+     "text": "Let A<sub>i</sub> be “i is fixed”, for i ∈ {2, 4, 6, 8}. Fixing a given set of k of them leaves (8 − k)! permutations."
+    },
+    {
+     "type": "formula",
+     "text": "Σ<sub>k=0</sub><sup>4</sup> (−1)<sup>k</sup>C(4,k)(8−k)! = 40320 − 20160 + 4320 − 480 + 24 = 24024"
+    },
+    {
+     "type": "tip",
+     "text": "<b>Tests:</b> inclusion–exclusion over only the constrained positions. <b>Common mistake:</b> writing D<sub>4</sub>·4! or similar. The odd numbers still move around freely among all 8 positions."
+    }
+   ]
+  },
+  {
+   "title": "Four couples, no couple adjacent",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "In how many ways can 4 couples sit in a row of 8 seats so that no couple sits side by side?"
+    }
+   ],
+   "answer": "Σ(−1)ᵏC(4,k)2ᵏ(8−k)! = 13824",
+   "solution": [
+    {
+     "type": "p",
+     "text": "Let A<sub>i</sub> be “couple i is adjacent”. Requiring a given set of k couples to be adjacent: glue each into a block (2 orders each), giving 2<sup>k</sup>(8 − k)!."
+    },
+    {
+     "type": "formula",
+     "text": "40320 − 4·2·5040 + 6·4·720 − 4·8·120 + 16·24 = 13824"
+    },
+    {
+     "type": "p",
+     "text": "<b>Answer:</b> 13824"
+    },
+    {
+     "type": "tip",
+     "text": "<b>Tests:</b> the factor 2<sup>k</sup> for internal orders. <b>Common mistake:</b> forgetting the 2<sup>k</sup>, or using (8 − 2k)! as if each couple took up no seats."
+    }
+   ]
+  },
+  {
+   "title": "An alternating-sum identity from onto functions",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "Prove that Σ<sub>k=0</sub><sup>n</sup> (−1)<sup>k</sup>C(n,k)(n − k)<sup>m</sup> equals n! when m = n, and 0 when 0 ≤ m &lt; n."
+    }
+   ],
+   "answer": "The sum counts onto maps [m] → [n]: n! bijections when m = n, none when m &lt; n.",
+   "solution": [
+    {
+     "type": "p",
+     "text": "Count onto functions f: [m] → [n]. Let A<sub>i</sub> be the set of functions that miss i. For |S| = k, the functions missing every element of S map into the other n − k values: |∩<sub>i∈S</sub>A<sub>i</sub>| = (n − k)<sup>m</sup>. By inclusion–exclusion, the number of onto functions is Σ (−1)<sup>k</sup>C(n,k)(n − k)<sup>m</sup>."
+    },
+    {
+     "type": "p",
+     "text": "If m = n, an onto map between two n-element sets is a bijection, and there are n! of them. If m &lt; n, an image has at most m &lt; n elements, so no map is onto and the count is 0. ∎"
+    },
+    {
+     "type": "tip",
+     "text": "<b>Tests:</b> proving an algebraic identity by recognizing what it counts. <b>Common mistake:</b> trying to expand the sum algebraically, which is very hard."
+    }
+   ]
+  },
+  {
+   "title": "Gift exchange avoiding self and partner",
+   "level": "very hard",
+   "prompt": [
+    {
+     "type": "p",
+     "text": "Four couples (8 people) draw names for a gift exchange: a uniformly random permutation decides who gives to whom. Nobody may draw themselves <b>or their own partner</b>. How many valid draws are there?"
+    }
+   ],
+   "answer": "4752 valid draws (rook coefficients from (1 + 4x + 2x²)⁴)",
+   "solution": [
+    {
+     "type": "p",
+     "text": "Treat this as a permutation with forbidden (giver, receiver) cells. Each couple {x, y} forbids the 2 × 2 block x→x, x→y, y→x, y→y. By inclusion–exclusion, each set of k forbidden cells, no two in the same row or column, contributes (−1)<sup>k</sup>(8 − k)!."
+    },
+    {
+     "type": "p",
+     "text": "Within one couple’s block, the possible choices are: no cell (1 way), one cell (4 ways), or two cells in different rows and columns (2 ways: both self-draws, or the swap). So the number r<sub>k</sub> of allowed k-cell choices is the coefficient of x<sup>k</sup> in (1 + 4x + 2x²)⁴:"
+    },
+    {
+     "type": "table",
+     "head": [
+      "k",
+      "0",
+      "1",
+      "2",
+      "3",
+      "4",
+      "5",
+      "6",
+      "7",
+      "8"
+     ],
+     "rows": [
+      [
+       "r<sub>k</sub>",
+       "1",
+       "16",
+       "104",
+       "352",
+       "664",
+       "704",
+       "416",
+       "128",
+       "16"
+      ]
+     ]
+    },
+    {
+     "type": "formula",
+     "text": "Σ (−1)<sup>k</sup> r<sub>k</sub> (8−k)! = 40320 − 80640 + 74880 − 42240 + 15936 − 4224 + 832 − 128 + 16 = 4752"
+    },
+    {
+     "type": "p",
+     "text": "<b>Answer:</b> 4752 valid draws (about 11.8% of all 40320)."
+    },
+    {
+     "type": "tip",
+     "text": "<b>Tests:</b> inclusion–exclusion when the forbidden events are grouped in blocks. <b>Common mistake:</b> using C(16,k) for the k-cell choices. Two forbidden cells in the same row (one giver to two people) can’t both happen."
+    }
+   ]
+  }
+ ],
+ "keyFacts": [
+  "|A ∪ B| = |A| + |B| − |A ∩ B|; three sets: + singles − pairs + triple",
+  "General: intersections of r sets get sign (−1)<sup>r+1</sup>; proof: Σ(−1)ʲC(r,j) = (1 − 1)ʳ = 0",
+  "#(none of the properties) = N − |A₁ ∪ ⋯ ∪ Aₙ|",
+  "#multiples of d in 1..N = ⌊N/d⌋; “divisible by a and b” = divisible by lcm(a, b)",
+  "Upper bound xᵢ ≤ c: subtract solutions with xᵢ ≥ c + 1 (lower the total by c + 1); negative total → 0",
+  "Dₙ = n! Σ (−1)ᵏ/k!; D₃ = 2, D₄ = 9, D₅ = 44; Dₙ/n! → 1/e",
+  "Onto m → n: Σ (−1)ʳ C(n, r)(n − r)ᵐ; 4 → 3 gives 36, 5 → 3 gives 150",
+  "φ(n) = n ∏(1 − 1/p) over distinct primes p | n"
+ ]
+}
